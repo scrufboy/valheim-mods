@@ -10,7 +10,7 @@ namespace LivingWorld.HumanNpc
         ZNetView view;
         HumanCompanion companion;
         ItemDrop.ItemData torch;
-        float nextCheck, eligibleSince = -1, brightSince = -1;
+        float nextCheck, eligibleSince = -1, brightSince = -1, lastCombat = Single.NegativeInfinity;
         bool ambientDark;
         bool fault;
         static readonly MethodInfo Copy = typeof(object).GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -33,7 +33,15 @@ namespace LivingWorld.HumanNpc
                 long owner; Player leader;
                 if (!companion.TryGetConfidenceParty(out owner, out leader) || leader == null) { Extinguish(); return; }
                 var readiness = GetComponent<HumanEquipmentReadiness>();
-                if (readiness != null && readiness.WantsWeapons()) { ReleaseForWeapons(); return; }
+                var combatAi = GetComponent<MonsterAI>();
+                bool combatLocked = companion.CombatReadinessActive || body.InAttack() || body.IsStaggering() ||
+                    body.IsBlocking() || (combatAi != null && (combatAi.IsAlerted() || combatAi.GetTargetCreature() != null));
+                if (readiness != null && readiness.WantsWeapons()) combatLocked = true;
+                if (combatLocked) { lastCombat = Time.time; ReleaseForWeapons(); return; }
+                // Torches are companion ambience, never combat equipment. A
+                // full five quiet seconds must follow the last combat signal so
+                // a transient target/alert gap cannot put one back in a hand.
+                if (Time.time - lastCombat < 5f) { Extinguish(); return; }
                 bool busy = body.InAttack() || body.IsStaggering() || body.IsSwimming() || body.IsCrouching();
                 var cleric = GetComponent<HumanCleric>();
                 busy |= cleric != null && cleric.Casting;
@@ -127,3 +135,4 @@ namespace LivingWorld.HumanNpc
         void OnDisable() { Extinguish(); }
     }
 }
+

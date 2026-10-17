@@ -14,6 +14,15 @@ namespace LivingWorld.HumanNpc
         public const float WalkAgainDistance = 3.5f;
         public const float IdleAttentionSeconds = 12f;
         public const float LeaderMovementThreshold = 0.15f;
+        public const float FormationRear = 3.2f;
+        public const float FormationSide = 2.1f;
+
+        public static float FormationSideOffset(bool archer, bool cleric, int stableIdentity)
+        {
+            if (archer) return -FormationSide;
+            if (cleric) return FormationSide;
+            return (stableIdentity & 1) == 0 ? -FormationSide : FormationSide;
+        }
 
         public static CompanionPace NextPace(CompanionPace previous, float distance, bool mustCross)
         {
@@ -36,3 +45,4 @@ namespace LivingWorld.HumanNpc
         static bool Finite(float value) { return !Single.IsNaN(value) && !Single.IsInfinity(value); }
     }
 }
+

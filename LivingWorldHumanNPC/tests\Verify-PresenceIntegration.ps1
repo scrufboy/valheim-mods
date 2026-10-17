@@ -38,8 +38,10 @@ try {
  Has (Method $presence Follow) 'CompanionPresencePolicy::NextPace'
  Has (Method $presence Follow) 'HumanDoorTraversal::NeedsCloseFollow'
  Has (Method $presence Follow) 'UnityEngine.Transform::get_position'
- $formation=$presence.Methods | Where-Object Name -eq FormationDestination
- Require ($null -eq $formation) 'regressed custom formation destination must be absent'
+ $formation=Method $presence FormationDestination
+ Has $formation 'CompanionPresencePolicy::FormationSideOffset'
+ Has $formation 'UnityEngine.Transform::get_forward'
+ Has $formation 'UnityEngine.Transform::get_right'
  Has (Method $presence Follow) 'BaseAI::StopMoving'
  Has (Method $presence Follow) 'MethodBase::Invoke'
  Has (Method $presence BeforeFollow) 'GetComponent<LivingWorld.HumanNpc.HumanFollowPresence>'
@@ -110,3 +112,4 @@ try {
  }
  "PresenceIntegration PASS: $checks native head-look, scope and 0.3.2 preservation checks. Live animation/movement NOT RUN."
 } finally {$candidate.Dispose();$native.Dispose();$baseline.Dispose()}
+

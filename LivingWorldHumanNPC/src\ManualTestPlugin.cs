@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace LivingWorld.ManualTest
 {
-    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.34")]
+    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.35")]
     [BepInIncompatibility("local.livingworld.manualtest")]
     [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     public sealed class ManualTestPlugin : BaseUnityPlugin
@@ -718,3 +718,4 @@ namespace LivingWorld.ManualTest
         // Marker only. Saved metadata is inspected, never blessed automatically.
     }
 }
+

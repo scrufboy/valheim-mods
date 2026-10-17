@@ -18,7 +18,7 @@ namespace LivingWorld.Telemetry
     public sealed class LivingWorldTelemetryPlugin : BaseUnityPlugin
     {
         public const string Guid = "local.livingworld.telemetry";
-        public const string Version = "0.2.0";
+        public const string Version = "0.2.1";
         const int Schema = 2;
         const long MaxBytes = 64L * 1024L * 1024L;
         const int MaxRecords = 200000;
@@ -333,17 +333,17 @@ namespace LivingWorld.Telemetry
         {
             if (current == null || !current.active || healthTarget != __instance) return;
             float after = __instance.GetHealth(), before = healthBefore; healthTarget = null;
-            if (after > before) current.Emit("AttackEffect", Id(__instance), "effect", "heal", "before", before, "after", after, "amount", after - before);
+            if (after > before) current.Emit("HealthGainObserved", Id(__instance), "source", "Character.Heal", "before", before, "after", after, "amount", after - before);
         }
         static void AttackStartPrefix(Humanoid __instance, Character target, bool secondaryAttack)
         {
-            if (current == null || !current.active || !Tracked(__instance)) return;
+            if (current == null || !current.active || __instance.GetComponent<HumanCompanion>() == null) return;
             current.Emit("AttackAttempt", Id(__instance), "phase", "requested", "target", Id(target),
                 "weapon", Item(__instance.GetCurrentWeapon()), "secondary", secondaryAttack, "blocking", __instance.IsBlocking());
         }
         static void AttackStartPostfix(Humanoid __instance, Character target, bool secondaryAttack, bool __result)
         {
-            if (current == null || !current.active || !Tracked(__instance)) return;
+            if (current == null || !current.active || __instance.GetComponent<HumanCompanion>() == null) return;
             current.Emit("AttackAttempt", Id(__instance), "phase", "result", "target", Id(target),
                 "weapon", Item(__instance.GetCurrentWeapon()), "started", __result);
         }
@@ -377,3 +377,4 @@ namespace LivingWorld.Telemetry
         }
     }
 }
+

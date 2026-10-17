@@ -78,11 +78,13 @@ namespace LivingWorld.HumanNpc
             if (leader == null || target != leader.gameObject)
             { if (ambient != null) ambient.Cancel("follow target/order lost"); return false; }
             if (posture != null) posture.Refresh();
-            float distance = Vector3.Distance(transform.position, leader.transform.position);
+            Vector3 destination = FormationDestination(leader);
+            float distance = Vector3.Distance(transform.position, destination);
             bool crossing = doors != null && doors.NeedsCloseFollow(target);
-            Vector3 destination = leader.transform.position; bool ambientHold = false;
+            if (crossing) destination = leader.transform.position;
+            bool ambientHold = false;
             bool optional = ambient != null && ambient.TryDestination(leader, crossing, out destination, out ambientHold);
-            if (!optional) destination = leader.transform.position;
+            if (!optional && crossing) destination = leader.transform.position;
             if (optional) { ReleaseLook(); pace = ambientHold ? CompanionPace.Stand : CompanionPace.Walk; }
             else pace = CompanionPresencePolicy.NextPace(pace, distance, crossing);
             if (posture != null && posture.Posture == CompanionPosture.Crouch && pace == CompanionPace.Run)
@@ -101,6 +103,24 @@ namespace LivingWorld.HumanNpc
             }
             Report(distance, crossing);
             return true;
+        }
+
+        Vector3 FormationDestination(Player leader)
+        {
+            if (leader == null) return transform.position;
+            int stable = 17;
+            string identity = gameObject.name ?? "";
+            for (int i = 0; i < identity.Length; ++i) stable = unchecked(stable * 31 + identity[i]);
+            bool archer = identity.IndexOf("Scout", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool cleric = identity.IndexOf("Cleric", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (!archer && !cleric) return leader.transform.position;
+            float side = CompanionPresencePolicy.FormationSideOffset(archer, cleric, stable);
+            Vector3 forward = leader.transform.forward; forward.y = 0f;
+            Vector3 right = leader.transform.right; right.y = 0f;
+            if (forward.sqrMagnitude < .01f) forward = new Vector3(0f, 0f, 1f);
+            if (right.sqrMagnitude < .01f) right = new Vector3(1f, 0f, 0f);
+            return leader.transform.position - forward.normalized * CompanionPresencePolicy.FormationRear +
+                right.normalized * side;
         }
 
         void Attention(CharacterAnimEvent events)
@@ -197,3 +217,4 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
+

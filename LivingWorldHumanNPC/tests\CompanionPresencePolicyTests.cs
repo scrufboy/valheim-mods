@@ -43,6 +43,11 @@ static class CompanionPresencePolicyTests
         Check(CompanionPresencePolicy.StopDistance < CompanionPresencePolicy.ResumeDistance &&
             CompanionPresencePolicy.ResumeDistance < CompanionPresencePolicy.WalkAgainDistance &&
             CompanionPresencePolicy.WalkAgainDistance < CompanionPresencePolicy.RunDistance, "Ordered hysteresis bands");
+        Check(CompanionPresencePolicy.FormationSideOffset(true, false, 0) < 0, "Archer owns stable left lane");
+        Check(CompanionPresencePolicy.FormationSideOffset(false, true, 0) > 0, "Cleric owns stable right lane");
+        Check(CompanionPresencePolicy.FormationSideOffset(false, false, 0) !=
+            CompanionPresencePolicy.FormationSideOffset(false, false, 1), "Other companions alternate stable lanes");
         Console.WriteLine("CompanionPresencePolicy PASS: " + checks + " checks.");
     }
 }
+
