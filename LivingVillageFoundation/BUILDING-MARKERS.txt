@@ -1,0 +1,32 @@
+Building-role registry foundation (not installed; no native patches)
+
+BuildingRegistry stores immutable settlement/building/marker identities and locations.
+Roles: Kitchen, Smithy, Workshop, Barracks, Healing, GreatHall, Housing.
+Every building and marker has one settlement owner. Invalid reassignment is rejected
+without losing the old assignment. Removing markers only removes role declarations;
+forgetting a building removes its marker assignments, never native pieces.
+Lookup considers role, explicit distance, settlement bounds, and deterministic ties.
+
+Native adapter plan:
+1. Owner-authoritative game-thread adapter derives settlement identity from maypole
+   ZDOID and supplies actual bounds including linked outposts. Never infer ownership
+   solely from nearest center where areas overlap.
+2. Survey loaded pieces into explicit building records. Building grouping is a
+   separate problem: this registry does not claim native prefabs are blueprints.
+3. Persist marker identity, settlement identity, building identity, role and position
+   in versioned ZDO fields; reconstruct registry after load, without duplicating
+   native geometry. Handle explicit marker role changes and native destruction.
+4. Steward looks up facilities and queues work. Registry does not teleport villagers,
+   grant items, fabricate food, activate production, or assign controllers itself.
+5. Interaction can use normal game/controller input. Do not add global input hooks.
+
+Visual options require native asset inspection and gameplay testing:
+- Private clone of the native piece_guardstone visual, stripping ward/private-area
+  components ONLY from our clone; retain separately defined networking/placement.
+  Never change the global original prefab or claim ward coverage is our boundary.
+- Private colored shield marker on wall, or a small pedestal/item-holder decoration.
+  Per-role material clones prevent recoloring original assets.
+No visual prefab registration or compatibility guarantee is supplied here.
+
+This foundation does not record blueprints, rebuild missing pieces, demolish a
+building, establish NPC ownership of beds, or replace existing gameplay behavior.
