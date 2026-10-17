@@ -1,0 +1,2 @@
+using System;using System.Linq;using Mono.Cecil;
+class Dump {static void Main(string[] a){var x=AssemblyDefinition.ReadAssembly(a[0]);foreach(var t in x.MainModule.Types.SelectMany(All))foreach(var m in t.Methods.Where(m=>m.HasBody && a.Skip(1).Any(s=>m.FullName.Contains(s)))){Console.WriteLine(m.FullName);foreach(var i in m.Body.Instructions)Console.WriteLine(i);}}static System.Collections.Generic.IEnumerable<TypeDefinition> All(TypeDefinition t){yield return t;foreach(var n in t.NestedTypes.SelectMany(All))yield return n;}}
