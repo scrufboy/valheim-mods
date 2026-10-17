@@ -4,6 +4,14 @@ The GitHub home for Brian's **Living World C.O.R.E.** Valheim work.
 
 **C.O.R.E.** means **Characters, Origins, Roles & Encounters**.
 
+## Claude/Codex collaboration
+
+- [Shared Claude exchange](./claude-exchange)
+- [Current handoff](./claude-exchange/CURRENT.md)
+- [Exchange protocol](./claude-exchange/PROTOCOL.md)
+
+The exchange is append-only: both agents preserve prior evidence, distinguish offline results from live proof, and may not erase working behavior to promote a new candidate.
+
 ## Active projects
 
 - [LivingWorldCORE](./LivingWorldCORE) — shared architecture and integration contracts
