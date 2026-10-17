@@ -1,0 +1,28 @@
+LIVING WORLD AUTOMATIC TELEMETRY 0.2.0 — LAB ONLY
+
+There are no commands and no markers for you to enter.
+
+The recorder starts automatically after a world and local player finish loading.
+It records relevant NPC behavior and outcomes while you play. It closes the file
+automatically when you leave the world. If a recording reaches its safety limit,
+the recorder closes it and immediately continues in a numbered part file.
+
+Files are written under:
+
+BepInEx\LivingWorldTelemetry
+
+Each filename contains the local time, world name, and part number. Every record
+also contains UTC wall time for matching the automatic evidence to OBS footage.
+
+The recorder does not control NPCs, spawn enemies, alter combat, or train behavior
+inside the game. It observes. We use its files to identify failures and revise the
+NPC controller. It does not continuously flood LogOutput.log with sample records.
+
+REMOVE IT
+
+Delete only:
+
+BepInEx\plugins\LivingWorldTelemetry\LivingWorld.Telemetry.dll
+
+Existing telemetry files remain under BepInEx\LivingWorldTelemetry until you
+choose to delete or move them.
