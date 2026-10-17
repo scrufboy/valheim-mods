@@ -1,0 +1,2 @@
+using System;using System.Linq;using Mono.Cecil;
+class StampWorkerVersion {static void Main(string[] a){var r=new DefaultAssemblyResolver();r.AddSearchDirectory("work/runtime-profile/BepInEx/core");var x=AssemblyDefinition.ReadAssembly(a[0],new ReaderParameters{AssemblyResolver=r});var type=x.MainModule.Types.Single(item=>item.FullName=="FriendliesAI.Plugin");var attr=type.CustomAttributes.Single(item=>item.AttributeType.Name=="BepInPlugin");attr.ConstructorArguments[2]=new CustomAttributeArgument(x.MainModule.TypeSystem.String,a.Length>2?a[2]:"0.1.1");x.Write(a[1]);}}
