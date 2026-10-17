@@ -1,0 +1,164 @@
+FRESH HUMAN NPC COMPOSITION - NATIVE LIFECYCLE AUDIT
+Date: 2026-10-13
+
+Scope
+Read-only inspection of installed native Valheim IL and serialized MonoScript
+metadata. No game process was launched; no profile/save/source asset was changed.
+Native assembly SHA256:
+25A0A107DCE4D834C44C2B72D0EAFD5CB7793933BDA81816ACCFA1EA9543DACE
+
+Conclusion
+No native method reviewed requires a Dverger or another creature prefab as root.
+A fresh GameObject assembled from native components and the native human Visual
+subtree has a concrete supported construction route. The Player root/controller
+is not cloned, retained or awakened. Its human visual/equipment configuration may
+be read and remapped into fresh private components. There is no reason to replay
+native Awake, and doing so is unsafe.
+
+Serialized execution order (read directly from native MonoScript assets)
+  ZNetView           -20
+  ZSyncTransform     -10
+  ZSyncAnimation      -3
+  Humanoid             0
+  MonsterAI            0
+  VisEquipment         0
+  CharacterAnimEvent   0
+  FootStep             0
+  Character            0
+BaseAI is inherited by MonsterAI; no separate BaseAI MonoScript was found among
+the inspected script dependencies. None of the above IL types has a managed
+DefaultExecutionOrder attribute: the ordering evidence is native asset metadata.
+Do not infer engine ordering from AddComponent insertion order.
+
+Safe construction sequence
+1. Obtain a private inactive prefab holder. Create a new GameObject (not a native
+   creature clone), immediately deactivate it, and parent it under that holder.
+   The object must remain inactiveInHierarchy throughout all following edits.
+2. Assign own root name/layer/scale and own Rigidbody+CapsuleCollider settings.
+   Add exactly one native ZNetView, ZSyncTransform, ZSyncAnimation, Humanoid,
+   MonsterAI, VisEquipment and optional native FootStep. Do not add Character
+   separately: Humanoid already derives from Character. Do not add Player,
+   PlayerController, camera/input, CharacterDrop, Tameable, NpcTalk or Floating.
+3. Instantiate only the native human Visual subtree under the inactive new root;
+   name it exactly Visual. Preserve its complete skeleton, body mesh, human
+   Animator controller/avatar and CharacterAnimEvent receiver. Review all retained
+   scripts by allowlist. There must be exactly one body Animator, no hidden second
+   visual and no Player component anywhere in the assembled graph.
+4. Remap human visual references, including eye, all equipment attach transforms,
+   cloth colliders, foot transforms and AnimationEffect root, to private objects.
+   Share immutable native assets only; independently allocate mutable containers.
+5. Assign explicit behavior, physics, stats, inventory arrays and animation sync
+   lists before any activation. Do not copy a creature root/component field set.
+   Configure VisEquipment.m_isPlayer=true (human visual mode) but
+   m_playerComponent=null and m_nViewOverride=null. Disable NPC random hair/model.
+6. Preflight the complete graph and all item references. Register the finished
+   private root with Jotunn; the prefab holder stays inactive. Setting activeSelf
+   true while its holder remains inactive does not intentionally run lifecycle.
+7. On actual native scene instantiation, let Unity invoke native lifecycle once.
+   The installed native script metadata puts ZDO initialization before transform
+   sync, animation sync and Humanoid/AI. Apply versioned appearance/order defaults
+   in the custom post-Awake/Start owner-guarded path, never by replaying Awake.
+
+Concrete lifecycle requirements and hazards
+ZNetView.Awake (-20):
+  IL_0000 tests m_forceDisableInit; IL_0007 requires ZDOMan singleton, otherwise
+  destroys this component. IL_0171 onward creates a ZDO from the prefab-name hash
+  or consumes m_initZDO. IL_0211 calls ZNetScene.AddInstance. Consequently prefab
+  staging MUST NOT activate this component in the menu/registration context.
+  Set persistent=true explicitly for the companion; default ctor leaves false.
+
+ZSyncTransform.Awake (-10):
+  IL_0000 caches same-root ZNetView/Rigidbody/Character. IL_0036 calls GetZDO;
+  if null, IL_003f disables the behavior and returns, with no retry. This is why
+  the verified native execution order matters. Configure syncPosition/Rotation,
+  syncBodyVelocity and characterParentSync explicitly as needed.
+
+ZSyncAnimation.Awake (-3):
+  Requires same-root ZNetView and an active child Animator. Registers SetTrigger,
+  then builds hash/default arrays from syncBools/syncFloats/syncInts. Each list
+  must be nonnull and populated with the human controller's native parameters.
+
+Humanoid/Character.Awake (0):
+  Requires same-root CapsuleCollider, Rigidbody, ZSyncAnimation and ZNetView;
+  child Animator must have CharacterAnimEvent; direct child Visual is mandatory
+  (Character IL_0099 dereferences it without null fallback). LODGroup is optional.
+  Calls Utils.GetBoneTransform for the human head. m_eye is a separate serialized
+  transform and must be remapped. Creates SEMan and registers native damage/etc.
+  Humanoid then caches same-root VisEquipment and reads/writes native seed.
+  Fresh Humanoid constructor creates its own Inventory(8,4). Do not replace it
+  with another actor's live inventory. Its six item arrays are NOT initialized by
+  the native constructor: set defaultItems, randomWeapon, randomArmor, randomShield,
+  randomSets, randomItems to nonnull independent arrays. GiveDefaultItems uses
+  their Length without null guards. Character.m_weakSpots also starts null;
+  GetWeakSpot(short) uses its Length for nonnegative input, so set new WeakSpot[0].
+BaseAI/MonsterAI.Awake (0):
+  Gets same-root Character/ZNetView/ZSyncAnimation/Rigidbody; optional Tameable.
+  Subscribes Character damage/death callbacks and registers Alert/SetAggravated/
+  near-projectile RPCs. Reads spawn time/point, schedules idle sound. MonsterAI
+  reads sleeping/despawn flags, writes synced sleeping state, registers wake/sleep.
+  These zero-order Awakes only need references to the other zero-order components,
+  not completion of their private Awake caches. Native ZSyncAnimation is already
+  initialized at -3. There is no inspected dependency cycle needing manual replay.
+
+VisEquipment/CharacterAnimEvent (0):
+  VisEquipment requires local human renderer/model/attachment graph and initialized
+  ZNetView; builds a dictionary with every bone name via Add. Reject null/duplicate
+  bone names. CharacterAnimEvent acquires parent Character and same-root native
+  ZNetView/MonsterAI/VisEquipment/FootStep; does not call their post-Awake caches.
+  The native event bridge supports Humanoid attacks without a Player controller.
+
+Start ordering:
+  Humanoid.Start supplies defaults, MonsterAI.Start tries EquipBestWeapon. Relative
+  Start order between zero-order components must not be assumed. Existing bounded
+  owner-safe post-Start equipment verification/selection can resolve this without
+  calling either Start manually. FootStep.Start subscribes land event/registers RPC.
+
+Never replay lifecycle:
+  Character.Awake and BaseAI.Awake add static-list membership and callbacks.
+  Every ZNetView.Register overload uses Dictionary.Add, not replacement. A second
+  Awake can duplicate subscriptions/list entries or throw duplicate RPC errors.
+  ZNetView/ZSyncTransform/ZSyncAnimation/VisEquipment/CharacterAnimEvent Awake are
+  private nonvirtual, not supported base-call subclass hooks. Character/Humanoid/
+  BaseAI/MonsterAI Awake are protected virtual, but subclasses are unnecessary for
+  resolving the installed native initialization dependency order.
+
+Fresh defaults are not companion design
+Character native ctor defaults include speed10/run20/health10; BaseAI hearRange9999;
+MonsterAI alertRange9999, circleTargetDistance10, attackPlayerObjects=true. Assign
+the independent human companion's own bounded values explicitly. Effects created
+with new EffectList are safe: its ctor initializes Array.Empty<EffectData>().
+MonsterAI.consumeItems null is guarded by UpdateConsumeItem, but an explicit empty
+list expresses disabled consumption. Do not import creature effect/voice/corpse,
+death/drop, random equipment, wandering/chase/circling or target settings.
+
+Automated evidence delivered alongside this report
+  Test-FreshHumanLifecycle.ps1: PASS, 69 read-only IL/field/lifecycle assertions.
+  inspect_script_order.py: PASS, 9 native serialized execution-order assertions.
+The script reads existing local UnityPy dependencies and only selected native
+bundles; no UnityPlayer or game process is started.
+
+Jotunn registration lifecycle - follow-up audit
+Reviewed Jotunn.dll SHA256:
+9509221046842A70F94B98BAB4CB41005DEE026823A7A79345829ED46A30F796
+CustomPrefab(GameObject,bool) only stores the prefab and fix-reference flag.
+PrefabManager.AddPrefab(CustomPrefab), IL_0050-0067, DOES reparent the supplied
+root with SetParent(PrefabContainer.transform,false). PrefabManager's native
+IManager.Init creates its Prefabs holder, parents it beneath Main.RootObject,
+and explicitly SetActive(false) at IL_003a-003b. The holder getter is internal,
+so a runtime external preflight uses reviewed reflection to assert the actual
+container is inactive before AddPrefab, then checks same parent and inactivity
+afterwards. This protects against altered container state rather than assuming it.
+RegisterToZNetScene adds references to m_prefabs/m_namedPrefabs; it does not
+instantiate or activate the candidate. AssetManager.AddAsset/GenerateAssetID/
+AddAssetToBundleLoader register a name-derived asset ID and loader metadata;
+reviewed paths have no candidate SetActive, Instantiate or lifecycle invocation.
+Test-JotunnRegistrationLifecycle.ps1 passes 23 read-only contract assertions.
+This is static lifecycle evidence only; actual registration/Awake remains NOT RUN.
+
+Verification boundary
+These are source/metadata checks, not runtime lifecycle certification. Actual
+native Unity instantiation, no-Awake-during-staging observation, valid RPC binding,
+human visual appearance, attack-animation timing, locomotion, save migration and
+replication of this new fresh-root implementation remain NOT RUN until exercised
+in Unity. Previously user-observed appearance/movement/damage on the old root is
+valuable reusable-feature evidence, not a live pass for this new composition.
