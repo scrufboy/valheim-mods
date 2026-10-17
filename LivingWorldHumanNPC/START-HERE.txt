@@ -1,0 +1,25 @@
+LIVING WORLD HUMAN NPC 0.3.34 — AUTOMATIC WAVE SITE SEARCH LAB
+
+This archive replaces the prior Human NPC lab candidate. Extract it inside the
+profile's BepInEx folder so the active DLL lands at:
+
+plugins\LivingWorldHumanNpc\LivingWorld.HumanNpc.dll
+
+This build corrects the combat controller itself:
+- bow mode cannot retain a sword or shield in an active hand;
+- sword/shield mode cannot retain the bow in an active hand;
+- a close observed attack creates one bounded shield response, not a held guard;
+- a confirmed native block releases the shield and queues a fast legal return hit;
+- the cleric points toward the patient with a blue casting glow; the recipient
+  gets a separate gold heal effect without a forced crouch or combat interruption;
+- torch ownership yields before weapons are drawn and cannot remain as a combat hand;
+- combat owns hands and posture across target changes until a complete threat scan
+  finds no remaining threat; leader hand state cannot interrupt an encounter;
+- the archer prefers the bow at usable clear-lane range and falls back to
+  sword/shield for close pressure rather than treating the bow as incidental;
+- two companions receive stable left/right rear positions and local separation;
+- native visible-back weapon stowing is restored; weapons must not disappear;
+- the Point-based cleric cast remains separate from equipment stowing.
+
+This remains a lab build. Runtime results must be established by the automatically
+installed telemetry recorder, not assumed from offline compilation.
