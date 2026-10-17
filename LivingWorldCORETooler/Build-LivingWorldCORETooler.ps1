@@ -14,8 +14,8 @@ if(Test-Path -LiteralPath $package){
     Remove-Item -LiteralPath $resolvedPackage -Recurse -Force
 }
 New-Item -ItemType Directory -Force -Path (Join-Path $package 'plugins\LivingWorldCORETooler') | Out-Null
-$source=Join-Path $root 'src\LivingWorldLabToolerPlugin.cs'
-$iconSource=Join-Path (Split-Path $root -Parent) 'ValheimToolerOwnership\icon.png'
+$source=Join-Path $root 'src\LivingWorldCoreToolerPlugin.cs'
+$iconSource=Join-Path $root 'icon.png'
 $refs=@(
     (Join-Path $BepInExDirectory 'BepInEx.dll'),
     (Join-Path $ManagedDirectory 'netstandard.dll'),
