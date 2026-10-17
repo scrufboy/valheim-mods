@@ -1,0 +1,77 @@
+HUMAN COMPOSITION 0.3.0 - CONSERVATIVE SAVED-ACTOR DECISION
+
+Status: candidate implementation. Live Unity load, migration, rendering and
+save/reload of this composition have NOT RUN. The existing 0.2.2 user's successful
+visual, path-arrival, attributed-hit and quit/reload observations do not certify
+the new native-component root or companion order restoration.
+
+Frozen evidence source (read only):
+C:/Users/scruf/.codex/.chatgpt-projects/g-p-6acbfeacfc1c81918b6bf81f40fe6336/work/LivingVillage/human-lab-0.2.2-placement-fix
+
+0.2.2 source SHA256:
+HumanRigPolicy.cs 0EB1B38BD6D4C616AB57E16183C6BB84095E31CBAED8A6B90F696578811972CE
+HumanAppearance.cs 8CDE3C6596B017A6BF01049330F7AB9C058D825770C143D498BEA4A24DB9348C
+ManualTestPlugin.cs 5E1AD0947FF57E93DA6954E5DEECBB8BCB328618A96DAFAFD633140AF98D081D
+
+Native assembly inspected by Mono.Cecil, never executed:
+D:/SteamLibrary/steamapps/common/Valheim/valheim_Data/Managed/assembly_valheim.dll
+SHA256 25A0A107DCE4D834C44C2B72D0EAFD5CB7793933BDA81816ACCFA1EA9543DACE
+
+Decision:
+- Keep registered prefab LWC_HumanScout_v1. Do not rename, destroy/recreate the
+  saved actor, change its ZDO ID, or require a new world/site/lab.
+- Keep world LWC_HumanLab_v1 and player profile LWC_Tester.
+- The visual contract remains native-human-v1, which denotes the same native
+  human visual/attachment arrangement, not a license to reinterpret the root.
+- Add independent composition revision human-components-v1. No existing saved
+  revision is silently upgraded on Start, discovery, follow, appearance or load.
+- Exact known legacy tuple (visual=native-human-v1, identity=LWC_HumanScout_v1,
+  lab tag=npc, no composition) is eligible for explicit lwtest migrate only.
+- Until the command succeeds, autonomous companion behavior is gated. The
+  candidate uses the new component root at load; it does NOT secretly retain or
+  instantiate the old creature root while waiting for consent.
+- Migration writes only two custom fields: composition origin first and new
+  composition revision last. The native-human-v1 field is not overwritten.
+- The origin is legacy-0.2.x-native-human-v1; fresh explicit spawns instead get
+  fresh-human-components-v1. A missing/unknown/conflicting revision or identity
+  fails closed and is never reset as a fresh actor.
+- A partial legacy origin write before the composition commit remains gated and
+  may be retried with an explicit migrate command. Missing current origin or
+  unknown future compositions are refused, not repaired speculatively.
+- Migration also asks the companion layer to write its separate initial Hold
+  order bound to the invoking player. Unknown existing order data is not erased.
+- Fresh metadata is allowed only on the exact new instance returned directly by
+  the explicit spawn command, with world, local player, owner and prefab checks.
+  Empty metadata on a loaded actor is NOT evidence of a new spawn.
+- No claim that rollback is safe after using 0.3.0. This remains a review candidate
+  and should not be installed over a live session or substituted into frozen 0.2.2.
+
+Concrete native code evidence supporting stable identity reuse:
+1. ZNetScene.CreateObject(ZDO), IL_0001..0051, gets saved prefab hash, resolves the
+   registered prefab, takes saved position/rotation, sets ZNetView.m_initZDO to
+   the existing ZDO, and then instantiates. No new identity required by that path.
+2. ZNetView.Awake, IL_0049..005e, consumes that existing m_initZDO into m_zdo.
+3. Character.GetHealth/GetMaxHealth read existing s_health/s_maxHealth with native
+   defaults; existing native values must not be rewritten by custom migration.
+4. BaseAI.GetPatrolPoint reads native s_patrol/s_patrolPoint. SetPatrolPoint writes
+   those keys. Companion order state is a new custom record, not a changed meaning
+   for old patrol fields.
+5. MonsterAI.SetFollowTarget consists of ldarg.0, ldarg.1, stfld m_follow, ret.
+   That old follow pointer is runtime-only. No persistent leader may be inferred
+   from an old following test or the old saved scout's existence.
+6. Humanoid.Start calls GiveDefaultItems for non-players. This is not arbitrary
+   persistent NPC inventory support. Native default loadout remains explicit.
+
+Limits of preserving native fields:
+Our metadata migration never calls ZDO.Clear, ResetZDO, SetPrefab, SetPosition,
+SetHealth, SetLevel, RemoveGlobalKey, Destroy, inventory clearing or teleport.
+Native Awake still has its own normal writes (type/distant, seed, spawnPoint,
+spawnTime and health normalization). Therefore do NOT describe an ordinary game
+load as byte-identical or claim that a behavior gate prevents all native writes.
+
+Automated evidence:
+- 87 pure migration policy checks: legacy/current/fresh/unknown/corrupt cases;
+  world-owner-explicit-consent combinations; partial commit; ordinal identity;
+  metadata serialization roundtrip; preserved unrelated sentinels.
+- These sentinels prove the migration write plan's scope, NOT actual Unity/ZDO
+  binary-save compatibility. No saved world/player file was read or written.
