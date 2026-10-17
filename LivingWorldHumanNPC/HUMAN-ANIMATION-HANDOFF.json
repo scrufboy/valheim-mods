@@ -1,0 +1,358 @@
+{
+  "Schema": 1,
+  "Purpose": "Metadata-only human animation handoff; no game meshes, controllers or clips redistributed",
+  "SourceEvidence": [
+    {
+      "Path": "C:\\Users\\scruf\\Documents\\Codex\\2026-10-13\\begin-now-dedicated-independent-valheim-living\\work\\human-npc\\assets\\Player-graph.json",
+      "SHA256": "88CC1CE858B50E73E5195FDA4AAD75E50D4D053BCE0B62980D343287797B35DD"
+    },
+    {
+      "Path": "C:\\Users\\scruf\\Documents\\Codex\\2026-10-13\\begin-now-dedicated-independent-valheim-living\\work\\human-npc\\assets\\Player-animation-assets.json",
+      "SHA256": "FDDB704CEA80A7FE8B2FCF586A98536437287D189768AF1AD5CB1D3E32B8B37A"
+    }
+  ],
+  "Avatar": "player_maleAvatar",
+  "Animator": {
+    "ApplyRootMotion": false,
+    "UpdateMode": 1,
+    "CullingMode": 1,
+    "Layers": [
+      {
+        "Index": 0,
+        "IKPass": true
+      },
+      {
+        "Index": 1,
+        "IKPass": false
+      }
+    ]
+  },
+  "HeadLook": {
+    "Enabled": 1,
+    "Weight": 0.5,
+    "BodyWeight": 0.10000000149011612,
+    "HeadWeight": 1.0,
+    "EyeWeight": 0.0,
+    "EyeTransformCount": 0,
+    "Clamp": 0.5,
+    "Adapter": "CharacterAnimEvent.m_lookAt; native smoothing, owner replication and IK retained"
+  },
+  "SkeletonPaths": [
+    "Player/Visual/Armature/Hips",
+    "Player/Visual/Armature/Hips/LeftUpLeg",
+    "Player/Visual/Armature/Hips/LeftUpLeg/LeftLeg",
+    "Player/Visual/Armature/Hips/LeftUpLeg/LeftLeg/LeftFoot",
+    "Player/Visual/Armature/Hips/LeftUpLeg/LeftLeg/LeftFoot/LeftToeBase",
+    "Player/Visual/Armature/Hips/LeftUpLeg/LeftLeg/LeftFoot/LeftToeBase/LeftToeBase_end",
+    "Player/Visual/Armature/Hips/RightUpLeg",
+    "Player/Visual/Armature/Hips/RightUpLeg/RightLeg",
+    "Player/Visual/Armature/Hips/RightUpLeg/RightLeg/RightFoot",
+    "Player/Visual/Armature/Hips/RightUpLeg/RightLeg/RightFoot/RightToeBase",
+    "Player/Visual/Armature/Hips/RightUpLeg/RightLeg/RightFoot/RightToeBase/RightToeBase_end",
+    "Player/Visual/Armature/Hips/Spine",
+    "Player/Visual/Armature/Hips/Spine/Spine1",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandIndex1",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandIndex1/LeftHandIndex2",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandIndex1/LeftHandIndex2/LeftHandIndex3",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandIndex1/LeftHandIndex2/LeftHandIndex3/LeftHandIndex3_end",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandMiddle1",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandMiddle1/LeftHandMiddle2",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandMiddle1/LeftHandMiddle2/LeftHandMiddle3",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandMiddle1/LeftHandMiddle2/LeftHandMiddle3/LeftHandMiddle3_end",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandPinky1",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandPinky1/LeftHandPinky2",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandPinky1/LeftHandPinky2/LeftHandPinky3",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandPinky1/LeftHandPinky2/LeftHandPinky3/LeftHandPinky3_end",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandRing1",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandRing1/LeftHandRing2",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandRing1/LeftHandRing2/LeftHandRing3",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandRing1/LeftHandRing2/LeftHandRing3/LeftHandRing3_end",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandThumb1",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandThumb1/LeftHandThumb2",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandThumb1/LeftHandThumb2/LeftHandThumb3",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandThumb1/LeftHandThumb2/LeftHandThumb3/LeftHandThumb3_end",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHand_Attach",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/Neck",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/Neck/Head",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/Neck/Head/Jaw",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/Neck/Head/Jaw/Jaw_end",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/Neck/Head/Helmet_attach",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandIndex1",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandIndex1/RightHandIndex2",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandIndex1/RightHandIndex2/RightHandIndex3",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandIndex1/RightHandIndex2/RightHandIndex3/RightHandIndex3_end",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandMiddle1",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandMiddle1/RightHandMiddle2",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandMiddle1/RightHandMiddle2/RightHandMiddle3",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandMiddle1/RightHandMiddle2/RightHandMiddle3/RightHandMiddle3_end",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandPinky1",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandPinky1/RightHandPinky2",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandPinky1/RightHandPinky2/RightHandPinky3",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandPinky1/RightHandPinky2/RightHandPinky3/RightHandPinky3_end",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandRing1",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandRing1/RightHandRing2",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandRing1/RightHandRing2/RightHandRing3",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandRing1/RightHandRing2/RightHandRing3/RightHandRing3_end",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandThumb1",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandThumb1/RightHandThumb2",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandThumb1/RightHandThumb2/RightHandThumb3",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHandThumb1/RightHandThumb2/RightHandThumb3/RightHandThumb3_end",
+    "Player/Visual/Armature/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand/RightHand_Attach",
+    "Player/Visual/Armature/Hips/Spine/Spine1/BackShield_attach",
+    "Player/Visual/Armature/Hips/Spine/Spine1/BackOneHanded_attach",
+    "Player/Visual/Armature/Hips/Spine/Spine1/BackTwohanded_attach",
+    "Player/Visual/Armature/Hips/Spine/Spine1/BackBow_attach",
+    "Player/Visual/Armature/Hips/Spine/Spine1/BackAtgeir_attach",
+    "Player/Visual/Armature/Hips/BackTool_attach"
+  ],
+  "Parameters": [
+    {
+      "Name": "crafting",
+      "NativeType": 3,
+      "Hash": 513315479
+    },
+    {
+      "Name": "crouching",
+      "NativeType": 4,
+      "Hash": 70061904
+    },
+    {
+      "Name": "emote_stop",
+      "NativeType": 9,
+      "Hash": 317491399
+    },
+    {
+      "Name": "emote_wave",
+      "NativeType": 9,
+      "Hash": 1908290552
+    },
+    {
+      "Name": "emote_sit",
+      "NativeType": 4,
+      "Hash": 553796351
+    },
+    {
+      "Name": "emote_sitchair",
+      "NativeType": 4,
+      "Hash": 3512848946
+    },
+    {
+      "Name": "emote_drink",
+      "NativeType": 9,
+      "Hash": 706198501
+    },
+    {
+      "Name": "emote_challenge",
+      "NativeType": 9,
+      "Hash": 3407792221
+    },
+    {
+      "Name": "emote_cheer",
+      "NativeType": 9,
+      "Hash": 689330273
+    },
+    {
+      "Name": "emote_nonono",
+      "NativeType": 9,
+      "Hash": 130827414
+    },
+    {
+      "Name": "emote_thumbsup",
+      "NativeType": 9,
+      "Hash": 1910052432
+    },
+    {
+      "Name": "emote_point",
+      "NativeType": 9,
+      "Hash": 2416707600
+    },
+    {
+      "Name": "emote_blowkiss",
+      "NativeType": 9,
+      "Hash": 347421473
+    },
+    {
+      "Name": "emote_bow",
+      "NativeType": 9,
+      "Hash": 4088757636
+    },
+    {
+      "Name": "emote_cower",
+      "NativeType": 9,
+      "Hash": 2875398086
+    },
+    {
+      "Name": "emote_cry",
+      "NativeType": 9,
+      "Hash": 3936573096
+    },
+    {
+      "Name": "emote_despair",
+      "NativeType": 9,
+      "Hash": 3179646401
+    },
+    {
+      "Name": "emote_flex",
+      "NativeType": 9,
+      "Hash": 2469051674
+    },
+    {
+      "Name": "emote_comehere",
+      "NativeType": 9,
+      "Hash": 1216321105
+    },
+    {
+      "Name": "emote_kneel",
+      "NativeType": 9,
+      "Hash": 3322048799
+    },
+    {
+      "Name": "emote_laugh",
+      "NativeType": 9,
+      "Hash": 87865522
+    },
+    {
+      "Name": "emote_roar",
+      "NativeType": 9,
+      "Hash": 3400462225
+    },
+    {
+      "Name": "emote_shrug",
+      "NativeType": 9,
+      "Hash": 2004913324
+    },
+    {
+      "Name": "emote_headbang",
+      "NativeType": 9,
+      "Hash": 2601142347
+    },
+    {
+      "Name": "emote_dance",
+      "NativeType": 9,
+      "Hash": 1071777371
+    },
+    {
+      "Name": "emote_toast",
+      "NativeType": 9,
+      "Hash": 2498990964
+    },
+    {
+      "Name": "emote_rest",
+      "NativeType": 9,
+      "Hash": 1454292897
+    },
+    {
+      "Name": "emote_relax",
+      "NativeType": 9,
+      "Hash": 227813659
+    },
+    {
+      "Name": "emote_vibe",
+      "NativeType": 9,
+      "Hash": 3921662576
+    },
+    {
+      "Name": "emote_loveyou",
+      "NativeType": 9,
+      "Hash": 1524435184
+    }
+  ],
+  "RelevantClips": [
+    {
+      "Name": "Sitting idle",
+      "Events": [],
+      "ForbiddenForSocial": false,
+      "GameplayWiringVerified": false
+    },
+    {
+      "Name": "Player_Sit_Chair",
+      "Events": [],
+      "ForbiddenForSocial": false,
+      "GameplayWiringVerified": false
+    },
+    {
+      "Name": "Standing Up from sit",
+      "Events": [],
+      "ForbiddenForSocial": false,
+      "GameplayWiringVerified": false
+    },
+    {
+      "Name": "Workbench",
+      "Events": [],
+      "ForbiddenForSocial": false,
+      "GameplayWiringVerified": false
+    },
+    {
+      "Name": "KneelDeath",
+      "Events": [
+        {
+          "Function": "Die",
+          "Time": 3.9666666984558105
+        }
+      ],
+      "ForbiddenForSocial": true,
+      "GameplayWiringVerified": false
+    },
+    {
+      "Name": "Wave",
+      "Events": [],
+      "ForbiddenForSocial": false,
+      "GameplayWiringVerified": false
+    },
+    {
+      "Name": "Cheer",
+      "Events": [],
+      "ForbiddenForSocial": false,
+      "GameplayWiringVerified": false
+    },
+    {
+      "Name": "Bow",
+      "Events": [],
+      "ForbiddenForSocial": false,
+      "GameplayWiringVerified": false
+    },
+    {
+      "Name": "Despair",
+      "Events": [],
+      "ForbiddenForSocial": false,
+      "GameplayWiringVerified": false
+    },
+    {
+      "Name": "Kneel Start",
+      "Events": [],
+      "ForbiddenForSocial": false,
+      "GameplayWiringVerified": false
+    },
+    {
+      "Name": "Kneel Loop",
+      "Events": [],
+      "ForbiddenForSocial": false,
+      "GameplayWiringVerified": false
+    },
+    {
+      "Name": "hammer_Swing",
+      "Events": [],
+      "ForbiddenForSocial": false,
+      "GameplayWiringVerified": false
+    }
+  ],
+  "AuthoringRules": [
+    "No Player root/controller lifecycle on NPC",
+    "No root displacement in new social/work clips",
+    "No Die/Hit/OnAttackTrigger event in friendly emote or work loop",
+    "Native combat interrupts work/social pose",
+    "New clips require enter/loop/exit, cancellation, held-tool alignment and both body-model checks",
+    "Never reuse KneelDeath for surrender: Die event is present",
+    "No new animations authored by this report"
+  ],
+  "Runtime": "NOT RUN; static extracted asset metadata only"
+}
