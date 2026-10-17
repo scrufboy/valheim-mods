@@ -1,0 +1,20 @@
+{
+  "Schema": 1,
+  "Files": [
+    {
+      "Source": "build-verification.json",
+      "Destination": "build-verification.json",
+      "Sha256": "68A8D061F2519C5336C524F40D47909FD93AEF542B667902E7E717CF4CA07E29"
+    },
+    {
+      "Source": "plugins/LivingWorldHumanNpc/LivingWorld.HumanNpc.dll",
+      "Destination": "plugins/LivingWorldHumanNpc/LivingWorld.HumanNpc.dll",
+      "Sha256": "8575846E75CE86ACE270875520D6090767CE3D5EB6590D9BA8EA91195A6DC3E6"
+    },
+    {
+      "Source": "plugins/LivingWorldHumanNpc/START-HERE.txt",
+      "Destination": "plugins/LivingWorldHumanNpc/START-HERE.txt",
+      "Sha256": "9EFCC93A1BDEA103DD57AB8B2D817DC6D45C5AAE8C7F5455722FA4BA700CD4DB"
+    }
+  ]
+}
