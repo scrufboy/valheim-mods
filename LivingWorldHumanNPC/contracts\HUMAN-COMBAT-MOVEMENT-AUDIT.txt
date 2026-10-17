@@ -1,0 +1,67 @@
+HUMAN COMBAT MOVEMENT - READ-ONLY NATIVE CODE/ASSET AUDIT
+
+Status: semantics inspected offline. Native combat quality, lateral movement,
+attack timing and paths in the new composition have NOT RUN in Unity.
+No creature/template settings or legacy implementation code are reused.
+
+Native assembly SHA256:
+25A0A107DCE4D834C44C2B72D0EAFD5CB7793933BDA81816ACCFA1EA9543DACE
+Native sword bundle: Valheim_Data/StreamingAssets/SoftRef/Bundles/c4210710
+Prefab: Assets/GameElements/Items/weapons/SwordBronze.prefab
+ItemDrop serialized component path ID: 335845937936352307
+
+Circle interval/duration:
+MonsterAI.UpdateAI IL_03eb..0476 requires circleTargetInterval > 0 and a creature
+target. It accumulates pauseTimer with dt. After interval, it calls native
+RandomMovementArroundPoint(target.position, circleTargetDistance, IsAlerted),
+then EARLY RETURNS before normal weapon selection/attack decisions. After
+interval+duration it resets the timer to Random(0, interval/10), still executing
+the circle branch for that tick. Initial timer is randomized in MonsterAI.Awake.
+This is a periodic brief reposition window, not continuous strafe-while-attacking.
+
+Circle distance:
+BaseAI.RandomMovementArroundPoint IL_0026..00be uses the horizontal target-to-actor
+direction and rotates it +/-40 degrees (+/-90 when the actor is closer than half
+the radius), then chooses target.position + rotatedDirection * circleDistance.
+Distance is absolute target-centre radius, NOT added to sword attack range.
+The routine changes waypoint only after m_randomCircleInterval; zero would let
+it choose a different random waypoint every update. A positive 1-second interval
+avoids that degenerate constantly-replanned candidate configuration.
+IL_01b5..01ed delegates actual motion to native MoveTo.
+
+Attack range is separate:
+MonsterAI.UpdateAI IL_0863..08b9 subtracts target.GetRadius from centre distance
+and compares to item.m_shared.m_aiAttackRange. The native sword asset has:
+- m_aiAttackRange = 2m
+- m_aiAttackRangeMin = 0m
+- m_aiAttackInterval = 2s
+- m_attack.m_attackRange = approximately 2.4m (hit geometry, a different field)
+- attack animation = swing_longsword
+- chargeAnimationBool = empty; requiresReload=false; bowDraw=false
+These exact fields were re-read from the installed native asset, not inferred
+from a web guide. inspect_human_sword.py passed seven native asset assertions.
+
+The charging-named switch:
+MonsterAI.UpdateAI IL_061b..06b0 selects m_circulateWhileCharging for grounded
+actors, then checks target exists, weapon exists, !weaponReady and !InAttack.
+weaponReady includes attack cooldowns (IL_0477..04d9), not only a charge state.
+That branch calls RandomMovementArroundPoint with m_randomMoveRange, NOT
+m_circleTargetDistance. With randomMoveRange=0 it chooses the target centre.
+RandomMovementArroundPoint also calls ChargeStop at IL_0000. Therefore this
+switch is left false for the noncharging sword; it is not a useful way to enable
+the separate periodic lateral movement while retaining zero idle wander.
+
+Explicit human candidate settings chosen by the implementation owner:
+m_randomCircleInterval=1s; m_circleTargetDistance=3m;
+m_circleTargetDuration=1.5s; m_circleTargetInterval=6s;
+m_circulateWhileCharging=false; m_circulateWhileChargingFlying=false.
+These are deliberate small human-melee reposition settings, not inherited values.
+They preserve native normal attack decisions outside brief lateral windows.
+They are NOT gameplay-tuned/certified. A 2.5m/1s alternative is also semantically
+reasonable; either can be outside immediate sword range for some target radii,
+but native normal approach resumes after the window. The reviewer must not
+claim that either numeric radius guarantees an orbit or a successful sword hit.
+
+Bounded companion engagement remains separate from native circling geometry;
+its custom target selection must continue to reject unprovoked wildlife and
+clear forbidden/stale combat rather than relying on native faction relationships.
