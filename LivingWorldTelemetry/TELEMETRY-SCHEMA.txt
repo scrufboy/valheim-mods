@@ -1,0 +1,38 @@
+LWC LIVE TELEMETRY SCHEMA 2
+
+Format: UTF-8 JSON Lines. One complete JSON object per line.
+
+The recorder starts at world readiness, rotates files at a safety limit, and closes
+on world exit. No player command or manual marker is part of this version.
+
+Every record: schema, session, category, wallUtc, elapsed; actor when applicable.
+
+Categories emitted in 0.2.0:
+- RunStart / RunSummary / RecorderFault.
+- ActorState: identity, role, health, Wet, every active/stowed hand slot, current
+  weapon, ammunition, combat target, door result, posture, presence and activity.
+- PositionSample: position/velocity, leader-relative formation position, nearest
+  companion distance and target distance.
+- Observation: player Wet state and health.
+- WeaponAssessment / WeaponIntent: exact live policy inputs, rejection reason and
+  requested equipment mode.
+- AttackAttempt: requested native attack and whether Valheim accepted it.
+- AttackTrigger: actual attack animation event reaching its execution boundary.
+- BlockAttempt / BlockResult: incoming impact, equipped blocker, block timer,
+  success and whether the real native under-0.25-second timed window was satisfied.
+- Damage: actual pre/post health change and attacker when known.
+- AttackEffect: actual pre/post health change from healing.
+- HealAssessment / HealPhase: eligibility, casting, cancellation and patient.
+- HealthChangeObserved: fallback for health changes missed by native hooks.
+
+Bounds:
+- 0.5 second position sample interval.
+- 50 total records per second.
+- 200,000 records or 64 MiB per file, followed by automatic rotation.
+- Dropped records are counted in each RunSummary.
+
+Interpretation limits:
+- Telemetry records exposed runtime facts; it does not invent hidden enemy intent.
+- A request is not a successful action. Separate accepted/trigger/result records
+  make that distinction explicit.
+- It observes and writes evidence. It never changes NPC decisions or gameplay.
