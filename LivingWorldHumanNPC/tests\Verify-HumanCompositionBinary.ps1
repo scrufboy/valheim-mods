@@ -49,6 +49,10 @@ try {
     Require (@($environmentCalls | Where-Object {$_.Operand.FullName -match 'ShieldGenerator::IsInsideShield'}).Count -eq 1) 'environment adapter reads native shield protection'
     Require (@($environmentCalls | Where-Object {$_.Operand.FullName -match 'SEMan::AddStatusEffect'}).Count -eq 1) 'environment adapter applies native Wet through SEMan once'
     Require (@($environmentCalls | Where-Object {$_.Operand.FullName -match 'SEMan::RemoveStatusEffect'}).Count -eq 0) 'environment adapter leaves native drying and water Wet untouched'
+    $environmentType=@($types | Where-Object FullName -eq LivingWorld.HumanNpc.HumanEnvironmentStatus)[0]
+    Require (@($environmentType.Fields | Where-Object {$_.Name -eq 'TriggerStartEffects' -and $_.FieldType.FullName -eq 'System.Reflection.MethodInfo'}).Count -eq 1) 'wet presentation caches the exact native start-effect method contract'
+    Require (@($environment.Body.Instructions | Where-Object {$_.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Stfld -and $_.Operand.FullName -match 'StatusEffect::m_effectsOnlyOnPlayer'}).Count -eq 1) 'wet presentation changes only the actor runtime status player-only gate'
+    Require (@($environmentCalls | Where-Object {$_.Operand.FullName -match 'System.Reflection.MethodBase::Invoke'}).Count -eq 1) 'wet presentation retriggers the native networked start effect once'
     $apply=FindMethod LivingWorld.HumanNpc.NativeHumanFactory ApplyVisual
     $applyCalls=@(Calls $apply)
     Require (@($applyCalls | Where-Object {$_.Operand.Name -eq 'Instantiate'}).Count -eq 1) 'one human visual subtree instantiate in visual adapter'
@@ -70,4 +74,3 @@ try {
     "HumanCompositionBinary PASS: $checks independent IL checks. Binary SHA256: $((Get-FileHash -LiteralPath $AssemblyPath -Algorithm SHA256).Hash)"
     'Unity load, migration, pathfinding, attacks and save/reload NOT RUN by this audit.'
 } finally {$assembly.Dispose()}
-
