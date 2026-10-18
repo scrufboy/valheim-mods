@@ -55,6 +55,7 @@ namespace LivingWorld.HumanNpc
                 root.AddComponent<HumanFollowPresence>();
                 root.AddComponent<HumanCompanionPosture>();
                 root.AddComponent<HumanResources>().Configure(player.GetComponent<Player>());
+                root.AddComponent<HumanEnvironmentStatus>();
                 root.AddComponent<HumanIdentity>();
                 root.AddComponent<HumanPartyConfidence>();
                 root.AddComponent<HumanCompanionAmbient>();
@@ -290,3 +291,4 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
+
