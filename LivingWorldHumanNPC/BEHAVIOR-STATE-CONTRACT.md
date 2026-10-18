@@ -14,6 +14,15 @@ The companion has one persistent order and one exclusive action owner.
 
 Changing action state must not erase the persistent order. Combat entered from Follow returns to Follow; combat entered from Hold returns to Hold.
 
+### Tactical directive
+
+Each companion may also hold one explicit tactical directive. This is separate from the persistent order and from the exclusive action owner.
+
+- **Guard**: the normal companion directive. Observe, protect, and respond to authorized threats without initiating attacks on peaceful wildlife.
+- **Hunt**: a future role/class directive. It authorizes bounded hunting of eligible nearby wildlife while the companion remains under Follow or Hold.
+
+Directives are assigned per companion or to the whole party. This permits one companion to guard while another hunts. A directive may change which peaceful targets can be acquired, but it never outranks active hostile combat, incapacitation, or an explicit regroup order.
+
 ### Exclusive action owner, highest priority first
 
 1. **Dead or incapacitated**
@@ -122,6 +131,32 @@ Resident mode is separate from companion Follow/Hold behavior.
 - Dwelling, bed, workstation, food, repair, steward assignments, and town schedules belong to Resident mode.
 - Town weapon etiquette may require stowing, but it cannot override active defense.
 - Resident work and companion combat share identity and embodiment, not concurrent decision loops.
+
+## Future Hunt directive
+
+Hunt is not ordinary combat awareness and must not leak into Guard.
+
+- Hunt may acquire only explicitly allow-listed wildlife within its configured range, line of sight, ammunition, safety, and pursuit bounds.
+- A hunting companion leases one quarry at a time. Party claim ownership prevents two hunters from wasting shots or pursuing the same quarry unless coordination is intentionally requested.
+- An active hostile threat immediately cancels the hunting lease and transfers exclusive ownership to combat. After verified combat clear, the companion may resume Hunt or return to formation according to its order.
+- A completed, escaped, invalid, or out-of-bounds quarry releases the lease. The companion then retrieves permitted drops or returns to formation; it does not wander indefinitely.
+- Birds require a separate huntable-target adapter: Valheim birds are `RandomFlyingBird` objects, not `Character`/`MonsterAI` combatants. They must never be inserted into the normal hostile-character authorization path merely to make archery target them.
+- Fish and any later non-`Character` quarry require the same explicit adapter boundary rather than special cases scattered through combat code.
+
+This section defines a future interface only. It is not implemented by the 0.3.44 test build.
+
+## Future controller command wheel
+
+Companion commands must be fully usable from a controller without a mouse cursor.
+
+- Hold one configurable, conflict-checked controller chord to open the radial wheel.
+- The left or right stick selects a wedge; releasing the chord confirms; the controller cancel button closes it without changing an order.
+- The first selection chooses the recipient: whole party or the companion currently looked at. The command layer then exposes only valid actions such as Follow, Hold, Regroup, Guard, and Hunt.
+- Guard and Hunt are directives, so different companions may use them simultaneously while sharing the same Follow or Hold order.
+- The wheel writes one explicit command into the existing state model. It does not run combat logic, duplicate decisions, or become another behavior loop.
+- Keyboard bindings and console commands remain equivalent paths for testing and accessibility.
+
+The input chord and final wedge layout must be selected only after checking the live Valheim, mod, and controller bindings for conflicts. This section is design authority, not a claim that the wheel exists in 0.3.44.
 
 ## Non-regression rule
 
