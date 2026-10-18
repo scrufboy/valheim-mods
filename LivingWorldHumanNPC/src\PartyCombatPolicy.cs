@@ -25,11 +25,22 @@ namespace LivingWorld.HumanNpc
             return distance >= boundary ? PartyWeapon.Bow : PartyWeapon.SwordShield;
         }
 
-        public static bool Torch(bool dark, bool nearbyLight, bool stealth, bool combat,
-            bool handsBusy, bool fogKnown, float fogDensity, bool mist)
+        public static float PerceivedLight(float red, float green, float blue, float intensity)
         {
-            return dark && !nearbyLight && !stealth && !combat && !handsBusy &&
-                fogKnown && Finite(fogDensity) && fogDensity >= 0 && fogDensity < 0.02f && !mist;
+            if (!Finite(red) || !Finite(green) || !Finite(blue) || !Finite(intensity) ||
+                red < 0 || green < 0 || blue < 0 || intensity < 0) return Single.PositiveInfinity;
+            // Rec. 709 luminance reflects perceived brightness. Using the
+            // brightest RGB channel made Valheim's blue night light read as
+            // daylight even when the scene was visibly dark.
+            return (red * .2126f + green * .7152f + blue * .0722f) * intensity;
+        }
+
+        public static bool Torch(bool dark, bool nearbyLight, bool stealth, bool combat, bool handsBusy)
+        {
+            // Weather is not a reason to discard useful light. Combat, stealth,
+            // occupied hands, sufficient ambient light and a nearby built light
+            // are the complete utility-light arbitration order.
+            return dark && !nearbyLight && !stealth && !combat && !handsBusy;
         }
 
         public static bool HealEligible(bool ally, bool alive, bool owned, bool visible,
@@ -50,3 +61,4 @@ namespace LivingWorld.HumanNpc
         static bool Finite(float value) { return !Single.IsNaN(value) && !Single.IsInfinity(value); }
     }
 }
+
