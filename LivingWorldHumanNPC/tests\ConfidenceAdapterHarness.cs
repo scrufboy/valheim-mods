@@ -82,6 +82,7 @@ namespace LivingWorld.HumanNpc
         public Player leader;public long party=7;public bool ready=true,combat;
         internal Player PresenceLeader{get{return combat?null:leader;}}
         public bool CombatReadinessActive{get{return combat;}}
+        public bool CombatOwnsActor{get{return combat;}}
         internal bool TryGetConfidenceParty(out long partyId,out Player bound){partyId=party;bound=leader;return ready;}
     }
 }
@@ -171,3 +172,4 @@ static class ConfidenceAdapterHarness
         Console.WriteLine("ConfidenceAdapterHarness PASS: "+checks+" actual-adapter checks with managed doubles. Unity sensing NOT RUN.");
     }
 }
+

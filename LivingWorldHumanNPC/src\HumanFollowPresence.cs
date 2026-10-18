@@ -171,11 +171,9 @@ namespace LivingWorld.HumanNpc
             ObserveLeader(leader);
             Character awareness = companion == null ? null : companion.AwarenessTarget;
             bool eligible = leader != null && leader.m_eye != null;
-            // Social gaze never competes with combat aim. Include native attack,
-            // draw and alert phases so a brief target transition cannot twist
-            // the head back toward the leader between bow releases.
-            bool combat = companion != null && companion.CombatReadinessActive;
-            combat |= body != null && (body.InAttack() || body.IsDrawingBow() || body.IsBlocking());
+            // Social gaze never competes with combat aim. The companion's one
+            // combat-owner state controls this handoff; animation details do not.
+            bool combat = companion != null && companion.CombatOwnsActor;
             if (combat) { ReleaseLook(); return; }
             if (awareness != null)
             {

@@ -59,6 +59,11 @@ namespace LivingWorld.HumanNpc
         public bool HasAuthorizedCombat { get { return authorizedTarget != null; } }
         public bool CombatReadinessActive
         { get { return authorizedTarget != null || (encounterOwned && (!encounterClearObserved || Time.time < encounterUntil)); } }
+        // Single ownership boundary consumed by every non-combat subsystem.
+        // Native attack/draw/block details are consequences of combat, never
+        // separate votes that can independently enter or exit this state.
+        public bool CombatOwnsActor { get { return CombatReadinessActive; } }
+        public bool CompanionBehaviorAllowed { get { return !CombatOwnsActor; } }
         public bool AreaClearVerified
         { get { return authorizedTarget == null && !encounterOwned && encounterClearObserved && !awarenessAlarmed; } }
         public Character TargetCreature { get { return authorizedTarget; } }
@@ -293,6 +298,13 @@ namespace LivingWorld.HumanNpc
             encounterOwned = true; encounterClearObserved = false; encounterUntil = Time.time + 1.5f;
             lastAttributedDamage = CompanionPolicy.Finite(damage) && damage > 0 ? Time.time : Single.NegativeInfinity;
             retiredPursuitTarget = null;
+            // Finish the companion-to-combat handoff in this same call.  No
+            // cleric cast or utility torch may survive into MonsterAI's first
+            // combat update; ambient/posture was released immediately above.
+            var cleric = GetComponent<HumanCleric>();
+            if (cleric != null) cleric.InterruptForCombat();
+            var torch = GetComponent<HumanUtilityTorch>();
+            if (torch != null) torch.ReleaseForWeapons();
             status = explicitOrder ? "Explicit combat: bounded pursuit; nearby active defense continues" : "Native active-threat / attributed-damage defense";
             return true;
         }

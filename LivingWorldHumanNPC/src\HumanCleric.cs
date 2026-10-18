@@ -20,6 +20,10 @@ namespace LivingWorld.HumanNpc
         bool fault;
         static readonly MethodInfo Look = typeof(BaseAI).GetMethod("LookAt", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new[] { typeof(Vector3) }, null);
         public bool Casting { get { return patient != null; } }
+        internal void InterruptForCombat()
+        {
+            if (patient != null) Cancel("cast interrupted by combat handoff; no heal delivered");
+        }
         public string Describe() { return "cleric=" + IsCleric(gameObject) + "; reserve=" + (reserve == null ? "pending" : reserve.Current.ToString("F1")) + "; cooldown=" + cooldown.ToString("F1") + "; casting=" + Casting + "; fault=" + fault; }
 
         internal static bool IsCleric(GameObject actor)
@@ -51,7 +55,7 @@ namespace LivingWorld.HumanNpc
                 reserve.Advance(dt, 2, 0, 1, !Casting);
                 if (Casting)
                 {
-                    if (companion.CombatReadinessActive || body.IsStaggering() || !Eligible(patient))
+                    if (companion.CombatOwnsActor || body.IsStaggering() || !Eligible(patient))
                     { Cancel("cast interrupted by personal combat; no heal delivered"); return; }
                     ai.StopMoving();
                     if (Look == null) throw new MissingMethodException("BaseAI.LookAt");
@@ -71,7 +75,7 @@ namespace LivingWorld.HumanNpc
                         Save();
                     }
                 }
-                else if (!companion.CombatReadinessActive && Time.time >= nextScan && cooldown <= 0 && reserve.Have(25) &&
+                else if (companion.CompanionBehaviorAllowed && Time.time >= nextScan && cooldown <= 0 && reserve.Have(25) &&
                     !body.InAttack() && !body.IsStaggering())
                 {
                     nextScan = Time.time + .5f;

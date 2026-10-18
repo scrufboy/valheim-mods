@@ -87,7 +87,7 @@ namespace LivingWorld.HumanNpc
             // leader is the established readiness signal. Town etiquette is a
             // separate future rule and must not erase party mirroring.
             return Owner() && companion != null &&
-                (companion.CombatReadinessActive || LeaderReady(companion.PartyLeader));
+                (companion.CombatOwnsActor || LeaderReady(companion.PartyLeader));
         }
 
         internal bool EnsureCombatReady()
@@ -149,7 +149,7 @@ namespace LivingWorld.HumanNpc
             try
             {
                 if (!HandsSafe()) return;
-                bool threat = companion != null && companion.CombatReadinessActive;
+                bool threat = companion != null && companion.CombatOwnsActor;
                 bool show = WantsWeapons();
                 if (show)
                 {
@@ -195,3 +195,4 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
+

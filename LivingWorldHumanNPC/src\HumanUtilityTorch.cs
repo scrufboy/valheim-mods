@@ -33,11 +33,13 @@ namespace LivingWorld.HumanNpc
                 long owner; Player leader;
                 if (!companion.TryGetConfidenceParty(out owner, out leader) || leader == null) { Extinguish(); return; }
                 var readiness = GetComponent<HumanEquipmentReadiness>();
-                var combatAi = GetComponent<MonsterAI>();
-                bool combatLocked = companion.CombatReadinessActive || body.InAttack() || body.IsStaggering() ||
-                    body.IsBlocking() || (combatAi != null && (combatAi.IsAlerted() || combatAi.GetTargetCreature() != null));
-                if (readiness != null && readiness.WantsWeapons()) combatLocked = true;
-                if (combatLocked || !companion.AreaClearVerified) { lastCombat = Time.time; ReleaseForWeapons(); return; }
+                if (companion.CombatOwnsActor)
+                { lastCombat = Time.time; ReleaseForWeapons(); return; }
+                // A peaceful leader-readiness signal can reserve the hands, but
+                // it is not combat and cannot mutate the combat-clear timer.
+                if (readiness != null && readiness.WantsWeapons())
+                { ReleaseForWeapons(); return; }
+                if (!companion.AreaClearVerified) { ReleaseForWeapons(); return; }
                 // Torches are companion ambience, never combat equipment. A
                 // full five quiet seconds must follow the last combat signal so
                 // a transient target/alert gap cannot put one back in a hand.
@@ -54,7 +56,7 @@ namespace LivingWorld.HumanNpc
                 float fog = known ? Mathf.Max(environment.m_fogDensityNight, environment.m_fogDensityMorning,
                     environment.m_fogDensityDay, environment.m_fogDensityEvening) : 1f;
                 bool dark = AmbientDark(known);
-                bool allowed = PartyCombatPolicy.Torch(dark, NearbyLight(), leader.IsCrouching(), companion.CombatReadinessActive,
+                bool allowed = PartyCombatPolicy.Torch(dark, NearbyLight(), leader.IsCrouching(), companion.CombatOwnsActor,
                     busy, known, fog, Mister.InsideMister(transform.position, 1f));
                 if (!allowed) { Extinguish(); return; }
                 if (eligibleSince < 0) eligibleSince = Time.time;

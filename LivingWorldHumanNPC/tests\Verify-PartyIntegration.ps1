@@ -38,6 +38,8 @@ try {
  Has $companion ThreatPriority 'CompanionPolicy::ThreatPriority'
  Has $companion FindActiveThreat 'CompanionPolicy::ShouldSwitchThreat'
  Has $companion Authorize 'get_DetectionLeash'
+ Has $companion Authorize 'HumanCleric::InterruptForCombat'
+ Has $companion Authorize 'HumanUtilityTorch::ReleaseForWeapons'
  Has $companion FindActiveThreat 'get_DetectionLeash'
  $findThreat=Method $companion FindActiveThreat
  $drops=@($findThreat.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'DropCombatTarget'})
@@ -48,7 +50,6 @@ try {
  Has $lab TryFindWaveSite 'Pathfinding::GetPath'
  Has $lab TryFindWaveSite 'Quaternion::AngleAxis'
  Require (@(Strings (Method $lab SpawnWave)|Where-Object {$_ -like '*face a clearer approach*'}).Count -eq 0) 'wave spawn no longer refuses one fixed facing point'
- Has $equipment AfterSelect 'HumanPartyEquipment::Equip'
  Has $equipment Update 'HumanCompanionPosture::get_OwnsAmbientHands'
  Has $equipment Update 'HumanEquipmentReadiness::EnsureCombatReady'
  Has $equipment PrepareArcher 'ManualTestPlugin::GuardWorld'
@@ -56,22 +57,14 @@ try {
  Has $equipment SaveInventory 'Inventory::Save'
  Has $equipment RestoreInventory 'Inventory::Load'
  Has $equipment RestoreInventory 'Humanoid::EquipItem'
- Has $equipment AdvanceDraw 'System.Reflection.MethodBase::Invoke'
- Require (@(Calls (Method $equipment AdvanceDraw)|Where-Object {$_.Contains('Attack::StartDraw') -or $_.Contains('Character::UseStamina')}).Count -eq 0) 'equipment does not simulate the Player bow draw loop'
- Require ('LookAt' -in (Strings (Method $equipment '.cctor'))) 'equipment reflects the native BaseAI LookAt boundary'
  Has $equipment BeforeBowRelease 'PartyCombatPolicy::BowReleaseBridge'
- Has $equipment AfterSelect 'PartyCombatPolicy::Weapon'
- Has $equipment ObserveBlock 'Character::InAttack'
- Has $equipment ObserveBlock 'BaseAI::CanSeeTarget'
- Has $equipment ObserveBlock 'PartyCombatPolicy::ReactToAttack'
- Require ('BlockAttack' -in (Strings (Method $equipment InstallPatches))) 'equipment reflects the native BlockAttack boundary'
  Has $equipment InstallPatches 'HarmonyLib.Harmony::Patch'
- Has $equipment AfterNativeBlock 'OnBlockResolved'
- Has $equipment TryRiposte 'System.Reflection.MethodBase::Invoke'
  Require ('DoAttack' -in (Strings (Method $equipment '.cctor'))) 'equipment reflects the native MonsterAI DoAttack boundary'
- Require (@(Strings (Method $equipment TryRiposte)|Where-Object {$_ -eq 'native MonsterAI return strike started after confirmed block'}).Count -eq 1) 'riposte reports native attack execution'
- Has $equipment Unequip 'Humanoid::UnequipItem'
- Has $equipment MayAttack 'LaneClear'
+ Has $equipment MayAttack 'HasAmmo'
+ $combatUpdateCalls=Calls (Method $equipment Update)
+ Require (@($combatUpdateCalls|Where-Object {$_ -match 'LookAt|DoAttack|PartyCombatPolicy::Weapon|ReactToAttack|EquipItem|UnequipItem'}).Count -eq 0) 'equipment update does not run a parallel combat controller'
+ Require (@($equipment.Methods|Where-Object {$_.Name -in @('AfterSelect','AdvanceDraw','ObserveBlock','TryRiposte','OnBlockResolved')}).Count -eq 0) 'manual weapon, draw, block and riposte decision methods removed'
+ Require (@(Strings (Method $equipment InstallPatches)|Where-Object {$_ -eq 'BlockAttack'}).Count -eq 0) 'equipment does not patch native block decisions'
  Require (@(Calls (Method $equipment MayAttack)|Where-Object {$_.Contains('GetAttackDrawPercentage')}).Count -eq 0) 'bow permission never waits on a Player-only draw percentage'
  $validate=Method $equipment ValidateItems
  Require (@($validate.Body.Instructions|Where-Object {$_.Operand -is [Mono.Cecil.FieldReference] -and $_.Operand.Name -eq 'm_aiAttackInterval'}).Count -eq 0) 'party equipment does not impose a slower bow attack interval'
@@ -150,3 +143,4 @@ try {
  Require ($circulate.OpCode.Code.ToString() -eq 'Ldc_I4_1') 'native circulate-while-charging is enabled'
  'PartyIntegration PASS: '+$checks+' compiled integration/native-contract assertions. No Unity acceptance claimed.'
 } finally {$party.Dispose();$native.Dispose()}
+

@@ -48,7 +48,7 @@ try {
  Has (Method $presence BeforeFollow) 'GetComponent<LivingWorld.HumanNpc.HumanFollowPresence>'
  Has (Method $presence BeforeHeadLook) 'GetComponentInParent<LivingWorld.HumanNpc.HumanFollowPresence>'
  Has (Method $presence Attention) 'CompanionPresencePolicy::AttendLeader'
- Has (Method $presence Attention) 'HumanCompanion::get_CombatReadinessActive'
+Has (Method $presence Attention) 'HumanCompanion::get_CombatOwnsActor'
  Has (Method $presence Leader) 'HumanCompanion::get_PresenceLeader'
  $pose=$candidate.MainModule.Types | Where-Object Name -eq HumanCompanionPosture
  Has (Method $presence Follow) 'HumanCompanionPosture::Refresh'
@@ -65,7 +65,7 @@ try {
  Require ($stow.Count -eq 1 -and $stow[0].Previous.OpCode.Code.ToString() -eq 'Ldc_I4_1' -and $stow[0].Previous.Previous.OpCode.Code.ToString() -eq 'Ldc_I4_0') 'readiness transaction uses native HideHandItems(false,true) stow path'
  Has (Method $readiness SyncBackVisuals) 'VisEquipment::SetLeftBackItem'
  Has (Method $readiness SyncBackVisuals) 'VisEquipment::SetRightBackItem'
- Has (Method $readiness WantsWeapons) 'HumanCompanion::get_CombatReadinessActive'
+Has (Method $readiness WantsWeapons) 'HumanCompanion::get_CombatOwnsActor'
  Require (@(Calls (Method $readiness WantsWeapons) | Where-Object {$_ -match 'get_PresenceLeader|VisibleCombat'}).Count -eq 0) 'companion weapon draw is threat-driven, never copied from leader hand state'
  foreach($name in @('AfterCrouching','AfterSitting')){
    Has (Method $pose $name) 'GetComponent<LivingWorld.HumanNpc.HumanCompanionPosture>'

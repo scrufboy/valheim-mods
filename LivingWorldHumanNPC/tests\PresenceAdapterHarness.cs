@@ -130,6 +130,7 @@ namespace LivingWorld.HumanNpc
         public Player PresenceLeader { get { return eligible && !combat ? leader : null; } }
         public bool HasAuthorizedCombat { get { return combat; } }
         public bool CombatReadinessActive { get { return combat; } }
+        public bool CombatOwnsActor { get { return combat; } }
         public Character AwarenessTarget { get { return awareness; } }
     }
     public class HumanDoorTraversal : MonoBehaviour
@@ -194,3 +195,4 @@ static class PresenceAdapterHarness
         Console.WriteLine("PresenceAdapterHarness PASS: "+checks+" actual-adapter checks with managed doubles. Unity NOT RUN.");
     }
 }
+

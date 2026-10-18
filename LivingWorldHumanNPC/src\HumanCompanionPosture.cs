@@ -96,11 +96,9 @@ namespace LivingWorld.HumanNpc
                 if (!wantsRest || !restRequested || leader != restingLeader)
                 { settledAt = Time.time; restingLeader = leader; }
                 restRequested = wantsRest;
-                // Leader mimicry is peaceful-only. Native alert, blocking,
-                // attack and bow draw phases keep the fighter upright even if
-                // the leader is hiding or the authorized target changes.
-                bool combat = companion != null && companion.CombatReadinessActive;
-                combat |= body != null && (body.InAttack() || body.IsDrawingBow() || body.IsBlocking());
+                // Leader mimicry is peaceful-only. The single combat-owner
+                // state keeps the fighter upright; animations do not vote.
+                bool combat = companion != null && companion.CombatOwnsActor;
                 var next = CompanionPosturePolicy.Choose(leader != null, combat,
                     safe, crouched, sitting, arrived, passageClear, Time.time - settledAt);
                 if (leader == null || !safe || crouched || sitting || !passageClear) StopAmbient();
@@ -221,3 +219,4 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
+
