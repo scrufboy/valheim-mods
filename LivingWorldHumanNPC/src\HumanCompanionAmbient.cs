@@ -17,7 +17,9 @@ namespace LivingWorld.HumanNpc
         static readonly MethodInfo Look = typeof(BaseAI).GetMethod("LookAt", Native, null, new[] { typeof(Vector3) }, null);
         static long sessions;
         struct StationLease { internal HumanCompanionAmbient Actor; internal ActivityToken Token; }
+        struct GuardLease { internal HumanCompanionAmbient Actor; internal ActivityToken Token; }
         static readonly Dictionary<CraftingStation, StationLease> Claims = new Dictionary<CraftingStation, StationLease>();
+        static readonly Dictionary<string, GuardLease> GuardClaims = new Dictionary<string, GuardLease>();
         readonly Collider[] discovery = new Collider[192], clearance = new Collider[64];
         readonly RaycastHit[] rayHits = new RaycastHit[32];
         readonly List<CraftingStation> stations = new List<CraftingStation>(24);
@@ -32,15 +34,19 @@ namespace LivingWorld.HumanNpc
         Humanoid body;
         ZNetView view;
         Scheduler scheduler;
+        GuardCoveragePolicy coverage;
         Player sampledLeader;
+        Player coverageLeader;
+        Player guardLeader;
         Vector3 leaderSample, point, focus, stationSample;
+        Vector3 coverageOrigin;
         CraftingStation station;
         ActivityToken lease;
         ActivityKind kind;
         ActivityPhase phase;
-        float nextScan, sampledAt, nextValidation, lastMotion, lastFollow, bestDistance, lastProgress, nextLookShift;
-        int candidateCursor, craftKind, lookStep;
-        bool haveSample, safeWorkbench, safeForge, checkedAnimation, faulted;
+        float nextScan, sampledAt, nextValidation, lastMotion, lastFollow, bestDistance, lastProgress, nextLookShift, guardScanStarted;
+        int candidateCursor, craftKind, lookStep, guardSector = -1;
+        bool haveSample, haveCoverageOrigin, safeWorkbench, safeForge, checkedAnimation, faulted, guardScanResolved;
         string status = "Ambient awaiting a quiet bound player";
         public string Status { get { return status; } }
         internal bool Active { get { return !lease.IsEmpty; } }
@@ -54,6 +60,7 @@ namespace LivingWorld.HumanNpc
             if (body == null) body = GetComponent<Humanoid>();
             if (ai == null) ai = GetComponent<BaseAI>();
             if (view == null) view = GetComponent<ZNetView>();
+            if (coverage == null) coverage = new GuardCoveragePolicy();
             if (scheduler == null) scheduler = new Scheduler(++sessions, new ActivitySettings {
                 Radius = Radius, CandidateBudget = 12, MinimumDwell = 15, MaximumDwell = 120,
                 QuietDelay = 6, BusyQuietDelay = 1.5, Cooldown = 20, FailureRetry = 3, RecentWindow = 180, PassiveInterval = 35,
@@ -124,6 +131,7 @@ namespace LivingWorld.HumanNpc
                     }
                     feedback = new ActivityFeedback { Token = lease, LeaseHeld = OwnsClaim(), TargetValid = valid,
                         Arrived = SettledAtPoint(distance),
+                        Finished = guardScanResolved,
                         PathFailed = phase != ActivityPhase.Performing && Time.time - lastProgress > 8f };
                 }
                 else if (!moving && !passage && !sitting && !leader.IsCrouching() && !facts.ExternalActionBusy &&
@@ -142,7 +150,13 @@ namespace LivingWorld.HumanNpc
                     station = null;
                     if (decision.Opportunity.Kind == ActivityKind.AmbientCraft && !snapshot.TryGetValue(decision.Opportunity.Id, out station)) return false;
                     if (station != null && !Acquire(station, decision.Token)) { station = null; return false; }
+                    int selectedGuardSector = decision.Opportunity.Kind == ActivityKind.GuardPosition ?
+                        (int)Math.Round(decision.Opportunity.Yaw) : -1;
+                    if (selectedGuardSector >= 0 && !AcquireGuard(leader, selectedGuardSector, decision.Token))
+                    { if (station != null) Release(); return false; }
                     lease = decision.Token; kind = decision.Opportunity.Kind; phase = decision.Phase;
+                    guardLeader = selectedGuardSector >= 0 ? leader : null;
+                    guardSector = selectedGuardSector; guardScanStarted = 0f; guardScanResolved = false;
                     point = new Vector3(decision.Opportunity.X, decision.Opportunity.Y, decision.Opportunity.Z);
                     craftKind = station == null ? 0 : station.m_useAnimation;
                     stationSample = station == null ? point : station.transform.position;
@@ -176,16 +190,18 @@ namespace LivingWorld.HumanNpc
         {
             if (!Active || !Performing || !Owner()) return;
             if (Look == null) { Cancel("native facing contract unavailable"); return; }
-            if (kind == ActivityKind.Observe || kind == ActivityKind.GuardPosition)
+            if (kind == ActivityKind.GuardPosition)
             {
-                if (Time.time >= nextLookShift)
+                if (guardScanStarted <= 0f)
                 {
-                    lookStep = (lookStep + 1) % 5;
-                    nextLookShift = Time.time + (lookStep == 2 ? 5.5f : lookStep == 4 ? 4.5f : 3.5f);
+                    guardScanStarted = Time.time; lookStep = 0;
                 }
+                float scanElapsed = Time.time - guardScanStarted;
+                int resolvedStep = scanElapsed < 1.6f ? 0 : scanElapsed < 3.2f ? 1 : scanElapsed < 4.8f ? 2 : 3;
+                lookStep = resolvedStep;
                 Vector3 outward = focus - point; outward.y = 0f;
                 if (outward.sqrMagnitude < 0.01f) outward = transform.forward;
-                float offset = lookStep == 1 ? -38f : lookStep == 3 ? 38f : lookStep == 4 ? -18f : 0f;
+                float offset = lookStep == 0 ? -48f : lookStep == 1 ? 0f : lookStep == 2 ? 48f : 0f;
                 Vector3 scanBase = outward.normalized;
                 double radians = offset * Math.PI / 180.0;
                 float sine = (float)Math.Sin(radians), cosine = (float)Math.Cos(radians);
@@ -193,7 +209,19 @@ namespace LivingWorld.HumanNpc
                     scanBase.z * cosine - scanBase.x * sine);
                 lookArgument[0] = transform.position + scan * 5f + Vector3.up;
                 Look.Invoke(ai, lookArgument);
+                if (!guardScanResolved && scanElapsed >= 6.0f && coverage != null && guardSector >= 0)
+                {
+                    guardScanResolved = true;
+                    coverage.Resolve(guardSector, Time.time);
+                    var plugin = LivingWorld.ManualTest.ManualTestPlugin.Instance;
+                    if (plugin != null) plugin.Report("GUARD_SCAN resolved=" + guardSector +
+                        "; next=" + GuardCoveragePolicy.Opposite(guardSector) + "; trigger=coverage");
+                }
                 return;
+            }
+            if (kind == ActivityKind.Observe)
+            {
+                lookArgument[0] = focus + Vector3.up; Look.Invoke(ai, lookArgument); return;
             }
             lookArgument[0] = focus + Vector3.up; Look.Invoke(ai, lookArgument);
             if (kind != ActivityKind.AmbientCraft || posture.HasAmbientPose) return;
@@ -243,23 +271,78 @@ namespace LivingWorld.HumanNpc
         }
         void DiscoverWalks(Player leader)
         {
-            // Deterministic rotating stroll probes: actual grounded, clear,
-            // path-complete points only. They create visible idle movement
-            // without teleporting or fabricating a workstation.
-            for (int n = 0; n < 4; ++n)
+            // A guard move answers a coverage deficit. A completed field scan
+            // selects the opposing sector next; old-area coverage is discarded
+            // after meaningful leader displacement. No random idle roll moves it.
+            if (coverageLeader != leader || !haveCoverageOrigin || Vector3.Distance(coverageOrigin, leader.transform.position) > 8f)
             {
-                int slot = (candidateCursor + n) % 12;
-                double angle = slot * Math.PI / 6.0;
-                ActivityKind walkKind = slot % 2 == 0 ? ActivityKind.GuardPosition : ActivityKind.Observe;
-                float distance = walkKind == ActivityKind.GuardPosition ? 4.5f + (slot % 3) * 0.75f : 3f + (slot % 3) * 0.75f;
-                Vector3 walk = leader.transform.position + new Vector3((float)Math.Sin(angle), 0f, (float)Math.Cos(angle)) * distance;
-                if (!Ground(ref walk) || !SafePoint(walk) || !ClearSegment(transform.position, walk) || !FullPath(walk)) continue;
-                opportunities.Add(new Opportunity { Id = "walk:" + slot, Kind = walkKind,
-                    Safe = true, Reachable = true, Permitted = true, Available = true,
-                    Duration = walkKind == ActivityKind.GuardPosition ? 35 + slot % 3 * 10 : 25 + slot % 3 * 8,
-                    LeaderDistance = Vector3.Distance(leader.transform.position, walk), ActorDistance = Vector3.Distance(transform.position, walk),
-                    X = walk.x, Y = walk.y, Z = walk.z });
+                coverageLeader = leader; coverageOrigin = leader.transform.position; haveCoverageOrigin = true;
+                coverage.Reset();
             }
+            int companionOffset = (GetInstanceID() & Int32.MaxValue) % GuardCoveragePolicy.SectorCount;
+            int otherSector;
+            int occupied = GuardUnavailableMask(leader, out otherSector);
+            if (otherSector >= 0) coverage.Prefer(GuardCoveragePolicy.Opposite(otherSector));
+            int rejected = occupied;
+            for (int attempt = 0; attempt < GuardCoveragePolicy.SectorCount; ++attempt)
+            {
+                int sector = coverage.Choose(rejected, companionOffset);
+                if (sector < 0) break;
+                double angle = GuardCoveragePolicy.Radians(sector);
+                float distance = 4.5f + (sector % 3) * 0.5f;
+                Vector3 walk = leader.transform.position + new Vector3((float)Math.Sin(angle), 0f, (float)Math.Cos(angle)) * distance;
+                if (!Ground(ref walk) || !SafePoint(walk) || CrossesLeaderExclusion(transform.position, walk, leader.transform.position) ||
+                    !ClearSegment(transform.position, walk) || !FullPath(walk))
+                { rejected |= 1 << sector; continue; }
+                opportunities.Add(new Opportunity { Id = GuardKey(leader, sector), Kind = ActivityKind.GuardPosition,
+                    Safe = true, Reachable = true, Permitted = true, Available = true,
+                    Duration = 8, CompletionCooldown = 2.5,
+                    LeaderDistance = Vector3.Distance(leader.transform.position, walk), ActorDistance = Vector3.Distance(transform.position, walk),
+                    X = walk.x, Y = walk.y, Z = walk.z, Yaw = sector });
+                break;
+            }
+        }
+
+        static string GuardKey(Player leader, int sector)
+        { return "guard:" + leader.GetPlayerID().ToString(System.Globalization.CultureInfo.InvariantCulture) + ":" + sector; }
+
+        int GuardUnavailableMask(Player leader, out int otherSector)
+        {
+            int mask = 0; otherSector = -1;
+            for (int sector = 0; sector < GuardCoveragePolicy.SectorCount; ++sector)
+            {
+                string key = GuardKey(leader, sector); GuardLease claim;
+                if (!GuardClaims.TryGetValue(key, out claim)) continue;
+                bool valid = claim.Actor != null && claim.Actor != this && claim.Actor.isActiveAndEnabled &&
+                    claim.Actor.guardLeader == leader && claim.Actor.guardSector == sector &&
+                    claim.Token.Equals(claim.Actor.lease);
+                if (!valid) { GuardClaims.Remove(key); continue; }
+                mask |= 1 << sector;
+                if (otherSector < 0) otherSector = sector;
+            }
+            return mask;
+        }
+
+        bool AcquireGuard(Player leader, int sector, ActivityToken token)
+        {
+            if (leader == null || token.IsEmpty || sector < 0 || sector >= GuardCoveragePolicy.SectorCount) return false;
+            string key = GuardKey(leader, sector); GuardLease claim;
+            if (GuardClaims.TryGetValue(key, out claim) && claim.Actor != null && claim.Actor != this &&
+                claim.Actor.isActiveAndEnabled && claim.Token.Equals(claim.Actor.lease)) return false;
+            GuardClaims[key] = new GuardLease { Actor = this, Token = token };
+            return true;
+        }
+
+        static bool CrossesLeaderExclusion(Vector3 from, Vector3 to, Vector3 leader)
+        {
+            float dx = to.x - from.x, dz = to.z - from.z;
+            float lengthSquared = dx * dx + dz * dz;
+            if (lengthSquared < 0.01f) return false;
+            float t = ((leader.x - from.x) * dx + (leader.z - from.z) * dz) / lengthSquared;
+            if (t < 0f) t = 0f; else if (t > 1f) t = 1f;
+            float closestX = from.x + dx * t, closestZ = from.z + dz * t;
+            float offsetX = closestX - leader.x, offsetZ = closestZ - leader.z;
+            return offsetX * offsetX + offsetZ * offsetZ < 1.3225f;
         }
         bool StationPermitted(CraftingStation target, Player leader)
         {
@@ -362,6 +445,13 @@ namespace LivingWorld.HumanNpc
         }
         bool OwnsClaim()
         {
+            if (kind == ActivityKind.GuardPosition)
+            {
+                if (guardLeader == null || guardSector < 0) return false;
+                GuardLease guardClaim;
+                return GuardClaims.TryGetValue(GuardKey(guardLeader, guardSector), out guardClaim) &&
+                    guardClaim.Actor == this && guardClaim.Token.Equals(lease);
+            }
             if (kind != ActivityKind.AmbientCraft) return true;
             StationLease claim;
             return station != null && Claims.TryGetValue(station, out claim) && claim.Actor == this && claim.Token.Equals(lease);
@@ -371,8 +461,15 @@ namespace LivingWorld.HumanNpc
         {
             StationLease claim;
             if (!ReferenceEquals(station, null) && Claims.TryGetValue(station, out claim) && claim.Actor == this && claim.Token.Equals(lease)) Claims.Remove(station);
+            if (guardLeader != null && guardSector >= 0)
+            {
+                string key = GuardKey(guardLeader, guardSector); GuardLease guardClaim;
+                if (GuardClaims.TryGetValue(key, out guardClaim) && guardClaim.Actor == this && guardClaim.Token.Equals(lease))
+                    GuardClaims.Remove(key);
+            }
             if (posture != null) posture.StopAmbient();
-            station = null; lease = new ActivityToken(); kind = ActivityKind.None; phase = ActivityPhase.None;
+            station = null; guardLeader = null; guardSector = -1; guardScanStarted = 0f; guardScanResolved = false;
+            lease = new ActivityToken(); kind = ActivityKind.None; phase = ActivityPhase.None;
             ResetPath();
         }
         internal void Cancel(string reason)
