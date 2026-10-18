@@ -51,7 +51,8 @@ namespace LivingWorld.HumanNpc
                 reserve.Advance(dt, 2, 0, 1, !Casting);
                 if (Casting)
                 {
-                    if (body.IsStaggering() || !Eligible(patient)) { Cancel("cast interrupted; no heal delivered"); return; }
+                    if (companion.HasAuthorizedCombat || body.IsStaggering() || !Eligible(patient))
+                    { Cancel("cast interrupted by personal combat; no heal delivered"); return; }
                     ai.StopMoving();
                     if (Look == null) throw new MissingMethodException("BaseAI.LookAt");
                     Look.Invoke(ai, new object[] { patient.GetCenterPoint() });
@@ -68,7 +69,8 @@ namespace LivingWorld.HumanNpc
                         Save();
                     }
                 }
-                else if (Time.time >= nextScan && cooldown <= 0 && reserve.Have(25) && !body.InAttack() && !body.IsStaggering())
+                else if (!companion.HasAuthorizedCombat && Time.time >= nextScan && cooldown <= 0 && reserve.Have(25) &&
+                    !body.InAttack() && !body.IsStaggering())
                 {
                     nextScan = Time.time + .5f;
                     Character best = null; float severity = 1;
@@ -121,3 +123,4 @@ namespace LivingWorld.HumanNpc
         void Log(string message) { Debug.Log("[LWC cleric] " + message); }
     }
 }
+
