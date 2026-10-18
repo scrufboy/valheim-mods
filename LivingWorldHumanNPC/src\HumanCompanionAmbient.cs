@@ -122,7 +122,7 @@ namespace LivingWorld.HumanNpc
                         if (!valid) { Cancel("committed target lost safety/access/occupancy"); return false; }
                     }
                     feedback = new ActivityFeedback { Token = lease, LeaseHeld = OwnsClaim(), TargetValid = valid,
-                        Arrived = distance <= Arrival && body.GetVelocity().sqrMagnitude < 0.36f,
+                        Arrived = SettledAtPoint(distance),
                         PathFailed = phase != ActivityPhase.Performing && Time.time - lastProgress > 8f };
                 }
                 else if (!moving && !passage && !sitting && !leader.IsCrouching() && !facts.ExternalActionBusy &&
@@ -157,6 +157,17 @@ namespace LivingWorld.HumanNpc
                 return true;
             }
             catch (Exception error) { faulted = true; Cancel("disabled after fault: " + error.Message); return false; }
+        }
+
+        bool SettledAtPoint(float distance)
+        {
+            if (distance > Arrival) return false;
+            // Native character velocity includes vertical grounding correction.
+            // That value can remain above the old full-vector threshold after
+            // MoveTo has reached and stopped at its goal, trapping the activity
+            // in Approaching/AwaitingLease forever. Arrival is horizontal intent.
+            Vector3 velocity = body.GetVelocity(); velocity.y = 0f;
+            return velocity.sqrMagnitude < 0.49f;
         }
 
         // Called by the one follow executor only AFTER it has stopped movement.
@@ -332,8 +343,9 @@ namespace LivingWorld.HumanNpc
         void Trace(Decision decision, ActivityKind previousKind)
         {
             if (haveTrace && decision.Control == lastTraceControl && decision.Reason == lastTraceReason && decision.Phase == lastTracePhase) return;
+            bool phaseChanged = !haveTrace || decision.Phase != lastTracePhase;
             haveTrace = true; lastTraceControl = decision.Control; lastTraceReason = decision.Reason; lastTracePhase = decision.Phase;
-            bool useful = decision.Control == Control.Begin || decision.Control == Control.Perform || decision.Control == Control.Complete ||
+            bool useful = phaseChanged || decision.Control == Control.Begin || decision.Control == Control.Perform || decision.Control == Control.Complete ||
                 decision.Reason == Reason.Extended || decision.Reason == Reason.PathFailed || decision.Reason == Reason.ApproachTimeout ||
                 decision.Reason == Reason.TargetUnavailable || decision.Reason == Reason.NoCandidate;
             if (!useful) return;
@@ -379,3 +391,4 @@ namespace LivingWorld.HumanNpc
         void OnDestroy() { Release(); }
     }
 }
+
