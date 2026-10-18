@@ -139,10 +139,12 @@ try {
  $settingsType=TypeDef $party HumanNpcSettings
  $settings=Method $settingsType Configure
  Has $plugin Register 'ConfigureAlertVoice'
- Has $settingsType ConfigureAlertVoice '::Instantiate'
- Has $settingsType ConfigureAlertVoice 'UnityEngine.Object::DontDestroyOnLoad'
- HasFloatSetting (Method $settingsType ConfigureAlertVoice) m_minPitch .8
- HasFloatSetting (Method $settingsType ConfigureAlertVoice) m_maxPitch .9
+ Has $plugin Register 'UnityEngine.Object::Instantiate'
+ $registrationCalls=Calls (Method $plugin Register)
+ Require (@($registrationCalls|Where-Object {$_.Contains('PrefabManager::AddPrefab')}).Count -eq 2) 'NPC and private alert voice are both registered through Jotunn'
+ Require (@($registrationCalls|Where-Object {$_.Contains('DontDestroyOnLoad')}).Count -eq 0) 'alert voice cannot use the failed unregistered DontDestroyOnLoad lifecycle'
+ HasFloatSetting (Method $settingsType TuneAlertVoice) m_minPitch .8
+ HasFloatSetting (Method $settingsType TuneAlertVoice) m_maxPitch .9
  HasFloatSetting $settings m_viewRange 30
  HasFloatSetting $settings m_hearRange 9999
  HasFloatSetting $settings m_alertRange 20
@@ -155,3 +157,4 @@ try {
  Require ($circulate.OpCode.Code.ToString() -eq 'Ldc_I4_1') 'native circulate-while-charging is enabled'
  'PartyIntegration PASS: '+$checks+' compiled integration/native-contract assertions. No Unity acceptance claimed.'
 } finally {$party.Dispose();$native.Dispose()}
+

@@ -12,12 +12,13 @@ using UnityEngine;
 
 namespace LivingWorld.ManualTest
 {
-    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.47")]
+    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.48")]
     [BepInIncompatibility("local.livingworld.manualtest")]
     [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     public sealed class ManualTestPlugin : BaseUnityPlugin
     {
         internal const string NpcId = HumanRigPolicy.PrefabId;
+        internal const string AlertVoiceId = "LWC_sfx_companion_alerted";
         internal const string LabTag = "livingworld_human_lab_v1";
         internal const string LabBuiltKey = "lwc_human_lab_v1_built";
         internal const string NpcKey = "livingworld_human_npc_v1";
@@ -117,10 +118,13 @@ namespace LivingWorld.ManualTest
         {
             if (registered) return;
             GameObject clone = null;
+            GameObject alertVoice = null;
+            bool alertRegistered = false, npcRegistered = false;
             try
             {
                 if (HavePath == null) throw new MissingMethodException("Native movement contracts changed.");
                 if (PrefabManager.Instance.GetPrefab(NpcId) != null) throw new InvalidOperationException("Test prefab identity already exists.");
+                if (PrefabManager.Instance.GetPrefab(AlertVoiceId) != null) throw new InvalidOperationException("Companion alert voice identity already exists.");
                 var playerSource = PrefabManager.Instance.GetPrefab("Player");
                 if (playerSource == null) throw new InvalidOperationException("Native human visual source unavailable.");
                 var voiceSource = PrefabManager.Instance.GetPrefab("sfx_goblin_alerted");
@@ -133,16 +137,28 @@ namespace LivingWorld.ManualTest
                 if (String.IsNullOrEmpty(weapon.GetComponent<ItemDrop>().m_itemData.m_shared.m_attack.m_attackAnimation))
                     throw new InvalidOperationException("Native sword attack animation missing.");
                 expectedWeaponName = weapon.GetComponent<ItemDrop>().m_itemData.m_shared.m_name;
+                // The alert effect must be a real registered prefab.  An
+                // unregistered DontDestroyOnLoad clone became Unity-null during
+                // the 0.3.47 run, so every SetAlerted call threw and forced the
+                // entire companion controller into its fail-closed state.
+                alertVoice = UnityEngine.Object.Instantiate(voiceSource);
+                alertVoice.name = AlertVoiceId;
+                alertVoice.SetActive(false);
+                HumanNpcSettings.TuneAlertVoice(alertVoice);
                 clone = NativeHumanFactory.Create(NpcId, playerSource, outfit);
-                HumanNpcSettings.ConfigureAlertVoice(clone.GetComponent<MonsterAI>(), voiceSource);
+                HumanNpcSettings.ConfigureAlertVoice(clone.GetComponent<MonsterAI>(), alertVoice);
                 clone.AddComponent<ManualNpcIdentity>();
                 NativeHumanFactory.Validate(clone, false);
                 var containerProperty = typeof(PrefabManager).GetProperty("PrefabContainer", Native);
                 var prefabContainer = containerProperty == null ? null : containerProperty.GetValue(PrefabManager.Instance, null) as GameObject;
-                if (prefabContainer == null || prefabContainer.activeInHierarchy || clone.activeInHierarchy)
+                if (prefabContainer == null || prefabContainer.activeInHierarchy || clone.activeInHierarchy || alertVoice.activeInHierarchy)
                     throw new InvalidOperationException("Native prefab registration must stay inactive until a network instance is created.");
+                PrefabManager.Instance.AddPrefab(new CustomPrefab(alertVoice, false));
+                alertRegistered = true;
                 PrefabManager.Instance.AddPrefab(new CustomPrefab(clone, false));
-                if (clone.activeInHierarchy || clone.transform.parent != prefabContainer.transform)
+                npcRegistered = true;
+                if (clone.activeInHierarchy || clone.transform.parent != prefabContainer.transform ||
+                    alertVoice.activeInHierarchy || alertVoice.transform.parent != prefabContainer.transform)
                     throw new InvalidOperationException("Prefab registration did not retain the inactive definition container.");
                 registeredPrefab = clone;
                 registered = true;
@@ -151,7 +167,11 @@ namespace LivingWorld.ManualTest
             }
             catch (Exception error)
             {
-                if (clone != null) UnityEngine.Object.Destroy(clone);
+                // A registered prefab belongs to Jotunn/ZNetScene and must not
+                // be destroyed behind their registries.  Only clean up objects
+                // which failed before registration.
+                if (!npcRegistered && clone != null) UnityEngine.Object.Destroy(clone);
+                if (!alertRegistered && alertVoice != null) UnityEngine.Object.Destroy(alertVoice);
                 Report("FAIL registration: " + error.Message);
                 Logger.LogError(error);
             }
@@ -722,3 +742,4 @@ namespace LivingWorld.ManualTest
         // Marker only. Saved metadata is inspected, never blessed automatically.
     }
 }
+
