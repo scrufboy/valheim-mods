@@ -18,7 +18,7 @@ namespace LivingWorld.Telemetry
     public sealed class LivingWorldTelemetryPlugin : BaseUnityPlugin
     {
         public const string Guid = "local.livingworld.telemetry";
-        public const string Version = "0.2.1";
+        public const string Version = "0.2.2";
         const int Schema = 2;
         const long MaxBytes = 64L * 1024L * 1024L;
         const int MaxRecords = 200000;
@@ -33,7 +33,6 @@ namespace LivingWorld.Telemetry
         static readonly FieldInfo BlockTimer = typeof(Humanoid).GetField("m_blockTimer", Any);
         static readonly MethodInfo CurrentBlocker = typeof(Humanoid).GetMethod("GetCurrentBlocker", Any, null, Type.EmptyTypes, null);
         static LivingWorldTelemetryPlugin current;
-        [ThreadStatic] static HumanPartyEquipment equipmentContext;
         [ThreadStatic] static Character healthTarget;
         [ThreadStatic] static float healthBefore;
         readonly Dictionary<string, string> states = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -59,9 +58,8 @@ namespace LivingWorld.Telemetry
         {
             if (Left == null || Right == null || HiddenLeft == null || HiddenRight == null || ClericPatient == null || BlockTimer == null || CurrentBlocker == null)
                 throw new MissingMemberException("Required observed NPC fields changed");
-            Patch(typeof(HumanPartyEquipment).GetMethod("Update", Any), "EquipmentUpdatePrefix", "EquipmentUpdatePostfix");
-            Patch(typeof(PartyCombatPolicy).GetMethod("Weapon", Any), "WeaponAssessmentPrefix", null);
-            Patch(typeof(HumanPartyEquipment).GetMethod("Equip", Any), "WeaponIntentPrefix", null);
+            Patch(typeof(MonsterAI).GetMethod("SelectBestAttack", Any, null,
+                new[] { typeof(Humanoid), typeof(float) }, null), null, "WeaponSelectionPostfix");
             Patch(typeof(HumanCleric).GetMethod("Cancel", Any), "ClericCancelPrefix", null);
             Patch(typeof(Character).GetMethod("RPC_Damage", Any, null, new[] { typeof(long), typeof(HitData) }, null), "DamagePrefix", "DamagePostfix");
             Patch(typeof(Character).GetMethod("Heal", Any, null, new[] { typeof(float), typeof(bool) }, null), "HealPrefix", "HealPostfix");
@@ -284,25 +282,13 @@ namespace LivingWorld.Telemetry
             PluginInfo info;
             return Chainloader.PluginInfos.TryGetValue("local.livingworld.humannpc", out info) ? info.Metadata.Version.ToString() : "missing";
         }
-        static void EquipmentUpdatePrefix(HumanPartyEquipment __instance) { equipmentContext = __instance; }
-        static void EquipmentUpdatePostfix() { equipmentContext = null; }
-        static void WeaponAssessmentPrefix(bool bowEquipped, bool ammo, bool laneClear, bool immediateThreat,
-            float distance, float closingSpeed, float shotSeconds)
+        static void WeaponSelectionPostfix(MonsterAI __instance, ItemDrop.ItemData __result)
         {
-            if (current == null || !current.active || equipmentContext == null) return;
-            string reason = !ammo ? "no-ammo" : !laneClear ? "lane-blocked-or-not-visible" : immediateThreat ? "nearby-threat" :
-                distance < (bowEquipped ? 8f : 12f) ? "inside-range-hysteresis" :
-                (distance - 6f) / Math.Max(1f, closingSpeed) <= shotSeconds + .5f ? "contact-before-safe-release" : "bow-allowed";
-            current.EmitChanged("weapon.assess." + Id(equipmentContext.GetComponent<Character>()), "WeaponAssessment",
-                Id(equipmentContext.GetComponent<Character>()), reason + "|" + bowEquipped,
-                "reason", reason, "bowEquipped", bowEquipped, "ammo", ammo, "laneClear", laneClear,
-                "immediateThreat", immediateThreat, "distance", distance, "closingSpeed", closingSpeed, "shotSeconds", shotSeconds);
-        }
-        static void WeaponIntentPrefix(HumanPartyEquipment __instance, bool ranged)
-        {
-            if (current == null || !current.active) return;
+            if (current == null || !current.active || __instance == null ||
+                __instance.GetComponent<HumanCompanion>() == null) return;
             string id = Id(__instance.GetComponent<Character>());
-            current.EmitChanged("weapon.intent." + id, "WeaponIntent", id, ranged ? "bow" : "sword-shield", "intent", ranged ? "bow" : "sword-shield");
+            current.EmitChanged("weapon.selection." + id, "WeaponSelection", id, Item(__result),
+                "weapon", Item(__result));
         }
         static void ClericCancelPrefix(HumanCleric __instance, string why)
         {
@@ -377,4 +363,3 @@ namespace LivingWorld.Telemetry
         }
     }
 }
-
