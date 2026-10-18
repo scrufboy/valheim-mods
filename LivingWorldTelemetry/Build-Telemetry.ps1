@@ -1,6 +1,6 @@
 param(
     [string]$ManagedDirectory='D:\SteamLibrary\steamapps\common\Valheim\valheim_Data\Managed',
-    [string]$LivingWorldRoot=(Join-Path $PSScriptRoot '..\human-npc-0.3.35-formation-combat-lock'),
+    [string]$LivingWorldRoot=(Join-Path $PSScriptRoot '..\human-npc-0.3.45-guard-scan-coverage'),
     [string]$CoreRoot=(Join-Path $PSScriptRoot '..\independent-core')
 )
 $ErrorActionPreference='Stop'
@@ -32,7 +32,7 @@ try {
     $calls=@($methods|ForEach-Object {$_.Body.Instructions}|Where-Object {$_.Operand -is [Mono.Cecil.MethodReference]}|ForEach-Object {$_.Operand.FullName})
     if(@($calls|Where-Object {$_.Contains('System.IO.TextWriter::WriteLine')}).Count -eq 0){throw 'Bounded writer call absent.'}
     $strings=@($methods|ForEach-Object {$_.Body.Instructions}|Where-Object {$_.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldstr}|ForEach-Object Operand)
-    foreach($required in @('Update','Weapon','Equip','Cancel','RPC_Damage','Heal','StartAttack','OnAttackTrigger','BlockAttack')){
+    foreach($required in @('SelectBestAttack','Cancel','RPC_Damage','Heal','StartAttack','OnAttackTrigger','BlockAttack')){
         if($required -notin $strings){throw "Required reflected observation boundary absent: $required"}
     }
     if('lwtelemetry' -in $strings -or @($calls|Where-Object {$_ -match 'Terminal/ConsoleCommand::.ctor'}).Count){
@@ -48,13 +48,12 @@ try {
     if(@($refsFound|Where-Object {$_ -match '(?i)rrr|souls'}).Count){throw 'Forbidden external gameplay dependency found.'}
     $hash=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
     [ordered]@{
-        Version='0.2.1';Status='PASS';DllPath=$dll;DllSha256=$hash;
+        Version='0.2.2';Status='PASS';DllPath=$dll;DllSha256=$hash;
         MainNpcSha256=(Get-FileHash -LiteralPath $main -Algorithm SHA256).Hash;
         Scope='Automatic read-only lab observation plus bounded rotating local JSONL output; no commands; Unity runtime not executed';
         RecordsPerSecondCap=50;RecordCap=200000;ByteCap=67108864;SampleSeconds=0.5;
         AssemblyReferences=$refsFound
     }|ConvertTo-Json -Depth 5|Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
-    "Telemetry 0.2.1 offline build PASS. DLL SHA256: $hash"
+    "Telemetry 0.2.2 offline build PASS. DLL SHA256: $hash"
     'No game/profile/world was launched or changed.'
 } finally {$assembly.Dispose()}
-
