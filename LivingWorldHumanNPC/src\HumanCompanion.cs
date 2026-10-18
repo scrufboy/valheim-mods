@@ -410,6 +410,10 @@ namespace LivingWorld.HumanNpc
             // acquire/idle/acquire loop recorded in the 2026-10-17 lab run.
             if (best != null && best != authorizedTarget)
             {
+                // Do not abandon a legal in-progress fight merely because a
+                // scan found another valid enemy. Switch only for higher duty.
+                if (authorizedTarget != null && AuthorizationValid(authorizedTarget) &&
+                    !CompanionPolicy.ShouldSwitchThreat(ThreatPriority(authorizedTarget), bestPriority)) return;
                 if (authorizedTarget != null)
                 {
                     retiredPursuitTarget = authorizedTarget;
