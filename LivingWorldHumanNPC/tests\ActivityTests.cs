@@ -114,7 +114,7 @@ static class ActivityTests
                 Check(next.ReleasedToken.Equals(decision.Token) && engine.CurrentToken.IsEmpty, "failure clears: " + failure);
             }
 
-            foreach (string invalid in new[] { "unsafe", "unreachable", "denied", "occupied", "far", "faractor", "nan", "duration", "coordinate", "id" })
+            foreach (string invalid in new[] { "unsafe", "unreachable", "denied", "occupied", "far", "faractor", "nan", "duration", "cooldown", "cooldownnan", "coordinate", "id" })
             {
                 var candidate = forge;
                 switch (invalid)
@@ -123,6 +123,7 @@ static class ActivityTests
                     case "denied": candidate.Permitted = false; break; case "occupied": candidate.Available = false; break;
                     case "far": candidate.LeaderDistance = 13; break; case "faractor": candidate.ActorDistance = 25; break;
                     case "nan": candidate.LeaderDistance = double.NaN; break; case "duration": candidate.Duration = 0; break;
+                    case "cooldown": candidate.CompletionCooldown = -1; break; case "cooldownnan": candidate.CompletionCooldown = double.NaN; break;
                     case "coordinate": candidate.X = float.PositiveInfinity; break; case "id": candidate.Id = null; break;
                 }
                 engine = New(); decision = Begin(engine, LeaderActivity.Busy, new[] { candidate });
@@ -187,6 +188,17 @@ static class ActivityTests
             engine = New(); decision = Begin(engine, LeaderActivity.Standing, all.ToArray());
             Check(decision.Opportunity.Kind == ActivityKind.GuardPosition, "standing idle first establishes outward security coverage");
 
+            var coverage = Place("guard-sector", ActivityKind.GuardPosition); coverage.CompletionCooldown = 2.5;
+            engine = New(); decision = Begin(engine, LeaderActivity.Standing, new[] { coverage });
+            next = engine.Tick(Facts(7, LeaderActivity.Standing), all, Ack(decision, true));
+            var resolved = Ack(decision, true); resolved.Finished = true;
+            next = engine.Tick(Facts(8, LeaderActivity.Standing), all, resolved);
+            Check(next.Control == Control.Complete, "resolved coverage completes without waiting for decorative dwell");
+            next = engine.Tick(Facts(9, LeaderActivity.Standing), new[] { coverage }, new Feedback());
+            Check(next.Reason == Reason.Cooldown, "coverage uses its explicit short completion cooldown");
+            next = engine.Tick(Facts(11, LeaderActivity.Standing), new[] { coverage }, new Feedback());
+            Check(next.Control == Control.Begin, "resolved guard can reposition after its bounded cooldown");
+
             engine = New(); decision = Begin(engine, LeaderActivity.Busy, new[] { forge });
             var replay = Ack(decision, true); replay.Token.Session++;
             Check(engine.Tick(Facts(7, LeaderActivity.Busy), all, replay).Reason == Reason.WaitingForLease, "other-session ack cannot execute");
@@ -219,4 +231,3 @@ static class ActivityTests
         catch (Exception error) { Console.Error.WriteLine("ActivityPolicy FAIL: " + error.Message); Environment.Exit(1); }
     }
 }
-
