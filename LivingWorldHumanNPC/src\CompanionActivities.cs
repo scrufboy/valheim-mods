@@ -69,7 +69,7 @@ namespace LivingWorld.CompanionActivities
 
     public sealed class ActivitySettings
     {
-        public double QuietDelay = 5, ScanInterval = 3, Cooldown = 15, Radius = 12;
+        public double QuietDelay = 5, BusyQuietDelay = 1.5, ScanInterval = 3, Cooldown = 15, Radius = 12;
         public double SnapshotLifetime = 3, LeaseTimeout = 2, ApproachTimeout = 14;
         public double MinimumDwell = 15, MaximumDwell = 120, RecentWindow = 180;
         public double PassiveInterval = 30, FailureRetry = 3;
@@ -79,7 +79,7 @@ namespace LivingWorld.CompanionActivities
         internal ActivitySettings Copy()
         {
             var copy = (ActivitySettings)MemberwiseClone();
-            foreach (double value in new[] { QuietDelay, ScanInterval, Cooldown, Radius,
+            foreach (double value in new[] { QuietDelay, BusyQuietDelay, ScanInterval, Cooldown, Radius,
                 SnapshotLifetime, LeaseTimeout, ApproachTimeout, MinimumDwell, MaximumDwell, RecentWindow, PassiveInterval, FailureRetry })
                 if (!Scheduler.Finite(value) || value <= 0 || value > 600) throw new ArgumentException("Invalid activity limit.");
             if (MinimumDwell > MaximumDwell || CandidateBudget < 1 || CandidateBudget > 64 ||
@@ -151,7 +151,7 @@ namespace LivingWorld.CompanionActivities
                 var released = ClearActivity();
                 observedContext = true; leaderId = facts.LeaderId; orderRevision = facts.OrderRevision;
                 leaderActivity = facts.LeaderActivity; interestGroup = facts.InterestGroup;
-                quietSince = facts.Now; nextDecision = facts.Now + settings.QuietDelay;
+                quietSince = facts.Now; nextDecision = facts.Now + RequiredQuietDelay(facts.LeaderActivity);
                 passiveCycles = 0;
                 return new Decision { Control = Control.Follow, ReleasedToken = released,
                     Reason = orderChanged ? Reason.OrderChanged : contextChanged ? Reason.ContextChanged : Reason.QuietDelay };
@@ -197,7 +197,7 @@ namespace LivingWorld.CompanionActivities
                 return Output(Control.Continue, Reason.Performing, 0);
             }
 
-            if (facts.Now - quietSince < settings.QuietDelay)
+            if (facts.Now - quietSince < RequiredQuietDelay(facts.LeaderActivity))
                 return new Decision { Control = Control.Follow, Reason = Reason.QuietDelay };
             if (facts.Now < nextDecision) return new Decision { Control = Control.Follow, Reason = Reason.Cooldown };
             int pauseTarget = facts.LeaderActivity == LeaderActivity.Standing ? settings.StandingPauseCycles :
@@ -259,6 +259,9 @@ namespace LivingWorld.CompanionActivities
             committedAt = facts.Now; phase = ActivityPhase.AwaitingLease; passiveCycles = 0; continuityExtensions = 0;
             return Output(Control.Begin, Reason.Selected, examined);
         }
+
+        double RequiredQuietDelay(LeaderActivity activity)
+        { return activity == LeaderActivity.Busy ? Math.Min(settings.QuietDelay, settings.BusyQuietDelay) : settings.QuietDelay; }
 
         bool Valid(Opportunity candidate)
         {
@@ -334,3 +337,4 @@ namespace LivingWorld.CompanionActivities
         }
     }
 }
+
