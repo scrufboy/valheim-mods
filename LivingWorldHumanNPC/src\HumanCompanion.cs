@@ -339,8 +339,10 @@ namespace LivingWorld.HumanNpc
         void RefreshNearbyThreat()
         {
             if (authorizedTarget == null) return;
-            if (CompanionPolicy.RefreshPursuit(IsActiveThreat(authorizedTarget), Time.time - lastAttributedDamage,
-                Vector3.Distance(authorizedTarget.transform.position, transform.position)))
+            bool sensed = ai.CanSeeTarget(authorizedTarget) || ai.CanHearTarget(authorizedTarget);
+            if (sensed) lastSensed = Time.time;
+            if (CompanionPolicy.RefreshEngagement(IsActiveThreat(authorizedTarget), sensed,
+                Time.time - lastAttributedDamage, Vector3.Distance(authorizedTarget.transform.position, transform.position)))
             { lastNearbyThreat = Time.time; encounterOwned = true; encounterClearObserved = false; encounterUntil = Time.time + 1.5f; }
         }
 
@@ -701,15 +703,17 @@ namespace LivingWorld.HumanNpc
             if (companion == null) return true;
             try
             {
-                if (companion.AuthorizationValid(__0) && companion.SafeEquippedWeapon())
+                if (!companion.AuthorizationValid(__0)) companion.DropCombatTarget();
+                else if (companion.SafeEquippedWeapon())
                 {
                     var cleric = companion.GetComponent<HumanCleric>();
                     if (cleric != null && cleric.Casting) { __result = false; return false; }
                     var equipment = companion.GetComponent<HumanPartyEquipment>();
                     if (equipment == null || equipment.MayAttack(__0, false)) return true;
-                    __result = false; return false;
                 }
-                companion.DropCombatTarget();
+                // A transient equipment, draw, lane or casting gate refuses only
+                // this attack request.  It is not evidence that the enemy ceased
+                // to exist and must never erase combat authorization.
             }
             catch (Exception error) { companion.Fault(error); }
             __result = false; return false;
@@ -722,15 +726,16 @@ namespace LivingWorld.HumanNpc
             if (companion == null) return true;
             try
             {
-                if (ReferenceEquals(CurrentAttackField.GetValue(attacker), __instance) &&
-                    companion.AuthorizationValid(companion.authorizedTarget) && companion.SafeEquippedWeapon() && SafeNativeAttack(__instance))
+                bool valid = companion.AuthorizationValid(companion.authorizedTarget);
+                if (ReferenceEquals(CurrentAttackField.GetValue(attacker), __instance) && valid &&
+                    companion.SafeEquippedWeapon() && SafeNativeAttack(__instance))
                 {
                     var cleric = companion.GetComponent<HumanCleric>();
                     if (cleric != null && cleric.Casting) return false;
                     var equipment = companion.GetComponent<HumanPartyEquipment>();
                     if (equipment == null || equipment.MayAttack(companion.authorizedTarget, true)) return true;
                 }
-                companion.DropCombatTarget();
+                if (!valid) companion.DropCombatTarget();
             }
             catch (Exception error) { companion.Fault(error); }
             return false;

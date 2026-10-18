@@ -135,6 +135,9 @@ class CompanionPolicyTests
         Check(!CompanionPolicy.RefreshPursuit(true, 0, 6.01f), "distant threat does not renew pursuit timer");
         Check(!CompanionPolicy.RefreshPursuit(false, Single.PositiveInfinity, 1), "passive nearby wildlife does not renew pursuit");
         Check(!CompanionPolicy.RefreshPursuit(true, 0, Single.NaN), "invalid nearby distance denied");
+        Check(CompanionPolicy.RefreshEngagement(true, true, 99, 24), "sensed active ranged threat renews engagement");
+        Check(!CompanionPolicy.RefreshEngagement(true, false, 99, 24), "unsensed distant threat does not renew engagement");
+        Check(CompanionPolicy.RefreshEngagement(false, false, 2, 5), "recent close damage renews engagement");
         Check(CompanionPolicy.MayReacquireRetired(false, false, false), "new real threat immediately eligible");
         Check(!CompanionPolicy.MayReacquireRetired(true, false, false), "expired distant chase cannot instantly restart");
         Check(CompanionPolicy.MayReacquireRetired(true, false, true), "retired target returning to nearby active melee is defendable");
@@ -171,3 +174,4 @@ class CompanionPolicyTests
         Console.WriteLine("PASS " + checks + " companion policy checks (pure offline; Unity execution NOT RUN)");
     }
 }
+

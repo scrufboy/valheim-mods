@@ -51,7 +51,7 @@ namespace LivingWorld.HumanNpc
                 reserve.Advance(dt, 2, 0, 1, !Casting);
                 if (Casting)
                 {
-                    if (companion.HasAuthorizedCombat || body.IsStaggering() || !Eligible(patient))
+                    if (companion.CombatReadinessActive || body.IsStaggering() || !Eligible(patient))
                     { Cancel("cast interrupted by personal combat; no heal delivered"); return; }
                     ai.StopMoving();
                     if (Look == null) throw new MissingMethodException("BaseAI.LookAt");
@@ -60,6 +60,8 @@ namespace LivingWorld.HumanNpc
                     {
                         var recipient = patient; patient = null;
                         ClericPresentation.End(gameObject);
+                        if (!reserve.Use(25, 1, 3)) throw new InvalidOperationException("Cleric reserve changed during committed cast");
+                        cooldown = 8f;
                         float before = recipient.GetHealth();
                         recipient.Heal(Mathf.Min(35f, recipient.GetMaxHealth() - before), true);
                         Log("heal recipient=" + recipient.GetZDOID() + "; health=" + before + " -> " + recipient.GetHealth());
@@ -69,7 +71,7 @@ namespace LivingWorld.HumanNpc
                         Save();
                     }
                 }
-                else if (!companion.HasAuthorizedCombat && Time.time >= nextScan && cooldown <= 0 && reserve.Have(25) &&
+                else if (!companion.CombatReadinessActive && Time.time >= nextScan && cooldown <= 0 && reserve.Have(25) &&
                     !body.InAttack() && !body.IsStaggering())
                 {
                     nextScan = Time.time + .5f;
@@ -88,8 +90,7 @@ namespace LivingWorld.HumanNpc
                         var posture = GetComponent<HumanCompanionPosture>();
                         if (posture != null) posture.Refresh();
                         ClericPresentation.Begin(gameObject);
-                        castingUntil = Time.time + 1.5f; cooldown = 8f;
-                        reserve.Use(25, 1, 3); Save();
+                        castingUntil = Time.time + 1.5f; Save();
                         Log("cast begun; recipient=" + best.GetZDOID() + "; reserve=" + reserve.Current);
                     }
                 }

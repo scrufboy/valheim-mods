@@ -116,6 +116,18 @@ namespace LivingWorld.HumanNpc
                 (activeThreat || (Finite(secondsSinceDamage) && secondsSinceDamage >= 0 && secondsSinceDamage <= RecentDamageSeconds));
         }
 
+        // An authorized, still-sensed threat keeps the engagement alive across
+        // ordinary weapon changes and native-AI attack intervals.  The smaller
+        // NearbyThreatRange remains the fallback for recent attributed damage;
+        // it must not be the only way a ranged fight can remain authorized.
+        public static bool RefreshEngagement(bool activeThreat, bool sensed, float secondsSinceDamage, float distance)
+        {
+            if (!Finite(distance) || distance < 0 || distance > AwarenessRange) return false;
+            if (activeThreat && sensed) return true;
+            return distance <= NearbyThreatRange && Finite(secondsSinceDamage) &&
+                secondsSinceDamage >= 0 && secondsSinceDamage <= RecentDamageSeconds;
+        }
+
         public static bool MayReacquireRetired(bool sameTarget, bool explicitOrder, bool nearbyThreat)
         { return !sameTarget || explicitOrder || nearbyThreat; }
 
@@ -169,3 +181,4 @@ namespace LivingWorld.HumanNpc
         { return Finite(value) && value >= minimum && (inclusive ? value <= maximum : value < maximum); }
     }
 }
+
