@@ -39,9 +39,16 @@ try {
     $createCalls=@(Calls $create)
     Require (@($createCalls | Where-Object {$_.Operand.FullName -eq 'System.Void UnityEngine.GameObject::.ctor(System.String)'}).Count -eq 2) 'definition container plus fresh named GameObject root constructed explicitly'
     Require (@($createCalls | Where-Object {$_.Operand.Name -match 'Instantiate|GetPrefab|CreateClonedPrefab'}).Count -eq 0) 'fresh-root factory does not obtain or instantiate character/template prefab'
-    foreach($component in @('UnityEngine.CapsuleCollider','UnityEngine.Rigidbody','ZNetView','ZSyncTransform','ZSyncAnimation','Humanoid','MonsterAI','LivingWorld.HumanNpc.HumanCompositionIdentity','LivingWorld.HumanNpc.HumanCompanion','LivingWorld.HumanNpc.HumanEquipmentReadiness')){
+    foreach($component in @('UnityEngine.CapsuleCollider','UnityEngine.Rigidbody','ZNetView','ZSyncTransform','ZSyncAnimation','Humanoid','MonsterAI','LivingWorld.HumanNpc.HumanCompositionIdentity','LivingWorld.HumanNpc.HumanCompanion','LivingWorld.HumanNpc.HumanEquipmentReadiness','LivingWorld.HumanNpc.HumanEnvironmentStatus')){
         Require (@($createCalls | Where-Object {$_.Operand.FullName.Contains('AddComponent<'+$component+'>')}).Count -eq 1) "fresh explicit component $component"
     }
+    $environment=FindMethod LivingWorld.HumanNpc.HumanEnvironmentStatus Update
+    $environmentCalls=@(Calls $environment)
+    Require (@($environmentCalls | Where-Object {$_.Operand.FullName -eq 'System.Boolean EnvMan::IsWet()'}).Count -eq 1) 'environment adapter reads native rain state'
+    Require (@($environmentCalls | Where-Object {$_.Operand.FullName -match 'Cover::GetCoverForPoint'}).Count -eq 1) 'environment adapter reads native roof cover'
+    Require (@($environmentCalls | Where-Object {$_.Operand.FullName -match 'ShieldGenerator::IsInsideShield'}).Count -eq 1) 'environment adapter reads native shield protection'
+    Require (@($environmentCalls | Where-Object {$_.Operand.FullName -match 'SEMan::AddStatusEffect'}).Count -eq 1) 'environment adapter applies native Wet through SEMan once'
+    Require (@($environmentCalls | Where-Object {$_.Operand.FullName -match 'SEMan::RemoveStatusEffect'}).Count -eq 0) 'environment adapter leaves native drying and water Wet untouched'
     $apply=FindMethod LivingWorld.HumanNpc.NativeHumanFactory ApplyVisual
     $applyCalls=@(Calls $apply)
     Require (@($applyCalls | Where-Object {$_.Operand.Name -eq 'Instantiate'}).Count -eq 1) 'one human visual subtree instantiate in visual adapter'
@@ -63,3 +70,4 @@ try {
     "HumanCompositionBinary PASS: $checks independent IL checks. Binary SHA256: $((Get-FileHash -LiteralPath $AssemblyPath -Algorithm SHA256).Hash)"
     'Unity load, migration, pathfinding, attacks and save/reload NOT RUN by this audit.'
 } finally {$assembly.Dispose()}
+
