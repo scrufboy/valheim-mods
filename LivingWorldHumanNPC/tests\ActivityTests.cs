@@ -38,6 +38,13 @@ static class ActivityTests
             Check(Scheduler.Allowed(LeaderActivity.Busy, ActivityKind.AmbientCraft, Capabilities.All), "pretend crafting allowed");
             Check(Scheduler.Allowed(LeaderActivity.Standing, ActivityKind.AmbientCraft, Capabilities.All), "idle leader permits autonomous station work");
             Check(!Scheduler.Allowed(LeaderActivity.Busy, ActivityKind.BedSleep, Capabilities.All), "menu does not mean sleep");
+            var accelerated = New(); var acceleratedForge = Place("accelerated-forge", ActivityKind.AmbientCraft);
+            accelerated.Tick(Facts(0, LeaderActivity.Busy), new[] { acceleratedForge }, new Feedback());
+            Check(accelerated.Tick(Facts(2, LeaderActivity.Busy), new[] { acceleratedForge }, new Feedback()).Control == Control.Begin,
+                "busy leader accelerates companion activity handoff");
+            var ordinary = New(); ordinary.Tick(Facts(0, LeaderActivity.Standing), new[] { acceleratedForge }, new Feedback());
+            Check(ordinary.Tick(Facts(2, LeaderActivity.Standing), new[] { acceleratedForge }, new Feedback()).Reason == Reason.QuietDelay,
+                "ordinary standing retains its distinct quiet delay");
             var engine = New(); var forge = Place("forge", ActivityKind.AmbientCraft);
             var decision = Begin(engine, LeaderActivity.Busy, new[] { forge });
             Check(decision.Control == Control.Begin && decision.Phase == ActivityPhase.AwaitingLease, "begin reserves before acting");
@@ -212,3 +219,4 @@ static class ActivityTests
         catch (Exception error) { Console.Error.WriteLine("ActivityPolicy FAIL: " + error.Message); Environment.Exit(1); }
     }
 }
+
