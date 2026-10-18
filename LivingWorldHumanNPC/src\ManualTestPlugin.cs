@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace LivingWorld.ManualTest
 {
-    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.43")]
+    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.44")]
     [BepInIncompatibility("local.livingworld.manualtest")]
     [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     public sealed class ManualTestPlugin : BaseUnityPlugin
@@ -650,6 +650,7 @@ namespace LivingWorld.ManualTest
                 Report("Identity: " + npc.GetComponent<HumanIdentity>().Status);
                 Report("Party confidence: " + npc.GetComponent<HumanPartyConfidence>().Describe());
                 Report("Companion activity: " + npc.GetComponent<HumanCompanionAmbient>().Status);
+                Report("Utility torch: " + npc.GetComponent<HumanUtilityTorch>().Describe());
                 Report("Scout health=" + humanoid.GetHealth() + "; grounded=" + humanoid.IsOnGround() + "; weapon=" +
                     (humanoid.GetCurrentWeapon() == null ? "none" : humanoid.GetCurrentWeapon().m_shared.m_name) + "; expectedNativeWeaponEquipped=" + HasExpectedWeapon() + ".");
             }
