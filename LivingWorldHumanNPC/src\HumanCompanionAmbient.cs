@@ -56,7 +56,7 @@ namespace LivingWorld.HumanNpc
             if (view == null) view = GetComponent<ZNetView>();
             if (scheduler == null) scheduler = new Scheduler(++sessions, new ActivitySettings {
                 Radius = Radius, CandidateBudget = 12, MinimumDwell = 15, MaximumDwell = 120,
-                QuietDelay = 12, Cooldown = 20, FailureRetry = 3, RecentWindow = 180, PassiveInterval = 35,
+                QuietDelay = 6, BusyQuietDelay = 1.5, Cooldown = 20, FailureRetry = 3, RecentWindow = 180, PassiveInterval = 35,
                 StandingPauseCycles = 0, BusyPauseCycles = 0, MaximumContinuityExtensions = 1 });
         }
         bool Owner() { return view != null && view.IsValid() && view.IsOwner(); }
@@ -94,7 +94,8 @@ namespace LivingWorld.HumanNpc
                 var currentStation = leader.GetCurrentCraftingStation();
                 // Ready already proves this is the bound LOCAL player. Local
                 // inventory/merchant UI therefore describes this leader only.
-                bool busy = currentStation != null || leader.InPlaceMode() || InventoryGui.IsVisible() || StoreGui.IsVisible();
+                bool busy = currentStation != null || leader.InPlaceMode() || InventoryGui.IsVisible() || StoreGui.IsVisible() ||
+                    Minimap.IsOpen();
                 var facts = new Context {
                     Now = Time.time, CandidateSnapshotAt = sampledAt, IsOwner = true, Ready = true, Alive = true,
                     Membership = Membership.Companion, LeaderPresent = true, LeaderAlive = true,
@@ -102,7 +103,7 @@ namespace LivingWorld.HumanNpc
                     LeaderMoving = moving, PassageActive = passage,
                     LeaderActivity = leader.IsCrouching() ? LeaderActivity.Crouching : sitting ? LeaderActivity.Sitting :
                         busy ? LeaderActivity.Busy : LeaderActivity.Standing,
-                    ExternalActionBusy = (!Active && Vector3.Distance(transform.position, leader.transform.position) > CompanionPresencePolicy.ResumeDistance) ||
+                    ExternalActionBusy = (!Active && Vector3.Distance(transform.position, leader.transform.position) > CompanionPresencePolicy.RunDistance) ||
                         (leader.InEmote() && !sitting),
                     Capabilities = Capabilities.Observe | Capabilities.Guard | Capabilities.AmbientCraft,
                     InterestGroup = currentStation == null ? "" : StationId(currentStation)
