@@ -44,7 +44,7 @@ namespace LivingWorld.CompanionActivities
         public string Id, InterestGroup;
         public ActivityKind Kind;
         public bool Safe, Reachable, Permitted, Available;
-        public double LeaderDistance, ActorDistance, Duration;
+        public double LeaderDistance, ActorDistance, Duration, CompletionCooldown;
         public float X, Y, Z, Yaw;
     }
 
@@ -321,7 +321,9 @@ namespace LivingWorld.CompanionActivities
         {
             recentIds[recentCursor] = current.Id; recentAt[recentCursor] = now;
             recentCursor = (recentCursor + 1) % recentIds.Length;
-            ActivityToken released = ClearActivity(); nextDecision = now + (failed ? settings.FailureRetry : settings.Cooldown);
+            double cooldown = failed ? settings.FailureRetry : current.CompletionCooldown > 0 ?
+                current.CompletionCooldown : settings.Cooldown;
+            ActivityToken released = ClearActivity(); nextDecision = now + cooldown;
             // A rejected destination is not a life choice. Retry a different
             // candidate promptly instead of forcing the whole idle prelude again.
             passiveCycles = failed ? Math.Max(settings.StandingPauseCycles, settings.BusyPauseCycles) : 0;
