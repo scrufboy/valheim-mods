@@ -44,7 +44,7 @@ namespace LivingWorld.HumanNpc
         ActivityToken lease;
         ActivityKind kind;
         ActivityPhase phase;
-        float nextScan, sampledAt, nextValidation, lastMotion, lastFollow, bestDistance, lastProgress, nextLookShift, guardScanStarted;
+        float nextScan, sampledAt, nextValidation, lastMotion, lastFollow, bestDistance, lastProgress, guardScanStarted;
         int candidateCursor, craftKind, lookStep, guardSector = -1;
         bool haveSample, haveCoverageOrigin, safeWorkbench, safeForge, checkedAnimation, faulted, guardScanResolved;
         string status = "Ambient awaiting a quiet bound player";
@@ -162,7 +162,7 @@ namespace LivingWorld.HumanNpc
                     stationSample = station == null ? point : station.transform.position;
                     focus = station == null ? point + (point - leader.transform.position).normalized * 2f : station.transform.position;
                     bestDistance = Vector3.Distance(transform.position, point); lastProgress = Time.time; nextValidation = 0f;
-                    lookStep = 0; nextLookShift = Time.time;
+                    lookStep = 0;
                     ResetPath();
                 }
                 if (!Active) return false;
@@ -489,4 +489,3 @@ namespace LivingWorld.HumanNpc
         void OnDestroy() { Release(); }
     }
 }
-
