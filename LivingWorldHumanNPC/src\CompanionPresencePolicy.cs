@@ -15,7 +15,7 @@ namespace LivingWorld.HumanNpc
         public const float IdleAttentionSeconds = 12f;
         public const float LeaderMovementThreshold = 0.15f;
         public const float FormationRear = 3.2f;
-        public const float FormationSide = 2.1f;
+        public const float FormationSide = 1.65f;
         public const float FormationStopDistance = 0.8f;
 
         public static float FormationSideOffset(bool archer, bool cleric, int stableIdentity)
