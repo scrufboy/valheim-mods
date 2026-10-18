@@ -176,12 +176,13 @@ namespace LivingWorld.HumanNpc
             // the head back toward the leader between bow releases.
             bool combat = companion != null && companion.CombatReadinessActive;
             combat |= body != null && (body.InAttack() || body.IsDrawingBow() || body.IsBlocking());
-            if (ambient != null && ambient.Active) { ReleaseLook(); return; }
-            if (!combat && awareness != null)
+            if (combat) { ReleaseLook(); return; }
+            if (awareness != null)
             {
                 AssignLook(events, awareness.transform, 0.9f, 0.25f);
                 return;
             }
+            if (ambient != null && ambient.Active) { ReleaseLook(); return; }
             if (!CompanionPresencePolicy.AttendLeader(eligible, combat, pace != CompanionPace.Stand, Time.time - lastActivity))
             { ReleaseLook(); return; }
             AssignLook(events, leader.m_eye, 0.75f, 0f);
