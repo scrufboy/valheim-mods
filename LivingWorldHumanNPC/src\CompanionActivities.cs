@@ -270,7 +270,8 @@ namespace LivingWorld.CompanionActivities
                 Finite(candidate.LeaderDistance) && candidate.LeaderDistance >= 0 && candidate.LeaderDistance <= settings.Radius &&
                 Finite(candidate.ActorDistance) && candidate.ActorDistance >= 0 && candidate.ActorDistance <= settings.Radius * 2 &&
                 Finite(candidate.X) && Finite(candidate.Y) && Finite(candidate.Z) && Finite(candidate.Yaw) &&
-                Finite(candidate.Duration) && candidate.Duration > 0;
+                Finite(candidate.Duration) && candidate.Duration > 0 &&
+                Finite(candidate.CompletionCooldown) && candidate.CompletionCooldown >= 0 && candidate.CompletionCooldown <= 600;
         }
 
         static double BaseScore(ActivityKind kind)
@@ -339,4 +340,3 @@ namespace LivingWorld.CompanionActivities
         }
     }
 }
-
