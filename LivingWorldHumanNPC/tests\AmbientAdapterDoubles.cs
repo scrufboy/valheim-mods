@@ -83,3 +83,5 @@ public class Pathfinding
 }
 public static class InventoryGui {public static bool visible;public static bool IsVisible(){return visible;}}
 public static class StoreGui {public static bool visible;public static bool IsVisible(){return visible;}}
+public static class Minimap {public static bool open;public static bool IsOpen(){return open;}}
+
