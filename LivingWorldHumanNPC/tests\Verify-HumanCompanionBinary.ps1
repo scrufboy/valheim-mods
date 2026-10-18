@@ -70,7 +70,8 @@ try {
     HasCalls (Method ReconcileLeader) @('Player::GetPlayer','CompanionPolicy::Motion','CompanionPolicy::MustClearPatrol','BaseAI::ResetPatrolPoint','MonsterAI::SetFollowTarget','CompanionPolicy::MustCaptureWaitAnchor')
     HasFields (Method ReconcileLeader) @('CompanionOrderRecord::OwnerId','HumanCompanion::waitAnchor')
     HasCalls (Method Authorize) @('::Ready','CompanionPolicy::MayAuthorize','::IsActiveThreat','CompanionPolicy::RefreshPursuit','CompanionPolicy::MayReacquireRetired')
-    HasCalls (Method IsActiveThreat) @('GetComponent<MonsterAI>','BaseAI::IsAlerted','BaseAI::GetTargetCreature','::ProtectingOwner')
+    HasCalls (Method IsActiveThreat) @('GetComponent<MonsterAI>','BaseAI::GetTargetCreature','BaseAI::CanSeeTarget','BaseAI::CanHearTarget','BaseAI::IsEnemy','::ProtectingOwner')
+    Require (@(Calls (Method IsActiveThreat) | Where-Object {$_.Operand.Name -eq 'IsAlerted'}).Count -eq 0) 'independent companion sensing does not wait for hostile alert state'
     HasCalls (Method ProtectingOwner) @('Character::IsDead','CompanionPolicy::MayProtectOwner','::OrderAnchor')
     HasCalls (Method AuthorizationValid) @('::Ready','Character::IsDead','Character::IsPlayer','Character::IsTamed','CompanionPolicy::WithinTacticalCombatBounds')
     HasCalls (Method BeforeAttack) @('::AuthorizationValid','::SafeEquippedWeapon','::DropCombatTarget')
@@ -91,3 +92,4 @@ try {
     "HumanCompanionBinary PASS: $checks structural IL integration checks. Binary SHA256: $((Get-FileHash -LiteralPath $AssemblyPath -Algorithm SHA256).Hash)"
     'Native Harmony routing, physics, animation, companion persistence and full combat gameplay NOT RUN.'
 } finally {$assembly.Dispose()}
+
