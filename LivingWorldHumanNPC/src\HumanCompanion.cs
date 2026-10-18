@@ -301,7 +301,7 @@ namespace LivingWorld.HumanNpc
         {
             if (target == null) return false;
             var hostile = target.GetComponent<MonsterAI>();
-            if (hostile == null || !hostile.IsAlerted()) return false;
+            if (hostile == null) return false;
             Character victim = hostile.GetTargetCreature();
             if (victim == body || (ProtectingOwner() && victim == observedLeader)) return true;
             var ally = victim == null ? null : victim.GetComponent<HumanCompanion>();
@@ -317,9 +317,9 @@ namespace LivingWorld.HumanNpc
             // An attack on self, leader or party above still overrides concealment.
             if (ProtectingOwner() && observedLeader.IsCrouching()) return false;
 
-            // An alerted enemy inside the party's sensed defensive envelope is
-            // already a threat. Do not wait for its first hit or for native AI
-            // to finish selecting a party victim before companions respond.
+            // A sensed enemy inside the party's defensive envelope is already
+            // actionable. Requiring the enemy's alert flag made companions wait
+            // for the other AI to commit first instead of running their own scan.
             if (Vector3.Distance(target.transform.position, transform.position) > DetectionLeash ||
                 Vector3.Distance(target.transform.position, OrderAnchor()) > DetectionLeash ||
                 (!ai.CanSeeTarget(target) && !ai.CanHearTarget(target))) return false;
@@ -348,7 +348,7 @@ namespace LivingWorld.HumanNpc
         {
             if (candidate == null) return Single.NegativeInfinity;
             var hostile = candidate.GetComponent<MonsterAI>();
-            if (hostile == null || !hostile.IsAlerted()) return Single.NegativeInfinity;
+            if (hostile == null) return Single.NegativeInfinity;
             Character victim = hostile.GetTargetCreature();
             bool leader = ProtectingOwner() && victim == observedLeader;
             bool self = victim == body;
@@ -378,8 +378,8 @@ namespace LivingWorld.HumanNpc
             float seenDistance = Single.PositiveInfinity;
             foreach (Character candidate in Character.GetAllCharacters())
             {
-                if (candidate == null || candidate == body || candidate.IsDead() || candidate.IsPlayer() || candidate.IsTamed() ||
-                    candidate.GetComponent<HumanCompanion>() != null) continue;
+                if (candidate == null || candidate == body || candidate.IsDead() || candidate.IsPlayer() ||
+                    candidate.IsTamed() || candidate.GetComponent<HumanCompanion>() != null) continue;
                 float distance = Vector3.Distance(transform.position, candidate.transform.position);
                 bool sensed = distance <= CompanionPolicy.AwarenessRange &&
                     Vector3.Distance(candidate.transform.position, OrderAnchor()) <= CompanionPolicy.AwarenessRange &&
