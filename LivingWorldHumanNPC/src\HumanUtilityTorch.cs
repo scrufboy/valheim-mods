@@ -36,6 +36,9 @@ namespace LivingWorld.HumanNpc
                 if (!companion.TryGetConfidenceParty(out owner, out leader) || leader == null) { Disable("no bound party leader"); return; }
                 if (companion.CombatOwnsActor)
                 { lastCombat = Time.time; Disable("combat owns actor"); return; }
+                var readiness = GetComponent<HumanEquipmentReadiness>();
+                if (readiness != null && readiness.WantsWeapons())
+                { Disable("leader weapon readiness"); return; }
                 if (!companion.AreaClearVerified) { Disable("area clear not verified"); return; }
                 // Torches are companion ambience, never combat equipment. A
                 // full five quiet seconds must follow the last combat signal so
@@ -168,6 +171,8 @@ namespace LivingWorld.HumanNpc
                 Time.time - lastCombat < 5f) return false;
             long owner; Player leader;
             if (!companion.TryGetConfidenceParty(out owner, out leader) || leader == null || leader.IsCrouching()) return false;
+            var readiness = GetComponent<HumanEquipmentReadiness>();
+            if (readiness != null && readiness.WantsWeapons()) return false;
             bool busy = body.InAttack() || body.IsStaggering() || body.IsSwimming() || body.IsCrouching();
             var cleric = GetComponent<HumanCleric>();
             busy |= cleric != null && cleric.Casting;
@@ -184,8 +189,11 @@ namespace LivingWorld.HumanNpc
         {
             if (body == null) body = GetComponent<Humanoid>();
             if (view == null) view = GetComponent<ZNetView>();
-            Disable("weapon priority");
+            // Once the torch is already absent, the combat/leader owner reports
+            // its own stable state.  Do not alternate two off-reasons every tick.
+            if (TorchVisible() || torch != null && torch.m_equipped) Disable("weapon priority");
         }
         void OnDisable() { Disable("component disabled"); }
     }
 }
+

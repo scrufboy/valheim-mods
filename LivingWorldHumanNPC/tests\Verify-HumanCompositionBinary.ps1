@@ -24,7 +24,9 @@ try {
     $allCalls=@($allInstructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference]})
     $strings=@($allInstructions | Where-Object {$_.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldstr} | ForEach-Object {$_.Operand})
     Require (@($strings | Where-Object {$_ -match '(?i)dvergr|dverger'}).Count -eq 0) 'no rejected template identifier anywhere in compiled strings'
-    Require (@($allCalls | Where-Object {$_.Operand.Name -eq 'CreateClonedPrefab'}).Count -eq 0) 'no prefab root cloning API anywhere'
+    $cloneSites=@($methods | Where-Object { @(Calls $_ | Where-Object {$_.Operand.Name -eq 'CreateClonedPrefab'}).Count -gt 0 })
+    Require ($cloneSites.Count -eq 1 -and $cloneSites[0].DeclaringType.FullName -eq 'LivingWorld.ManualTest.ManualTestPlugin' -and
+        $cloneSites[0].Name -eq 'Register' -and @(Calls $cloneSites[0] | Where-Object {$_.Operand.Name -eq 'CreateClonedPrefab'}).Count -eq 1) 'only the private alert effect uses Jotunn inactive-container cloning'
     Require (@($allCalls | Where-Object {$_.Operand.FullName -match 'AddComponent<Player>|System.Void Player::.ctor'}).Count -eq 0) 'no constructed Player component/lifecycle'
     Require (@($allCalls | Where-Object {$_.Operand.FullName -match 'System.IO.|System.Net.|System.Diagnostics.Process|ZNet::SetServer|Game::SetProfile|ZNetView::ClaimOwnership|ZNetView::ResetZDO'}).Count -eq 0) 'no file/network/profile launch/reset/ownership mutation path'
     Require ($assembly.MainModule.Resources.Count -eq 0) 'no bundled game/legacy resources'
@@ -74,3 +76,4 @@ try {
     "HumanCompositionBinary PASS: $checks independent IL checks. Binary SHA256: $((Get-FileHash -LiteralPath $AssemblyPath -Algorithm SHA256).Hash)"
     'Unity load, migration, pathfinding, attacks and save/reload NOT RUN by this audit.'
 } finally {$assembly.Dispose()}
+

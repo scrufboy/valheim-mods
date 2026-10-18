@@ -77,7 +77,7 @@ namespace LivingWorld.HumanNpc
         static bool HiddenCombat(Humanoid human)
         { return human != null && (CombatItem(Slot(HiddenLeft, human)) || CombatItem(Slot(HiddenRight, human))); }
 
-        static bool LeaderReady(Player leader)
+        internal static bool LeaderReady(Player leader)
         { return leader != null && !leader.IsDead() && VisibleCombat(leader); }
 
         internal bool WantsWeapons()
@@ -87,12 +87,9 @@ namespace LivingWorld.HumanNpc
             // leader is the established readiness signal. Town etiquette is a
             // separate future rule and must not erase party mirroring.
             if (!Owner() || companion == null) return false;
-            if (companion.CombatOwnsActor) return true;
-            var utility = GetComponent<HumanUtilityTorch>();
-            // At vanilla night the peaceful companion torch owns the hand.
-            // Leader readiness remains available by day and combat overrides
-            // utility ownership atomically.
-            return (utility == null || !utility.ClaimsPeacefulHands()) && LeaderReady(companion.PartyLeader);
+            // The established leader-readiness signal is second only to a real
+            // owned encounter.  Peaceful utility equipment may never veto it.
+            return companion.CombatOwnsActor || LeaderReady(companion.PartyLeader);
         }
 
         internal bool EnsureCombatReady()
@@ -154,27 +151,23 @@ namespace LivingWorld.HumanNpc
             try
             {
                 if (!HandsSafe()) return;
-                // Utility equipment is a real hand owner, not an unequipped
-                // combat loadout.  The previous fall-through treated a visible
-                // torch as "no combat item", restored/stowed the sword pair and
-                // unequipped the torch every readiness tick.  HumanUtilityTorch
-                // then put it back on its next tick, producing the observed
-                // half-second visual flicker.  Yield completely while the calm
-                // nighttime utility state owns the hands.
                 var utility = GetComponent<HumanUtilityTorch>();
-                if (utility != null && utility.ClaimsPeacefulHands())
-                {
-                    Report(3, "peaceful utility torch owns hands");
-                    return;
-                }
-                bool threat = companion != null && companion.CombatOwnsActor;
                 bool show = WantsWeapons();
                 if (show)
                 {
                     if (utility != null) utility.ReleaseForWeapons();
                     if (HiddenCombat(body)) ShowHands.Invoke(body, ShowWithoutHipAnimation);
                     SyncBackVisuals(false);
-                    Report(1, "authorized combat threat: weapons drawn");
+                    Report(1, companion != null && companion.CombatOwnsActor ?
+                        "authorized combat threat: weapons drawn" : "leader readiness: weapons drawn");
+                }
+                // Utility equipment is a real hand owner, not an unequipped
+                // combat loadout.  It yields to both combat and leader readiness,
+                // then owns the calm nighttime hands without a stow/equip loop.
+                else if (utility != null && utility.ClaimsPeacefulHands())
+                {
+                    Report(3, "peaceful utility torch owns hands");
+                    return;
                 }
                 else
                 {
@@ -212,3 +205,4 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
+

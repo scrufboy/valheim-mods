@@ -78,7 +78,11 @@ namespace LivingWorld.HumanNpc
                 if (!Owner()) { posture = CompanionPosture.Upright; hadAuthority = false; restingLeader = null; restRequested = false; return; }
                 if (clearCraftPending && sync != null) { sync.SetInt("crafting", 0); clearCraftPending = false; }
                 RestoreAmbientHands();
-                Player leader = companion == null ? null : companion.PresenceLeader;
+                // Posture mimicry follows the persistent bound party identity,
+                // not the peaceful-only gaze/follow view. Heightened awareness
+                // must not erase the leader's stealth instruction; committed
+                // combat still forces upright through the policy below.
+                Player leader = companion == null ? null : companion.PartyLeader;
                 bool safe = body != null && !body.IsDead() && body.IsOnGround() && !body.IsSwimming() &&
                     !body.IsFlying() && !body.InAttack() && !body.IsDrawingBow() && !body.IsBlocking();
                 bool crouched = leader != null && leader.IsCrouching();

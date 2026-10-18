@@ -26,12 +26,18 @@ try {
     $generate=Method 'Jotunn.Managers.AssetManager' 'GenerateAssetID' 'UnityEngine.Object'
     $valid=Method 'Jotunn.Entities.CustomPrefab' 'IsValid' ''
     $getter=Method 'Jotunn.Managers.PrefabManager' 'get_PrefabContainer' ''
+    $createClone=Method 'Jotunn.Managers.PrefabManager' 'CreateClonedPrefab' 'System.String,UnityEngine.GameObject'
+    $cloneAsset=Method 'Jotunn.Managers.AssetManager' 'ClonePrefab' 'UnityEngine.GameObject,System.String,UnityEngine.Transform'
     Require ($getter.IsAssembly) 'PrefabContainer getter internal; external guard must use reviewed reflection'
     $initInstructions=@($init.Body.Instructions)
     $deactivate=@($initInstructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.FullName -eq 'System.Void UnityEngine.GameObject::SetActive(System.Boolean)'})
     Require ($deactivate.Count -eq 1 -and $deactivate[0].Previous.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldc_I4_0) 'Jotunn initializes PrefabContainer inactive'
     Require (@(Calls $add | Where-Object {$_.Operand.FullName -eq 'System.Void UnityEngine.Transform::SetParent(UnityEngine.Transform,System.Boolean)'}).Count -eq 1) 'AddPrefab reparents only to configured prefab holder'
     Require (@(Calls $add | Where-Object {$_.Operand.Name -eq 'get_PrefabContainer'}).Count -eq 1) 'AddPrefab resolves native inactive PrefabContainer'
+    Require (@(Calls $createClone | Where-Object {$_.Operand.Name -eq 'get_PrefabContainer'}).Count -eq 1) 'CreateClonedPrefab resolves the same inactive PrefabContainer before cloning'
+    Require (@(Calls $createClone | Where-Object {$_.Operand.FullName -eq 'UnityEngine.GameObject Jotunn.Managers.AssetManager::ClonePrefab(UnityEngine.GameObject,System.String,UnityEngine.Transform)'}).Count -eq 1) 'CreateClonedPrefab delegates one clone with the inactive container parent'
+    Require (@(Calls $cloneAsset | Where-Object {$_.Operand.FullName -eq '!!0 UnityEngine.Object::Instantiate<UnityEngine.GameObject>(!!0,UnityEngine.Transform)'}).Count -eq 1) 'AssetManager clones directly under the supplied parent instead of creating a live scene root'
+    Require (@(Calls $cloneAsset | Where-Object {$_.Operand.Name -eq 'SetActive'}).Count -eq 0) 'AssetManager does not activate the staged clone'
     foreach($method in @($ctor,$add,$register,$asset,$loader,$generate,$valid)){
         Require (@(Calls $method | Where-Object {$_.Operand.Name -in @('SetActive','Instantiate','Awake','Start','SendMessage')}).Count -eq 0) "$($method.FullName) does not activate/instantiate/invoke lifecycle"
     }
@@ -40,3 +46,4 @@ try {
     Require (@(Calls $generate | Where-Object {$_.Operand.Name -eq 'GetStableHashCode'}).Count -eq 1) 'Fresh asset identity generated from own name'
     Write-Output "JotunnRegistrationLifecycle PASS: $checks read-only registration/lifecycle checks. Actual Unity registration NOT RUN."
 } finally {$assembly.Dispose()}
+

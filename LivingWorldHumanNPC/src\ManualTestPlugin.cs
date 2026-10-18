@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace LivingWorld.ManualTest
 {
-    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.48")]
+    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.49")]
     [BepInIncompatibility("local.livingworld.manualtest")]
     [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     public sealed class ManualTestPlugin : BaseUnityPlugin
@@ -137,13 +137,12 @@ namespace LivingWorld.ManualTest
                 if (String.IsNullOrEmpty(weapon.GetComponent<ItemDrop>().m_itemData.m_shared.m_attack.m_attackAnimation))
                     throw new InvalidOperationException("Native sword attack animation missing.");
                 expectedWeaponName = weapon.GetComponent<ItemDrop>().m_itemData.m_shared.m_name;
-                // The alert effect must be a real registered prefab.  An
-                // unregistered DontDestroyOnLoad clone became Unity-null during
-                // the 0.3.47 run, so every SetAlerted call threw and forced the
-                // entire companion controller into its fail-closed state.
-                alertVoice = UnityEngine.Object.Instantiate(voiceSource);
-                alertVoice.name = AlertVoiceId;
-                alertVoice.SetActive(false);
+                // Clone directly into Jotunn's inactive prefab container.  A
+                // live scene clone may run its effect lifecycle and destroy
+                // itself before ZNetScene registration, which is exactly what
+                // the 0.3.48 runtime log proved.
+                alertVoice = PrefabManager.Instance.CreateClonedPrefab(AlertVoiceId, voiceSource);
+                if (alertVoice == null) throw new InvalidOperationException("Jotunn could not stage the companion alert voice.");
                 HumanNpcSettings.TuneAlertVoice(alertVoice);
                 clone = NativeHumanFactory.Create(NpcId, playerSource, outfit);
                 HumanNpcSettings.ConfigureAlertVoice(clone.GetComponent<MonsterAI>(), alertVoice);

@@ -81,8 +81,11 @@ try {
  Has $readiness EnsureCombatReady 'System.Reflection.MethodBase::Invoke'
  Has $readiness Update 'HumanUtilityTorch::ReleaseForWeapons'
  Has $readiness Update 'HumanUtilityTorch::ClaimsPeacefulHands'
- Has $readiness WantsWeapons 'HumanUtilityTorch::ClaimsPeacefulHands'
+ Has $readiness WantsWeapons 'HumanCompanion::get_PartyLeader'
+ Has $readiness WantsWeapons 'HumanEquipmentReadiness::LeaderReady'
  Has $torch ReleaseForWeapons 'Disable'
+ Has $torch Update 'HumanEquipmentReadiness::WantsWeapons'
+ Has $torch ClaimsPeacefulHands 'HumanEquipmentReadiness::WantsWeapons'
  $equipmentCalls=@($equipment.Methods|Where-Object HasBody|ForEach-Object {Calls $_})
  Require (@($equipmentCalls|Where-Object {$_ -match 'Character::Damage|HitData::|Projectile::Setup|Inventory::RemoveItem'}).Count -eq 0) 'equipment leaves damage/projectiles/ammo debit to native attack'
  Has (TypeDef $native Attack) UseAmmo 'Inventory::RemoveItem'
@@ -139,7 +142,7 @@ try {
  $settingsType=TypeDef $party HumanNpcSettings
  $settings=Method $settingsType Configure
  Has $plugin Register 'ConfigureAlertVoice'
- Has $plugin Register 'UnityEngine.Object::Instantiate'
+ Has $plugin Register 'PrefabManager::CreateClonedPrefab'
  $registrationCalls=Calls (Method $plugin Register)
  Require (@($registrationCalls|Where-Object {$_.Contains('PrefabManager::AddPrefab')}).Count -eq 2) 'NPC and private alert voice are both registered through Jotunn'
  Require (@($registrationCalls|Where-Object {$_.Contains('DontDestroyOnLoad')}).Count -eq 0) 'alert voice cannot use the failed unregistered DontDestroyOnLoad lifecycle'

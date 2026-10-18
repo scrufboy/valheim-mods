@@ -128,6 +128,7 @@ namespace LivingWorld.HumanNpc
         public Character awareness;
         public bool eligible=true,combat;
         public Player PresenceLeader { get { return eligible && !combat ? leader : null; } }
+        public Player PartyLeader { get { return eligible ? leader : null; } }
         public bool HasAuthorizedCombat { get { return combat; } }
         public bool CombatReadinessActive { get { return combat; } }
         public bool CombatOwnsActor { get { return combat; } }
@@ -196,3 +197,4 @@ static class PresenceAdapterHarness
         Console.WriteLine("PresenceAdapterHarness PASS: "+checks+" actual-adapter checks with managed doubles. Unity NOT RUN.");
     }
 }
+
