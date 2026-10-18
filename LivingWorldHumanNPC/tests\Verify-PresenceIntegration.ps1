@@ -39,9 +39,10 @@ try {
  Has (Method $presence Follow) 'HumanDoorTraversal::NeedsCloseFollow'
  Has (Method $presence Follow) 'UnityEngine.Transform::get_position'
  $formation=Method $presence FormationDestination
- Has $formation 'CompanionPresencePolicy::FormationSideOffset'
+ Has $formation 'HumanFollowPresence::AcquireLease'
  Has $formation 'UnityEngine.Transform::get_forward'
  Has $formation 'UnityEngine.Transform::get_right'
+ Has (Method $presence ReleaseLease) '::Remove'
  Has (Method $presence Follow) 'BaseAI::StopMoving'
  Has (Method $presence Follow) 'MethodBase::Invoke'
  Has (Method $presence BeforeFollow) 'GetComponent<LivingWorld.HumanNpc.HumanFollowPresence>'

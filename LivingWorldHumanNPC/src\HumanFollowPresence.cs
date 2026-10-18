@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using HarmonyLib;
@@ -29,6 +30,9 @@ namespace LivingWorld.HumanNpc
         float previousLookWeight, previousBodyWeight;
         bool ownLook, faulted;
         CompanionPace pace;
+        static readonly List<HumanFollowPresence> Leases = new List<HumanFollowPresence>();
+        Player leaseLeader;
+        int leaseSlot = -1;
         string status = "Presence awaiting active follow order";
         public string Status { get { return status; } }
 
@@ -62,6 +66,7 @@ namespace LivingWorld.HumanNpc
         {
             if (currentLeader != leader)
             {
+                ReleaseLease();
                 ReleaseLook();
                 currentLeader = leader; pace = CompanionPace.Stand;
                 lastActivity = Time.time;
@@ -78,14 +83,15 @@ namespace LivingWorld.HumanNpc
             if (leader == null || target != leader.gameObject)
             { if (ambient != null) ambient.Cancel("follow target/order lost"); return false; }
             if (posture != null) posture.Refresh();
-            Vector3 destination = FormationDestination(leader);
-            float distance = Vector3.Distance(transform.position, destination);
             bool crossing = doors != null && doors.NeedsCloseFollow(target);
-            if (crossing) destination = leader.transform.position;
-            bool ambientHold = false;
+            Vector3 destination = leader.transform.position; bool ambientHold = false;
             bool optional = ambient != null && ambient.TryDestination(leader, crossing, out destination, out ambientHold);
-            if (!optional && crossing) destination = leader.transform.position;
+            bool formation = !optional && !crossing && FormationEligible();
+            if (formation) destination = FormationDestination(leader);
+            else ReleaseLease();
+            float distance = Vector3.Distance(transform.position, destination);
             if (optional) { ReleaseLook(); pace = ambientHold ? CompanionPace.Stand : CompanionPace.Walk; }
+            else if (formation) pace = CompanionPresencePolicy.NextFormationPace(pace, distance);
             else pace = CompanionPresencePolicy.NextPace(pace, distance, crossing);
             if (posture != null && posture.Posture == CompanionPosture.Crouch && pace == CompanionPace.Run)
                 pace = CompanionPace.Walk;
@@ -108,19 +114,55 @@ namespace LivingWorld.HumanNpc
         Vector3 FormationDestination(Player leader)
         {
             if (leader == null) return transform.position;
-            int stable = 17;
-            string identity = gameObject.name ?? "";
-            for (int i = 0; i < identity.Length; ++i) stable = unchecked(stable * 31 + identity[i]);
-            bool archer = identity.IndexOf("Scout", StringComparison.OrdinalIgnoreCase) >= 0;
-            bool cleric = identity.IndexOf("Cleric", StringComparison.OrdinalIgnoreCase) >= 0;
-            if (!archer && !cleric) return leader.transform.position;
-            float side = CompanionPresencePolicy.FormationSideOffset(archer, cleric, stable);
+            AcquireLease(leader);
+            if (leaseSlot < 0) return leader.transform.position;
+            float side = leaseSlot == 0 ? -CompanionPresencePolicy.FormationSide : CompanionPresencePolicy.FormationSide;
             Vector3 forward = leader.transform.forward; forward.y = 0f;
             Vector3 right = leader.transform.right; right.y = 0f;
             if (forward.sqrMagnitude < .01f) forward = new Vector3(0f, 0f, 1f);
             if (right.sqrMagnitude < .01f) right = new Vector3(1f, 0f, 0f);
             return leader.transform.position - forward.normalized * CompanionPresencePolicy.FormationRear +
                 right.normalized * side;
+        }
+
+        bool FormationEligible()
+        {
+            string identity = gameObject.name ?? "";
+            return identity.IndexOf("HumanScout", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                identity.IndexOf("HumanCleric", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        void AcquireLease(Player leader)
+        {
+            if (leaseLeader == leader && leaseSlot >= 0) return;
+            ReleaseLease();
+            bool leftFree = true, rightFree = true;
+            for (int i = Leases.Count - 1; i >= 0; --i)
+            {
+                var other = Leases[i];
+                if (other == null || !other.isActiveAndEnabled || other.leaseLeader == null || other.leaseSlot < 0)
+                { Leases.RemoveAt(i); continue; }
+                if (other.leaseLeader != leader) continue;
+                if (other.leaseSlot == 0) leftFree = false;
+                if (other.leaseSlot == 1) rightFree = false;
+            }
+            Vector3 forward = leader.transform.forward; forward.y = 0f;
+            Vector3 right = leader.transform.right; right.y = 0f;
+            if (forward.sqrMagnitude < .01f) forward = new Vector3(0f, 0f, 1f);
+            if (right.sqrMagnitude < .01f) right = new Vector3(1f, 0f, 0f);
+            Vector3 rear = leader.transform.position - forward.normalized * CompanionPresencePolicy.FormationRear;
+            float leftDistance = Vector3.Distance(transform.position, rear - right.normalized * CompanionPresencePolicy.FormationSide);
+            float rightDistance = Vector3.Distance(transform.position, rear + right.normalized * CompanionPresencePolicy.FormationSide);
+            if (leftFree && rightFree) leaseSlot = leftDistance <= rightDistance ? 0 : 1;
+            else if (leftFree) leaseSlot = 0;
+            else if (rightFree) leaseSlot = 1;
+            else leaseSlot = -1;
+            if (leaseSlot >= 0) { leaseLeader = leader; Leases.Add(this); }
+        }
+
+        void ReleaseLease()
+        {
+            leaseLeader = null; leaseSlot = -1; Leases.Remove(this);
         }
 
         void Attention(CharacterAnimEvent events)
@@ -197,8 +239,8 @@ namespace LivingWorld.HumanNpc
             var plugin = LivingWorld.ManualTest.ManualTestPlugin.Instance;
             if (plugin != null) plugin.Report("PRESENCE FAIL: " + status);
         }
-        void OnDisable() { ReleaseLook(); if (ambient != null) ambient.Cancel("presence disabled"); currentLeader = null; pace = CompanionPace.Stand; }
-        void OnDestroy() { ReleaseLook(); if (ambient != null) ambient.Cancel("presence destroyed"); }
+        void OnDisable() { ReleaseLease(); ReleaseLook(); if (ambient != null) ambient.Cancel("presence disabled"); currentLeader = null; pace = CompanionPace.Stand; }
+        void OnDestroy() { ReleaseLease(); ReleaseLook(); if (ambient != null) ambient.Cancel("presence destroyed"); }
 
         static bool BeforeFollow(BaseAI __instance, GameObject __0, float __1)
         {

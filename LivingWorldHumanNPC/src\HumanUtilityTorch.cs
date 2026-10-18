@@ -37,7 +37,7 @@ namespace LivingWorld.HumanNpc
                 bool combatLocked = companion.CombatReadinessActive || body.InAttack() || body.IsStaggering() ||
                     body.IsBlocking() || (combatAi != null && (combatAi.IsAlerted() || combatAi.GetTargetCreature() != null));
                 if (readiness != null && readiness.WantsWeapons()) combatLocked = true;
-                if (combatLocked) { lastCombat = Time.time; ReleaseForWeapons(); return; }
+                if (combatLocked || !companion.AreaClearVerified) { lastCombat = Time.time; ReleaseForWeapons(); return; }
                 // Torches are companion ambience, never combat equipment. A
                 // full five quiet seconds must follow the last combat signal so
                 // a transient target/alert gap cannot put one back in a hand.

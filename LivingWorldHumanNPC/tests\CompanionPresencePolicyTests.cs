@@ -47,6 +47,10 @@ static class CompanionPresencePolicyTests
         Check(CompanionPresencePolicy.FormationSideOffset(false, true, 0) > 0, "Cleric owns stable right lane");
         Check(CompanionPresencePolicy.FormationSideOffset(false, false, 0) !=
             CompanionPresencePolicy.FormationSideOffset(false, false, 1), "Other companions alternate stable lanes");
+        Check(CompanionPresencePolicy.NextFormationPace(CompanionPace.Walk, .8f) == CompanionPace.Stand,
+            "Formation settles tightly on its leased position");
+        Check(CompanionPresencePolicy.NextFormationPace(CompanionPace.Stand, 1.5f) == CompanionPace.Walk,
+            "Formation resumes when its leased position opens");
         Console.WriteLine("CompanionPresencePolicy PASS: " + checks + " checks.");
     }
 }

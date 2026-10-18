@@ -16,12 +16,18 @@ namespace LivingWorld.HumanNpc
         public const float LeaderMovementThreshold = 0.15f;
         public const float FormationRear = 3.2f;
         public const float FormationSide = 2.1f;
+        public const float FormationStopDistance = 0.8f;
 
         public static float FormationSideOffset(bool archer, bool cleric, int stableIdentity)
         {
             if (archer) return -FormationSide;
             if (cleric) return FormationSide;
             return (stableIdentity & 1) == 0 ? -FormationSide : FormationSide;
+        }
+
+        public static CompanionPace NextFormationPace(CompanionPace previous, float slotDistance)
+        {
+            return NextPace(previous, slotDistance + StopDistance - FormationStopDistance, false);
         }
 
         public static CompanionPace NextPace(CompanionPace previous, float distance, bool mustCross)

@@ -59,6 +59,8 @@ namespace LivingWorld.HumanNpc
         public bool HasAuthorizedCombat { get { return authorizedTarget != null; } }
         public bool CombatReadinessActive
         { get { return authorizedTarget != null || (encounterOwned && (!encounterClearObserved || Time.time < encounterUntil)); } }
+        public bool AreaClearVerified
+        { get { return authorizedTarget == null && !encounterOwned && encounterClearObserved && !awarenessAlarmed; } }
         public Character TargetCreature { get { return authorizedTarget; } }
         internal Character AwarenessTarget { get { return awarenessTarget; } }
         internal bool AwarenessAlarmed { get { return awarenessTarget != null && awarenessAlarmed; } }
@@ -740,3 +742,4 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
+
