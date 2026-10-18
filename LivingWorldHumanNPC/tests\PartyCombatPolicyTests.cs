@@ -20,13 +20,13 @@ class PartyCombatPolicyTests
         Check(PartyCombatPolicy.Weapon(true,true,true,true,30,2,2)==PartyWeapon.SwordShield,"nearby second threat overrides distant target");
         Check(PartyCombatPolicy.Weapon(false,true,true,false,7,1,2)==PartyWeapon.SwordShield,"entry hysteresis");
         Check(PartyCombatPolicy.Weapon(true,true,true,false,11,1,2)==PartyWeapon.Bow,"retain safe ranged commitment");
-        Check(!PartyCombatPolicy.Torch(true,false,false,false,false,true,0.03f,false),"fog suppresses light");
-        Check(!PartyCombatPolicy.Torch(true,false,false,false,false,true,0.001f,true),"local mist suppresses light");
-        Check(!PartyCombatPolicy.Torch(true,false,true,false,false,true,0.001f,false),"stealth suppresses light");
-        Check(!PartyCombatPolicy.Torch(true,false,false,true,false,true,0.001f,false),"combat frees hands");
-        Check(!PartyCombatPolicy.Torch(true,true,false,false,false,true,0.001f,false),"existing light sufficient");
-        Check(PartyCombatPolicy.Torch(true,false,false,false,false,true,0.001f,false),"clear dark night");
-        Check(!PartyCombatPolicy.Torch(true,false,false,false,false,false,0,false),"unknown fog is not clear weather");
+        Check(!PartyCombatPolicy.Torch(true,false,true,false,false),"stealth suppresses light");
+        Check(!PartyCombatPolicy.Torch(true,false,false,true,false),"combat frees hands");
+        Check(!PartyCombatPolicy.Torch(true,true,false,false,false),"existing light sufficient");
+        Check(!PartyCombatPolicy.Torch(true,false,false,false,true),"occupied hands suppress light");
+        Check(PartyCombatPolicy.Torch(true,false,false,false,false),"dark peaceful companion uses light");
+        Check(PartyCombatPolicy.PerceivedLight(0f,0f,.6f,1f) < .1f,"blue night is perceived as dark");
+        Check(PartyCombatPolicy.PerceivedLight(.6f,.6f,.6f,1f) > .5f,"neutral daylight is perceived as bright");
         Check(PartyCombatPolicy.HealEligible(true,true,true,true,5,20,100),"injured party member");
         Check(!PartyCombatPolicy.HealEligible(false,true,true,true,5,20,100),"enemy excluded");
         Check(!PartyCombatPolicy.HealEligible(true,false,true,true,5,0,100),"no resurrection");
@@ -39,3 +39,4 @@ class PartyCombatPolicyTests
         Console.WriteLine("PartyCombatPolicy PASS: " + checks + " scenario checks. Runtime not tested.");
     }
 }
+
