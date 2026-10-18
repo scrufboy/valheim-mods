@@ -6,13 +6,32 @@ namespace LivingWorld.HumanNpc
 {
     internal static class HumanNpcSettings
     {
+        const float CompanionVoiceMinPitch = .8f;
+        const float CompanionVoiceMaxPitch = .9f;
+        static GameObject companionAlertVoice;
+
         internal static void ConfigureAlertVoice(MonsterAI ai, GameObject nativeHumanVoice)
         {
             if (ai == null || nativeHumanVoice == null)
                 throw new InvalidOperationException("Native human alert voice unavailable.");
+            if (companionAlertVoice == null)
+            {
+                // RRR's human NPC voice is a private clone of the native Fuling
+                // alert with a 0.80-0.90 pitch range.  Clone the standalone SFX
+                // locally so no shared vanilla prefab is mutated and no RRR or
+                // dependency on another NPC package is introduced.
+                companionAlertVoice = UnityEngine.Object.Instantiate(nativeHumanVoice);
+                companionAlertVoice.name = "LWC_sfx_companion_alerted";
+                companionAlertVoice.SetActive(false);
+                UnityEngine.Object.DontDestroyOnLoad(companionAlertVoice);
+                var sound = companionAlertVoice.GetComponent<ZSFX>();
+                if (sound == null) throw new InvalidOperationException("Native Fuling alert has no ZSFX component.");
+                sound.m_minPitch = CompanionVoiceMinPitch;
+                sound.m_maxPitch = CompanionVoiceMaxPitch;
+            }
             var voices = new EffectList();
             voices.m_effectPrefabs = new[] { new EffectList.EffectData {
-                m_prefab = nativeHumanVoice, m_enabled = true, m_variant = -1
+                m_prefab = companionAlertVoice, m_enabled = true, m_variant = -1
             } };
             ai.m_alertedEffects = voices;
         }

@@ -163,7 +163,21 @@ namespace LivingWorld.HumanNpc
         internal bool ClaimsPeacefulHands()
         {
             if (companion == null) companion = GetComponent<HumanCompanion>();
-            if (companion == null || companion.CombatOwnsActor || !companion.AreaClearVerified) return false;
+            if (body == null) body = GetComponent<Humanoid>();
+            if (companion == null || body == null || companion.CombatOwnsActor || !companion.AreaClearVerified ||
+                Time.time - lastCombat < 5f) return false;
+            long owner; Player leader;
+            if (!companion.TryGetConfidenceParty(out owner, out leader) || leader == null || leader.IsCrouching()) return false;
+            bool busy = body.InAttack() || body.IsStaggering() || body.IsSwimming() || body.IsCrouching();
+            var cleric = GetComponent<HumanCleric>();
+            busy |= cleric != null && cleric.Casting;
+            var weapon = body.GetCurrentWeapon();
+            busy |= weapon != null && weapon.m_shared.m_attack.m_bowDraw;
+            var posture = GetComponent<HumanCompanionPosture>();
+            if (busy || (posture != null && (posture.OwnsAmbientHands || posture.HasAmbientPose))) return false;
+            // nearBuiltLight is the cached result of the bounded half-second
+            // physics scan in Update.  Readiness may consult this method ten
+            // times per second but must never start another world scan.
             return AmbientDark() && !nearBuiltLight;
         }
         internal void ReleaseForWeapons()

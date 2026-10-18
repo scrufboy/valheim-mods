@@ -80,6 +80,7 @@ try {
  Has $readiness Update 'System.Reflection.MethodBase::Invoke'
  Has $readiness EnsureCombatReady 'System.Reflection.MethodBase::Invoke'
  Has $readiness Update 'HumanUtilityTorch::ReleaseForWeapons'
+ Has $readiness Update 'HumanUtilityTorch::ClaimsPeacefulHands'
  Has $readiness WantsWeapons 'HumanUtilityTorch::ClaimsPeacefulHands'
  Has $torch ReleaseForWeapons 'Disable'
  $equipmentCalls=@($equipment.Methods|Where-Object HasBody|ForEach-Object {Calls $_})
@@ -135,8 +136,13 @@ try {
  Has $doors Step 'BaseAI::StopMoving'
  Has $doors Step 'ResetRoute'
  Has $doors NeedsCloseFollow 'DoorTravelPolicy::ContinueShortFollow'
- $settings=Method (TypeDef $party HumanNpcSettings) Configure
+ $settingsType=TypeDef $party HumanNpcSettings
+ $settings=Method $settingsType Configure
  Has $plugin Register 'ConfigureAlertVoice'
+ Has $settingsType ConfigureAlertVoice '::Instantiate'
+ Has $settingsType ConfigureAlertVoice 'UnityEngine.Object::DontDestroyOnLoad'
+ HasFloatSetting (Method $settingsType ConfigureAlertVoice) m_minPitch .8
+ HasFloatSetting (Method $settingsType ConfigureAlertVoice) m_maxPitch .9
  HasFloatSetting $settings m_viewRange 30
  HasFloatSetting $settings m_hearRange 9999
  HasFloatSetting $settings m_alertRange 20

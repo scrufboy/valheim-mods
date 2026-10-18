@@ -154,11 +154,23 @@ namespace LivingWorld.HumanNpc
             try
             {
                 if (!HandsSafe()) return;
+                // Utility equipment is a real hand owner, not an unequipped
+                // combat loadout.  The previous fall-through treated a visible
+                // torch as "no combat item", restored/stowed the sword pair and
+                // unequipped the torch every readiness tick.  HumanUtilityTorch
+                // then put it back on its next tick, producing the observed
+                // half-second visual flicker.  Yield completely while the calm
+                // nighttime utility state owns the hands.
+                var utility = GetComponent<HumanUtilityTorch>();
+                if (utility != null && utility.ClaimsPeacefulHands())
+                {
+                    Report(3, "peaceful utility torch owns hands");
+                    return;
+                }
                 bool threat = companion != null && companion.CombatOwnsActor;
                 bool show = WantsWeapons();
                 if (show)
                 {
-                    var utility = GetComponent<HumanUtilityTorch>();
                     if (utility != null) utility.ReleaseForWeapons();
                     if (HiddenCombat(body)) ShowHands.Invoke(body, ShowWithoutHipAnimation);
                     SyncBackVisuals(false);

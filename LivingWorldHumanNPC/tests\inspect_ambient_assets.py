@@ -96,5 +96,5 @@ for item in voice.read_typetree()['m_Component']:
         voice_sets.append(fields)
 assert len(voice_sets) == 1 and len(voice_sets[0]['m_audioClips']) == 3, 'Native Fuling alert variants changed'
 assert voice_sets[0]['m_minPitch'] >= 1.09 and voice_sets[0]['m_maxPitch'] <= 1.21, 'Native Fuling alert pitch changed'
-print('Native companion combat exclamation -> sfx_goblin_alerted (3 clips, pitch 1.10-1.20)')
+print('Native companion alert source -> sfx_goblin_alerted (3 clips, source pitch 1.10-1.20); compiled adapter must clone and lower it to 0.80-0.90')
 print('NativeAmbientAssets PASS: native Workbench/Forge events and combat exclamation inspected. Unity NOT RUN.')
