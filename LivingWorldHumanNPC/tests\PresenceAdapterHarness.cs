@@ -160,7 +160,8 @@ static class PresenceAdapterHarness
         HumanFollowPresence.InstallPatches(new HarmonyLib.Harmony()); HumanCompanionPosture.InstallPatches(new HarmonyLib.Harmony());
         Time.time=100; npc.transform.position=new Vector3(0,0,8);
         Check((bool)Call(presence,"Follow",person,.02f),"Own active following handled");
-        Check(ai.moves==1&&ai.lastRun&&ai.lastGoal.z==0,"Catch up via native MoveTo toward actual leader");
+        Check(ai.moves==1&&ai.lastRun&&Vector3.Distance(ai.lastGoal,leader.transform.position)>=CompanionPresencePolicy.LeaderExclusionRadius,
+            "Catch up via native MoveTo without routing into leader exclusion");
         Call(presence,"Attention",gaze);
         Check(gaze.m_lookAt==leader.m_eye&&gaze.m_bodyLookWeight==0&&gaze.m_lookWeight==.75f,"Head looks at eye, no torso twisting");
         npc.transform.position=new Vector3(0,0,4);Call(presence,"Follow",person,.02f);Check(ai.lastRun,"Run hysteresis retained");
@@ -195,4 +196,3 @@ static class PresenceAdapterHarness
         Console.WriteLine("PresenceAdapterHarness PASS: "+checks+" actual-adapter checks with managed doubles. Unity NOT RUN.");
     }
 }
-

@@ -65,7 +65,12 @@ namespace LivingWorld.HumanNpc
         public bool CombatOwnsActor { get { return CombatReadinessActive; } }
         public bool CompanionBehaviorAllowed { get { return !CombatOwnsActor; } }
         public bool AreaClearVerified
-        { get { return authorizedTarget == null && !encounterOwned && encounterClearObserved && !awarenessAlarmed; } }
+        {
+            // Awareness and curiosity are peaceful states. Only an owned combat
+            // encounter withholds the verified-clear signal from utility hands,
+            // formation and ambient companion behavior.
+            get { return authorizedTarget == null && !encounterOwned && encounterClearObserved; }
+        }
         public Character TargetCreature { get { return authorizedTarget; } }
         internal Character AwarenessTarget { get { return awarenessTarget; } }
         internal bool AwarenessAlarmed { get { return awarenessTarget != null && awarenessAlarmed; } }
@@ -315,31 +320,33 @@ namespace LivingWorld.HumanNpc
             var hostile = target.GetComponent<MonsterAI>();
             if (hostile == null) return false;
             Character victim = hostile.GetTargetCreature();
-            if (victim == body || (ProtectingOwner() && victim == observedLeader)) return true;
+            bool targetsProtectedParty = victim == body || (ProtectingOwner() && victim == observedLeader);
             var ally = victim == null ? null : victim.GetComponent<HumanCompanion>();
             long ownParty, otherParty; Player ownLeader, otherLeader;
             bool attackingParty = ally != null && TryGetConfidenceParty(out ownParty, out ownLeader) &&
                 ally.TryGetConfidenceParty(out otherParty, out otherLeader) && ownParty == otherParty &&
                 Vector3.Distance(victim.transform.position, OrderAnchor()) <= CompanionPolicy.NpcLeash;
-            if (attackingParty) return true;
+            targetsProtectedParty |= attackingParty;
+
+            bool sensed = Vector3.Distance(target.transform.position, transform.position) <= DetectionLeash &&
+                Vector3.Distance(target.transform.position, OrderAnchor()) <= DetectionLeash &&
+                (ai.CanSeeTarget(target) || ai.CanHearTarget(target));
+            bool enemy;
+            rawEnemyQuery++;
+            try { enemy = BaseAI.IsEnemy(body, target); }
+            finally { rawEnemyQuery--; }
+            if (!enemy) return false;
 
             // A crouched leader is asking the party to remain concealed. The
             // companion may observe and visibly track a hostile, but proximity
             // alone must not turn that observation into lethal authorization.
             // An attack on self, leader or party above still overrides concealment.
-            if (ProtectingOwner() && observedLeader.IsCrouching()) return false;
+            if (ProtectingOwner() && observedLeader.IsCrouching() && !targetsProtectedParty) return false;
 
-            // A sensed enemy inside the party's defensive envelope is already
-            // actionable. Requiring the enemy's alert flag made companions wait
-            // for the other AI to commit first instead of running their own scan.
-            if (Vector3.Distance(target.transform.position, transform.position) > DetectionLeash ||
-                Vector3.Distance(target.transform.position, OrderAnchor()) > DetectionLeash ||
-                (!ai.CanSeeTarget(target) && !ai.CanHearTarget(target))) return false;
-            bool enemy;
-            rawEnemyQuery++;
-            try { enemy = BaseAI.IsEnemy(body, target); }
-            finally { rawEnemyQuery--; }
-            return enemy;
+            // Native victim selection is the commit line. IsAlerted and sensing
+            // remain awareness inputs, so curiosity can turn heads and display
+            // its marker without stealing torch, formation or combat ownership.
+            return CompanionPolicy.HostileCommitted(targetsProtectedParty, sensed, hostile.IsAlerted());
         }
 
         bool ProtectingOwner()
@@ -763,4 +770,3 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
-

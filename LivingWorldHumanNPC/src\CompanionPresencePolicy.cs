@@ -17,6 +17,8 @@ namespace LivingWorld.HumanNpc
         public const float FormationRear = 3.2f;
         public const float FormationSide = 1.65f;
         public const float FormationStopDistance = 0.8f;
+        public const float LeaderExclusionRadius = 1.25f;
+        public const float LeaderExclusionMargin = 0.45f;
 
         public static float FormationSideOffset(bool archer, bool cleric, int stableIdentity)
         {
@@ -48,7 +50,23 @@ namespace LivingWorld.HumanNpc
                 (travelling || quietSeconds < IdleAttentionSeconds);
         }
 
+        public static bool PathEntersLeaderExclusion(float actorX, float actorZ,
+            float destinationX, float destinationZ, float leaderX, float leaderZ)
+        {
+            if (!Finite(actorX) || !Finite(actorZ) || !Finite(destinationX) || !Finite(destinationZ) ||
+                !Finite(leaderX) || !Finite(leaderZ)) return true;
+            float startX = actorX - leaderX, startZ = actorZ - leaderZ;
+            float radiusSquared = LeaderExclusionRadius * LeaderExclusionRadius;
+            if (startX * startX + startZ * startZ < radiusSquared) return true;
+            float dx = destinationX - actorX, dz = destinationZ - actorZ;
+            float lengthSquared = dx * dx + dz * dz;
+            if (lengthSquared < .0001f) return false;
+            float t = -(startX * dx + startZ * dz) / lengthSquared;
+            if (t < 0f) t = 0f; else if (t > 1f) t = 1f;
+            float nearestX = startX + dx * t, nearestZ = startZ + dz * t;
+            return nearestX * nearestX + nearestZ * nearestZ < radiusSquared;
+        }
+
         static bool Finite(float value) { return !Single.IsNaN(value) && !Single.IsInfinity(value); }
     }
 }
-

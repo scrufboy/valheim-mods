@@ -90,6 +90,7 @@ namespace LivingWorld.HumanNpc
             if (formation) destination = FormationDestination(leader);
             else ReleaseLease();
             float distance = Vector3.Distance(transform.position, destination);
+            Vector3 safeDestination = RespectLeaderExclusion(leader, destination);
             if (optional) { ReleaseLook(); pace = ambientHold ? CompanionPace.Stand : CompanionPace.Walk; }
             else if (formation) pace = CompanionPresencePolicy.NextFormationPace(pace, distance);
             else pace = CompanionPresencePolicy.NextPace(pace, distance, crossing);
@@ -103,12 +104,33 @@ namespace LivingWorld.HumanNpc
                 lastActivity = Time.time;
                 // A committed ambient point is an optional input to this same
                 // executor; ordinary orders retain the actual leader position.
-                moveArguments[0] = dt; moveArguments[1] = destination;
+                moveArguments[0] = dt; moveArguments[1] = safeDestination;
                 moveArguments[2] = optional ? 0.2f : 0f; moveArguments[3] = pace == CompanionPace.Run;
                 Move.Invoke(ai, moveArguments);
             }
             Report(distance, crossing);
             return true;
+        }
+
+        Vector3 RespectLeaderExclusion(Player leader, Vector3 destination)
+        {
+            if (leader == null || !CompanionPresencePolicy.PathEntersLeaderExclusion(
+                transform.position.x, transform.position.z, destination.x, destination.z,
+                leader.transform.position.x, leader.transform.position.z)) return destination;
+            Vector3 outward = transform.position - leader.transform.position; outward.y = 0f;
+            if (outward.sqrMagnitude < .01f)
+            {
+                outward = leader.transform.forward * -1f; outward.y = 0f;
+                if (outward.sqrMagnitude < .01f) outward = new Vector3(0f, 0f, -1f);
+            }
+            outward = outward.normalized;
+            Vector3 tangent = new Vector3(-outward.z, 0f, outward.x);
+            float side = leaseSlot == 0 ? -1f : leaseSlot == 1 ? 1f : 1f;
+            Vector3 detour = leader.transform.position + outward *
+                (CompanionPresencePolicy.LeaderExclusionRadius + CompanionPresencePolicy.LeaderExclusionMargin) +
+                tangent * side * .9f;
+            detour.y = destination.y;
+            return detour;
         }
 
         Vector3 FormationDestination(Player leader)
@@ -258,4 +280,3 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
-

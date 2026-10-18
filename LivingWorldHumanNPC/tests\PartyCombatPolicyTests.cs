@@ -22,9 +22,15 @@ class PartyCombatPolicyTests
         Check(PartyCombatPolicy.Weapon(true,true,true,false,11,1,2)==PartyWeapon.Bow,"retain safe ranged commitment");
         Check(!PartyCombatPolicy.Torch(true,false,true,false,false),"stealth suppresses light");
         Check(!PartyCombatPolicy.Torch(true,false,false,true,false),"combat frees hands");
-        Check(!PartyCombatPolicy.Torch(true,true,false,false,false),"existing light sufficient");
         Check(!PartyCombatPolicy.Torch(true,false,false,false,true),"occupied hands suppress light");
-        Check(PartyCombatPolicy.Torch(true,false,false,false,false),"dark peaceful companion uses light");
+        Check(!PartyCombatPolicy.Torch(true,true,false,false,false),"nearby built light suppresses carried torch");
+        Check(PartyCombatPolicy.Torch(true,false,false,false,false),"vanilla night peaceful companion uses light");
+        Check(!PartyCombatPolicy.Torch(false,false,false,false,false),"vanilla day does not use utility light");
+        Check(PartyCombatPolicy.BuiltLightNearby(false,6f),"six metres enters built-light shelter");
+        Check(PartyCombatPolicy.BuiltLightNearby(true,9.9f),"light shelter persists through hysteresis band");
+        Check(!PartyCombatPolicy.BuiltLightNearby(false,6.1f),"outside six metres does not newly suppress torch");
+        Check(!PartyCombatPolicy.BuiltLightNearby(true,10f),"ten metres restores torch eligibility");
+        Check(!PartyCombatPolicy.BuiltLightNearby(true,Single.PositiveInfinity),"no built light restores torch eligibility");
         Check(PartyCombatPolicy.PerceivedLight(0f,0f,.6f,1f) < .1f,"blue night is perceived as dark");
         Check(PartyCombatPolicy.PerceivedLight(.6f,.6f,.6f,1f) > .5f,"neutral daylight is perceived as bright");
         Check(PartyCombatPolicy.HealEligible(true,true,true,true,5,20,100),"injured party member");
@@ -39,4 +45,3 @@ class PartyCombatPolicyTests
         Console.WriteLine("PartyCombatPolicy PASS: " + checks + " scenario checks. Runtime not tested.");
     }
 }
-

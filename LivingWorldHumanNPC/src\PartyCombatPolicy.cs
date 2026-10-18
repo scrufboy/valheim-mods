@@ -35,12 +35,22 @@ namespace LivingWorld.HumanNpc
             return (red * .2126f + green * .7152f + blue * .0722f) * intensity;
         }
 
-        public static bool Torch(bool dark, bool nearbyLight, bool stealth, bool combat, bool handsBusy)
+        public static bool BuiltLightNearby(bool previouslyNear, float nearestDistance)
         {
-            // Weather is not a reason to discard useful light. Combat, stealth,
-            // occupied hands, sufficient ambient light and a nearby built light
-            // are the complete utility-light arbitration order.
-            return dark && !nearbyLight && !stealth && !combat && !handsBusy;
+            if (Single.IsPositiveInfinity(nearestDistance)) return false;
+            if (!Finite(nearestDistance) || nearestDistance < 0f) return true;
+            if (nearestDistance <= 6f) return true;
+            if (nearestDistance >= 10f) return false;
+            return previouslyNear;
+        }
+
+        public static bool Torch(bool nativeNight, bool nearBuiltLight, bool stealth, bool combat, bool handsBusy)
+        {
+            // Vanilla's night decision is authoritative. Rendered blue ambient
+            // light and nearby build pieces must not veto a peaceful companion's
+            // torch. Combat, stealth and unavailable hands are the only runtime
+            // suppressors once the game says it is night.
+            return nativeNight && !nearBuiltLight && !stealth && !combat && !handsBusy;
         }
 
         public static bool HealEligible(bool ally, bool alive, bool owned, bool visible,
@@ -61,4 +71,3 @@ namespace LivingWorld.HumanNpc
         static bool Finite(float value) { return !Single.IsNaN(value) && !Single.IsInfinity(value); }
     }
 }
-

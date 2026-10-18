@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace LivingWorld.ManualTest
 {
-    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.45")]
+    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.46")]
     [BepInIncompatibility("local.livingworld.manualtest")]
     [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     public sealed class ManualTestPlugin : BaseUnityPlugin
@@ -123,6 +123,8 @@ namespace LivingWorld.ManualTest
                 if (PrefabManager.Instance.GetPrefab(NpcId) != null) throw new InvalidOperationException("Test prefab identity already exists.");
                 var playerSource = PrefabManager.Instance.GetPrefab("Player");
                 if (playerSource == null) throw new InvalidOperationException("Native human visual source unavailable.");
+                var voiceSource = PrefabManager.Instance.GetPrefab("sfx_goblin_alerted");
+                if (voiceSource == null) throw new InvalidOperationException("Native human combat voice source unavailable.");
                 var outfit = new[] { "ArmorLeatherChest", "ArmorLeatherLegs", "SwordBronze", "ShieldWood" }
                     .Select(name => PrefabManager.Instance.GetPrefab(name)).ToArray();
                 if (outfit.Any(item => item == null || item.GetComponent<ItemDrop>() == null))
@@ -132,6 +134,7 @@ namespace LivingWorld.ManualTest
                     throw new InvalidOperationException("Native sword attack animation missing.");
                 expectedWeaponName = weapon.GetComponent<ItemDrop>().m_itemData.m_shared.m_name;
                 clone = NativeHumanFactory.Create(NpcId, playerSource, outfit);
+                HumanNpcSettings.ConfigureAlertVoice(clone.GetComponent<MonsterAI>(), voiceSource);
                 clone.AddComponent<ManualNpcIdentity>();
                 NativeHumanFactory.Validate(clone, false);
                 var containerProperty = typeof(PrefabManager).GetProperty("PrefabContainer", Native);
@@ -719,4 +722,3 @@ namespace LivingWorld.ManualTest
         // Marker only. Saved metadata is inspected, never blessed automatically.
     }
 }
-

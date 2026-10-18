@@ -51,7 +51,14 @@ static class CompanionPresencePolicyTests
             "Formation settles tightly on its leased position");
         Check(CompanionPresencePolicy.NextFormationPace(CompanionPace.Stand, 1.5f) == CompanionPace.Walk,
             "Formation resumes when its leased position opens");
+        Check(CompanionPresencePolicy.PathEntersLeaderExclusion(0f, -3f, 0f, 3f, 0f, 0f),
+            "route through leader is rejected");
+        Check(!CompanionPresencePolicy.PathEntersLeaderExclusion(-3f, -3f, -3f, 3f, 0f, 0f),
+            "clear parallel route remains native");
+        Check(CompanionPresencePolicy.PathEntersLeaderExclusion(.25f, 0f, 3f, 0f, 0f, 0f),
+            "actor already inside exclusion must leave");
+        Check(CompanionPresencePolicy.PathEntersLeaderExclusion(Single.NaN, 0f, 3f, 0f, 0f, 0f),
+            "invalid route fails safely away from leader");
         Console.WriteLine("CompanionPresencePolicy PASS: " + checks + " checks.");
     }
 }
-

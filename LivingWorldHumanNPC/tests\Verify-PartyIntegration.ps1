@@ -80,7 +80,7 @@ try {
  Has $readiness Update 'System.Reflection.MethodBase::Invoke'
  Has $readiness EnsureCombatReady 'System.Reflection.MethodBase::Invoke'
  Has $readiness Update 'HumanUtilityTorch::ReleaseForWeapons'
- Has $torch Update 'HumanEquipmentReadiness::WantsWeapons'
+ Has $readiness WantsWeapons 'HumanUtilityTorch::ClaimsPeacefulHands'
  Has $torch ReleaseForWeapons 'Disable'
  $equipmentCalls=@($equipment.Methods|Where-Object HasBody|ForEach-Object {Calls $_})
  Require (@($equipmentCalls|Where-Object {$_ -match 'Character::Damage|HitData::|Projectile::Setup|Inventory::RemoveItem'}).Count -eq 0) 'equipment leaves damage/projectiles/ammo debit to native attack'
@@ -98,6 +98,8 @@ try {
  Has $cleric Update 'ClericPresentation::Delivered'
  Has $cleric Save 'HumanResourcePool::Save'
  Has $torch Update 'PartyCombatPolicy::Torch'
+ Has $torch AmbientDark 'EnvMan::IsNight'
+ Has $torch AmbientDark 'EnvMan::IsDaylight'
  Has $torch AmbientDark 'PartyCombatPolicy::PerceivedLight'
  Has $torch Update 'HumanCompanionPosture::get_OwnsAmbientHands'
  Has $torch EnsureTorch 'ObjectDB::GetItemPrefab'
@@ -134,6 +136,7 @@ try {
  Has $doors Step 'ResetRoute'
  Has $doors NeedsCloseFollow 'DoorTravelPolicy::ContinueShortFollow'
  $settings=Method (TypeDef $party HumanNpcSettings) Configure
+ Has $plugin Register 'ConfigureAlertVoice'
  HasFloatSetting $settings m_viewRange 30
  HasFloatSetting $settings m_hearRange 9999
  HasFloatSetting $settings m_alertRange 20
@@ -146,4 +149,3 @@ try {
  Require ($circulate.OpCode.Code.ToString() -eq 'Ldc_I4_1') 'native circulate-while-charging is enabled'
  'PartyIntegration PASS: '+$checks+' compiled integration/native-contract assertions. No Unity acceptance claimed.'
 } finally {$party.Dispose();$native.Dispose()}
-

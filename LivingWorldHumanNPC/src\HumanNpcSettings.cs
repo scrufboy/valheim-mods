@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -5,6 +6,17 @@ namespace LivingWorld.HumanNpc
 {
     internal static class HumanNpcSettings
     {
+        internal static void ConfigureAlertVoice(MonsterAI ai, GameObject nativeHumanVoice)
+        {
+            if (ai == null || nativeHumanVoice == null)
+                throw new InvalidOperationException("Native human alert voice unavailable.");
+            var voices = new EffectList();
+            voices.m_effectPrefabs = new[] { new EffectList.EffectData {
+                m_prefab = nativeHumanVoice, m_enabled = true, m_variant = -1
+            } };
+            ai.m_alertedEffects = voices;
+        }
+
         // Product-owned values. No creature or Player behaviour settings are copied.
         // Human walking/swimming scales deliberately match the authored human rig.
         internal static void Configure(Humanoid h, MonsterAI ai, Rigidbody body)

@@ -31,7 +31,11 @@ static class AmbientAdapterHarness
         }
         public void Step(float time){Time.time=time;Call(presence,"Follow",person,.1f);}
         public void Select(){if(Time.time<112)Step(112);for(float at=147;at<=252&&!ambient.Active;at+=35)Step(at);selectedAt=Time.time;}
-        public void Arrive(){npc.transform.position=ai.lastGoal;arrivedAt=selectedAt+1;Step(arrivedAt);}
+        public void Arrive()
+        {
+            for(int i=0;i<16&&!ambient.Performing;i++)
+            { arrivedAt=selectedAt+1+i*.1f;npc.transform.position=ai.lastGoal;Step(arrivedAt); }
+        }
         public void Clean(){ambient.Cancel("harness teardown");}
     }
     static GameObject Prop(string name,bool effect)
@@ -51,7 +55,8 @@ static class AmbientAdapterHarness
         var f=new Fixture();Station();f.Step(100);f.Step(111);
         Check(!f.ambient.Active&&f.body.hides==0,"quiet delay never animates or hides equipment");
         f.Select();Check(f.ambient.Active&&!f.ambient.Performing,"ordinary manually named station selected without lab/maypole tags");
-        Check(f.ai.lastGoal.x==3&&Math.Abs(f.ai.lastGoal.z-1.35f)<.001&&!f.ai.lastRun,"sole follow executor receives stable walking use point");
+        Check(Vector3.Distance(f.ai.lastGoal,f.leader.transform.position)>=CompanionPresencePolicy.LeaderExclusionRadius&&!f.ai.lastRun,
+            "sole follow executor receives safe walking waypoint outside leader exclusion");
         Check(f.body.hides==0&&f.animator.GetInteger("crafting")==0,"no crafting before arrival");
         var committed=f.ai.lastGoal;int scans=Physics.scans,paths=Pathfinding.instance.queries;
         f.person.transform.forward=new Vector3(1,0,0);Station(1);f.Step(f.selectedAt+.2f);
@@ -88,7 +93,8 @@ static class AmbientAdapterHarness
         f=new Fixture();Station();f.Select();f.leader.crouched=true;f.Step(f.selectedAt+.1f);
         Check(!f.ambient.Active&&f.posture.Posture==CompanionPosture.Crouch,"crouch cancels activity and keeps native crouch posture");
         f=new Fixture();Station();f.Select();f.doors.blocked=true;f.Step(f.selectedAt+.1f);
-        Check(!f.ambient.Active&&f.ai.lastGoal.x==0,"door precedence immediately restores leader destination");
+        Check(!f.ambient.Active&&Vector3.Distance(f.ai.lastGoal,f.leader.transform.position)>=CompanionPresencePolicy.LeaderExclusionRadius,
+            "door precedence immediately restores a leader-safe follow destination");
         f=new Fixture();Station();f.Select();f.leader.emote=true;f.person.Get<ZNetView>().data.emote="sit";f.Step(f.selectedAt+.1f);
         Check(!f.ambient.Active&&f.animator.GetInteger("crafting")==0,"player sit cancels optional crafting; baseline sit timing remains separate");
 
@@ -115,7 +121,7 @@ static class AmbientAdapterHarness
         f=new Fixture();Station();Physics.fullScan=true;f.Select();Check(f.ai.lastGoal.x!=3,"saturated collider snapshot fails closed");f.Clean();
         f=new Fixture();for(int i=0;i<12;i++)Station(2+i*.25f);f.Select();Check(Physics.scans>0&&Pathfinding.instance.queries<=Physics.scans*6,"native path queries bounded across walk and station candidates");f.Clean();
 
-        f=new Fixture();Station();InventoryGui.visible=false;StoreGui.visible=true;f.Select();Check(f.ai.lastGoal.x==3,"bound local merchant UI supplies real busy context");f.Clean();
+        f=new Fixture();Station();InventoryGui.visible=false;StoreGui.visible=true;f.Select();Check(f.ambient.Active,"bound local merchant UI supplies real busy context");f.Clean();
         f=new Fixture();Station();InventoryGui.visible=false;f.Select();Check(f.ai.lastGoal.x!=3,"stationary standing prefers local observation over compulsory workstation use");f.Clean();
         f=new Fixture();Station();Player.m_localPlayer=new GameObject().Add<Player>();f.Select();Check(!f.ambient.Active&&Physics.scans==0,"other local player's menus never drive remote bound companion");
         f=new Fixture();Station();f.animator.runtimeAnimatorController.animationClips[0].events=new[]{new AnimationEvent{functionName="Hit"}};f.Select();Check(f.ai.lastGoal.x!=3,"changed workbench Hit event fails closed before pose/item mutation");f.Clean();

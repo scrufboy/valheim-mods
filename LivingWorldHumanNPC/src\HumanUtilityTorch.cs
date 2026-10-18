@@ -10,9 +10,9 @@ namespace LivingWorld.HumanNpc
         ZNetView view;
         HumanCompanion companion;
         ItemDrop.ItemData torch;
-        float nextCheck, eligibleSince = -1, brightSince = -1, lastCombat = Single.NegativeInfinity;
-        float observedLight = Single.PositiveInfinity, observedFog;
-        bool ambientDark;
+        float nextCheck, eligibleSince = -1, lastCombat = Single.NegativeInfinity;
+        float observedLight = Single.PositiveInfinity, observedFog, nearestBuiltLight = Single.PositiveInfinity;
+        bool nativeNight, nativeDaylight, nearBuiltLight;
         bool fault;
         string state = "starting";
         static readonly MethodInfo Copy = typeof(object).GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -34,13 +34,8 @@ namespace LivingWorld.HumanNpc
                 EnsureTorch();
                 long owner; Player leader;
                 if (!companion.TryGetConfidenceParty(out owner, out leader) || leader == null) { Disable("no bound party leader"); return; }
-                var readiness = GetComponent<HumanEquipmentReadiness>();
                 if (companion.CombatOwnsActor)
                 { lastCombat = Time.time; Disable("combat owns actor"); return; }
-                // A peaceful leader-readiness signal can reserve the hands, but
-                // it is not combat and cannot mutate the combat-clear timer.
-                if (readiness != null && readiness.WantsWeapons())
-                { Disable("leader weapon readiness"); return; }
                 if (!companion.AreaClearVerified) { Disable("area clear not verified"); return; }
                 // Torches are companion ambience, never combat equipment. A
                 // full five quiet seconds must follow the last combat signal so
@@ -53,17 +48,15 @@ namespace LivingWorld.HumanNpc
                 // the shield temporarily; the equipment adapter restores it in combat.
                 var weapon = body.GetCurrentWeapon();
                 busy |= weapon != null && weapon.m_shared.m_attack.m_bowDraw;
-                var environment = EnvMan.instance == null ? null : EnvMan.instance.GetCurrentEnvironment();
-                bool known = environment != null;
-                bool dark = AmbientDark(known);
+                bool dark = AmbientDark();
                 observedFog = RenderSettings.fog ? RenderSettings.fogDensity : 0f;
-                bool nearbyLight = NearbyLight();
+                nearBuiltLight = NearbyBuiltLight(nearBuiltLight);
                 bool stealth = leader.IsCrouching();
-                bool allowed = PartyCombatPolicy.Torch(dark, nearbyLight, stealth, companion.CombatOwnsActor, busy);
+                bool allowed = PartyCombatPolicy.Torch(dark, nearBuiltLight, stealth, companion.CombatOwnsActor, busy);
                 if (!allowed)
                 {
-                    Disable(!dark ? "ambient light sufficient" : nearbyLight ? "nearby built light sufficient" :
-                        stealth ? "leader stealth" : busy ? "hands/body busy" : "utility light denied");
+                    Disable(!dark ? "vanilla day" : nearBuiltLight ? "within six-metre built-light shelter" : stealth ? "leader stealth" :
+                        busy ? "hands/body busy" : "utility light denied");
                     return;
                 }
                 // Only a real crafting pose owns the peaceful hands. Guard and
@@ -86,41 +79,35 @@ namespace LivingWorld.HumanNpc
             catch (Exception error) { fault = true; Disable("fault: " + error.Message); }
         }
 
-        bool AmbientDark(bool environmentKnown)
+        bool AmbientDark()
         {
-            if (!environmentKnown) return false;
+            var manager = EnvMan.instance;
             Color ambient = RenderSettings.ambientLight;
-            float level = PartyCombatPolicy.PerceivedLight(ambient.r, ambient.g, ambient.b, RenderSettings.ambientIntensity);
-            observedLight = level;
-            // Hysteresis prevents dawn, storms and environment transitions from
-            // snapping every torch off at a time-of-day boundary. Current rendered
-            // ambient light—not the clock—decides, with five seconds of sustained
-            // brightness required to extinguish an already-needed torch.
-            if (!ambientDark)
-            {
-                if (level < .22f) ambientDark = true;
-                return ambientDark;
-            }
-            if (level <= .32f) { brightSince = -1f; return true; }
-            if (brightSince < 0f) brightSince = Time.time;
-            if (Time.time - brightSince >= 5f) { ambientDark = false; brightSince = -1f; }
-            return ambientDark;
+            observedLight = PartyCombatPolicy.PerceivedLight(ambient.r, ambient.g, ambient.b, RenderSettings.ambientIntensity);
+            if (manager == null) { nativeNight = false; nativeDaylight = false; return false; }
+            nativeNight = EnvMan.IsNight();
+            nativeDaylight = EnvMan.IsDaylight();
+            // IsNight follows Valheim's own quarter-day boundaries. The
+            // IsDaylight complement also admits always-dark environments.
+            return nativeNight || !nativeDaylight;
         }
 
-        bool NearbyLight()
+        bool NearbyBuiltLight(bool previous)
         {
-            // Only twice per second while opted in; no full-scene Light search.
-            foreach (var collider in Physics.OverlapSphere(transform.position, 8f))
+            float nearest = Single.PositiveInfinity;
+            foreach (var collider in Physics.OverlapSphere(transform.position, 10f))
             {
                 var piece = collider.GetComponentInParent<Piece>();
                 if (piece == null) continue;
                 foreach (var light in piece.GetComponentsInChildren<Light>())
-                    if (light.enabled && light.gameObject.activeInHierarchy && light.intensity > .25f &&
-                        Vector3.Distance(light.transform.position, body.GetCenterPoint()) <= Mathf.Min(8, light.range) &&
-                        !Physics.Linecast(body.GetCenterPoint(), light.transform.position,
-                            LayerMask.GetMask("Default", "static_solid", "piece", "terrain"), QueryTriggerInteraction.Ignore)) return true;
+                {
+                    if (!light.enabled || !light.gameObject.activeInHierarchy || light.intensity <= .25f) continue;
+                    float distance = Vector3.Distance(light.transform.position, body.GetCenterPoint());
+                    if (distance < nearest) nearest = distance;
+                }
             }
-            return false;
+            nearestBuiltLight = nearest;
+            return PartyCombatPolicy.BuiltLightNearby(previous, nearest);
         }
 
         void EnsureTorch()
@@ -164,11 +151,21 @@ namespace LivingWorld.HumanNpc
             string actor = body == null || String.IsNullOrEmpty(body.m_name) ? gameObject.name : body.m_name;
             Debug.Log("[LWC torch] " + actor + ": " + state + "; perceivedLight=" +
                 (Single.IsInfinity(observedLight) ? "unknown" : observedLight.ToString("F3")) +
-                "; renderedFog=" + observedFog.ToString("F3"));
+                "; renderedFog=" + observedFog.ToString("F3") + "; nativeNight=" + nativeNight +
+                "; nativeDaylight=" + nativeDaylight + "; builtLightDistance=" +
+                (Single.IsInfinity(nearestBuiltLight) ? "none" : nearestBuiltLight.ToString("F2")));
         }
         internal string Describe() { return state + "; perceivedLight=" +
             (Single.IsInfinity(observedLight) ? "unknown" : observedLight.ToString("F3")) +
-            "; renderedFog=" + observedFog.ToString("F3"); }
+            "; renderedFog=" + observedFog.ToString("F3") + "; nativeNight=" + nativeNight +
+            "; nativeDaylight=" + nativeDaylight + "; builtLightDistance=" +
+            (Single.IsInfinity(nearestBuiltLight) ? "none" : nearestBuiltLight.ToString("F2")); }
+        internal bool ClaimsPeacefulHands()
+        {
+            if (companion == null) companion = GetComponent<HumanCompanion>();
+            if (companion == null || companion.CombatOwnsActor || !companion.AreaClearVerified) return false;
+            return AmbientDark() && !nearBuiltLight;
+        }
         internal void ReleaseForWeapons()
         {
             if (body == null) body = GetComponent<Humanoid>();
@@ -178,4 +175,3 @@ namespace LivingWorld.HumanNpc
         void OnDisable() { Disable("component disabled"); }
     }
 }
-

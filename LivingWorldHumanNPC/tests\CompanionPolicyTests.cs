@@ -20,6 +20,10 @@ class CompanionPolicyTests
 
         static void Main()
         {
+            Check(!CompanionPolicy.HostileCommitted(false, true, false), "sensed hostile remains awareness only");
+            Check(!CompanionPolicy.HostileCommitted(false, true, true), "alerted hostile without party target remains curiosity");
+            Check(CompanionPolicy.HostileCommitted(true, true, true), "native party target commits before first hit");
+            Check(CompanionPolicy.HostileCommitted(true, false, false), "party-directed attack remains defensive authority through sensing gap");
             float leaderThreat = CompanionPolicy.ThreatPriority(true, false, false, 10f, 9f);
             float selfThreat = CompanionPolicy.ThreatPriority(false, true, false, 1f, 1f);
             float partyThreat = CompanionPolicy.ThreatPriority(false, false, true, 1f, 1f);
@@ -174,4 +178,3 @@ class CompanionPolicyTests
         Console.WriteLine("PASS " + checks + " companion policy checks (pure offline; Unity execution NOT RUN)");
     }
 }
-

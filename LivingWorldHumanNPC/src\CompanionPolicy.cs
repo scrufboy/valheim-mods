@@ -110,6 +110,16 @@ namespace LivingWorld.HumanNpc
                 (explicitOrder || activeThreat || (Finite(attributedDamage) && attributedDamage > 0f));
         }
 
+        public static bool HostileCommitted(bool targetsProtectedParty, bool sensedEnemy, bool alerted)
+        {
+            // Sensing and the native alert flag feed visible awareness. They do
+            // not by themselves authorize lethal combat. A hostile commits when
+            // native MonsterAI has selected this protected party as its victim;
+            // that selection occurs before the first hit. Attributed damage is
+            // an independent authorization path in MayAuthorize.
+            return targetsProtectedParty;
+        }
+
         public static bool RefreshPursuit(bool activeThreat, float secondsSinceDamage, float distance)
         {
             return Finite(distance) && distance >= 0 && distance <= NearbyThreatRange &&
@@ -181,4 +191,3 @@ namespace LivingWorld.HumanNpc
         { return Finite(value) && value >= minimum && (inclusive ? value <= maximum : value < maximum); }
     }
 }
-

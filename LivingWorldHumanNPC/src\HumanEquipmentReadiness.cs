@@ -86,8 +86,13 @@ namespace LivingWorld.HumanNpc
             // A real encounter has priority, while an explicitly armed party
             // leader is the established readiness signal. Town etiquette is a
             // separate future rule and must not erase party mirroring.
-            return Owner() && companion != null &&
-                (companion.CombatOwnsActor || LeaderReady(companion.PartyLeader));
+            if (!Owner() || companion == null) return false;
+            if (companion.CombatOwnsActor) return true;
+            var utility = GetComponent<HumanUtilityTorch>();
+            // At vanilla night the peaceful companion torch owns the hand.
+            // Leader readiness remains available by day and combat overrides
+            // utility ownership atomically.
+            return (utility == null || !utility.ClaimsPeacefulHands()) && LeaderReady(companion.PartyLeader);
         }
 
         internal bool EnsureCombatReady()
@@ -195,4 +200,3 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
-
