@@ -60,6 +60,15 @@ namespace LivingWorld.HumanNpc
                 Finite(health) && Finite(maximum) && maximum > 0 && health > 0 && health < maximum * 0.85f;
         }
 
+        public static bool ClericSupport(bool combatOwner, bool personalThreat, bool bodyBusy,
+            bool cooldownReady, bool reserveReady)
+        {
+            // A cleric cast is a bounded class action inside combat ownership,
+            // never a return to peaceful companion behaviour. Personal danger
+            // always yields immediately to native combat and shield defense.
+            return !bodyBusy && cooldownReady && reserveReady && (!combatOwner || !personalThreat);
+        }
+
         public static bool ReactToAttack(bool perceived, bool facing, bool shield, bool stamina,
             bool incapacitated, float distance, float cueAge, float reactionDelay)
         {

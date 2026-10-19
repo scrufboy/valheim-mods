@@ -14,7 +14,7 @@ if($PSVersionTable.PSEdition -ne 'Core'){
 $compiler='C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $build=Join-Path $PSScriptRoot 'build'
 $null=New-Item -ItemType Directory -Force -Path $build
-[ordered]@{Version='0.3.54';Status='INCOMPLETE';Reason='Current build has not completed all checks';UnityRuntime='NOT RUN';ProfileInstalled=$false;GameLaunched=$false} |
+[ordered]@{Version='0.3.55';Status='INCOMPLETE';Reason='Current build has not completed all checks';UnityRuntime='NOT RUN';ProfileInstalled=$false;GameLaunched=$false} |
     ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
 $nativeBuild=Join-Path $SharedProjectRoot 'independent-core\build'
 $runtimeCore=Join-Path $SharedProjectRoot 'runtime\BepInEx\core'
@@ -82,8 +82,8 @@ foreach($source in $sources){
     }
 }
 $pluginSource=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'src\ManualTestPlugin.cs') -Raw
-if($pluginSource -notmatch '\[BepInPlugin\("local\.livingworld\.humannpc",\s*"[^"]+",\s*"0\.3\.54"\)\]'){
-    throw 'Expected new 0.3.54 human NPC plugin declaration; never reuse frozen version.'
+if($pluginSource -notmatch '\[BepInPlugin\("local\.livingworld\.humannpc",\s*"[^"]+",\s*"0\.3\.55"\)\]'){
+    throw 'Expected new 0.3.55 human NPC plugin declaration; never reuse frozen version.'
 }
 $sourceManifest=@($sources | ForEach-Object {
     [ordered]@{Path=$_;RelativePath=[IO.Path]::GetRelativePath($PSScriptRoot,$_).Replace('\','/');Sha256=(Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash}
@@ -219,10 +219,10 @@ $referenceManifest=@($referencePaths | ForEach-Object {[ordered]@{Path=$_;Sha256
 $referenceManifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $build 'reference-manifest.json') -Encoding utf8
 $dllHash=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
 [ordered]@{
-    Version='0.3.54'; Status='PASS'; DllPath=$dll; DllSha256=$dllHash;
+    Version='0.3.55'; Status='PASS'; DllPath=$dll; DllSha256=$dllHash;
     Scope='Offline compilation, pure managed policies, container isolation and read-only native IL/asset checks only';
     UnityRuntime='NOT RUN'; ProfileInstalled=$false; GameLaunched=$false;
     Sources=$sourceManifest; Suites=@($suiteResults.ToArray())
 } | ConvertTo-Json -Depth 7 | Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
-Write-Output "HumanNpc 0.3.54 offline build PASS. DLL SHA256: $dllHash"
+Write-Output "HumanNpc 0.3.55 offline build PASS. DLL SHA256: $dllHash"
 Write-Output 'Unity load, migration, animation, movement/combat and save/reload NOT RUN. No game or live profile touched.'

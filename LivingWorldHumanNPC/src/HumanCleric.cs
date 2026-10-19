@@ -55,8 +55,8 @@ namespace LivingWorld.HumanNpc
                 reserve.Advance(dt, 2, 0, 1, !Casting);
                 if (Casting)
                 {
-                    if (companion.CombatOwnsActor || body.IsStaggering() || !Eligible(patient))
-                    { Cancel("cast interrupted by personal combat; no heal delivered"); return; }
+                    if (body.IsStaggering() || companion.CombatOwnsActor && PersonalThreat() || !Eligible(patient))
+                    { Cancel("cast interrupted by personal threat or invalid patient; no heal delivered"); return; }
                     ai.StopMoving();
                     if (Look == null) throw new MissingMethodException("BaseAI.LookAt");
                     Look.Invoke(ai, new object[] { patient.GetCenterPoint() });
@@ -75,8 +75,9 @@ namespace LivingWorld.HumanNpc
                         Save();
                     }
                 }
-                else if (companion.CompanionBehaviorAllowed && Time.time >= nextScan && cooldown <= 0 && reserve.Have(25) &&
-                    !body.InAttack() && !body.IsStaggering())
+                else if (Time.time >= nextScan && PartyCombatPolicy.ClericSupport(companion.CombatOwnsActor,
+                    PersonalThreat(), body.InAttack() || body.IsDrawingBow() || body.IsBlocking() || body.IsStaggering(),
+                    cooldown <= 0, reserve.Have(25)))
                 {
                     nextScan = Time.time + .5f;
                     Character best = null; float severity = 1;
@@ -118,6 +119,21 @@ namespace LivingWorld.HumanNpc
             return PartyCombatPolicy.HealEligible(ally, !target.IsDead(), targetView != null && targetView.IsValid() && targetView.IsOwner(),
                 visible, Vector3.Distance(transform.position, target.transform.position), target.GetHealth(), target.GetMaxHealth());
         }
+        bool PersonalThreat()
+        {
+            if (companion == null || !companion.CombatOwnsActor) return false;
+            var committed = companion.TargetCreature;
+            if (committed != null && !committed.IsDead() && Vector3.Distance(transform.position, committed.transform.position) <= 7f)
+                return true;
+            foreach (var candidate in Character.GetAllCharacters())
+            {
+                if (candidate == null || candidate == body || candidate.IsDead() ||
+                    Vector3.Distance(transform.position, candidate.transform.position) > 7f) continue;
+                var hostile = candidate.GetComponent<MonsterAI>();
+                if (hostile != null && hostile.GetTargetCreature() == body) return true;
+            }
+            return false;
+        }
         void Cancel(string why) { patient = null; ClericPresentation.End(gameObject); Save(); Log(why); }
         void Save()
         {
@@ -128,4 +144,3 @@ namespace LivingWorld.HumanNpc
         void Log(string message) { Debug.Log("[LWC cleric] " + message); }
     }
 }
-

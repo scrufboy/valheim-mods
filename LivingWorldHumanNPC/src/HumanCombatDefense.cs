@@ -96,7 +96,8 @@ namespace LivingWorld.HumanNpc
 
         void Update()
         {
-            if (!Owner() || !companion.CombatOwnsActor)
+            var cleric = GetComponent<HumanCleric>();
+            if (!Owner() || !companion.CombatOwnsActor || cleric != null && cleric.Casting)
             { Release(); return; }
 
             Character threat = IncomingAttack();

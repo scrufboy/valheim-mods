@@ -1,34 +1,25 @@
-LIVING WORLD HUMAN NPC 0.3.54 — NATIVE SITTING REPAIR
+LIVING WORLD HUMAN NPC 0.3.55 — ROLE AND GUARD COORDINATION
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:
 
 plugins\LivingWorldHumanNpc\LivingWorld.HumanNpc.dll
 
-This build preserves the 0.3.52 combat-continuity repair and fixes three
+This build preserves the 0.3.54 native sitting repair and corrects three bounded,
 measured integration failures:
-- native one-handed weapon selection now pairs an owned shield, so the bounded
-  defense component has a real blocker to raise;
-- properly stowed back-slot weapons no longer veto peaceful workstation
-  animations;
-- a directly observed door on the route to the leader retains the real leader
-  goal, including while the doorway crossing is committed;
-- nearby side doors are still never inferred or selected;
-- an authorized living target remains committed instead of being replaced or
-  erased by the quarter-second awareness scan;
-- native MonsterAI target update, movement, facing, weapon choice and attack
-  cadence run during authorized combat;
-- committed combat uses a broad encounter boundary, not the tight follow-station
-  leash that was repeatedly revoking combat authorization;
-- attributed damage renews the encounter without forcing a mid-strike retarget;
-- a small human defense component may raise an equipped shield against a visible,
-  close attacker already swinging at that companion;
-- shield defense does not move, turn, retarget, equip a weapon, launch an attack,
-  or manufacture a riposte;
-- torch, follow, visible-back stowing, wetness, door and ambient systems remain
-  separate from combat ownership.
+- an archer now retains the bow at safe range when native combat has a ready
+  attack and a clear lane, while a close personal threat selects sword/shield;
+- native MonsterAI still owns combat movement, facing, cadence, targeting,
+  projectile creation, damage and ammunition use;
+- the cleric may use its existing heal during a safe combat window without
+  leaving combat ownership; a close personal threat immediately vetoes or
+  interrupts the cast;
+- temporary guard directions are chosen against every currently occupied buddy
+  sector, rather than only the first buddy found;
+- guard sectors remain short-lived activity leases, never permanent assignments;
+- torch, follow, visible-back stowing, wetness, doors, posture, sitting and
+  workstation behavior are unchanged.
 
 Offline verification proves the boundaries and package integrity. Bed use is not
-implemented in this candidate. The next live run must compare the RRR/Souls of the
-Land reference enemies, then confirm native block results, workstation animation,
-and leader-route door passage in telemetry.
+implemented in this candidate. The next live run must confirm sustained ranged
+archery, a safe-window cleric cast, and non-overlapping guard coverage in telemetry.

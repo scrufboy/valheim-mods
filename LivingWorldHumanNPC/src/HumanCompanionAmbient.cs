@@ -279,9 +279,7 @@ namespace LivingWorld.HumanNpc
                 coverage.Reset();
             }
             int companionOffset = (GetInstanceID() & Int32.MaxValue) % GuardCoveragePolicy.SectorCount;
-            int otherSector;
-            int occupied = GuardUnavailableMask(leader, out otherSector);
-            if (otherSector >= 0) coverage.Prefer(GuardCoveragePolicy.Opposite(otherSector));
+            int occupied = GuardUnavailableMask(leader);
             int rejected = occupied;
             for (int attempt = 0; attempt < GuardCoveragePolicy.SectorCount; ++attempt)
             {
@@ -305,9 +303,9 @@ namespace LivingWorld.HumanNpc
         static string GuardKey(Player leader, int sector)
         { return "guard:" + leader.GetPlayerID().ToString(System.Globalization.CultureInfo.InvariantCulture) + ":" + sector; }
 
-        int GuardUnavailableMask(Player leader, out int otherSector)
+        int GuardUnavailableMask(Player leader)
         {
-            int mask = 0; otherSector = -1;
+            int mask = 0;
             for (int sector = 0; sector < GuardCoveragePolicy.SectorCount; ++sector)
             {
                 string key = GuardKey(leader, sector); GuardLease claim;
@@ -317,7 +315,6 @@ namespace LivingWorld.HumanNpc
                     claim.Token.Equals(claim.Actor.lease);
                 if (!valid) { GuardClaims.Remove(key); continue; }
                 mask |= 1 << sector;
-                if (otherSector < 0) otherSector = sector;
             }
             return mask;
         }

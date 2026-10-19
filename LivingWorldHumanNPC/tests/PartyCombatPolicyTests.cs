@@ -38,6 +38,10 @@ class PartyCombatPolicyTests
         Check(!PartyCombatPolicy.HealEligible(true,false,true,true,5,0,100),"no resurrection");
         Check(!PartyCombatPolicy.HealEligible(true,true,false,true,5,20,100),"no foreign health writes");
         Check(!PartyCombatPolicy.HealEligible(true,true,true,false,5,20,100),"wall blocks healing");
+        Check(PartyCombatPolicy.ClericSupport(true,false,false,true,true),"safe combat window permits class support");
+        Check(!PartyCombatPolicy.ClericSupport(true,true,false,true,true),"personal threat keeps native combat in control");
+        Check(!PartyCombatPolicy.ClericSupport(true,false,true,true,true),"busy body cannot begin a cast");
+        Check(PartyCombatPolicy.ClericSupport(false,false,false,true,true),"peaceful recovery remains available");
         Check(PartyCombatPolicy.ReactToAttack(true,true,true,true,false,3,0f,0f),"observed close attack permits immediate shield response");
         Check(!PartyCombatPolicy.ReactToAttack(false,true,true,true,false,3,0f,0f),"unseen cue cannot trigger block");
         Check(!PartyCombatPolicy.ReactToAttack(true,true,true,true,false,3,1f,0f),"stale cue discarded");

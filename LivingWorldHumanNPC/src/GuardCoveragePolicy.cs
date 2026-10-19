@@ -33,6 +33,36 @@ namespace LivingWorld.HumanNpc
 
         public int Choose(int unavailableMask, int stableOffset)
         {
+            unavailableMask &= (1 << SectorCount) - 1;
+            // Active buddy guard leases describe the directions that are
+            // already being watched. They are temporary observations, not
+            // permanent formation assignments. Spread against every active
+            // direction before considering this actor's own scan history.
+            if (unavailableMask != 0)
+            {
+                int groupStart = Normalize(stableOffset), groupBest = -1, bestMinimum = -1, bestTotal = -1;
+                double groupOldest = Double.PositiveInfinity;
+                for (int step = 0; step < SectorCount; ++step)
+                {
+                    int candidate = (groupStart + step) % SectorCount;
+                    if ((unavailableMask & (1 << candidate)) != 0) continue;
+                    int minimum = SectorCount, total = 0;
+                    for (int occupied = 0; occupied < SectorCount; ++occupied)
+                    {
+                        if ((unavailableMask & (1 << occupied)) == 0) continue;
+                        int distance = CircularDistance(candidate, occupied);
+                        if (distance < minimum) minimum = distance;
+                        total += distance;
+                    }
+                    if (minimum > bestMinimum || minimum == bestMinimum && total > bestTotal ||
+                        minimum == bestMinimum && total == bestTotal && resolvedAt[candidate] < groupOldest)
+                    {
+                        groupBest = candidate; bestMinimum = minimum; bestTotal = total;
+                        groupOldest = resolvedAt[candidate];
+                    }
+                }
+                return groupBest;
+            }
             if (ValidSector(preferred) && (unavailableMask & (1 << preferred)) == 0) return preferred;
             int start = Normalize(stableOffset), best = -1;
             double oldest = Double.PositiveInfinity;
@@ -55,6 +85,12 @@ namespace LivingWorld.HumanNpc
         public static double Radians(int sector)
         { return ValidSector(sector) ? sector * Math.PI * 2.0 / SectorCount : 0.0; }
 
+        static int CircularDistance(int first, int second)
+        {
+            int distance = Math.Abs(first - second);
+            return Math.Min(distance, SectorCount - distance);
+        }
+
         static int Normalize(int value)
         {
             int normalized = value % SectorCount;
@@ -65,4 +101,3 @@ namespace LivingWorld.HumanNpc
         static bool Finite(double value) { return !Double.IsNaN(value) && !Double.IsInfinity(value); }
     }
 }
-
