@@ -69,6 +69,8 @@ try {
  $validate=Method $equipment ValidateItems
  Require (@($validate.Body.Instructions|Where-Object {$_.Operand -is [Mono.Cecil.FieldReference] -and $_.Operand.Name -eq 'm_aiAttackInterval'}).Count -eq 0) 'party equipment does not impose a slower bow attack interval'
  Has $equipment BeforeSelect 'get_Ready'
+ Has $equipment BeforeSelect 'HumanCompanion::get_HasAuthorizedCombat'
+ Has $equipment RejectUtilitySelection 'HumanUtilityTorch::IsUtilityTorch'
  Has (TypeDef $native MonsterAI) SelectBestAttack 'Humanoid::EquipBestWeapon'
  Has $readiness EnsurePeacefulStow 'Humanoid::HideHandItems'
  Has $readiness EnsurePeacefulStow 'EquipmentPresentationPolicy::Stow'
@@ -108,6 +110,7 @@ try {
  Has $torch Update 'HumanCompanionPosture::get_OwnsAmbientHands'
  Has $torch EnsureTorch 'ObjectDB::GetItemPrefab'
  Has $torch EnsureTorch 'System.Reflection.MethodBase::Invoke'
+ Require (@((Method $torch EnsureTorch).Body.Instructions|Where-Object {$_.Operand -is [Mono.Cecil.FieldReference] -and $_.Operand.Name -eq 'm_aiAttackRangeMin'}).Count -gt 0) 'utility torch is ineligible for native combat selection'
  Has $torch Update 'HumanUtilityTorch::TorchVisible'
  Has $torch Update 'Humanoid::UnequipItem'
  Has $torch Update 'Humanoid::EquipItem'
@@ -156,8 +159,9 @@ try {
  HasFloatSetting $settings m_circleTargetDistance 8
  HasFloatSetting $settings m_circleTargetDuration 6
  HasFloatSetting $settings m_circleTargetInterval 8
+ $avoidWater=StoredValue $settings m_avoidWater
+ Require ($avoidWater.OpCode.Code.ToString() -eq 'Ldc_I4_0') 'swimming humanoids do not reject leader paths through water'
  $circulate=StoredValue $settings m_circulateWhileCharging
  Require ($circulate.OpCode.Code.ToString() -eq 'Ldc_I4_1') 'native circulate-while-charging is enabled'
  'PartyIntegration PASS: '+$checks+' compiled integration/native-contract assertions. No Unity acceptance claimed.'
 } finally {$party.Dispose();$native.Dispose()}
-

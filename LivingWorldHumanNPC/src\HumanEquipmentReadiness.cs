@@ -71,14 +71,29 @@ namespace LivingWorld.HumanNpc
                 type == ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft;
         }
 
+        static bool OffensiveItem(ItemDrop.ItemData item)
+        {
+            if (item == null || item.m_shared == null) return false;
+            var type = item.m_shared.m_itemType;
+            return type == ItemDrop.ItemData.ItemType.OneHandedWeapon || type == ItemDrop.ItemData.ItemType.Bow ||
+                type == ItemDrop.ItemData.ItemType.TwoHandedWeapon ||
+                type == ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft;
+        }
+
         static bool VisibleCombat(Humanoid human)
         { return human != null && (CombatItem(Slot(Left, human)) || CombatItem(Slot(Right, human))); }
 
         static bool HiddenCombat(Humanoid human)
         { return human != null && (CombatItem(Slot(HiddenLeft, human)) || CombatItem(Slot(HiddenRight, human))); }
 
+        static bool VisibleOffensive(Humanoid human)
+        { return human != null && (OffensiveItem(Slot(Left, human)) || OffensiveItem(Slot(Right, human))); }
+
+        static bool HiddenOffensive(Humanoid human)
+        { return human != null && (OffensiveItem(Slot(HiddenLeft, human)) || OffensiveItem(Slot(HiddenRight, human))); }
+
         internal static bool LeaderReady(Player leader)
-        { return leader != null && !leader.IsDead() && VisibleCombat(leader); }
+        { return leader != null && !leader.IsDead() && VisibleOffensive(leader); }
 
         internal bool WantsWeapons()
         {
@@ -95,18 +110,21 @@ namespace LivingWorld.HumanNpc
         internal bool EnsureCombatReady()
         {
             if (!HandsSafe()) return false;
-            if (!VisibleCombat(body) && !HiddenCombat(body)) RestoreBasePair(false);
+            // A shield is defense, not an attack-capable ready state. Utility
+            // torch transitions can leave only the shield visible; restore the
+            // real weapon before native combat is allowed to proceed.
+            if (!VisibleOffensive(body) && !HiddenOffensive(body)) RestoreBasePair(false);
             if (HiddenCombat(body)) ShowHands.Invoke(body, ShowWithoutHipAnimation);
             SyncBackVisuals(false);
             Report(1, "combat threat: weapons drawn without duplicate hip animation");
-            return VisibleCombat(body) && !HiddenCombat(body);
+            return VisibleOffensive(body) && !HiddenOffensive(body);
         }
 
         // Utility equipment is allowed to borrow the hand, never to destroy the
         // persistent combat/stow presentation that existed before it.
         internal void RecoverFromUtility()
         {
-            if (!HandsSafe() || VisibleCombat(body) || HiddenCombat(body)) return;
+            if (!HandsSafe() || VisibleOffensive(body) || HiddenOffensive(body)) return;
             RestoreBasePair(!WantsWeapons());
         }
 
@@ -156,6 +174,7 @@ namespace LivingWorld.HumanNpc
                 if (show)
                 {
                     if (utility != null) utility.ReleaseForWeapons();
+                    if (!VisibleOffensive(body) && !HiddenOffensive(body)) RestoreBasePair(false);
                     if (HiddenCombat(body)) ShowHands.Invoke(body, ShowWithoutHipAnimation);
                     SyncBackVisuals(false);
                     Report(1, companion != null && companion.CombatOwnsActor ?
@@ -205,4 +224,3 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
-

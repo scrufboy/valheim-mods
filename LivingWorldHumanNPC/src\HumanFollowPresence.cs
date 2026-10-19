@@ -15,6 +15,7 @@ namespace LivingWorld.HumanNpc
         const BindingFlags Native = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         static readonly MethodInfo Move = typeof(BaseAI).GetMethod("MoveTo", Native, null,
             new[] { typeof(float), typeof(Vector3), typeof(float), typeof(bool) }, null);
+        static readonly FieldInfo LastFindPathTime = typeof(BaseAI).GetField("m_lastFindPathTime", Native);
         readonly object[] moveArguments = new object[4];
         HumanCompanion companion;
         HumanDoorTraversal doors;
@@ -27,8 +28,9 @@ namespace LivingWorld.HumanNpc
         Transform assignedLook, previousLook;
         Vector3 leaderSample;
         float lastActivity, nextReport;
+        float lastCatchUpRepath = Single.NegativeInfinity;
         float previousLookWeight, previousBodyWeight;
-        bool ownLook, faulted;
+        bool ownLook, faulted, catchingUp;
         CompanionPace pace;
         static readonly List<HumanFollowPresence> Leases = new List<HumanFollowPresence>();
         Player leaseLeader;
@@ -40,7 +42,7 @@ namespace LivingWorld.HumanNpc
         {
             var follow = typeof(BaseAI).GetMethod("Follow", Native, null, new[] { typeof(GameObject), typeof(float) }, null);
             var head = typeof(CharacterAnimEvent).GetMethod("UpdateHeadRotation", Native, null, new[] { typeof(float) }, null);
-            if (follow == null || head == null || Move == null)
+            if (follow == null || head == null || Move == null || LastFindPathTime == null)
                 throw new MissingMethodException("Native human follow/head-look contract changed.");
             harmony.Patch(follow, prefix: new HarmonyMethod(typeof(HumanFollowPresence).GetMethod("BeforeFollow", BindingFlags.Static | BindingFlags.NonPublic)));
             harmony.Patch(head, prefix: new HarmonyMethod(typeof(HumanFollowPresence).GetMethod("BeforeHeadLook", BindingFlags.Static | BindingFlags.NonPublic)));
@@ -84,9 +86,12 @@ namespace LivingWorld.HumanNpc
             { if (ambient != null) ambient.Cancel("follow target/order lost"); return false; }
             if (posture != null) posture.Refresh();
             bool crossing = doors != null && doors.NeedsCloseFollow(target);
+            float leaderDistance = Vector3.Distance(transform.position, leader.transform.position);
+            catchingUp = CompanionPresencePolicy.CatchUp(catchingUp, leaderDistance);
+            if (catchingUp && ambient != null) ambient.Cancel("leader catch-up owns movement");
             Vector3 destination = leader.transform.position; bool ambientHold = false;
-            bool optional = ambient != null && ambient.TryDestination(leader, crossing, out destination, out ambientHold);
-            bool formation = !optional && !crossing && FormationEligible();
+            bool optional = !catchingUp && ambient != null && ambient.TryDestination(leader, crossing, out destination, out ambientHold);
+            bool formation = !catchingUp && !optional && !crossing && FormationEligible();
             if (formation) destination = FormationDestination(leader);
             else ReleaseLease();
             float distance = Vector3.Distance(transform.position, destination);
@@ -106,9 +111,19 @@ namespace LivingWorld.HumanNpc
                 // executor; ordinary orders retain the actual leader position.
                 moveArguments[0] = dt; moveArguments[1] = safeDestination;
                 moveArguments[2] = optional ? 0.2f : 0f; moveArguments[3] = pace == CompanionPace.Run;
-                Move.Invoke(ai, moveArguments);
+                bool completed = (bool)Move.Invoke(ai, moveArguments);
+                // MoveTo returns true for both arrival and path failure. At
+                // catch-up distance this cannot be arrival, so invalidate the
+                // cached failed route at a bounded rate and let native pathing
+                // solve again on the next update. No teleport or direct motion.
+                if (catchingUp && completed && Time.time - lastCatchUpRepath >= CompanionPresencePolicy.CatchUpRepathSeconds)
+                {
+                    LastFindPathTime.SetValue(ai, Single.NegativeInfinity);
+                    ai.ResetRandomMovement();
+                    lastCatchUpRepath = Time.time;
+                }
             }
-            Report(distance, crossing);
+            Report(leaderDistance, crossing);
             return true;
         }
 
@@ -247,8 +262,8 @@ namespace LivingWorld.HumanNpc
             if (Time.time < nextReport) return;
             nextReport = Time.time + 10f;
             status = String.Format(CultureInfo.InvariantCulture,
-                "pace={0}; leaderDistance={1:F2}; doorOverride={2}; leaderLook={3}; quietSeconds={4:F1}; crouching={5}; encumbered={6}",
-                pace, distance, crossing, ownLook, Time.time - lastActivity, body.IsCrouching(), body.IsEncumbered());
+                "pace={0}; leaderDistance={1:F2}; catchUp={2}; doorOverride={3}; leaderLook={4}; quietSeconds={5:F1}; crouching={6}; encumbered={7}",
+                pace, distance, catchingUp, crossing, ownLook, Time.time - lastActivity, body.IsCrouching(), body.IsEncumbered());
             var plugin = LivingWorld.ManualTest.ManualTestPlugin.Instance;
             if (plugin != null) plugin.Report("PRESENCE " + status);
         }
@@ -260,7 +275,7 @@ namespace LivingWorld.HumanNpc
             var plugin = LivingWorld.ManualTest.ManualTestPlugin.Instance;
             if (plugin != null) plugin.Report("PRESENCE FAIL: " + status);
         }
-        void OnDisable() { ReleaseLease(); ReleaseLook(); if (ambient != null) ambient.Cancel("presence disabled"); currentLeader = null; pace = CompanionPace.Stand; }
+        void OnDisable() { ReleaseLease(); ReleaseLook(); if (ambient != null) ambient.Cancel("presence disabled"); currentLeader = null; pace = CompanionPace.Stand; catchingUp = false; }
         void OnDestroy() { ReleaseLease(); ReleaseLook(); if (ambient != null) ambient.Cancel("presence destroyed"); }
 
         static bool BeforeFollow(BaseAI __instance, GameObject __0, float __1)

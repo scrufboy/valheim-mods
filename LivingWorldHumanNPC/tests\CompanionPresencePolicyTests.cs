@@ -59,6 +59,10 @@ static class CompanionPresencePolicyTests
             "actor already inside exclusion must leave");
         Check(CompanionPresencePolicy.PathEntersLeaderExclusion(Single.NaN, 0f, 3f, 0f, 0f, 0f),
             "invalid route fails safely away from leader");
+        Check(CompanionPresencePolicy.CatchUp(false, 12f), "twelve metres enters dedicated leader catch-up");
+        Check(CompanionPresencePolicy.CatchUp(true, 7.1f), "catch-up remains owned through its release band");
+        Check(!CompanionPresencePolicy.CatchUp(true, 7f), "catch-up releases near the formation");
+        Check(!CompanionPresencePolicy.CatchUp(false, Single.NaN), "invalid leader distance cannot own movement");
         Console.WriteLine("CompanionPresencePolicy PASS: " + checks + " checks.");
     }
 }

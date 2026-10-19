@@ -58,13 +58,14 @@ namespace HarmonyLib
 }
 public class BaseAI : MonoBehaviour
 {
-    public int moves, stops,looks,m_pathAgentType;
+    public int moves, stops,looks,resets,m_pathAgentType;
     public float m_lastFindPathTime;
     public Vector3 lastGoal;
-    public bool lastRun;
+    public bool lastRun,moveCompleted;
     public void Follow(GameObject go,float dt) {}
     public void StopMoving() { ++stops; }
-    public bool MoveTo(float dt,Vector3 point,float stop,bool run) { ++moves;lastGoal=point;lastRun=run;return false; }
+    public void ResetRandomMovement() { ++resets; }
+    public bool MoveTo(float dt,Vector3 point,float stop,bool run) { ++moves;lastGoal=point;lastRun=run;return moveCompleted; }
     public void LookAt(Vector3 point){++looks;var d=point-transform.position;d.y=0;transform.forward=d.normalized;}
 }
 public class Character : MonoBehaviour
@@ -163,6 +164,9 @@ static class PresenceAdapterHarness
         Check((bool)Call(presence,"Follow",person,.02f),"Own active following handled");
         Check(ai.moves==1&&ai.lastRun&&Vector3.Distance(ai.lastGoal,leader.transform.position)>=CompanionPresencePolicy.LeaderExclusionRadius,
             "Catch up via native MoveTo without routing into leader exclusion");
+        npc.transform.position=new Vector3(0,0,14);ai.moveCompleted=true;Time.time=101;Call(presence,"Follow",person,.02f);ai.moveCompleted=false;
+        Check(ai.resets==1&&Single.IsNegativeInfinity(ai.m_lastFindPathTime),
+            "Failed far route invalidates native path cache without teleporting");
         Call(presence,"Attention",gaze);
         Check(gaze.m_lookAt==leader.m_eye&&gaze.m_bodyLookWeight==0&&gaze.m_lookWeight==.75f,"Head looks at eye, no torso twisting");
         npc.transform.position=new Vector3(0,0,4);Call(presence,"Follow",person,.02f);Check(ai.lastRun,"Run hysteresis retained");
@@ -197,4 +201,3 @@ static class PresenceAdapterHarness
         Console.WriteLine("PresenceAdapterHarness PASS: "+checks+" actual-adapter checks with managed doubles. Unity NOT RUN.");
     }
 }
-

@@ -19,6 +19,15 @@ namespace LivingWorld.HumanNpc
         public const float FormationStopDistance = 0.8f;
         public const float LeaderExclusionRadius = 1.25f;
         public const float LeaderExclusionMargin = 0.45f;
+        public const float CatchUpDistance = 12f;
+        public const float CatchUpReleaseDistance = 7f;
+        public const float CatchUpRepathSeconds = .75f;
+
+        public static bool CatchUp(bool active, float leaderDistance)
+        {
+            if (!Finite(leaderDistance) || leaderDistance < 0f) return false;
+            return active ? leaderDistance > CatchUpReleaseDistance : leaderDistance >= CatchUpDistance;
+        }
 
         public static float FormationSideOffset(bool archer, bool cleric, int stableIdentity)
         {

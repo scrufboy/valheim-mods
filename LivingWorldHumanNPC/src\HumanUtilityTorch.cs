@@ -128,6 +128,14 @@ namespace LivingWorld.HumanNpc
             }
             torch.m_shared = (ItemDrop.ItemData.SharedData)Copy.Invoke(torch.m_shared, null);
             torch.m_shared.m_useDurability = false;
+            // This actor-only utility copy is never a MonsterAI attack option.
+            // The global vanilla Torch definition is not changed.
+            torch.m_shared.m_aiAttackRangeMin = Single.MaxValue;
+        }
+
+        internal static bool IsUtilityTorch(ItemDrop.ItemData item)
+        {
+            return item != null && item.m_dropPrefab != null && item.m_dropPrefab.name == "Torch";
         }
 
         bool TorchVisible()
@@ -196,4 +204,3 @@ namespace LivingWorld.HumanNpc
         void OnDisable() { Disable("component disabled"); }
     }
 }
-

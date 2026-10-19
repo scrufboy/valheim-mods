@@ -35,10 +35,12 @@ namespace LivingWorld.HumanNpc
                 throw new MissingMemberException("Native party equipment members changed");
             var select = typeof(MonsterAI).GetMethod("SelectBestAttack", Hidden, null, new[] { typeof(Humanoid), typeof(float) }, null);
             if (select == null) throw new MissingMethodException("Native party combat boundary changed");
-            // Native MonsterAI owns weapon selection and every combat decision.
-            // The prefix only makes an empty bow ineligible; it does not choose
-            // a weapon, turn the actor, request attacks, block or reposition.
-            harmony.Patch(select, prefix: new HarmonyMethod(typeof(HumanPartyEquipment), "BeforeSelect"));
+            // Native MonsterAI owns weapon selection during authorized combat.
+            // Outside combat, returning no attack item is what permits its own
+            // UpdateAI to reach Follow even when readiness is only visual.
+            harmony.Patch(select,
+                prefix: new HarmonyMethod(typeof(HumanPartyEquipment), "BeforeSelect"),
+                postfix: new HarmonyMethod(typeof(HumanPartyEquipment), "RejectUtilitySelection"));
             harmony.Patch(DoAttack,
                 prefix: new HarmonyMethod(typeof(HumanPartyEquipment), "BeforeBowRelease"),
                 postfix: new HarmonyMethod(typeof(HumanPartyEquipment), "AfterBowRelease"));
@@ -180,12 +182,27 @@ namespace LivingWorld.HumanNpc
         static bool BeforeSelect(MonsterAI __instance, ref ItemDrop.ItemData __result)
         {
             var equipment = __instance.GetComponent<HumanPartyEquipment>();
-            if (equipment == null || !equipment.Ready) return true;
+            if (equipment == null) return true;
+            equipment.Cache();
+            if (equipment.companion != null && !equipment.companion.HasAuthorizedCombat)
+            {
+                __result = null;
+                return false;
+            }
+            if (!equipment.Ready) return true;
             // Preserve Valheim's native EquipBestWeapon selection, as used by
             // RRR NPCs. Only make an empty bow ineligible for this actor.
             if (!equipment.HasAmmo()) equipment.bow.m_shared.m_aiAttackRangeMin = Single.MaxValue;
             else equipment.bow.m_shared.m_aiAttackRangeMin = 6f;
             return true;
+        }
+
+        static void RejectUtilitySelection(MonsterAI __instance, ref ItemDrop.ItemData __result)
+        {
+            // Torches are traversal equipment. Even if native inventory timing
+            // exposes one during the combat handoff, it cannot become an attack.
+            if (__instance.GetComponent<HumanCompanion>() != null && HumanUtilityTorch.IsUtilityTorch(__result))
+                __result = null;
         }
 
         [HarmonyPriority(Priority.Last)]
@@ -221,4 +238,3 @@ namespace LivingWorld.HumanNpc
 
     }
 }
-

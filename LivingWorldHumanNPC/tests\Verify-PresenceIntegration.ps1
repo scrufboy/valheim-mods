@@ -36,6 +36,9 @@ try {
  Require (@($calls | Where-Object {$_ -match 'SetMoveDir|SetLookDir|LookTowards|LookAt\(|set_rotation|set_position|Rotate|Teleport|Animator::Play|Animator::CrossFade|SetTarget|SetFollowTarget|SetPatrolPoint|ClaimOwnership|ZDO::Set|SetWalk|SetRun'}).Count -eq 0) 'presence never steers/teleports/reorders/forces animation or writes combat/save state'
  Require (@($calls | Where-Object {$_ -match 'Physics::|FindObjects|GetAllCharacters|GetAllPlayers|Pathfinding::|AddComponent|GameObject::.ctor'}).Count -eq 0) 'no scene scan, extra path queries, proxy object or new runtime components'
  Has (Method $presence Follow) 'CompanionPresencePolicy::NextPace'
+ Has (Method $presence Follow) 'CompanionPresencePolicy::CatchUp'
+ Has (Method $presence Follow) 'FieldInfo::SetValue'
+ Has (Method $presence Follow) 'BaseAI::ResetRandomMovement'
  Has (Method $presence Follow) 'HumanDoorTraversal::NeedsCloseFollow'
  Has (Method $presence Follow) 'UnityEngine.Transform::get_position'
  $formation=Method $presence FormationDestination
@@ -68,7 +71,8 @@ Has (Method $presence Attention) 'HumanCompanion::get_CombatOwnsActor'
 Has (Method $readiness WantsWeapons) 'HumanCompanion::get_CombatOwnsActor'
  Has (Method $readiness WantsWeapons) 'HumanCompanion::get_PartyLeader'
  Has (Method $readiness WantsWeapons) 'HumanEquipmentReadiness::LeaderReady'
- Has (Method $readiness LeaderReady) 'HumanEquipmentReadiness::VisibleCombat'
+ Has (Method $readiness LeaderReady) 'HumanEquipmentReadiness::VisibleOffensive'
+ Has (Method $readiness EnsureCombatReady) 'HumanEquipmentReadiness::VisibleOffensive'
  Require (@(Calls (Method $readiness WantsWeapons) | Where-Object {$_ -match 'HumanUtilityTorch'}).Count -eq 0) 'peaceful utility equipment cannot veto combat or leader readiness'
  foreach($name in @('AfterCrouching','AfterSitting')){
    Has (Method $pose $name) 'GetComponent<LivingWorld.HumanNpc.HumanCompanionPosture>'
@@ -116,4 +120,3 @@ Has (Method $readiness WantsWeapons) 'HumanCompanion::get_CombatOwnsActor'
  }
  "PresenceIntegration PASS: $checks native head-look, scope and 0.3.2 preservation checks. Live animation/movement NOT RUN."
 } finally {$candidate.Dispose();$native.Dispose();$baseline.Dispose()}
-

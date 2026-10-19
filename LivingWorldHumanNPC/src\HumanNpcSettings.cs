@@ -62,7 +62,7 @@ namespace LivingWorld.HumanNpc
             // Native AvoidFire pre-empts Follow and chooses random circling even
             // when afraidOfFire is false. Humans must approach homes/hearths.
             // This does NOT change actual fire/smoke damage or tolerance.
-            ai.m_avoidFire = false; ai.m_afraidOfFire = false; ai.m_avoidWater = true;
+            ai.m_avoidFire = false; ai.m_afraidOfFire = false; ai.m_avoidWater = false;
             ai.m_avoidLava = true; ai.m_skipLavaTargets = true; ai.m_avoidLavaFlee = true;
             ai.m_aggravatable = false; ai.m_passiveAggresive = false;
             ai.m_spawnMessage = ""; ai.m_deathMessage = ""; ai.m_alertedMessage = "";
@@ -85,4 +85,3 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
-
