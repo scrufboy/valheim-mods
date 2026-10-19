@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -11,37 +13,89 @@ using ValheimTooler.Core;
 using ValheimTooler.Utils;
 
 [assembly: AssemblyTitle("Living World C.O.R.E. Tooler")]
-[assembly: AssemblyDescription("Original ValheimTooler interface with Living World integration")]
+[assembly: AssemblyDescription("Living World C.O.R.E. development and companion tooler")]
 [assembly: AssemblyCompany("Brian / scrufboy")]
 [assembly: AssemblyProduct("Living World C.O.R.E.")]
 [assembly: AssemblyCopyright("Living World integration Copyright Brian / scrufboy")]
-[assembly: AssemblyVersion("2.1.0.0")]
-[assembly: AssemblyFileVersion("2.1.0.0")]
+[assembly: AssemblyVersion("2.2.0.0")]
+[assembly: AssemblyFileVersion("2.2.0.0")]
 
 namespace Scrufboy.LivingWorld.Tooler
 {
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
-    [BepInDependency("com.github.Astropilot.ValheimTooler", BepInDependency.DependencyFlags.HardDependency)]
-    public sealed class LivingWorldToolerExtension : BaseUnityPlugin
+    [BepInProcess("valheim.exe")]
+    public sealed class LivingWorldCoreToolerPlugin : BaseUnityPlugin
     {
-        public const string PluginGuid = "com.scrufboy.livingworld.tooler";
-        public const string PluginName = "Brian's Living World C.O.R.E. Tooler";
-        public const string PluginVersion = "2.1.0";
+        public const string PluginGuid = "com.scrufboy.livingworldcore.tooler";
+        public const string PluginName = "Living World C.O.R.E. Tooler — Brian / scrufboy";
+        public const string PluginVersion = "2.2.0";
 
         private Harmony harmony;
+        private bool coreStarted;
+        private static LivingWorldCoreToolerPlugin instance;
 
         private void Awake()
         {
+            instance = this;
             harmony = new Harmony(PluginGuid);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
-            Logger.LogInfo(PluginName + " " + PluginVersion + " loaded into the original ValheimTooler interface.");
+            Logger.LogInfo(PluginName + " " + PluginVersion + " loaded.");
         }
 
         private void OnDestroy()
         {
+            if (coreStarted)
+            {
+                CallCoreLoader("Unload");
+                coreStarted = false;
+            }
             if (harmony != null)
             {
                 harmony.UnpatchSelf();
+            }
+            instance = null;
+        }
+
+        private void InitializeCore()
+        {
+            if (coreStarted)
+            {
+                return;
+            }
+
+            string gameFolder = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+            File.WriteAllText(Path.Combine(gameFolder, "config_lwc_tooler.path"), Paths.ConfigPath);
+            CallCoreLoader("Init");
+            coreStarted = true;
+            Logger.LogInfo("Living World C.O.R.E. Tooler interface initialized. Press Delete to open or close it.");
+        }
+
+        private static void CallCoreLoader(string methodName)
+        {
+            Type loader = typeof(EntryPoint).Assembly.GetType("ValheimTooler.Loader");
+            if (loader == null)
+            {
+                throw new InvalidOperationException("Living World C.O.R.E. Tooler core loader is missing.");
+            }
+
+            MethodInfo method = loader.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public);
+            if (method == null)
+            {
+                throw new InvalidOperationException("Living World C.O.R.E. Tooler core method is missing: " + methodName);
+            }
+
+            method.Invoke(null, new object[0]);
+        }
+
+        [HarmonyPatch(typeof(FejdStartup), "Start")]
+        private static class StartupPatch
+        {
+            private static void Postfix()
+            {
+                if (instance != null)
+                {
+                    instance.InitializeCore();
+                }
             }
         }
     }
@@ -58,6 +112,21 @@ namespace Scrufboy.LivingWorld.Tooler
         };
 
         private static int selectedTab;
+
+        [HarmonyPatch(typeof(VTLocalization), "Localize")]
+        private static class ProductTitlePatch
+        {
+            private static bool Prefix(string text, ref string __result)
+            {
+                if (!String.IsNullOrEmpty(text) && text.Contains("$vt_main_title"))
+                {
+                    __result = text.Replace("$vt_main_title", "Living World C.O.R.E. Tooler — Brian / scrufboy");
+                    return false;
+                }
+
+                return true;
+            }
+        }
 
         [HarmonyPatch(typeof(EntryPoint), "ValheimToolerWindow")]
         private static class EntryPointWindowPatch

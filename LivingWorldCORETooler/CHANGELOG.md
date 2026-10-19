@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.0
+
+- Replaced the inherited ValheimTooler plugin identity with the Living World C.O.R.E. Tooler identity.
+- Rebranded the visible title, assembly metadata, configuration names, and runtime log prefixes for Brian / scrufboy.
+- Removed the legacy ValheimTooler loader plugin from the package.
+- Kept MIT attribution in the documentation and license only.
+
 ## 2.1.0
 
 - Restored the complete original ValheimTooler UI, colors, tabs, catalogs, and controls.
