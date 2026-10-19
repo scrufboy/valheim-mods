@@ -11,6 +11,12 @@ item/prefab spawning, time of day, environment/weather, terrain, map/admin,
 confirmed destructive actions, and an arbitrary command bridge. Invalid
 unfinished ObjectDB item entries are skipped without flooding `LogOutput.log`.
 
+The Raids page includes two opt-in, real Valheim `RandomEvent` matchups for
+Formidable companion evaluation: a bounded group of two to three Common Folk
+Pillagers and a two-combatant Krauguk Legion. They use the installed Souls of
+the Land RRR prefabs, hunt the player/party, and are excluded from random world
+raid selection. Custom Raids 1.8.2 loads and synchronizes these event records.
+
 The World page includes Midnight, Morning, Noon, Evening, normal time-flow,
 time skipping, named environment forcing, Clear, Rain, Thunderstorm, Fog,
 environment reset, world save, and guarded location generation controls.

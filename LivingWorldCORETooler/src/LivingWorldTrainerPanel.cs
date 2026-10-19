@@ -182,6 +182,13 @@ namespace Scrufboy.LivingWorld.Tooler
                 new ActionDef("Wave status", "lwtest wave status", "Reports wave and party state."));
             DangerButton("Stop active wave", "lwtest wave stop", "Stops the specialized wave. Use this instead of cleanup.");
 
+            Heading("Formidable Souls matchups");
+            Row(new ActionDef("Pillagers — 2 to 3", "event lwc_souls_pillagers", "Starts a real bounded RandomEvent using the installed RRRN_Pillager prefab."),
+                new ActionDef("Krauguk Legion — 2", "event lwc_krauguk_legion", "Starts a real bounded RandomEvent using two installed RRRN_OrcBrute combatants."));
+            Row(new ActionDef("Stop Souls matchup", "stopevent", "Stops the active real raid event; surviving enemies may remain."),
+                new ActionDef("Prepare full party", "lwparty", "Creates or recovers the full companion party before the matchup."));
+            GUILayout.Label("Requires Custom Raids plus the repaired Souls/RRRCore, RunicPack, SagesVault, and MadHatter stack. These trials never enter the random raid pool.", statusStyle);
+
             Heading("Vanilla raid console");
             Row(new ActionDef("Eikthyr army", "event army_eikthyr", "Real native raid event."),
                 new ActionDef("Elder army", "event army_theelder", "Real native raid event."));

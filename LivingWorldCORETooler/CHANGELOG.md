@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.4.0
+
+- Added real, manually triggered Souls of the Land RandomEvent matchups to the Raid page.
+- Added a bounded two-to-three Common Folk Pillager trial and a two-combatant Krauguk Legion trial.
+- Kept both events out of the random raid pool and preserved all native and specialized raid controls.
+- Packaged the supplemental Custom Raids configuration and declared Custom Raids 1.8.2 as a dependency.
+
 ## 2.3.0
 
 - Restored the complete Living World trainer surface inside the fifth Tooler page.
