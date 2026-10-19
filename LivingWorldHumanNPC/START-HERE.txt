@@ -1,12 +1,25 @@
-LIVING WORLD HUMAN NPC 0.3.56 — NATIVE COMBAT OWNERSHIP
+LIVING WORLD HUMAN NPC 0.3.57 — FIRE-TEAM COHESION
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:
 
 plugins\LivingWorldHumanNpc\LivingWorld.HumanNpc.dll
 
-This build removes the second combat authority that was delaying and vetoing
-native combat:
+This build preserves the 0.3.56 native combat authority and corrects the
+separation/support failure measured during the 2026-10-19 Elder raid:
+- companions may break formation to fight, but crossing an 18-metre leader or
+  living-party-member boundary converts that fight into bounded local defense;
+- after that immediate exchange, the companion releases combat and regroups
+  instead of chaining another distant target;
+- an owned encounter retains alerted, sensed hostiles through ordinary native
+  target handoff gaps, without turning peaceful awareness into an attack;
+- an already-started cleric heal survives a momentary line-of-sight obstruction,
+  while death, ownership, range, full health and immediate personal threat still
+  cancel it;
+- visual attack cues extend to 14 metres so shield users can answer visible
+  ranged attacks aimed at them;
+- the native maximum chase distance is bounded to the 30-metre awareness range
+  instead of the former enemy-faction 300-metre chase value;
 - native MonsterAI now performs its ordinary FindEnemy and UpdateTarget pass;
 - Living World validates the selected target after that pass, only rejecting
   allies, tame creatures, unprovoked wildlife reserved for Hunt mode,

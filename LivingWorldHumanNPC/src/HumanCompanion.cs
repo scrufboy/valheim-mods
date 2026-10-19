@@ -284,19 +284,28 @@ namespace LivingWorld.HumanNpc
             float targetFromAnchor = Vector3.Distance(target.transform.position, anchor);
             float npcFromAnchor = Vector3.Distance(transform.position, anchor);
             bool localDefense = LocalSelfDefense(target, damage, targetFromNpc);
+            bool livingPartyMember;
+            float partyDistance = NearestLivingPartyMember(out livingPartyMember);
+            bool recoveryRequired = CompanionPolicy.MustEnterCombatRecovery(npcFromAnchor,
+                livingPartyMember, partyDistance);
             if (targetFromNpc > DetectionLeash || (!localDefense &&
-                (targetFromAnchor > DetectionLeash || npcFromAnchor > CompanionPolicy.NpcLeash))) return false;
+                (targetFromAnchor > DetectionLeash || npcFromAnchor > CompanionPolicy.NpcLeash || recoveryRequired))) return false;
             bool nearby = CompanionPolicy.RefreshPursuit(activeThreat, damage > 0 ? 0 : Single.PositiveInfinity,
                 Vector3.Distance(target.transform.position, transform.position));
             if (!CompanionPolicy.MayReacquireRetired(retiredPursuitTarget == target, explicitOrder, nearby || activeThreat)) return false;
             if (authorizedTarget == target)
             {
                 if (CompanionPolicy.Finite(damage) && damage > 0) lastAttributedDamage = Time.time;
-                if (localDefense && npcFromAnchor > CompanionPolicy.TacticalNpcLeash) recoveryDefense = true;
+                if (localDefense && (npcFromAnchor > CompanionPolicy.TacticalNpcLeash || recoveryRequired) && !recoveryDefense)
+                {
+                    recoveryDefense = true;
+                    combatOrigin = transform.position;
+                }
                 RefreshNearbyThreat(); return AuthorizationValid(target);
             }
             if (authorizedTarget != null) return false;
-            BeginCombatOwnership(target, localDefense && npcFromAnchor > CompanionPolicy.TacticalNpcLeash,
+            BeginCombatOwnership(target, localDefense &&
+                (npcFromAnchor > CompanionPolicy.TacticalNpcLeash || recoveryRequired),
                 damage, explicitOrder ? "Explicit target handed to native combat" : "Party threat handed to native combat");
             SetNativeCombatTarget(target);
             return true;
@@ -305,7 +314,9 @@ namespace LivingWorld.HumanNpc
         void BeginCombatOwnership(Character target, bool recovery, float damage, string reason)
         {
             ReleaseOptionalActivity();
-            authorizedTarget = target; combatOrigin = transform.position;
+            bool continuingRecovery = recovery && recoveryDefense;
+            authorizedTarget = target;
+            if (!continuingRecovery) combatOrigin = transform.position;
             recoveryDefense = recovery;
             lastNearbyThreat = Time.time; lastSensed = Time.time;
             encounterOwned = true; encounterClearObserved = false; encounterClearScans = 0;
@@ -347,14 +358,20 @@ namespace LivingWorld.HumanNpc
             float targetFromAnchor = Vector3.Distance(target.transform.position, anchor);
             float npcFromAnchor = Vector3.Distance(transform.position, anchor);
             bool localDefense = LocalSelfDefense(target, 0f, targetFromNpc);
+            bool livingPartyMember;
+            float partyDistance = NearestLivingPartyMember(out livingPartyMember);
+            bool recoveryRequired = CompanionPolicy.MustEnterCombatRecovery(npcFromAnchor,
+                livingPartyMember, partyDistance);
             // Stealth is the one peaceful veto. A crouched leader permits native
             // awareness but not an unprovoked attack; a hostile already committed
             // to the protected party still crosses into combat immediately.
             bool stealthHold = ProtectingOwner() && observedLeader.IsCrouching();
             bool activeThreat = IsActiveThreat(target);
             bool passiveWildlife = target.GetFaction() == Character.Faction.AnimalsVeg;
-            return CompanionPolicy.MayAdoptNativeSelection(stealthHold, activeThreat, passiveWildlife, localDefense,
-                targetFromNpc, targetFromAnchor, npcFromAnchor);
+            bool alreadyCommitted = target == authorizedTarget;
+            return (alreadyCommitted || localDefense || !recoveryRequired) &&
+                CompanionPolicy.MayAdoptNativeSelection(stealthHold, activeThreat, passiveWildlife, localDefense,
+                    targetFromNpc, targetFromAnchor, npcFromAnchor);
         }
 
         bool AdoptNativeTarget(Character target, bool sensed, string reason)
@@ -363,9 +380,13 @@ namespace LivingWorld.HumanNpc
             if (authorizedTarget != target)
             {
                 float npcFromAnchor = Vector3.Distance(transform.position, OrderAnchor());
+                bool livingPartyMember;
+                float partyDistance = NearestLivingPartyMember(out livingPartyMember);
+                bool recoveryRequired = CompanionPolicy.MustEnterCombatRecovery(npcFromAnchor,
+                    livingPartyMember, partyDistance);
                 bool recovery = LocalSelfDefense(target, 0f,
                     Vector3.Distance(target.transform.position, transform.position)) &&
-                    npcFromAnchor > CompanionPolicy.TacticalNpcLeash;
+                    (npcFromAnchor > CompanionPolicy.TacticalNpcLeash || recoveryRequired);
                 BeginCombatOwnership(target, recovery, 0f, reason);
             }
             if (sensed)
@@ -488,6 +509,7 @@ namespace LivingWorld.HumanNpc
             float bestPriority = Single.NegativeInfinity;
             Character seen = null;
             float seenDistance = Single.PositiveInfinity;
+            bool encounterHostileObserved = false;
             foreach (Character candidate in Character.GetAllCharacters())
             {
                 if (candidate == null || candidate == body || candidate.IsDead() || candidate.IsPlayer() ||
@@ -501,10 +523,17 @@ namespace LivingWorld.HumanNpc
                 bool enemy = BaseAI.IsEnemy(body, candidate);
                 if (sensed && enemy && distance < seenDistance)
                 { seen = candidate; seenDistance = distance; }
-                if (!IsActiveThreat(candidate) || distance > DetectionLeash || !sensed) continue;
+                var hostile = candidate.GetComponent<MonsterAI>();
+                bool encounterThreat = CompanionPolicy.EncounterThreat(encounterOwned, enemy,
+                    hostile != null && hostile.IsAlerted(), sensed,
+                    candidate.GetFaction() == Character.Faction.AnimalsVeg);
+                encounterHostileObserved |= encounterThreat;
+                if ((!IsActiveThreat(candidate) && !encounterThreat) || distance > DetectionLeash || !sensed) continue;
                 if (!CompanionPolicy.MayReacquireRetired(retiredPursuitTarget == candidate, false, true)) continue;
                 if (!enemy || (!localDefense && fromAnchor > DetectionLeash)) continue;
                 float priority = ThreatPriority(candidate);
+                if (!CompanionPolicy.Finite(priority) && encounterThreat)
+                    priority = 500f - fromAnchor * 8f - distance;
                 if (best == null || CompanionPolicy.ShouldSwitchThreat(bestPriority, priority))
                 { best = candidate; bestPriority = priority; }
             }
@@ -532,6 +561,13 @@ namespace LivingWorld.HumanNpc
             }
             else if (best == null && encounterOwned)
             {
+                if (encounterHostileObserved)
+                {
+                    encounterClearScans = 0;
+                    encounterClearObserved = false;
+                    encounterUntil = Mathf.Max(encounterUntil, Time.time + 1.5f);
+                    return;
+                }
                 // One missed quarter-second scan is not an all-clear. Require
                 // repeated observations and the retention interval together.
                 encounterClearScans++;
@@ -551,10 +587,39 @@ namespace LivingWorld.HumanNpc
             return activeMotion == CompanionMotion.Follow && observedLeader != null ? observedLeader.transform.position : new Vector3(order.X, order.Y, order.Z);
         }
 
+        float NearestLivingPartyMember(out bool found)
+        {
+            found = false;
+            long ownParty; Player ownLeader;
+            if (!TryGetConfidenceParty(out ownParty, out ownLeader)) return Single.PositiveInfinity;
+            float nearest = Single.PositiveInfinity;
+            foreach (Character candidate in Character.GetAllCharacters())
+            {
+                if (candidate == null || candidate == body || candidate.IsDead()) continue;
+                var companion = candidate.GetComponent<HumanCompanion>();
+                if (companion == null) continue;
+                long candidateParty; Player candidateLeader;
+                if (!companion.TryGetConfidenceParty(out candidateParty, out candidateLeader) || candidateParty != ownParty) continue;
+                found = true;
+                nearest = Mathf.Min(nearest, Vector3.Distance(transform.position, candidate.transform.position));
+            }
+            return nearest;
+        }
+
         bool AuthorizationValid(Character candidate)
         {
             if (candidate != authorizedTarget || !LegalCombatTarget(candidate)) return false;
             Vector3 anchor = OrderAnchor();
+            float npcFromAnchor = Vector3.Distance(transform.position, anchor);
+            bool livingPartyMember;
+            float partyDistance = NearestLivingPartyMember(out livingPartyMember);
+            if (!recoveryDefense && CompanionPolicy.MustEnterCombatRecovery(npcFromAnchor,
+                livingPartyMember, partyDistance))
+            {
+                recoveryDefense = true;
+                combatOrigin = transform.position;
+                status = "Combat recovery boundary reached; finish locally and regroup";
+            }
             float targetFromNpc = Vector3.Distance(candidate.transform.position, transform.position);
             bool sensed = LocalSelfDefense(candidate, 0f, targetFromNpc) || ai.CanSeeTarget(candidate) || ai.CanHearTarget(candidate);
             if (sensed) lastSensed = Time.time;
@@ -566,7 +631,7 @@ namespace LivingWorld.HumanNpc
                     targetFromNpc);
             return CompanionPolicy.WithinCommittedCombatBounds(Time.time - lastNearbyThreat, Time.time - lastSensed,
                 Vector3.Distance(candidate.transform.position, combatOrigin), Vector3.Distance(transform.position, combatOrigin),
-                Vector3.Distance(candidate.transform.position, anchor), Vector3.Distance(transform.position, anchor), targetFromNpc);
+                Vector3.Distance(candidate.transform.position, anchor), npcFromAnchor, targetFromNpc);
         }
 
         static bool SafeNativeAttack(Attack attack)
@@ -600,17 +665,22 @@ namespace LivingWorld.HumanNpc
 
         void StopCombatCore(bool endEncounter)
         {
-            if (!Owner()) { authorizedTarget = null; recoveryDefense = false; if (endEncounter) { encounterOwned = false; encounterClearObserved = true; encounterClearScans = 0; encounterUntil = 0f; } return; }
+            if (!Owner()) { authorizedTarget = null; if (endEncounter) { recoveryDefense = false; encounterOwned = false; encounterClearObserved = true; encounterClearScans = 0; encounterUntil = 0f; } return; }
             ReleaseOptionalActivity();
             retiredPursuitTarget = authorizedTarget != null ? authorizedTarget : retiredPursuitTarget;
             authorizedTarget = null;
-            recoveryDefense = false;
-            if (endEncounter) { encounterOwned = false; encounterClearObserved = true; encounterClearScans = 0; encounterUntil = 0f; }
+            if (endEncounter) { recoveryDefense = false; encounterOwned = false; encounterClearObserved = true; encounterClearScans = 0; encounterUntil = 0f; }
             ClearNativeCombat(); status = "Combat stopped; persistent movement order retained";
         }
 
         void DropCombatTarget()
         {
+            if (recoveryDefense)
+            {
+                StopCombatCore(true);
+                status = "Local defense complete; combat released for party regroup";
+                return;
+            }
             encounterUntil = Mathf.Max(encounterUntil, Time.time + 3f);
             encounterOwned = true; encounterClearObserved = false; encounterClearScans = 0;
             StopCombatCore(false);

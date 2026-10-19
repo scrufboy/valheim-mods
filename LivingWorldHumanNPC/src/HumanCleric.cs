@@ -22,7 +22,10 @@ namespace LivingWorld.HumanNpc
         public bool Casting { get { return patient != null; } }
         internal void InterruptForCombat()
         {
-            if (patient != null) Cancel("cast interrupted by combat handoff; no heal delivered");
+            // A target handoff elsewhere in an existing encounter is not a
+            // reason to erase support. Immediate personal danger still is.
+            if (patient != null && PersonalThreat())
+                Cancel("cast interrupted by personal threat; no heal delivered");
         }
         public string Describe() { return "cleric=" + IsCleric(gameObject) + "; reserve=" + (reserve == null ? "pending" : reserve.Current.ToString("F1")) + "; cooldown=" + cooldown.ToString("F1") + "; casting=" + Casting + "; fault=" + fault; }
 
@@ -55,7 +58,7 @@ namespace LivingWorld.HumanNpc
                 reserve.Advance(dt, 2, 0, 1, !Casting);
                 if (Casting)
                 {
-                    if (body.IsStaggering() || companion.CombatOwnsActor && PersonalThreat() || !Eligible(patient))
+                    if (body.IsStaggering() || companion.CombatOwnsActor && PersonalThreat() || !Eligible(patient, false))
                     { Cancel("cast interrupted by personal threat or invalid patient; no heal delivered"); return; }
                     ai.StopMoving();
                     if (Look == null) throw new MissingMethodException("BaseAI.LookAt");
@@ -83,7 +86,7 @@ namespace LivingWorld.HumanNpc
                     Character best = null; float severity = 1;
                     foreach (var candidate in Character.GetAllCharacters())
                     {
-                        if (!Eligible(candidate)) continue;
+                        if (!Eligible(candidate, true)) continue;
                         float fraction = candidate.GetHealth() / candidate.GetMaxHealth();
                         if (fraction < severity) { best = candidate; severity = fraction; }
                     }
@@ -104,7 +107,7 @@ namespace LivingWorld.HumanNpc
             catch (Exception error) { fault = true; patient = null; Log("cleric fail-closed: " + error.Message); }
         }
 
-        bool Eligible(Character target)
+        bool Eligible(Character target, bool starting)
         {
             if (target == null) return false;
             long party; Player leader;
@@ -116,15 +119,23 @@ namespace LivingWorld.HumanNpc
             var targetView = target.GetComponent<ZNetView>();
             bool visible = target == body || !Physics.Linecast(body.GetCenterPoint(), target.GetCenterPoint(),
                 LayerMask.GetMask("Default", "static_solid", "piece", "terrain"), QueryTriggerInteraction.Ignore);
-            return PartyCombatPolicy.HealEligible(ally, !target.IsDead(), targetView != null && targetView.IsValid() && targetView.IsOwner(),
-                visible, Vector3.Distance(transform.position, target.transform.position), target.GetHealth(), target.GetMaxHealth());
+            bool owned = targetView != null && targetView.IsValid() && targetView.IsOwner();
+            float distance = Vector3.Distance(transform.position, target.transform.position);
+            return starting
+                ? PartyCombatPolicy.HealEligible(ally, !target.IsDead(), owned, visible,
+                    distance, target.GetHealth(), target.GetMaxHealth())
+                : PartyCombatPolicy.HealCastStillValid(ally, !target.IsDead(), owned,
+                    distance, target.GetHealth(), target.GetMaxHealth());
         }
         bool PersonalThreat()
         {
             if (companion == null || !companion.CombatOwnsActor) return false;
             var committed = companion.TargetCreature;
             if (committed != null && !committed.IsDead() && Vector3.Distance(transform.position, committed.transform.position) <= 7f)
-                return true;
+            {
+                var committedAi = committed.GetComponent<MonsterAI>();
+                if (committedAi != null && committedAi.GetTargetCreature() == body) return true;
+            }
             foreach (var candidate in Character.GetAllCharacters())
             {
                 if (candidate == null || candidate == body || candidate.IsDead() ||

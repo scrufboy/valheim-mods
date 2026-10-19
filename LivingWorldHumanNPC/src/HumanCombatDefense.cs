@@ -72,7 +72,7 @@ namespace LivingWorld.HumanNpc
                 var hostile = candidate.GetComponent<MonsterAI>();
                 if (hostile == null || hostile.GetTargetCreature() != body) continue;
                 float distance = Vector3.Distance(transform.position, candidate.transform.position);
-                if (distance > 5f || distance >= nearestDistance || !ai.CanSeeTarget(candidate)) continue;
+                if (distance > PartyCombatPolicy.DefensiveCueRange || distance >= nearestDistance || !ai.CanSeeTarget(candidate)) continue;
                 nearest = candidate; nearestDistance = distance;
             }
             return nearest;

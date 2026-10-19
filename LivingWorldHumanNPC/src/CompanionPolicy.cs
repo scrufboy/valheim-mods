@@ -32,6 +32,11 @@ namespace LivingWorld.HumanNpc
         public const float NearbyThreatRange = 6f;
         public const float RecentDamageSeconds = 5f;
         public const float TacticalNpcLeash = 10f;
+        // A committed fire team may break formation, but it may not become two
+        // independent 30m hunts on opposite sides of the leader. Crossing either
+        // boundary finishes only the immediate fight, then returns to the party.
+        public const float CombatAnchorLeash = 18f;
+        public const float CombatPairLeash = 18f;
         public const float RecoveryDefenseRange = 8f;
         public const float RecoveryDefenseSeconds = 8f;
 
@@ -162,6 +167,25 @@ namespace LivingWorld.HumanNpc
         {
             return Finite(targetDistance) && targetDistance >= 0f && targetDistance <= RecoveryDefenseRange &&
                 (targetsSelf || (Finite(attributedDamage) && attributedDamage > 0f));
+        }
+
+        public static bool MustEnterCombatRecovery(float npcFromAnchor, bool livingPartyMember,
+            float nearestPartyMember)
+        {
+            if (!Finite(npcFromAnchor) || npcFromAnchor < 0f) return true;
+            if (npcFromAnchor > CombatAnchorLeash) return true;
+            if (!livingPartyMember) return false;
+            return !Finite(nearestPartyMember) || nearestPartyMember < 0f ||
+                nearestPartyMember > CombatPairLeash;
+        }
+
+        public static bool EncounterThreat(bool encounterOwned, bool enemy, bool alerted,
+            bool sensed, bool passiveWildlife)
+        {
+            // Alert alone never begins a peaceful fight. Once this party already
+            // owns a real encounter, however, an alerted sensed hostile is part
+            // of that encounter even during native target handoff gaps.
+            return encounterOwned && enemy && alerted && sensed && !passiveWildlife;
         }
 
         public static bool WithinRecoveryDefenseBounds(float elapsed, float unsensed,

@@ -38,11 +38,18 @@ class PartyCombatPolicyTests
         Check(!PartyCombatPolicy.HealEligible(true,false,true,true,5,0,100),"no resurrection");
         Check(!PartyCombatPolicy.HealEligible(true,true,false,true,5,20,100),"no foreign health writes");
         Check(!PartyCombatPolicy.HealEligible(true,true,true,false,5,20,100),"wall blocks healing");
+        Check(PartyCombatPolicy.HealCastStillValid(true,true,true,12,20,100),"started heal survives momentary sight loss at support boundary");
+        Check(!PartyCombatPolicy.HealCastStillValid(true,true,true,12.01f,20,100),"started heal cannot follow a fleeing patient");
+        Check(!PartyCombatPolicy.HealCastStillValid(true,false,true,5,0,100),"started heal cannot resurrect");
+        Check(!PartyCombatPolicy.HealCastStillValid(true,true,false,5,20,100),"started heal cannot write foreign health");
+        Check(!PartyCombatPolicy.HealCastStillValid(true,true,true,5,100,100),"started heal stops when patient is full");
         Check(PartyCombatPolicy.ClericSupport(true,false,false,true,true),"safe combat window permits class support");
         Check(!PartyCombatPolicy.ClericSupport(true,true,false,true,true),"personal threat keeps native combat in control");
         Check(!PartyCombatPolicy.ClericSupport(true,false,true,true,true),"busy body cannot begin a cast");
         Check(PartyCombatPolicy.ClericSupport(false,false,false,true,true),"peaceful recovery remains available");
         Check(PartyCombatPolicy.ReactToAttack(true,true,true,true,false,3,0f,0f),"observed close attack permits immediate shield response");
+        Check(PartyCombatPolicy.ReactToAttack(true,true,true,true,false,14,0f,0f),"observed ranged attack permits shield response at cue boundary");
+        Check(!PartyCombatPolicy.ReactToAttack(true,true,true,true,false,14.01f,0f,0f),"defensive cue range remains bounded");
         Check(!PartyCombatPolicy.ReactToAttack(false,true,true,true,false,3,0f,0f),"unseen cue cannot trigger block");
         Check(!PartyCombatPolicy.ReactToAttack(true,true,true,true,false,3,1f,0f),"stale cue discarded");
         Check(!PartyCombatPolicy.ReactToAttack(true,true,true,true,true,3,0f,0f),"staggered or attacking defender cannot begin a block");

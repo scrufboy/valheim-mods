@@ -178,7 +178,7 @@ try {
  HasFloatSetting $settings m_viewRange 30
  HasFloatSetting $settings m_hearRange 9999
  HasFloatSetting $settings m_alertRange 20
- HasFloatSetting $settings m_maxChaseDistance 300
+ HasFloatSetting $settings m_maxChaseDistance 30
  HasFloatSetting $settings m_minAttackInterval 0
  HasFloatSetting $settings m_circleTargetDistance 8
  HasFloatSetting $settings m_circleTargetDuration 6

@@ -6,6 +6,7 @@ namespace LivingWorld.HumanNpc
     // Decisions consume observations only. Native execution owns costs and hits.
     public static class PartyCombatPolicy
     {
+        public const float DefensiveCueRange = 14f;
         // Humanoid's player-facing bow draw mode must be suspended only for the
         // synchronous native AI release call, after every safety gate passed.
         public static bool BowReleaseBridge(bool ready, bool authorized, bool currentBow,
@@ -60,6 +61,15 @@ namespace LivingWorld.HumanNpc
                 Finite(health) && Finite(maximum) && maximum > 0 && health > 0 && health < maximum * 0.85f;
         }
 
+        public static bool HealCastStillValid(bool ally, bool alive, bool owned,
+            float distance, float health, float maximum)
+        {
+            // Visibility is required to begin a cast. A momentary tree, body or
+            // combatant crossing the ray must not erase a cast already committed.
+            return ally && alive && owned && Finite(distance) && distance >= 0f && distance <= 12f &&
+                Finite(health) && Finite(maximum) && maximum > 0f && health > 0f && health < maximum;
+        }
+
         public static bool ClericSupport(bool combatOwner, bool personalThreat, bool bodyBusy,
             bool cooldownReady, bool reserveReady)
         {
@@ -73,7 +83,7 @@ namespace LivingWorld.HumanNpc
             bool incapacitated, float distance, float cueAge, float reactionDelay)
         {
             return perceived && facing && shield && stamina && !incapacitated &&
-                Finite(distance) && distance >= 0 && distance <= 5f &&
+                Finite(distance) && distance >= 0 && distance <= DefensiveCueRange &&
                 Finite(cueAge) && Finite(reactionDelay) && reactionDelay >= 0f &&
                 cueAge >= reactionDelay && cueAge <= .8f;
         }

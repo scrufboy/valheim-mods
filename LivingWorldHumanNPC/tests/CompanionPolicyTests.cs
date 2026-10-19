@@ -202,6 +202,17 @@ class CompanionPolicyTests
         Check(!CompanionPolicy.WithinCommittedCombatBounds(0f,8f,1f,1f,1f,1f,1f), "committed target retires after extended unsensed interval");
         Check(!CompanionPolicy.WithinCommittedCombatBounds(0f,0f,1f,1f,1f,30.1f,1f), "committed combat cannot become an unbounded leader abandonment");
         Check(!CompanionPolicy.WithinCommittedCombatBounds(0f,0f,1f,1f,1f,1f,30.1f), "committed combat cannot chase beyond the awareness envelope");
+        Check(!CompanionPolicy.MustEnterCombatRecovery(18f, true, 18f), "fire team remains committed at inclusive cohesion boundaries");
+        Check(CompanionPolicy.MustEnterCombatRecovery(18.01f, true, 1f), "leader-anchor separation enters combat recovery");
+        Check(CompanionPolicy.MustEnterCombatRecovery(1f, true, 18.01f), "party separation enters combat recovery");
+        Check(!CompanionPolicy.MustEnterCombatRecovery(1f, false, Single.PositiveInfinity), "single living companion does not require a missing peer");
+        Check(CompanionPolicy.MustEnterCombatRecovery(Single.NaN, false, Single.PositiveInfinity), "invalid anchor separation fails into recovery");
+        Check(CompanionPolicy.EncounterThreat(true, true, true, true, false), "owned encounter retains alerted sensed hostile through target handoff");
+        Check(!CompanionPolicy.EncounterThreat(false, true, true, true, false), "awareness alone does not begin a peaceful encounter");
+        Check(!CompanionPolicy.EncounterThreat(true, false, true, true, false), "friendly alert is not an encounter threat");
+        Check(!CompanionPolicy.EncounterThreat(true, true, false, true, false), "unalarmed hostile does not prolong encounter");
+        Check(!CompanionPolicy.EncounterThreat(true, true, true, false, false), "unsensed hostile does not prolong encounter");
+        Check(!CompanionPolicy.EncounterThreat(true, true, true, true, true), "passive wildlife remains reserved for Hunt mode");
         Check(!CompanionPolicy.WithinRangedCombatBounds(1, 0, 24.01f, 0, 24, 0), "ranged target remains bounded");
         Check(!CompanionPolicy.WithinRangedCombatBounds(1, 3, 20, 0, 20, 0), "ranged sight loss unchanged");
         Check(!CompanionPolicy.WithinRangedCombatBounds(1, 0, Single.NaN, 0, 20, 0), "ranged invalid observation fails closed");
