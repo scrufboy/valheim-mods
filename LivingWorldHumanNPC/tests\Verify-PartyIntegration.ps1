@@ -85,6 +85,10 @@ try {
  Has $equipment BeforeSelect 'get_Ready'
  Has $equipment BeforeSelect 'HumanCompanion::get_HasAuthorizedCombat'
  Has $equipment RejectUtilitySelection 'HumanUtilityTorch::IsUtilityTorch'
+ Has $equipment RejectUtilitySelection 'HumanPartyEquipment::PairSelectedShield'
+ Has $equipment PairSelectedShield 'EquipmentPresentationPolicy::PairShield'
+ Has $equipment PairSelectedShield 'Humanoid::EquipItem'
+ Require (@(Calls (Method $equipment PairSelectedShield)|Where-Object {$_ -match 'LookAt|DoAttack|MoveTo|SetTarget|SetFollowTarget|UnequipItem'}).Count -eq 0) 'shield pairing cannot move, turn, target, attack, or replace native weapon selection'
  Has (TypeDef $native MonsterAI) SelectBestAttack 'Humanoid::EquipBestWeapon'
  Has $readiness EnsurePeacefulStow 'Humanoid::HideHandItems'
  Has $readiness EnsurePeacefulStow 'EquipmentPresentationPolicy::Stow'
@@ -156,7 +160,7 @@ try {
  $doors=TypeDef $party HumanDoorTraversal
  Has $doors Step 'BaseAI::StopMoving'
  Has $doors Step 'ResetRoute'
- Has $doors NeedsCloseFollow 'DoorTravelPolicy::ContinueShortFollow'
+ Has $doors NeedsCloseFollow 'DoorTravelPolicy::UseLeaderDoorGoal'
  $settingsType=TypeDef $party HumanNpcSettings
  $settings=Method $settingsType Configure
  Has $plugin Register 'ConfigureAlertVoice'

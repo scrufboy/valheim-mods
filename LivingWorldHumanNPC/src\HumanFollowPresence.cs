@@ -97,7 +97,10 @@ namespace LivingWorld.HumanNpc
             if (formation) destination = FormationDestination(leader);
             else ReleaseLease();
             float distance = Vector3.Distance(transform.position, destination);
-            Vector3 safeDestination = RespectLeaderExclusion(leader, destination);
+            // During a directly observed doorway transit the leader's real
+            // position is the order anchor. A personal-space detour here makes
+            // the door adapter reject its own goal before it can open the door.
+            Vector3 safeDestination = crossing ? destination : RespectLeaderExclusion(leader, destination);
             if (optional) { ReleaseLook(); pace = ambientHold ? CompanionPace.Stand : CompanionPace.Walk; }
             else if (formation) pace = CompanionPresencePolicy.NextFormationPace(pace, distance);
             else pace = CompanionPresencePolicy.NextPace(pace, distance, crossing);
@@ -322,4 +325,3 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
-

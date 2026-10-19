@@ -13,5 +13,11 @@ namespace LivingWorld.HumanNpc
 
         public static bool VerifiedStowed(bool visibleCombat, bool hiddenCombat)
         { return !visibleCombat && hiddenCombat; }
+
+        public static bool PairShield(bool authorizedCombat, bool selectedOneHandedWeapon,
+            bool shieldAvailable, bool shieldEquipped)
+        {
+            return authorizedCombat && selectedOneHandedWeapon && shieldAvailable && !shieldEquipped;
+        }
     }
 }

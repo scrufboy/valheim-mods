@@ -37,6 +37,7 @@ namespace LivingWorld.HumanNpc
         Vector3 lastReportedPosition;
         bool haveMotionSample;
         bool shortBlocked;
+        bool directDoorObserved;
         Vector3 shortProbeGoal;
         int candidateOffset;
         DoorTravelPhase phase;
@@ -239,15 +240,19 @@ namespace LivingWorld.HumanNpc
             Vector3 goal = target.transform.position;
             if (!companion.IsDoorTravelGoal(goal)) return false;
             float distance = Vector3.Distance(transform.position, goal);
-            if (distance >= 3f) return false;
+            bool crossing = phase != DoorTravelPhase.None;
+            if (crossing) return true;
+            if (Single.IsNaN(distance) || Single.IsInfinity(distance) || distance > DoorTravelPolicy.ScanRange) return false;
             if (Time.time >= nextShortProbe || Vector3.Distance(shortProbeGoal, goal) > 0.75f)
             {
                 nextShortProbe = Time.time + DoorTravelPolicy.ScanInterval;
                 shortProbeGoal = goal;
                 shortBlocked = SegmentBlocked(transform.position, goal, null);
+                float blockerDistance;
+                directDoorObserved = DirectBlockingDoor(transform.position, goal, out blockerDistance) != null &&
+                    blockerDistance <= DoorTravelPolicy.ScanRange;
             }
-            bool crossing = phase != DoorTravelPhase.None;
-            return DoorTravelPolicy.ContinueShortFollow(true, true, distance, crossing, shortBlocked);
+            return DoorTravelPolicy.UseLeaderDoorGoal(true, true, distance, false, shortBlocked, directDoorObserved);
         }
 
         internal bool MayRestNear(GameObject target)

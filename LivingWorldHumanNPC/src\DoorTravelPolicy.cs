@@ -26,7 +26,7 @@ namespace LivingWorld.HumanNpc
             bool access, bool claimed, bool retired)
         {
             return hit && firstSolidIsDoor && Finite(distance) && distance >= 0 &&
-                distance <= UseRange + .75f && access && !claimed && !retired;
+                distance <= ScanRange && access && !claimed && !retired;
         }
 
         // A following radius is not proof of arrival through a wall. A committed
@@ -36,6 +36,18 @@ namespace LivingWorld.HumanNpc
         {
             return authorized && matchingGoal && Finite(distance) && distance >= 0 &&
                 distance < 3f && (committedCrossing || blocked);
+        }
+
+        // A directly observed door on the current leader segment is route
+        // knowledge, not knowledge of another entrance. Keep the actual leader
+        // goal long enough for native pathing to reach and operate that door.
+        public static bool UseLeaderDoorGoal(bool authorized, bool matchingGoal,
+            float distance, bool committedCrossing, bool blocked, bool directDoorObserved)
+        {
+            if (!authorized || !matchingGoal || !Finite(distance) || distance < 0) return false;
+            if (committedCrossing) return true;
+            if (distance > ScanRange) return false;
+            return directDoorObserved || (distance < 3f && blocked);
         }
 
         public static bool RouteCandidate(float actorSide, float goalSide, float distance,

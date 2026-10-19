@@ -68,7 +68,9 @@ try{
  Has (Method $ambient StationPermitted) 'Piece::GetCreator';Has (Method $ambient StationPermitted) 'ZNetView::IsOwner';Has (Method $ambient StationPermitted) 'PrivateArea::CheckAccess'
  Has (Method $ambient Discover) 'Physics::OverlapSphereNonAlloc';Has (Method $ambient FullPath) 'Pathfinding::GetPath'
  Has (Method $ambient Release) 'HumanCompanionPosture::StopAmbient'
- Has (Method $posture BeginAmbientCraft) 'Humanoid::HideHandItems';Has (Method $posture BeginAmbientCraft) 'HumanCompanionPosture::HandsSafe'
+ $beginCraft=Method $posture BeginAmbientCraft
+ Has $beginCraft 'Humanoid::HideHandItems';Has $beginCraft 'HumanCompanionPosture::HandsSafe'
+ Require (@($beginCraft.Body.Instructions|Where-Object {$_.Operand -is [Mono.Cecil.FieldReference] -and $_.Operand.Name -in @('m_hiddenLeftItem','m_hiddenRightItem')}).Count -eq 0) 'visible-back stow slots do not veto peaceful crafting animation'
  Has (Method $posture RestoreAmbientHands) 'HumanCompanionPosture::HandsSafe';Has (Method $posture RestoreAmbientHands) 'System.Object::ReferenceEquals'
  Has (Method $posture HandsSafe) 'Attack::IsDone';Has (Method $posture HandsSafe) 'Character::InAttack';Has (Method $posture HandsSafe) 'HumanCompanionPosture::Owner'
  foreach($name in @('AfterCrouching','AfterSitting','BeforeCraftEvent','AfterCraftAttach')){Has (Method $posture $name) 'GetComponent'}

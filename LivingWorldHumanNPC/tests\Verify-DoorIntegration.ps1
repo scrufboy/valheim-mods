@@ -73,7 +73,8 @@ try {
  Has (Method $travel Discover) 'HumanDoorTraversal::ResetRoute'
  Has (Method $travel FullPath) 'Pathfinding::GetPath'
  Has (Method $travel FullPath) 'DoorTravelPolicy::FullLeg'
- Has (Method $travel NeedsCloseFollow) 'DoorTravelPolicy::ContinueShortFollow'
+ Has (Method $travel NeedsCloseFollow) 'DoorTravelPolicy::UseLeaderDoorGoal'
+ Has (Method $travel NeedsCloseFollow) 'HumanDoorTraversal::DirectBlockingDoor'
  Require (@($travel.Methods | Where-Object Name -eq BeforeFollow).Count -eq 0) 'old door follow executor removed; presence owns one follow hook'
  $presence=$candidate.MainModule.Types | Where-Object Name -eq HumanFollowPresence
  Has (Method $presence BeforeFollow) 'GetComponent<LivingWorld.HumanNpc.HumanFollowPresence>'

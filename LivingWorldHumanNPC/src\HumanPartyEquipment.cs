@@ -20,6 +20,7 @@ namespace LivingWorld.HumanNpc
         ZNetView view;
         HumanCompanion companion;
         ItemDrop.ItemData bow, sword, shield;
+        float nextShieldReport;
         bool restored, fault, subscribed;
         public bool Ready { get { return isActiveAndEnabled && restored && !fault && view != null && view.IsValid() && view.IsOwner() && !body.IsDead(); } }
         public string Describe()
@@ -201,8 +202,27 @@ namespace LivingWorld.HumanNpc
         {
             // Torches are traversal equipment. Even if native inventory timing
             // exposes one during the combat handoff, it cannot become an attack.
-            if (__instance.GetComponent<HumanCompanion>() != null && HumanUtilityTorch.IsUtilityTorch(__result))
-                __result = null;
+            var equipment = __instance.GetComponent<HumanPartyEquipment>();
+            if (equipment == null) return;
+            equipment.Cache();
+            if (HumanUtilityTorch.IsUtilityTorch(__result)) { __result = null; return; }
+            equipment.PairSelectedShield(__result);
+        }
+
+        void PairSelectedShield(ItemDrop.ItemData selected)
+        {
+            if (body == null || companion == null || selected == null || selected.m_shared == null) return;
+            var available = body.GetInventory().GetAllItems().FirstOrDefault(item => item != null && item.m_shared != null &&
+                item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield);
+            bool pair = EquipmentPresentationPolicy.PairShield(companion.HasAuthorizedCombat,
+                selected.m_shared.m_itemType == ItemDrop.ItemData.ItemType.OneHandedWeapon,
+                available != null, available != null && available.m_equipped);
+            if (!pair) return;
+            bool equipped = body.EquipItem(available, true);
+            if (equipped && available.m_equipped) return;
+            if (Time.time < nextShieldReport) return;
+            nextShieldReport = Time.time + 2f;
+            Log("native one-handed selection could not pair the owned shield; defense remains unavailable");
         }
 
         [HarmonyPriority(Priority.Last)]

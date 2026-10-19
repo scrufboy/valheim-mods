@@ -93,8 +93,8 @@ static class AmbientAdapterHarness
         f=new Fixture();Station();f.Select();f.leader.crouched=true;f.Step(f.selectedAt+.1f);
         Check(!f.ambient.Active&&f.posture.Posture==CompanionPosture.Crouch,"crouch cancels activity and keeps native crouch posture");
         f=new Fixture();Station();f.Select();f.doors.blocked=true;f.Step(f.selectedAt+.1f);
-        Check(!f.ambient.Active&&Vector3.Distance(f.ai.lastGoal,f.leader.transform.position)>=CompanionPresencePolicy.LeaderExclusionRadius,
-            "door precedence immediately restores a leader-safe follow destination");
+        Check(!f.ambient.Active&&Vector3.Distance(f.ai.lastGoal,f.leader.transform.position)<.01f,
+            "door precedence cancels ambience and preserves the real leader route anchor");
         f=new Fixture();Station();f.Select();f.leader.emote=true;f.person.Get<ZNetView>().data.emote="sit";f.Step(f.selectedAt+.1f);
         Check(!f.ambient.Active&&f.animator.GetInteger("crafting")==0,"player sit cancels optional crafting; baseline sit timing remains separate");
 

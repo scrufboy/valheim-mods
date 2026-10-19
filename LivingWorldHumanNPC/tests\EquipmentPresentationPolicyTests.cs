@@ -13,6 +13,11 @@ static class EquipmentPresentationPolicyTests
         Check(EquipmentPresentationPolicy.VerifiedStowed(false, true), "hidden-only presentation verifies");
         Check(!EquipmentPresentationPolicy.VerifiedStowed(true, true), "mixed presentation is not a pass");
         Check(!EquipmentPresentationPolicy.VerifiedStowed(false, false), "empty slots are not a pass");
+        Check(EquipmentPresentationPolicy.PairShield(true, true, true, false), "authorized one-handed combat pairs an available shield");
+        Check(!EquipmentPresentationPolicy.PairShield(false, true, true, false), "peaceful presentation never draws a shield");
+        Check(!EquipmentPresentationPolicy.PairShield(true, false, true, false), "bows and two-handed weapons do not pair a shield");
+        Check(!EquipmentPresentationPolicy.PairShield(true, true, false, false), "missing shield fails closed");
+        Check(!EquipmentPresentationPolicy.PairShield(true, true, true, true), "equipped shield is left alone");
         Console.WriteLine("EquipmentPresentationPolicy PASS: " + checks + " checks.");
     }
 }

@@ -130,10 +130,11 @@ namespace LivingWorld.HumanNpc
             if (ambientCraft == kind && kind != 0) return true;
             if ((kind != 1 && kind != 2) || faulted || !isActiveAndEnabled || posture != CompanionPosture.Upright ||
                 sync == null || !HandsSafe() || ownsHands || companion == null || companion.PresenceLeader == null) return false;
-            if (HiddenLeft.GetValue(humanoid) != null || HiddenRight.GetValue(humanoid) != null) return false;
             leasedLeft = LeftItem.GetValue(humanoid); leasedRight = RightItem.GetValue(humanoid);
             // Native hide preserves the actual existing items; never creates a
             // substitute weapon or interprets an attack as a crafting action.
+            // Existing hidden/back-slot equipment is presentation, not a hand
+            // lease, and must not veto a peaceful crafting animation.
             ownsHands = leasedLeft != null || leasedRight != null;
             if (ownsHands && !humanoid.HideHandItems(false, false))
             { ownsHands = false; leasedLeft = leasedRight = null; return false; }
@@ -223,4 +224,3 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
-

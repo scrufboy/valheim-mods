@@ -67,9 +67,17 @@ static class DoorTravelPolicyTests
         Check(!DoorTravelPolicy.ContinueShortFollow(true,true,3f,true,true),"Long following remains native");
         Check(!DoorTravelPolicy.ContinueShortFollow(true,true,float.NaN,true,true),"Invalid distance refused");
         Check(!DoorTravelPolicy.ContinueShortFollow(true,true,-1f,true,true),"Negative distance refused");
+        Check(DoorTravelPolicy.UseLeaderDoorGoal(true,true,8f,false,false,true),"directly observed route door retains leader goal");
+        Check(DoorTravelPolicy.UseLeaderDoorGoal(true,true,20f,true,false,false),"committed crossing retains leader goal while leader advances");
+        Check(DoorTravelPolicy.UseLeaderDoorGoal(true,true,2f,false,true,false),"short blocked follow is not false arrival");
+        Check(!DoorTravelPolicy.UseLeaderDoorGoal(true,true,13f,false,false,true),"uncommitted door observation is bounded");
+        Check(!DoorTravelPolicy.UseLeaderDoorGoal(false,true,8f,false,false,true),"unauthorized traversal cannot capture follow");
+        Check(!DoorTravelPolicy.UseLeaderDoorGoal(true,false,8f,false,false,true),"unrelated route cannot capture follow");
+        Check(!DoorTravelPolicy.UseLeaderDoorGoal(true,true,float.NaN,false,false,true),"invalid leader distance refused");
         Check(DoorTravelPolicy.DirectBlocker(true,true,2f,true,false,false),"door directly blocking travel is eligible");
         Check(!DoorTravelPolicy.DirectBlocker(true,false,2f,true,false,false),"nearby side door is not inferred as route knowledge");
-        Check(!DoorTravelPolicy.DirectBlocker(true,true,4f,true,false,false),"distant door is not omnisciently selected");
+        Check(DoorTravelPolicy.DirectBlocker(true,true,8f,true,false,false),"direct visible route door is eligible before collision");
+        Check(!DoorTravelPolicy.DirectBlocker(true,true,13f,true,false,false),"direct door observation remains bounded");
         Check(!DoorTravelPolicy.DirectBlocker(true,true,2f,false,false,false),"direct door still requires access");
         Check(DoorTravelPolicy.RouteCandidate(2,-2,8,0,true,false,false),"Nearby authorized opposite-side entrance");
         Check(!DoorTravelPolicy.RouteCandidate(2,-2,8,0,false,false,false),"Permission required");

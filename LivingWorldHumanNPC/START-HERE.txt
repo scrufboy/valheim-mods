@@ -1,11 +1,19 @@
-LIVING WORLD HUMAN NPC 0.3.52 — COMBAT CONTINUITY AND DEFENSE
+LIVING WORLD HUMAN NPC 0.3.53 — SHIELD, CRAFT AND DOOR FOLLOW REPAIR
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:
 
 plugins\LivingWorldHumanNpc\LivingWorld.HumanNpc.dll
 
-This build repairs the combat regression measured in 0.3.51:
+This build preserves the 0.3.52 combat-continuity repair and fixes three
+measured integration failures:
+- native one-handed weapon selection now pairs an owned shield, so the bounded
+  defense component has a real blocker to raise;
+- properly stowed back-slot weapons no longer veto peaceful workstation
+  animations;
+- a directly observed door on the route to the leader retains the real leader
+  goal, including while the doorway crossing is committed;
+- nearby side doors are still never inferred or selected;
 - an authorized living target remains committed instead of being replaced or
   erased by the quarter-second awareness scan;
 - native MonsterAI target update, movement, facing, weapon choice and attack
@@ -20,5 +28,7 @@ This build repairs the combat regression measured in 0.3.51:
 - torch, follow, visible-back stowing, wetness, door and ambient systems remain
   separate from combat ownership.
 
-Offline verification proves the boundaries and package integrity. The next live
-encounter must confirm continuous engagement and native block results in telemetry.
+Offline verification proves the boundaries and package integrity. Bed use is not
+implemented in this candidate. The next live run must compare the RRR/Souls of the
+Land reference enemies, then confirm native block results, workstation animation,
+and leader-route door passage in telemetry.
