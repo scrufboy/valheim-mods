@@ -31,7 +31,7 @@ if ($config -notmatch '(?s)\[LWC_Souls_Pillagers\.0\].*?MaxSpawned\s*=\s*3.*?Gro
 if ($config -notmatch '(?s)\[LWC_Krauguk_Legion\.0\].*?MaxSpawned\s*=\s*2.*?GroupSizeMin\s*=\s*2.*?GroupSizeMax\s*=\s*2') {
     throw 'The legion matchup is not bounded to two combatants.'
 }
-if ($manifest.version_number -ne '2.4.0') {
+if ($manifest.version_number -ne '2.4.1') {
     throw 'Unexpected Tooler package version.'
 }
 if ($manifest.dependencies -notcontains 'ASharpPen-Custom_Raids-1.8.2') {

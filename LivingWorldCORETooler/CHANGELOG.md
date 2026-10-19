@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.4.1
+
+- Established the existing Tooler shell, toolbar, page order, and capabilities as a build-checked interface contract.
+- Registered each Living World responsibility as an independently identified module instead of maintaining a fragile page-index switch.
+- Preserved the complete original Tooler surface and every existing Living World page and command.
+
 ## 2.4.0
 
 - Added real, manually triggered Souls of the Land RandomEvent matchups to the Raid page.

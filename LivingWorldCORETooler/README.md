@@ -21,6 +21,18 @@ The World page includes Midnight, Morning, Noon, Evening, normal time-flow,
 time skipping, named environment forcing, Clear, Rain, Thunderstorm, Fog,
 environment reset, world save, and guarded location generation controls.
 
+## Interface and module standard
+
+The visible Tooler is a stable interface contract. The original Player,
+Entities, Terrain Shaper, and Misc pages remain the proven foundation. Living
+World responsibilities are registered as separate pages for lifecycle,
+community behavior, combat, party control, raids, player testing, catalogs and
+spawning, world control, terrain, administration, confirmed destructive
+actions, and the command bridge. A module may repair or extend its own duty; it
+may not silently remove another duty, replace the established shell, or alter
+the current interface as an unrelated side effect. The build fails when a
+required page or baseline capability disappears.
+
 Default interface key: **Delete**. Settings are stored under the Living World
 C.O.R.E. Tooler configuration names, separate from any legacy Tooler install.
 

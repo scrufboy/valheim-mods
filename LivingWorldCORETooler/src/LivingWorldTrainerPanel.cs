@@ -5,11 +5,20 @@ namespace Scrufboy.LivingWorld.Tooler
 {
     internal static class LivingWorldPanel
     {
-        private static readonly string[] Tabs =
-        {
-            "Overview", "Lifecycle", "Community", "Combat", "Party", "Raids", "Player",
-            "Items / Spawn", "World", "Terrain", "Map / Admin", "Danger", "Console"
-        };
+        private static readonly ToolerPage[] Pages = LivingWorldToolerModules.Create(
+            Overview,
+            Lifecycle,
+            Community,
+            Combat,
+            Party,
+            Raids,
+            PlayerTools,
+            ItemsAndSpawn,
+            WorldTools,
+            TerrainTools,
+            MapAndAdmin,
+            Danger,
+            ConsolePage);
 
         private static Vector2 scroll;
         private static int tab;
@@ -36,26 +45,11 @@ namespace Scrufboy.LivingWorld.Tooler
             EnsureStyles();
             DrawEnvironment();
             DrawTabRow(0, 7);
-            DrawTabRow(7, Tabs.Length);
+            DrawTabRow(7, Pages.Length);
 
             float availableHeight = Mathf.Clamp(Screen.height - 340f, 280f, 560f);
             scroll = GUILayout.BeginScrollView(scroll, GUILayout.Height(availableHeight));
-            switch (tab)
-            {
-                case 0: Overview(); break;
-                case 1: Lifecycle(); break;
-                case 2: Community(); break;
-                case 3: Combat(); break;
-                case 4: Party(); break;
-                case 5: Raids(); break;
-                case 6: PlayerTools(); break;
-                case 7: ItemsAndSpawn(); break;
-                case 8: WorldTools(); break;
-                case 9: TerrainTools(); break;
-                case 10: MapAndAdmin(); break;
-                case 11: Danger(); break;
-                default: ConsolePage(); break;
-            }
+            Pages[Mathf.Clamp(tab, 0, Pages.Length - 1)].Draw();
             GUILayout.EndScrollView();
 
             GUILayout.Space(4);
@@ -95,7 +89,7 @@ namespace Scrufboy.LivingWorld.Tooler
             GUILayout.BeginHorizontal();
             for (int index = first; index < end; index++)
             {
-                if (GUILayout.Toggle(tab == index, Tabs[index], GUI.skin.button, GUILayout.MinWidth(96)))
+                if (GUILayout.Toggle(tab == index, Pages[index].Label, GUI.skin.button, GUILayout.MinWidth(96)))
                 {
                     tab = index;
                 }

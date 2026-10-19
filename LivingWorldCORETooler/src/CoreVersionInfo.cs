@@ -5,8 +5,8 @@ using System.Reflection;
 [assembly: AssemblyCompany("Brian / scrufboy")]
 [assembly: AssemblyProduct("Living World C.O.R.E. Tooler")]
 [assembly: AssemblyCopyright("Living World integration Copyright Brian / scrufboy")]
-[assembly: AssemblyVersion("2.4.0.0")]
-[assembly: AssemblyFileVersion("2.4.0.0")]
+[assembly: AssemblyVersion("2.4.1.0")]
+[assembly: AssemblyFileVersion("2.4.1.0")]
 
 internal static class LivingWorldCoreToolerVersionResource
 {
