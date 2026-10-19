@@ -206,52 +206,10 @@ namespace LivingWorld.HumanNpc
             if (equipment == null) return;
             equipment.Cache();
             if (HumanUtilityTorch.IsUtilityTorch(__result)) { __result = null; return; }
-            // Native combat still owns movement, facing, cadence and attack.
-            // This adapter supplies only the archer class preference that the
-            // pure policy already defines; a native-ready null remains null.
-            if (__result != null && equipment.Ready && equipment.companion != null &&
-                equipment.companion.HasAuthorizedCombat && !equipment.body.InAttack())
-            {
-                var target = equipment.companion.TargetCreature;
-                if (target != null && !target.IsDead())
-                {
-                    float distance = Vector3.Distance(equipment.transform.position, target.transform.position);
-                    float shotSeconds = equipment.bow.m_shared.m_attack.m_drawDurationMin;
-                    PartyWeapon desired = PartyCombatPolicy.Weapon(equipment.body.GetCurrentWeapon() == equipment.bow,
-                        equipment.HasAmmo(), equipment.LaneClear(target), equipment.NearbyThreat(), distance, 0f, shotSeconds);
-                    __result = desired == PartyWeapon.Bow ? equipment.bow : equipment.sword;
-                }
-            }
+            // Native EquipBestWeapon owns the bow/melee decision using each
+            // actor-local weapon's AI ranges. A second role vote here previously
+            // replaced a valid native choice and restarted combat cadence.
             equipment.PairSelectedShield(__result);
-        }
-
-        bool NearbyThreat()
-        {
-            foreach (var character in Character.GetAllCharacters())
-            {
-                if (character == null || character == body || character.IsDead() ||
-                    Vector3.Distance(transform.position, character.transform.position) > 6f) continue;
-                var hostile = character.GetComponent<MonsterAI>();
-                if (hostile != null && hostile.GetTargetCreature() == body &&
-                    (ai.CanSeeTarget(character) || ai.CanHearTarget(character))) return true;
-            }
-            return false;
-        }
-
-        internal bool LaneClear(Character target)
-        {
-            if (target == null || !ai.CanSeeTarget(target)) return false;
-            Vector3 start = body.GetCenterPoint(), end = target.GetCenterPoint(), line = end - start;
-            if (line.sqrMagnitude < .01f) return false;
-            foreach (var other in Character.GetAllCharacters())
-            {
-                if (other == null || other == body || other == target || other.IsDead()) continue;
-                if (!other.IsPlayer() && other.GetComponent<HumanCompanion>() == null && !other.IsTamed()) continue;
-                float along = Vector3.Dot(other.GetCenterPoint() - start, line) / line.sqrMagnitude;
-                if (along > 0f && along < 1f &&
-                    Vector3.Distance(other.GetCenterPoint(), start + line * along) < other.GetRadius() + .8f) return false;
-            }
-            return true;
         }
 
         void PairSelectedShield(ItemDrop.ItemData selected)

@@ -24,6 +24,22 @@ class CompanionPolicyTests
             Check(!CompanionPolicy.HostileCommitted(false, true, true), "alerted hostile without party target remains curiosity");
             Check(CompanionPolicy.HostileCommitted(true, true, true), "native party target commits before first hit");
             Check(CompanionPolicy.HostileCommitted(true, false, false), "party-directed attack remains defensive authority through sensing gap");
+            Check(CompanionPolicy.MayAdoptNativeSelection(false, false, false, false, 20f, 20f, 2f),
+                "native hostile selection enters combat without a second authorization vote");
+            Check(CompanionPolicy.MayAdoptNativeSelection(true, true, false, false, 20f, 20f, 2f),
+                "committed hostile overrides leader stealth hold");
+            Check(!CompanionPolicy.MayAdoptNativeSelection(true, false, false, false, 20f, 20f, 2f),
+                "uncommitted native selection remains awareness while leader holds stealth");
+            Check(!CompanionPolicy.MayAdoptNativeSelection(false, false, false, false, 30.01f, 20f, 2f),
+                "native target outside awareness envelope is rejected after selection");
+            Check(!CompanionPolicy.MayAdoptNativeSelection(false, false, false, false, 8f, 8f, 14.01f),
+                "native combat cannot pull companion away from its order anchor");
+            Check(CompanionPolicy.MayAdoptNativeSelection(false, false, false, true, 8f, 80f, 80f),
+                "local self-defense remains available while separated");
+            Check(!CompanionPolicy.MayAdoptNativeSelection(false, false, true, false, 8f, 8f, 2f),
+                "unprovoked wildlife remains reserved for Hunt mode");
+            Check(CompanionPolicy.MayAdoptNativeSelection(false, true, true, false, 8f, 8f, 2f),
+                "wildlife attacking the protected party becomes a combat threat");
             float leaderThreat = CompanionPolicy.ThreatPriority(true, false, false, 10f, 9f);
             float selfThreat = CompanionPolicy.ThreatPriority(false, true, false, 1f, 1f);
             float partyThreat = CompanionPolicy.ThreatPriority(false, false, true, 1f, 1f);

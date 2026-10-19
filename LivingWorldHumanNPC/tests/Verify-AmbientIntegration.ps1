@@ -37,18 +37,20 @@ try{
  $follow=GetTypeDef $candidate HumanFollowPresence;$ambient=GetTypeDef $candidate HumanCompanionAmbient;$posture=GetTypeDef $candidate HumanCompanionPosture
  $companion=GetTypeDef $candidate HumanCompanion;$old=GetTypeDef $baseline HumanCompanion
  foreach($before in $old.Methods|Where-Object HasBody){
-   if($before.Name -eq 'UpdateTarget'){continue} # Replaced by the separately verified native-target prefix/postfix handoff.
+   if($before.Name -in @('BeforeTarget','AfterEnemy','PrepareNativeTarget')){continue} # Deliberately removed second combat-authority hooks.
+   if($before.Name -eq 'UpdateTarget'){continue} # Replaced by the separately verified native-target observation handoff.
    $after=@($companion.Methods|Where-Object FullName -eq $before.FullName)
    Require ($after.Count -eq 1) "baseline companion method retained: $($before.Name)"
-   if($before.Name -in @('InstallPatches','get_PresenceLeader','get_MayTravelThroughDoors','IsDoorTravelGoal','Authorize','IsActiveThreat','RefreshNearbyThreat','FindActiveThreat','AuthorizationValid','SafeEquippedWeapon','StopCombat','StopCombatCore','DropCombatTarget','Tick','UpdateTarget','BeforeUpdate','BeforeTarget','BeforeDamaged','BeforeSetTarget','BeforeAttack','BeforeAttackTrigger','AfterEnemy')){continue} # Explicit party/encounter/door integration checked separately.
+   if($before.Name -in @('InstallPatches','get_PresenceLeader','get_MayTravelThroughDoors','IsDoorTravelGoal','Authorize','IsActiveThreat','RefreshNearbyThreat','FindActiveThreat','AuthorizationValid','SafeEquippedWeapon','StopCombat','StopCombatCore','DropCombatTarget','ReconcileLeader','Tick','UpdateTarget','BeforeUpdate','BeforeTarget','BeforeDamaged','BeforeSetTarget','BeforeAttack','BeforeAttackTrigger','AfterEnemy')){continue} # Explicit party/encounter/door integration checked separately.
    $hooked=$before.Name -eq 'Authorize'
    Require ((Canonical $before $false) -ceq (Canonical $after[0] $hooked)) "unchanged baseline companion logic except explicit release hook: $($before.Name)"
  }
  $authorize=Method $companion Authorize
- $release=@(Calls $authorize|Where-Object {$_.Operand.Name -eq 'ReleaseOptionalActivity'})
- $may=@(Calls $authorize|Where-Object {$_.Operand.Name -eq 'MayReacquireRetired'})
- $commit=@($authorize.Body.Instructions|Where-Object {$_.OpCode.Name -eq 'stfld' -and $_.Operand.Name -eq 'authorizedTarget'})
- Require ($release.Count -eq 1 -and $release[0].Offset -gt $may[0].Offset -and $release[0].Offset -lt $commit[0].Offset) 'accepted combat transition releases optional activity after safety gates, before target commit'
+ Has $authorize 'HumanCompanion::BeginCombatOwnership'
+ $begin=Method $companion BeginCombatOwnership
+ $release=@(Calls $begin|Where-Object {$_.Operand.Name -eq 'ReleaseOptionalActivity'})
+ $commit=@($begin.Body.Instructions|Where-Object {$_.OpCode.Name -eq 'stfld' -and $_.Operand.Name -eq 'authorizedTarget'})
+ Require ($release.Count -eq 1 -and $release[0].Offset -lt $commit[0].Offset) 'accepted combat transition releases optional activity before target commit'
  $stop=Method $companion StopCombatCore;$owner=@(Calls $stop|Where-Object {$_.Operand.Name -eq 'Owner'});$release=@(Calls $stop|Where-Object {$_.Operand.Name -eq 'ReleaseOptionalActivity'})
  Require ($release.Count -eq 1 -and $owner[0].Offset -lt $release[0].Offset) 'StopCombat retains owner gate before ambient release'
  Has (Method $companion ReleaseOptionalActivity) 'HumanCompanionAmbient::Cancel'

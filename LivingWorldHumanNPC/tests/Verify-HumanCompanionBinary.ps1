@@ -41,13 +41,16 @@ try {
     Require (@($allCalls | Where-Object {$_.Operand.FullName -match 'ZNetView::ClaimOwnership|ZNetView::ResetZDO|Player::Set|ZDO::SetPrefab|ZDO::SetPosition|ZDO::SetRotation'}).Count -eq 0) 'adapter never steals ownership or changes saved native identity/position/player lifecycle'
     $install=Method InstallPatches
     $strings=@($install.Body.Instructions | Where-Object {$_.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldstr} | ForEach-Object {$_.Operand})
-    foreach($name in @('UpdateAI','UpdateTarget','OnDamaged','SetTarget','DoAttack','OnAttackTrigger','IsEnemy')){Require ($strings -contains $name) "explicit native patch target $name"}
-    $patchOwners=@{UpdateAI='MonsterAI';UpdateTarget='MonsterAI';OnDamaged='MonsterAI';SetTarget='MonsterAI';DoAttack='MonsterAI';OnAttackTrigger='Attack';IsEnemy='BaseAI'}
+    foreach($name in @('UpdateAI','UpdateTarget','OnDamaged','SetTarget','DoAttack','OnAttackTrigger')){Require ($strings -contains $name) "explicit native patch target $name"}
+    Require ($strings -notcontains 'IsEnemy') 'native faction queries are not replaced by companion authorization'
+    Require ($strings -notcontains 'BeforeTarget') 'native UpdateTarget has no companion prefix veto'
+    Require ($strings -notcontains 'AfterEnemy') 'native IsEnemy has no companion postfix filter'
+    $patchOwners=@{UpdateAI='MonsterAI';UpdateTarget='MonsterAI';OnDamaged='MonsterAI';SetTarget='MonsterAI';DoAttack='MonsterAI';OnAttackTrigger='Attack'}
     foreach($name in $patchOwners.Keys){
         $anchor=@($install.Body.Instructions | Where-Object {$_.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldstr -and $_.Operand -eq $name})
         Require ($anchor.Count -eq 1 -and $anchor[0].Previous.Previous.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldtoken -and $anchor[0].Previous.Previous.Operand.FullName -eq $patchOwners[$name]) "$name resolves exactly $($patchOwners[$name]), not Player/Humanoid/Character/Animator"
     }
-    foreach($pair in @(@('BeforeUpdate','::Tick', $true),@('BeforeTarget','::PrepareNativeTarget',$true),@('AfterTarget','::ObserveNativeTarget',$false),@('BeforeDamaged','::ObserveAttributedDamage',$false),@('BeforeSetTarget','::AuthorizationValid',$true),@('BeforeAttack','::AuthorizationValid',$true),@('BeforeAttackTrigger','::AuthorizationValid',$true),@('AfterEnemy','::AuthorizationValid',$false))){ScopedPrefix $pair[0] $pair[1] $pair[2]}
+    foreach($pair in @(@('BeforeUpdate','::Tick', $true),@('AfterTarget','::ObserveNativeTarget',$false),@('BeforeDamaged','::ObserveAttributedDamage',$false),@('BeforeSetTarget','::NativeTargetAllowed',$true),@('BeforeAttack','::AuthorizationValid',$true),@('BeforeAttackTrigger','::AuthorizationValid',$true))){ScopedPrefix $pair[0] $pair[1] $pair[2]}
     HasCalls (Method Owner) @('ZNetView::IsValid','ZNetView::IsOwner')
     $ready=Method Ready
     HasCalls $ready @('UnityEngine.Behaviour::get_isActiveAndEnabled','::Owner','Character::IsDead','BaseAI::HuntPlayer','MonsterAI::DespawnInDay','MonsterAI::IsEventCreature','BaseAI::IsSleeping','HumanCompositionIdentity::get_IsReady','::ReadOrder')
@@ -69,15 +72,18 @@ try {
     }
     HasCalls (Method ReconcileLeader) @('Player::GetPlayer','CompanionPolicy::Motion','CompanionPolicy::MustClearPatrol','BaseAI::ResetPatrolPoint','MonsterAI::SetFollowTarget','CompanionPolicy::MustCaptureWaitAnchor')
     HasFields (Method ReconcileLeader) @('CompanionOrderRecord::OwnerId','HumanCompanion::waitAnchor')
-    HasCalls (Method Authorize) @('::Ready','CompanionPolicy::MayAuthorize','::IsActiveThreat','CompanionPolicy::RefreshPursuit','CompanionPolicy::MayReacquireRetired')
+    HasCalls (Method Authorize) @('::Ready','CompanionPolicy::MayAuthorize','::IsActiveThreat','CompanionPolicy::RefreshPursuit','CompanionPolicy::MayReacquireRetired','::BeginCombatOwnership','::SetNativeCombatTarget')
     HasCalls (Method IsActiveThreat) @('GetComponent<MonsterAI>','BaseAI::GetTargetCreature','BaseAI::CanSeeTarget','BaseAI::CanHearTarget','BaseAI::IsEnemy','BaseAI::IsAlerted','CompanionPolicy::HostileCommitted','::ProtectingOwner')
     Require (@(Calls (Method IsActiveThreat) | Where-Object {$_.Operand.Name -eq 'IsAlerted'}).Count -eq 1) 'hostile alert is observed once as awareness evidence, while native party targeting governs commitment'
     HasCalls (Method ProtectingOwner) @('Character::IsDead','CompanionPolicy::MayProtectOwner','::OrderAnchor')
     HasCalls (Method LegalCombatTarget) @('::Ready','Character::IsDead','Character::IsPlayer','Character::IsTamed','BaseAI::IsEnemy')
+    HasCalls (Method NativeTargetAllowed) @('::LegalCombatTarget','CompanionPolicy::MayAdoptNativeSelection','::IsActiveThreat')
+    HasCalls (Method AdoptNativeTarget) @('::NativeTargetAllowed','::BeginCombatOwnership')
+    HasCalls (Method SetNativeCombatTarget) @('MonsterAI::SetFollowTarget','System.Reflection.FieldInfo::SetValue','System.Reflection.MethodBase::Invoke')
     HasCalls (Method ObserveAttributedDamage) @('::LegalCombatTarget','::Authorize')
     HasCalls (Method AuthorizationValid) @('::LegalCombatTarget','BaseAI::CanHearTarget','BaseAI::CanSeeTarget','CompanionPolicy::WithinCommittedCombatBounds','CompanionPolicy::WithinRecoveryDefenseBounds')
-    HasCalls (Method BeforeAttack) @('::AuthorizationValid','::SafeEquippedWeapon','::DropCombatTarget')
-    HasCalls (Method BeforeAttackTrigger) @('System.Object::ReferenceEquals','::AuthorizationValid','::SafeEquippedWeapon','::SafeNativeAttack','::DropCombatTarget')
+    HasCalls (Method BeforeAttack) @('::AuthorizationValid','::SafeEquippedWeapon')
+    HasCalls (Method BeforeAttackTrigger) @('System.Object::ReferenceEquals','::AuthorizationValid','::SafeEquippedWeapon','::SafeNativeAttack')
     HasCalls (Method DropCombatTarget) @('::StopCombatCore')
     HasFields (Method DropCombatTarget) @('HumanCompanion::encounterOwned','HumanCompanion::encounterClearObserved','HumanCompanion::encounterUntil')
     HasCalls (Method SafeEquippedWeapon) @('Humanoid::GetCurrentWeapon','Humanoid::GetInventory','Inventory::GetAllItems','::Contains','::SafeNativeAttack')
@@ -88,11 +94,10 @@ try {
     HasFields $clear @('HumanCompanion::CurrentAttackField','Attack::m_attackKillsSelf','HumanCompanion::TargetField','HumanCompanion::StaticTargetField')
     $fields=@($clear.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.FieldReference] -and $_.Operand.FullName.Contains('HumanCompanion::CurrentAttackField')})
     Require ($fields.Count -ge 2) 'current attack is read then retired after abort/conditional stop'
-    HasCalls (Method Tick) @('::Owner','::Ready','::ClearNativeCombat','::ReconcileLeader','::RefreshNearbyThreat','::FindActiveThreat','BaseAI::StopMoving')
-    HasCalls (Method PrepareNativeTarget) @('::Ready','::AuthorizationValid','MonsterAI::SetFollowTarget','System.Reflection.FieldInfo::SetValue','System.Reflection.MethodBase::Invoke')
-    HasFields (Method PrepareNativeTarget) @('HumanCompanion::TargetField','HumanCompanion::StaticTargetField','HumanCompanion::TargetInfoMethod','HumanCompanion::AlertMethod')
-    HasCalls (Method ObserveNativeTarget) @('::DropCombatTarget')
-    Require (@($companion.Fields | Where-Object Name -eq 'rawEnemyQuery' | ForEach-Object {$_.CustomAttributes | Where-Object {$_.AttributeType.FullName -eq 'System.ThreadStaticAttribute'}}).Count -eq 1) 'native eligibility bypass is thread-local'
+    HasCalls (Method Tick) @('::Owner','::Ready','::ClearNativeCombat','::ReconcileLeader','::ObserveNativeTarget','::RefreshNearbyThreat','::FindActiveThreat','BaseAI::StopMoving')
+    HasCalls (Method ObserveNativeTarget) @('::AdoptNativeTarget','::ClearNativeCombat','::DropCombatTarget')
+    Require (@($companion.Methods | Where-Object Name -eq 'PrepareNativeTarget').Count -eq 0) 'no pre-native target injector remains'
+    Require (@($companion.Methods | Where-Object Name -eq 'AfterEnemy').Count -eq 0) 'no global enemy-result filter remains'
     "HumanCompanionBinary PASS: $checks structural IL integration checks. Binary SHA256: $((Get-FileHash -LiteralPath $AssemblyPath -Algorithm SHA256).Hash)"
     'Native Harmony routing, physics, animation, companion persistence and full combat gameplay NOT RUN.'
 } finally {$assembly.Dispose()}

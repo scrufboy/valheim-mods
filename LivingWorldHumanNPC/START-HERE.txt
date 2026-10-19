@@ -1,25 +1,25 @@
-LIVING WORLD HUMAN NPC 0.3.55 — ROLE AND GUARD COORDINATION
+LIVING WORLD HUMAN NPC 0.3.56 — NATIVE COMBAT OWNERSHIP
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:
 
 plugins\LivingWorldHumanNpc\LivingWorld.HumanNpc.dll
 
-This build preserves the 0.3.54 native sitting repair and corrects three bounded,
-measured integration failures:
-- an archer now retains the bow at safe range when native combat has a ready
-  attack and a clear lane, while a close personal threat selects sword/shield;
-- native MonsterAI still owns combat movement, facing, cadence, targeting,
-  projectile creation, damage and ammunition use;
-- the cleric may use its existing heal during a safe combat window without
-  leaving combat ownership; a close personal threat immediately vetoes or
-  interrupts the cast;
-- temporary guard directions are chosen against every currently occupied buddy
-  sector, rather than only the first buddy found;
-- guard sectors remain short-lived activity leases, never permanent assignments;
+This build removes the second combat authority that was delaying and vetoing
+native combat:
+- native MonsterAI now performs its ordinary FindEnemy and UpdateTarget pass;
+- Living World validates the selected target after that pass, only rejecting
+  allies, tame creatures, unprovoked wildlife reserved for Hunt mode,
+  stealth-hold violations and targets outside the companion/order safety envelope;
+- no global IsEnemy filter narrows native combat to a pre-authorized target;
+- no companion prefix injects or refuses targets before native selection;
+- native EquipBestWeapon owns bow-versus-melee choice from the Souls of the Land
+  actor-local combat values; the removed role override can no longer restart
+  weapon cadence;
+- explicit attack orders and defense of the leader still hand a legal target
+  directly to native combat;
 - torch, follow, visible-back stowing, wetness, doors, posture, sitting and
-  workstation behavior are unchanged.
+  workstation behavior remain intact and are locked out by the same combat owner.
 
-Offline verification proves the boundaries and package integrity. Bed use is not
-implemented in this candidate. The next live run must confirm sustained ranged
-archery, a safe-window cleric cast, and non-overlapping guard coverage in telemetry.
+Offline verification proves the structural boundary and package integrity. Live
+Unity combat remains the acceptance test. Bed use is not implemented in this candidate.

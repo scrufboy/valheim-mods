@@ -103,9 +103,9 @@ namespace LivingWorld.HumanNpc
                 Finite(ownerFromAnchor) && ownerFromAnchor >= 0 && ownerFromAnchor <= TargetLeash;
         }
 
-        // A native faction relationship alone is never an acquisition permission.
-        // Passive wildlife is never acquired. An alerted native monster already
-        // targeting this NPC/leader is an active threat even before its first hit.
+        // Explicit orders and party-defense signals may hand a target directly
+        // to native combat. Ordinary acquisition is owned by MonsterAI and is
+        // validated after selection by MayAdoptNativeSelection below.
         public static bool MayAuthorize(bool ownerReady, bool alive, bool self, bool player, bool tame,
             bool companion, bool nativeEnemy, bool explicitOrder, float attributedDamage, bool activeThreat)
         {
@@ -121,6 +121,17 @@ namespace LivingWorld.HumanNpc
             // that selection occurs before the first hit. Attributed damage is
             // an independent authorization path in MayAuthorize.
             return targetsProtectedParty;
+        }
+
+        public static bool MayAdoptNativeSelection(bool stealthHold, bool activeThreat, bool passiveWildlife, bool localDefense,
+            float targetFromNpc, float targetFromAnchor, float npcFromAnchor)
+        {
+            if (!Finite(targetFromNpc) || targetFromNpc < 0f || targetFromNpc > AwarenessRange ||
+                !Finite(targetFromAnchor) || targetFromAnchor < 0f ||
+                !Finite(npcFromAnchor) || npcFromAnchor < 0f) return false;
+            if (!localDefense && (targetFromAnchor > AwarenessRange || npcFromAnchor > NpcLeash)) return false;
+            if (passiveWildlife && !activeThreat) return false;
+            return !stealthHold || activeThreat;
         }
 
         public static bool RefreshPursuit(bool activeThreat, float secondsSinceDamage, float distance)

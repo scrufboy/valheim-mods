@@ -52,6 +52,11 @@ LivingWorldCORETooler/build/
 LivingWorldCORETooler/package/
 LivingWorldCORETooler/dist/
 
+# Living World Human NPC generated package output
+LivingWorldHumanNPC/build/
+LivingWorldHumanNPC/package/
+LivingWorldHumanNPC/*.zip
+
 # Build results on 'Bin' directories
 **/[Bb]in/*
 # Uncomment if you have tasks that rely on *.refresh files to move binaries

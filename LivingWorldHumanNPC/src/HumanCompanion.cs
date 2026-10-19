@@ -22,7 +22,6 @@ namespace LivingWorld.HumanNpc
         static readonly MethodInfo AlertMethod = RequiredMethod(typeof(BaseAI), "SetAlerted", typeof(bool));
         static readonly MethodInfo TargetInfoMethod = RequiredMethod(typeof(BaseAI), "SetTargetInfo", typeof(ZDOID));
         static bool patchesReady;
-        [ThreadStatic] static int rawEnemyQuery;
 
         ZNetView view;
         Humanoid body;
@@ -140,16 +139,11 @@ namespace LivingWorld.HumanNpc
             MethodInfo setTarget = RequiredMethod(typeof(MonsterAI), "SetTarget", typeof(Character));
             MethodInfo attack = RequiredMethod(typeof(MonsterAI), "DoAttack", typeof(Character), typeof(bool));
             MethodInfo trigger = RequiredMethod(typeof(Attack), "OnAttackTrigger");
-            MethodInfo enemy = typeof(BaseAI).GetMethod("IsEnemy", BindingFlags.Public | BindingFlags.Static,
-                null, new[] { typeof(Character), typeof(Character) }, null);
-            if (enemy == null) throw new MissingMethodException("BaseAI.IsEnemy(Character,Character)");
             Patch(harmony, update, "BeforeUpdate");
             harmony.Patch(target,
-                prefix: new HarmonyMethod(typeof(HumanCompanion).GetMethod("BeforeTarget", BindingFlags.Static | BindingFlags.NonPublic)),
                 postfix: new HarmonyMethod(typeof(HumanCompanion).GetMethod("AfterTarget", BindingFlags.Static | BindingFlags.NonPublic)));
             Patch(harmony, damaged, "BeforeDamaged"); Patch(harmony, setTarget, "BeforeSetTarget");
             Patch(harmony, attack, "BeforeAttack"); Patch(harmony, trigger, "BeforeAttackTrigger");
-            harmony.Patch(enemy, postfix: new HarmonyMethod(typeof(HumanCompanion).GetMethod("AfterEnemy", BindingFlags.Static | BindingFlags.NonPublic)));
             patchesReady = true;
         }
 
@@ -281,10 +275,7 @@ namespace LivingWorld.HumanNpc
             if (!Ready() || target == null) return false;
             ReconcileLeader();
             if (!OrderActive()) return false;
-            bool enemy;
-            rawEnemyQuery++;
-            try { enemy = BaseAI.IsEnemy(body, target); }
-            finally { rawEnemyQuery--; }
+            bool enemy = BaseAI.IsEnemy(body, target);
             bool activeThreat = IsActiveThreat(target);
             if (!CompanionPolicy.MayAuthorize(true, !target.IsDead(), target == body, target.IsPlayer(), target.IsTamed(),
                 target.GetComponent<HumanCompanion>() != null, enemy, explicitOrder, damage, activeThreat)) return false;
@@ -305,35 +296,85 @@ namespace LivingWorld.HumanNpc
                 RefreshNearbyThreat(); return AuthorizationValid(target);
             }
             if (authorizedTarget != null) return false;
+            BeginCombatOwnership(target, localDefense && npcFromAnchor > CompanionPolicy.TacticalNpcLeash,
+                damage, explicitOrder ? "Explicit target handed to native combat" : "Party threat handed to native combat");
+            SetNativeCombatTarget(target);
+            return true;
+        }
+
+        void BeginCombatOwnership(Character target, bool recovery, float damage, string reason)
+        {
             ReleaseOptionalActivity();
             authorizedTarget = target; combatOrigin = transform.position;
-            recoveryDefense = localDefense && npcFromAnchor > CompanionPolicy.TacticalNpcLeash;
+            recoveryDefense = recovery;
             lastNearbyThreat = Time.time; lastSensed = Time.time;
-            encounterOwned = true; encounterClearObserved = false; encounterUntil = Time.time + 1.5f;
-            lastAttributedDamage = CompanionPolicy.Finite(damage) && damage > 0 ? Time.time : Single.NegativeInfinity;
+            encounterOwned = true; encounterClearObserved = false; encounterClearScans = 0;
+            encounterUntil = Time.time + 1.5f;
+            lastAttributedDamage = CompanionPolicy.Finite(damage) && damage > 0f ? Time.time : Single.NegativeInfinity;
             retiredPursuitTarget = null;
-            // Finish the companion-to-combat handoff in this same call.  No
-            // cleric cast or utility torch may survive into MonsterAI's first
-            // combat update; ambient/posture was released immediately above.
+            // This is the single companion-to-combat handoff. After it, native
+            // MonsterAI owns target movement, facing, weapon cadence and attacks.
             var cleric = GetComponent<HumanCleric>();
             if (cleric != null) cleric.InterruptForCombat();
             var presence = GetComponent<HumanFollowPresence>();
             if (presence != null) presence.ReleaseForCombat();
             var torch = GetComponent<HumanUtilityTorch>();
             if (torch != null) torch.ReleaseForWeapons();
-            status = explicitOrder ? "Explicit combat: bounded pursuit; nearby active defense continues" : "Native active-threat / attributed-damage defense";
-            return true;
+            status = reason;
+        }
+
+        void SetNativeCombatTarget(Character target)
+        {
+            ai.SetFollowTarget(null);
+            TargetField.SetValue(ai, target); StaticTargetField.SetValue(ai, null);
+            LastPositionField.SetValue(ai, target.transform.position); BeenAtPositionField.SetValue(ai, false);
+            TargetInfoMethod.Invoke(ai, new object[] { target.GetZDOID() });
+            AlertMethod.Invoke(ai, new object[] { true });
         }
 
         bool LegalCombatTarget(Character target)
         {
             if (!Ready() || target == null || target.IsDead() || target == body || target.IsPlayer() ||
                 target.IsTamed() || target.GetComponent<HumanCompanion>() != null || !OrderActive()) return false;
-            bool enemy;
-            rawEnemyQuery++;
-            try { enemy = BaseAI.IsEnemy(body, target); }
-            finally { rawEnemyQuery--; }
-            return enemy;
+            return BaseAI.IsEnemy(body, target);
+        }
+
+        bool NativeTargetAllowed(Character target)
+        {
+            if (!LegalCombatTarget(target)) return false;
+            Vector3 anchor = OrderAnchor();
+            float targetFromNpc = Vector3.Distance(target.transform.position, transform.position);
+            float targetFromAnchor = Vector3.Distance(target.transform.position, anchor);
+            float npcFromAnchor = Vector3.Distance(transform.position, anchor);
+            bool localDefense = LocalSelfDefense(target, 0f, targetFromNpc);
+            // Stealth is the one peaceful veto. A crouched leader permits native
+            // awareness but not an unprovoked attack; a hostile already committed
+            // to the protected party still crosses into combat immediately.
+            bool stealthHold = ProtectingOwner() && observedLeader.IsCrouching();
+            bool activeThreat = IsActiveThreat(target);
+            bool passiveWildlife = target.GetFaction() == Character.Faction.AnimalsVeg;
+            return CompanionPolicy.MayAdoptNativeSelection(stealthHold, activeThreat, passiveWildlife, localDefense,
+                targetFromNpc, targetFromAnchor, npcFromAnchor);
+        }
+
+        bool AdoptNativeTarget(Character target, bool sensed, string reason)
+        {
+            if (!NativeTargetAllowed(target)) return false;
+            if (authorizedTarget != target)
+            {
+                float npcFromAnchor = Vector3.Distance(transform.position, OrderAnchor());
+                bool recovery = LocalSelfDefense(target, 0f,
+                    Vector3.Distance(target.transform.position, transform.position)) &&
+                    npcFromAnchor > CompanionPolicy.TacticalNpcLeash;
+                BeginCombatOwnership(target, recovery, 0f, reason);
+            }
+            if (sensed)
+            {
+                lastSensed = Time.time;
+                lastNearbyThreat = Time.time;
+                encounterUntil = Mathf.Max(encounterUntil, Time.time + 1.5f);
+            }
+            return true;
         }
 
         void ObserveAttributedDamage(float damage, Character attacker)
@@ -382,10 +423,7 @@ namespace LivingWorld.HumanNpc
             bool sensed = Vector3.Distance(target.transform.position, transform.position) <= DetectionLeash &&
                 Vector3.Distance(target.transform.position, OrderAnchor()) <= DetectionLeash &&
                 (ai.CanSeeTarget(target) || ai.CanHearTarget(target));
-            bool enemy;
-            rawEnemyQuery++;
-            try { enemy = BaseAI.IsEnemy(body, target); }
-            finally { rawEnemyQuery--; }
+            bool enemy = BaseAI.IsEnemy(body, target);
             if (!enemy) return false;
 
             // A crouched leader is asking the party to remain concealed. The
@@ -460,10 +498,7 @@ namespace LivingWorld.HumanNpc
                 bool sensed = distance <= CompanionPolicy.AwarenessRange &&
                     (fromAnchor <= CompanionPolicy.AwarenessRange || localDefense) &&
                     (localDefense || ai.CanSeeTarget(candidate) || ai.CanHearTarget(candidate));
-                bool enemy;
-                rawEnemyQuery++;
-                try { enemy = BaseAI.IsEnemy(body, candidate); }
-                finally { rawEnemyQuery--; }
+                bool enemy = BaseAI.IsEnemy(body, candidate);
                 if (sensed && enemy && distance < seenDistance)
                 { seen = candidate; seenDistance = distance; }
                 if (!IsActiveThreat(candidate) || distance > DetectionLeash || !sensed) continue;
@@ -639,9 +674,14 @@ namespace LivingWorld.HumanNpc
                 ? CompanionMotion.Follow : CompanionMotion.WaitForLeader;
             if (motion == CompanionMotion.Follow)
             {
-                if (CompanionPolicy.MustClearPatrol(activeMotion, motion, ai.GetFollowTarget() == leader.gameObject))
-                { ai.ResetPatrolPoint(); ai.ResetRandomMovement(); }
-                ai.SetFollowTarget(leader.gameObject); patrolApplied = false;
+                if (CombatReadinessActive) ai.SetFollowTarget(null);
+                else
+                {
+                    if (CompanionPolicy.MustClearPatrol(activeMotion, motion, ai.GetFollowTarget() == leader.gameObject))
+                    { ai.ResetPatrolPoint(); ai.ResetRandomMovement(); }
+                    ai.SetFollowTarget(leader.gameObject);
+                }
+                patrolApplied = false;
                 haveWaitAnchor = false;
             }
             else
@@ -689,6 +729,10 @@ namespace LivingWorld.HumanNpc
                 status = "Passive: composition/appearance/orders or saved native hunt/event/sleep state not ready"; return false;
             }
             ReconcileLeader();
+            // A target may have been selected by the preceding native update or
+            // by native OnDamaged between frames. Adopt it; never make native AI
+            // wait for a separate companion authorization vote.
+            ObserveNativeTarget(false, false);
             RefreshNearbyThreat();
             if (authorizedTarget != null && !AuthorizationValid(authorizedTarget))
             { DropCombatTarget(); status = "Target ended; encounter ownership retained while nearby threats are checked"; }
@@ -706,30 +750,18 @@ namespace LivingWorld.HumanNpc
             return true;
         }
 
-        bool PrepareNativeTarget(ref bool canHear, ref bool canSee)
-        {
-            canHear = false; canSee = false;
-            if (!Ready() || authorizedTarget == null || !AuthorizationValid(authorizedTarget))
-            { if (authorizedTarget != null) DropCombatTarget(); else ClearNativeCombat(); return false; }
-            // Supply the entry decision, then let the unmodified native target
-            // update own sensing, chase timers, last-known position and cadence.
-            // Saved companion follow remains intact and resumes after combat.
-            ai.SetFollowTarget(null);
-            bool entering = (TargetField.GetValue(ai) as Character) != authorizedTarget;
-            TargetField.SetValue(ai, authorizedTarget); StaticTargetField.SetValue(ai, null);
-            if (entering)
-            { LastPositionField.SetValue(ai, authorizedTarget.transform.position); BeenAtPositionField.SetValue(ai, false); }
-            TargetInfoMethod.Invoke(ai, new object[] { authorizedTarget.GetZDOID() });
-            AlertMethod.Invoke(ai, new object[] { true });
-            return true;
-        }
-
         void ObserveNativeTarget(bool canHear, bool canSee)
         {
-            if (authorizedTarget == null) return;
-            if (canHear || canSee) lastSensed = Time.time;
             var native = TargetField.GetValue(ai) as Character;
-            if (native == authorizedTarget) return;
+            if (native != null)
+            {
+                if (AdoptNativeTarget(native, canHear || canSee, "Native MonsterAI selected combat target")) return;
+                // Post-selection validation is a safety fence, not another combat
+                // controller. It rejects only forbidden allies, stealth holds or
+                // targets outside the companion/order envelope.
+                ClearNativeCombat();
+            }
+            if (authorizedTarget == null) return;
             // Native combat may end pursuit after its own lost-target/death/path
             // rules. Treat that as target retirement, retain the encounter long
             // enough to select another active threat, and do not resurrect it.
@@ -765,15 +797,6 @@ namespace LivingWorld.HumanNpc
             __result = false; return false;
         }
 
-        static bool BeforeTarget(MonsterAI __instance, float __1, ref bool __2, ref bool __3)
-        {
-            var companion = __instance.GetComponent<HumanCompanion>();
-            if (companion == null) return true;
-            try { return companion.PrepareNativeTarget(ref __2, ref __3); }
-            catch (Exception error) { companion.Fault(error); __2 = false; __3 = false; }
-            return false;
-        }
-
         static void AfterTarget(MonsterAI __instance, ref bool __2, ref bool __3)
         {
             var companion = __instance.GetComponent<HumanCompanion>();
@@ -794,7 +817,7 @@ namespace LivingWorld.HumanNpc
         {
             var companion = __instance.GetComponent<HumanCompanion>();
             if (companion == null) return true;
-            try { return companion.AuthorizationValid(__0); }
+            try { return companion.NativeTargetAllowed(__0); }
             catch (Exception error) { companion.Fault(error); return false; }
         }
 
@@ -804,8 +827,7 @@ namespace LivingWorld.HumanNpc
             if (companion == null) return true;
             try
             {
-                if (!companion.AuthorizationValid(__0)) companion.DropCombatTarget();
-                else if (companion.SafeEquippedWeapon())
+                if (companion.AuthorizationValid(__0) && companion.SafeEquippedWeapon())
                 {
                     var cleric = companion.GetComponent<HumanCleric>();
                     if (cleric != null && cleric.Casting) { __result = false; return false; }
@@ -836,19 +858,9 @@ namespace LivingWorld.HumanNpc
                     var equipment = companion.GetComponent<HumanPartyEquipment>();
                     if (equipment == null || equipment.MayAttack(companion.authorizedTarget, true)) return true;
                 }
-                if (!valid) companion.DropCombatTarget();
             }
             catch (Exception error) { companion.Fault(error); }
             return false;
-        }
-
-        static void AfterEnemy(Character __0, Character __1, ref bool __result)
-        {
-            if (!__result || rawEnemyQuery > 0 || __0 == null) return;
-            var companion = __0.GetComponent<HumanCompanion>();
-            if (companion == null) return;
-            try { __result = companion.AuthorizationValid(__1); }
-            catch (Exception error) { companion.Fault(error); __result = false; }
         }
     }
 }

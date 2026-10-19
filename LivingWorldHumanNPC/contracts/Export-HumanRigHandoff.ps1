@@ -21,9 +21,12 @@ if(-not $events.m_headRotation -or -not $animation.m_Controller.data.m_Controlle
 $clips=@($animation.clips | Where-Object {$_.name -match '^(Workbench|hammer_Swing|Sitting idle|Player_Sit_Chair|Wave|Cheer|Kneel Start|Kneel Loop|KneelDeath|Bow|Despair|Standing Up from sit)$'} | ForEach-Object {
  [ordered]@{Name=$_.name;Events=@($_.events | ForEach-Object {[ordered]@{Function=$_.functionName;Time=$_.time}});ForbiddenForSocial=($_.name -eq 'KneelDeath');GameplayWiringVerified=$false}
 })
-[ordered]@{
+$handoff=[ordered]@{
  Schema=1;Purpose='Metadata-only human animation handoff; no game meshes, controllers or clips redistributed';
- SourceEvidence=@(@{Path=$graphPath;SHA256=(Get-FileHash -LiteralPath $graphPath).Hash},@{Path=$animationPath;SHA256=(Get-FileHash -LiteralPath $animationPath).Hash});
+ SourceEvidence=@(
+  [ordered]@{Path=$graphPath;SHA256=(Get-FileHash -LiteralPath $graphPath).Hash},
+  [ordered]@{Path=$animationPath;SHA256=(Get-FileHash -LiteralPath $animationPath).Hash}
+ );
  Avatar=$animation.m_Avatar.data.m_Name;
  Animator=[ordered]@{ApplyRootMotion=$animator.m_ApplyRootMotion;UpdateMode=$animator.m_UpdateMode;CullingMode=$animator.m_CullingMode;Layers=@($animation.m_Controller.data.m_Controller.m_LayerArray | ForEach-Object {[ordered]@{Index=$_.data.m_StateMachineIndex;IKPass=$_.data.m_IKPass}})};
  HeadLook=[ordered]@{Enabled=$events.m_headRotation;Weight=$events.m_lookWeight;BodyWeight=$events.m_bodyLookWeight;HeadWeight=$events.m_headLookWeight;EyeWeight=$events.m_eyeLookWeight;EyeTransformCount=$events.m_eyes.Count;Clamp=$events.m_lookClamp;Adapter='CharacterAnimEvent.m_lookAt; native smoothing, owner replication and IK retained'};
@@ -32,5 +35,6 @@ $clips=@($animation.clips | Where-Object {$_.name -match '^(Workbench|hammer_Swi
  RelevantClips=$clips;
  AuthoringRules=@('No Player root/controller lifecycle on NPC','No root displacement in new social/work clips','No Die/Hit/OnAttackTrigger event in friendly emote or work loop','Native combat interrupts work/social pose','New clips require enter/loop/exit, cancellation, held-tool alignment and both body-model checks','Never reuse KneelDeath for surrender: Die event is present','No new animations authored by this report');
  Runtime='NOT RUN; static extracted asset metadata only'
-} | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $OutputPath -Encoding utf8
+}
+$handoff | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $OutputPath -Encoding utf8
 'HumanRigHandoff PASS: native head IK and crouching/emote_sit/emote_stop parameters confirmed; metadata-only handoff generated.'
