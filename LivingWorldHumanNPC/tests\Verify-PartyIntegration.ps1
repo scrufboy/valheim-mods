@@ -35,13 +35,17 @@ try {
  Has $companion BeforeAttackTrigger 'HumanPartyEquipment::MayAttack'
  Has $companion SafeEquippedWeapon 'HumanPartyEquipment::AllowsWeapon'
  Has $companion AuthorizationValid 'CompanionPolicy::WithinTacticalCombatBounds'
+ Has $companion AuthorizationValid 'CompanionPolicy::WithinRecoveryDefenseBounds'
  Has $companion ThreatPriority 'CompanionPolicy::ThreatPriority'
  Has $companion FindActiveThreat 'CompanionPolicy::ShouldSwitchThreat'
  Has $companion Authorize 'get_DetectionLeash'
  Has $companion Authorize 'HumanCleric::InterruptForCombat'
+ Has $companion Authorize 'HumanFollowPresence::ReleaseForCombat'
  Has $companion Authorize 'HumanUtilityTorch::ReleaseForWeapons'
  Has $companion FindActiveThreat 'get_DetectionLeash'
  $findThreat=Method $companion FindActiveThreat
+ $encounterClaims=@($findThreat.Body.Instructions | Where-Object {$_.OpCode.Code.ToString() -eq 'Stfld' -and $_.Operand -is [Mono.Cecil.FieldReference] -and $_.Operand.Name -eq 'encounterOwned'})
+ Require (@($encounterClaims | Where-Object {$_.Previous.OpCode.Code.ToString() -ne 'Ldc_I4_0'}).Count -eq 0) 'scan cannot claim combat ownership before a target is authorized'
  $drops=@($findThreat.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'DropCombatTarget'})
  Require ($drops.Count -eq 0) 'missed acquisition scan cannot revoke an already-authorized combat target'
  Has $lab SpawnWave '::TryFindWaveSite'
@@ -165,3 +169,4 @@ try {
  Require ($circulate.OpCode.Code.ToString() -eq 'Ldc_I4_1') 'native circulate-while-charging is enabled'
  'PartyIntegration PASS: '+$checks+' compiled integration/native-contract assertions. No Unity acceptance claimed.'
 } finally {$party.Dispose();$native.Dispose()}
+

@@ -22,11 +22,20 @@ namespace LivingWorld.HumanNpc
         public const float CatchUpDistance = 12f;
         public const float CatchUpReleaseDistance = 7f;
         public const float CatchUpRepathSeconds = .75f;
+        public const float CatchUpSpeedMultiplier = 1.2f;
+        public const float CatchUpMinimumAdvantage = 1f;
 
         public static bool CatchUp(bool active, float leaderDistance)
         {
             if (!Finite(leaderDistance) || leaderDistance < 0f) return false;
             return active ? leaderDistance > CatchUpReleaseDistance : leaderDistance >= CatchUpDistance;
+        }
+
+        public static float CatchUpRunSpeed(float normalRunSpeed)
+        {
+            if (!Finite(normalRunSpeed) || normalRunSpeed <= 0f) return normalRunSpeed;
+            return Math.Max(normalRunSpeed * CatchUpSpeedMultiplier,
+                normalRunSpeed + CatchUpMinimumAdvantage);
         }
 
         public static float FormationSideOffset(bool archer, bool cleric, int stableIdentity)
@@ -79,3 +88,4 @@ namespace LivingWorld.HumanNpc
         static bool Finite(float value) { return !Single.IsNaN(value) && !Single.IsInfinity(value); }
     }
 }
+

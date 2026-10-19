@@ -29,8 +29,9 @@ namespace LivingWorld.HumanNpc
         Vector3 leaderSample;
         float lastActivity, nextReport;
         float lastCatchUpRepath = Single.NegativeInfinity;
+        float normalRunSpeed;
         float previousLookWeight, previousBodyWeight;
-        bool ownLook, faulted, catchingUp;
+        bool ownLook, faulted, catchingUp, ownsCatchUpSpeed;
         CompanionPace pace;
         static readonly List<HumanFollowPresence> Leases = new List<HumanFollowPresence>();
         Player leaseLeader;
@@ -83,11 +84,12 @@ namespace LivingWorld.HumanNpc
             Player leader = Leader();
             ObserveLeader(leader);
             if (leader == null || target != leader.gameObject)
-            { if (ambient != null) ambient.Cancel("follow target/order lost"); return false; }
+            { ReleaseCatchUpSpeed(); if (ambient != null) ambient.Cancel("follow target/order lost"); return false; }
             if (posture != null) posture.Refresh();
             bool crossing = doors != null && doors.NeedsCloseFollow(target);
             float leaderDistance = Vector3.Distance(transform.position, leader.transform.position);
             catchingUp = CompanionPresencePolicy.CatchUp(catchingUp, leaderDistance);
+            SetCatchUpSpeed(catchingUp);
             if (catchingUp && ambient != null) ambient.Cancel("leader catch-up owns movement");
             Vector3 destination = leader.transform.position; bool ambientHold = false;
             bool optional = !catchingUp && ambient != null && ambient.TryDestination(leader, crossing, out destination, out ambientHold);
@@ -125,6 +127,31 @@ namespace LivingWorld.HumanNpc
             }
             Report(leaderDistance, crossing);
             return true;
+        }
+
+        void SetCatchUpSpeed(bool active)
+        {
+            if (body == null) return;
+            if (!active) { ReleaseCatchUpSpeed(); return; }
+            if (!ownsCatchUpSpeed)
+            {
+                normalRunSpeed = body.m_runSpeed;
+                ownsCatchUpSpeed = true;
+            }
+            body.m_runSpeed = CompanionPresencePolicy.CatchUpRunSpeed(normalRunSpeed);
+        }
+
+        void ReleaseCatchUpSpeed()
+        {
+            if (ownsCatchUpSpeed && body != null) body.m_runSpeed = normalRunSpeed;
+            ownsCatchUpSpeed = false;
+        }
+
+        internal void ReleaseForCombat()
+        {
+            catchingUp = false;
+            ReleaseLease();
+            ReleaseCatchUpSpeed();
         }
 
         Vector3 RespectLeaderExclusion(Player leader, Vector3 destination)
@@ -270,13 +297,13 @@ namespace LivingWorld.HumanNpc
 
         void Fault(Exception error)
         {
-            ReleaseLook(); if (ambient != null) ambient.Cancel("presence fault"); faulted = true;
+            ReleaseLook(); ReleaseCatchUpSpeed(); if (ambient != null) ambient.Cancel("presence fault"); faulted = true;
             status = "Presence disabled: " + error.Message + "; native follow retained";
             var plugin = LivingWorld.ManualTest.ManualTestPlugin.Instance;
             if (plugin != null) plugin.Report("PRESENCE FAIL: " + status);
         }
-        void OnDisable() { ReleaseLease(); ReleaseLook(); if (ambient != null) ambient.Cancel("presence disabled"); currentLeader = null; pace = CompanionPace.Stand; catchingUp = false; }
-        void OnDestroy() { ReleaseLease(); ReleaseLook(); if (ambient != null) ambient.Cancel("presence destroyed"); }
+        void OnDisable() { ReleaseLease(); ReleaseLook(); ReleaseCatchUpSpeed(); if (ambient != null) ambient.Cancel("presence disabled"); currentLeader = null; pace = CompanionPace.Stand; catchingUp = false; }
+        void OnDestroy() { ReleaseLease(); ReleaseLook(); ReleaseCatchUpSpeed(); if (ambient != null) ambient.Cancel("presence destroyed"); }
 
         static bool BeforeFollow(BaseAI __instance, GameObject __0, float __1)
         {
@@ -295,3 +322,4 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
+

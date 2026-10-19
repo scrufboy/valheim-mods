@@ -146,6 +146,15 @@ class CompanionPolicyTests
         Check(!CompanionPolicy.MayReacquireRetired(true, false, false), "expired distant chase cannot instantly restart");
         Check(CompanionPolicy.MayReacquireRetired(true, false, true), "retired target returning to nearby active melee is defendable");
         Check(CompanionPolicy.MayReacquireRetired(true, true, false), "explicit order may renew bounded chase");
+        Check(CompanionPolicy.MayDefendWhileSeparated(1f, false, 8f), "nearby attributed attacker permits separated self-defense");
+        Check(CompanionPolicy.MayDefendWhileSeparated(0f, true, 8f), "nearby self-targeting hostile permits separated self-defense");
+        Check(!CompanionPolicy.MayDefendWhileSeparated(1f, false, 8.01f), "separated defense cannot become a chase");
+        Check(!CompanionPolicy.MayDefendWhileSeparated(0f, false, 1f), "nearby non-threat gains no separated authority");
+        Check(CompanionPolicy.WithinRecoveryDefenseBounds(0f, 0f, 8f, 8f, 8f), "recovery defense accepts its local boundary");
+        Check(!CompanionPolicy.WithinRecoveryDefenseBounds(8f, 0f, 1f, 1f, 1f), "recovery defense expires without refresh");
+        Check(!CompanionPolicy.WithinRecoveryDefenseBounds(0f, 0f, 8.01f, 1f, 1f), "recovery target cannot pull fight from origin");
+        Check(!CompanionPolicy.WithinRecoveryDefenseBounds(0f, 0f, 1f, 8.01f, 1f), "recovery actor cannot chase from attack site");
+        Check(!CompanionPolicy.WithinRecoveryDefenseBounds(0f, 0f, 1f, 1f, 8.01f), "recovery attacker must remain immediate");
         Check(CompanionPolicy.SafeNativeAttack(false, false, 0), "safe ordinary native melee permitted");
         Check(!CompanionPolicy.SafeNativeAttack(true, false, 0), "friendly-hit override cannot bypass target discrimination");
         Check(!CompanionPolicy.SafeNativeAttack(false, true, 0), "native self-killing attack denied");
@@ -178,3 +187,4 @@ class CompanionPolicyTests
         Console.WriteLine("PASS " + checks + " companion policy checks (pure offline; Unity execution NOT RUN)");
     }
 }
+

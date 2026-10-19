@@ -31,6 +31,9 @@ namespace LivingWorld.HumanNpc
         public const float UnsensedSeconds = 3f;
         public const float NearbyThreatRange = 6f;
         public const float RecentDamageSeconds = 5f;
+        public const float TacticalNpcLeash = 10f;
+        public const float RecoveryDefenseRange = 8f;
+        public const float RecoveryDefenseSeconds = 8f;
 
         public static bool Finite(float value) { return !Single.IsNaN(value) && !Single.IsInfinity(value); }
 
@@ -141,6 +144,25 @@ namespace LivingWorld.HumanNpc
         public static bool MayReacquireRetired(bool sameTarget, bool explicitOrder, bool nearbyThreat)
         { return !sameTarget || explicitOrder || nearbyThreat; }
 
+        // Separation must never turn an attacked companion into a defenseless
+        // follower.  This is intentionally local: it permits fighting the actor
+        // already attacking this NPC, but never authorizes a new distant chase.
+        public static bool MayDefendWhileSeparated(float attributedDamage, bool targetsSelf, float targetDistance)
+        {
+            return Finite(targetDistance) && targetDistance >= 0f && targetDistance <= RecoveryDefenseRange &&
+                (targetsSelf || (Finite(attributedDamage) && attributedDamage > 0f));
+        }
+
+        public static bool WithinRecoveryDefenseBounds(float elapsed, float unsensed,
+            float targetFromOrigin, float npcFromOrigin, float targetFromNpc)
+        {
+            return InRange(elapsed, 0, RecoveryDefenseSeconds, false) &&
+                InRange(unsensed, 0, UnsensedSeconds, false) &&
+                InRange(targetFromOrigin, 0, RecoveryDefenseRange, true) &&
+                InRange(npcFromOrigin, 0, RecoveryDefenseRange, true) &&
+                InRange(targetFromNpc, 0, RecoveryDefenseRange, true);
+        }
+
         public static float ThreatPriority(bool targetsLeader, bool targetsSelf, bool targetsParty,
             float targetFromAnchor, float targetFromNpc)
         {
@@ -183,11 +205,12 @@ namespace LivingWorld.HumanNpc
         {
             float targetLeash = AwarenessRange;
             return InRange(elapsed, 0, 8f, false) && InRange(unsensed, 0, UnsensedSeconds, false) &&
-                InRange(targetFromOrigin, 0, targetLeash, true) && InRange(npcFromOrigin, 0, 10f, true) &&
-                InRange(targetFromOrder, 0, targetLeash, true) && InRange(npcFromOrder, 0, 10f, true);
+                InRange(targetFromOrigin, 0, targetLeash, true) && InRange(npcFromOrigin, 0, TacticalNpcLeash, true) &&
+                InRange(targetFromOrder, 0, targetLeash, true) && InRange(npcFromOrder, 0, TacticalNpcLeash, true);
         }
 
         static bool InRange(float value, float minimum, float maximum, bool inclusive)
         { return Finite(value) && value >= minimum && (inclusive ? value <= maximum : value < maximum); }
     }
 }
+

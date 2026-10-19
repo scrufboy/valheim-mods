@@ -46,6 +46,7 @@ namespace LivingWorld.HumanNpc
         float encounterUntil;
         bool encounterOwned;
         bool encounterClearObserved;
+        bool recoveryDefense;
         int encounterClearScans;
         CompanionMotion activeMotion = CompanionMotion.Invalid;
         Vector3 waitAnchor;
@@ -285,20 +286,25 @@ namespace LivingWorld.HumanNpc
             if (!CompanionPolicy.MayAuthorize(true, !target.IsDead(), target == body, target.IsPlayer(), target.IsTamed(),
                 target.GetComponent<HumanCompanion>() != null, enemy, explicitOrder, damage, activeThreat)) return false;
             Vector3 anchor = OrderAnchor();
-            if (Vector3.Distance(target.transform.position, transform.position) > DetectionLeash ||
-                Vector3.Distance(target.transform.position, anchor) > DetectionLeash ||
-                Vector3.Distance(transform.position, anchor) > CompanionPolicy.NpcLeash) return false;
+            float targetFromNpc = Vector3.Distance(target.transform.position, transform.position);
+            float targetFromAnchor = Vector3.Distance(target.transform.position, anchor);
+            float npcFromAnchor = Vector3.Distance(transform.position, anchor);
+            bool localDefense = LocalSelfDefense(target, damage, targetFromNpc);
+            if (targetFromNpc > DetectionLeash || (!localDefense &&
+                (targetFromAnchor > DetectionLeash || npcFromAnchor > CompanionPolicy.NpcLeash))) return false;
             bool nearby = CompanionPolicy.RefreshPursuit(activeThreat, damage > 0 ? 0 : Single.PositiveInfinity,
                 Vector3.Distance(target.transform.position, transform.position));
             if (!CompanionPolicy.MayReacquireRetired(retiredPursuitTarget == target, explicitOrder, nearby || activeThreat)) return false;
             if (authorizedTarget == target)
             {
                 if (CompanionPolicy.Finite(damage) && damage > 0) lastAttributedDamage = Time.time;
+                if (localDefense && npcFromAnchor > CompanionPolicy.TacticalNpcLeash) recoveryDefense = true;
                 RefreshNearbyThreat(); return AuthorizationValid(target);
             }
             if (authorizedTarget != null) return false;
             ReleaseOptionalActivity();
             authorizedTarget = target; combatOrigin = transform.position;
+            recoveryDefense = localDefense && npcFromAnchor > CompanionPolicy.TacticalNpcLeash;
             lastNearbyThreat = Time.time; lastSensed = Time.time;
             encounterOwned = true; encounterClearObserved = false; encounterUntil = Time.time + 1.5f;
             lastAttributedDamage = CompanionPolicy.Finite(damage) && damage > 0 ? Time.time : Single.NegativeInfinity;
@@ -308,10 +314,19 @@ namespace LivingWorld.HumanNpc
             // combat update; ambient/posture was released immediately above.
             var cleric = GetComponent<HumanCleric>();
             if (cleric != null) cleric.InterruptForCombat();
+            var presence = GetComponent<HumanFollowPresence>();
+            if (presence != null) presence.ReleaseForCombat();
             var torch = GetComponent<HumanUtilityTorch>();
             if (torch != null) torch.ReleaseForWeapons();
             status = explicitOrder ? "Explicit combat: bounded pursuit; nearby active defense continues" : "Native active-threat / attributed-damage defense";
             return true;
+        }
+
+        bool LocalSelfDefense(Character target, float damage, float targetDistance)
+        {
+            var hostile = target == null ? null : target.GetComponent<MonsterAI>();
+            bool targetsSelf = hostile != null && hostile.GetTargetCreature() == body;
+            return CompanionPolicy.MayDefendWhileSeparated(damage, targetsSelf, targetDistance);
         }
 
         bool IsActiveThreat(Character target)
@@ -358,10 +373,12 @@ namespace LivingWorld.HumanNpc
         void RefreshNearbyThreat()
         {
             if (authorizedTarget == null) return;
-            bool sensed = ai.CanSeeTarget(authorizedTarget) || ai.CanHearTarget(authorizedTarget);
+            float distance = Vector3.Distance(authorizedTarget.transform.position, transform.position);
+            bool sensed = LocalSelfDefense(authorizedTarget, 0f, distance) ||
+                ai.CanSeeTarget(authorizedTarget) || ai.CanHearTarget(authorizedTarget);
             if (sensed) lastSensed = Time.time;
             if (CompanionPolicy.RefreshEngagement(IsActiveThreat(authorizedTarget), sensed,
-                Time.time - lastAttributedDamage, Vector3.Distance(authorizedTarget.transform.position, transform.position)))
+                Time.time - lastAttributedDamage, distance))
             { lastNearbyThreat = Time.time; encounterOwned = true; encounterClearObserved = false; encounterUntil = Time.time + 1.5f; }
         }
 
@@ -402,9 +419,11 @@ namespace LivingWorld.HumanNpc
                 if (candidate == null || candidate == body || candidate.IsDead() || candidate.IsPlayer() ||
                     candidate.IsTamed() || candidate.GetComponent<HumanCompanion>() != null) continue;
                 float distance = Vector3.Distance(transform.position, candidate.transform.position);
+                float fromAnchor = Vector3.Distance(candidate.transform.position, OrderAnchor());
+                bool localDefense = LocalSelfDefense(candidate, 0f, distance);
                 bool sensed = distance <= CompanionPolicy.AwarenessRange &&
-                    Vector3.Distance(candidate.transform.position, OrderAnchor()) <= CompanionPolicy.AwarenessRange &&
-                    (ai.CanSeeTarget(candidate) || ai.CanHearTarget(candidate));
+                    (fromAnchor <= CompanionPolicy.AwarenessRange || localDefense) &&
+                    (localDefense || ai.CanSeeTarget(candidate) || ai.CanHearTarget(candidate));
                 bool enemy;
                 rawEnemyQuery++;
                 try { enemy = BaseAI.IsEnemy(body, candidate); }
@@ -412,10 +431,8 @@ namespace LivingWorld.HumanNpc
                 if (sensed && enemy && distance < seenDistance)
                 { seen = candidate; seenDistance = distance; }
                 if (!IsActiveThreat(candidate) || distance > DetectionLeash || !sensed) continue;
-                encounterOwned = true; encounterClearObserved = false; encounterClearScans = 0;
-                encounterUntil = Time.time + 3f;
                 if (!CompanionPolicy.MayReacquireRetired(retiredPursuitTarget == candidate, false, true)) continue;
-                if (!enemy || Vector3.Distance(candidate.transform.position, OrderAnchor()) > DetectionLeash) continue;
+                if (!enemy || (!localDefense && fromAnchor > DetectionLeash)) continue;
                 float priority = ThreatPriority(candidate);
                 if (best == null || CompanionPolicy.ShouldSwitchThreat(bestPriority, priority))
                 { best = candidate; bestPriority = priority; }
@@ -468,6 +485,10 @@ namespace LivingWorld.HumanNpc
             if (!Ready() || candidate == null || authorizedTarget != candidate || candidate.IsDead() || candidate.IsPlayer() ||
                 candidate.IsTamed() || candidate.GetComponent<HumanCompanion>() != null || !OrderActive()) return false;
             Vector3 anchor = OrderAnchor();
+            if (recoveryDefense)
+                return CompanionPolicy.WithinRecoveryDefenseBounds(Time.time - lastNearbyThreat, Time.time - lastSensed,
+                    Vector3.Distance(candidate.transform.position, combatOrigin), Vector3.Distance(transform.position, combatOrigin),
+                    Vector3.Distance(candidate.transform.position, transform.position));
             return CompanionPolicy.WithinTacticalCombatBounds(RangedParty, Time.time - lastNearbyThreat, Time.time - lastSensed,
                 Vector3.Distance(candidate.transform.position, combatOrigin), Vector3.Distance(transform.position, combatOrigin),
                 Vector3.Distance(candidate.transform.position, anchor), Vector3.Distance(transform.position, anchor));
@@ -504,10 +525,11 @@ namespace LivingWorld.HumanNpc
 
         void StopCombatCore(bool endEncounter)
         {
-            if (!Owner()) { authorizedTarget = null; if (endEncounter) { encounterOwned = false; encounterClearObserved = true; encounterClearScans = 0; encounterUntil = 0f; } return; }
+            if (!Owner()) { authorizedTarget = null; recoveryDefense = false; if (endEncounter) { encounterOwned = false; encounterClearObserved = true; encounterClearScans = 0; encounterUntil = 0f; } return; }
             ReleaseOptionalActivity();
             retiredPursuitTarget = authorizedTarget != null ? authorizedTarget : retiredPursuitTarget;
             authorizedTarget = null;
+            recoveryDefense = false;
             if (endEncounter) { encounterOwned = false; encounterClearObserved = true; encounterClearScans = 0; encounterUntil = 0f; }
             ClearNativeCombat(); status = "Combat stopped; persistent movement order retained";
         }
@@ -611,13 +633,13 @@ namespace LivingWorld.HumanNpc
             if (!Owner())
             {
                 // Never claim authority. Remote state remains native replication.
-                hadAuthority = false; authorizedTarget = null; encounterOwned = false; encounterClearObserved = true; temporaryFollow = false; temporaryLeader = null;
+                hadAuthority = false; authorizedTarget = null; recoveryDefense = false; encounterOwned = false; encounterClearObserved = true; temporaryFollow = false; temporaryLeader = null;
                 activeMotion = CompanionMotion.Invalid; haveWaitAnchor = false; ObserveLeader(null);
                 status = "Remote instance: no companion writes"; return false;
             }
             if (!hadAuthority)
             {
-                hadAuthority = true; authorizedTarget = null; encounterOwned = false; encounterClearObserved = true; patrolApplied = false;
+                hadAuthority = true; authorizedTarget = null; recoveryDefense = false; encounterOwned = false; encounterClearObserved = true; patrolApplied = false;
                 ClearNativeCombat(); // Combat authorizations never survive reload/ownership transfer.
             }
             if (!Ready())
@@ -770,3 +792,4 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
+

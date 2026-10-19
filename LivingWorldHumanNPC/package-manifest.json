@@ -4,12 +4,12 @@
     {
       "Source": "build-verification.json",
       "Destination": "build-verification.json",
-      "Sha256": "3515485F00FC1BEE44D1BB9373D66D9B9EA516AD5673B29597CF9A9797517A83"
+      "Sha256": "8CABDBFC721B0833B8E4CEE1392FFA87E52BB3118BFC598D7873126190B596DD"
     },
     {
       "Source": "plugins/LivingWorldHumanNpc/LivingWorld.HumanNpc.dll",
       "Destination": "plugins/LivingWorldHumanNpc/LivingWorld.HumanNpc.dll",
-      "Sha256": "7663FF93AA850F35B1F7F9616FEB0E9FE74C1E5FE010FEA49F1F2D999E1B0854"
+      "Sha256": "CABB2B2D07943F09ED536B78AF226A967754DD63CEB0FDD66A16FDD1DB4530A9"
     },
     {
       "Source": "plugins/LivingWorldHumanNpc/START-HERE.txt",
@@ -18,3 +18,4 @@
     }
   ]
 }
+

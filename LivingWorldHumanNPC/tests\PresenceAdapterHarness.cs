@@ -70,6 +70,7 @@ public class BaseAI : MonoBehaviour
 }
 public class Character : MonoBehaviour
 {
+    public float m_runSpeed=7f;
     public bool dead,swimming,flying,attacking,bowing,blocking;
     public bool grounded = true;
     public Vector3 velocity;
@@ -167,9 +168,11 @@ static class PresenceAdapterHarness
         npc.transform.position=new Vector3(0,0,14);ai.moveCompleted=true;Time.time=101;Call(presence,"Follow",person,.02f);ai.moveCompleted=false;
         Check(ai.resets==1&&Single.IsNegativeInfinity(ai.m_lastFindPathTime),
             "Failed far route invalidates native path cache without teleporting");
+        Check(body.m_runSpeed==CompanionPresencePolicy.CatchUpRunSpeed(7f),"Far catch-up receives a bounded speed advantage");
         Call(presence,"Attention",gaze);
         Check(gaze.m_lookAt==leader.m_eye&&gaze.m_bodyLookWeight==0&&gaze.m_lookWeight==.75f,"Head looks at eye, no torso twisting");
         npc.transform.position=new Vector3(0,0,4);Call(presence,"Follow",person,.02f);Check(ai.lastRun,"Run hysteresis retained");
+        Check(body.m_runSpeed==7f,"Leaving catch-up restores ordinary combat/travel speed");
         npc.transform.position=new Vector3(0,0,3.4f);Call(presence,"Follow",person,.02f);Check(!ai.lastRun,"Ease to walking");
         npc.transform.position=new Vector3(0,0,2.2f);int moves=ai.moves;Call(presence,"Follow",person,.02f);Check(ai.moves==moves,"Stop near person");
         npc.transform.position=new Vector3(0,0,2.8f);Call(presence,"Follow",person,.02f);Check(ai.moves==moves,"No micro chase in stop band");
@@ -180,6 +183,8 @@ static class PresenceAdapterHarness
         person.transform.position=new Vector3(.2f,0,0);Call(presence,"Attention",gaze);Check(gaze.m_lookAt==leader.m_eye,"Leader motion regains attention");
         orders.combat=true;Call(presence,"Attention",gaze);Check(gaze.m_lookAt==null,"Combat immediately releases head to native target");
         Check(!(bool)Call(presence,"Follow",person,.02f),"No movement override during combat");orders.combat=false;
+        npc.transform.position=new Vector3(0,0,14);Call(presence,"Follow",person,.02f);Call(presence,"ReleaseForCombat");
+        Check(body.m_runSpeed==7f,"Combat handoff releases catch-up speed before native fighting");npc.transform.position=new Vector3(0,0,2);
         var foreign=new Transform();gaze.m_lookAt=foreign;Call(presence,"Attention",gaze);Check(gaze.m_lookAt==foreign&&gaze.m_lookWeight==.5f,"External explicit focus not stolen");gaze.m_lookAt=null;
         Call(presence,"Attention",gaze);orders.eligible=false;Call(presence,"Attention",gaze);Check(gaze.m_lookAt==null,"Authority/order loss releases attention");orders.eligible=true;
         leader.crouched=true;npc.transform.position=new Vector3(0,0,8);Call(presence,"Follow",person,.02f);
@@ -201,3 +206,4 @@ static class PresenceAdapterHarness
         Console.WriteLine("PresenceAdapterHarness PASS: "+checks+" actual-adapter checks with managed doubles. Unity NOT RUN.");
     }
 }
+

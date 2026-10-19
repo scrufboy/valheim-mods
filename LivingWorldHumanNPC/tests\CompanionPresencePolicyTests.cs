@@ -63,6 +63,10 @@ static class CompanionPresencePolicyTests
         Check(CompanionPresencePolicy.CatchUp(true, 7.1f), "catch-up remains owned through its release band");
         Check(!CompanionPresencePolicy.CatchUp(true, 7f), "catch-up releases near the formation");
         Check(!CompanionPresencePolicy.CatchUp(false, Single.NaN), "invalid leader distance cannot own movement");
+        Check(Math.Abs(CompanionPresencePolicy.CatchUpRunSpeed(7f) - 8.4f) < .001f, "catch-up has a bounded twenty-percent speed advantage");
+        Check(CompanionPresencePolicy.CatchUpRunSpeed(2f) == 3f, "slow actor retains a full one-metre speed advantage");
+        Check(Single.IsNaN(CompanionPresencePolicy.CatchUpRunSpeed(Single.NaN)), "invalid run speed remains invalid rather than becoming authority");
         Console.WriteLine("CompanionPresencePolicy PASS: " + checks + " checks.");
     }
 }
+
