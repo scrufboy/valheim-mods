@@ -1,4 +1,4 @@
-LIVING WORLD HUMAN NPC 0.3.53 — SHIELD, CRAFT AND DOOR FOLLOW REPAIR
+LIVING WORLD HUMAN NPC 0.3.54 — NATIVE SITTING REPAIR
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:

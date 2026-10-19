@@ -84,8 +84,7 @@ namespace LivingWorld.HumanNpc
         }
         static bool Sitting(Player leader)
         {
-            var net = leader.GetComponent<ZNetView>();
-            return leader.InEmote() && net != null && net.IsValid() && net.GetZDO().GetString(ZDOVars.s_emote, "") == "sit";
+            return leader != null && leader.IsSitting();
         }
 
         internal bool TryDestination(Player leader, bool doorCrossing, out Vector3 destination, out bool hold)

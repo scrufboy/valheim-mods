@@ -86,13 +86,11 @@ namespace LivingWorld.HumanNpc
                 bool safe = body != null && !body.IsDead() && body.IsOnGround() && !body.IsSwimming() &&
                     !body.IsFlying() && !body.InAttack() && !body.IsDrawingBow() && !body.IsBlocking();
                 bool crouched = leader != null && leader.IsCrouching();
-                bool sitting = false;
-                if (leader != null)
-                {
-                    var leaderView = leader.GetComponent<ZNetView>();
-                    sitting = leaderView != null && leaderView.IsValid() && leader.InEmote() &&
-                        leaderView.GetZDO().GetString(ZDOVars.s_emote, "") == "sit";
-                }
+                // Character.IsSitting is Valheim's native resolved posture.
+                // Do not infer it from the transient emote RPC/ZDO pair: the
+                // current game can visibly seat the player without satisfying
+                // both of those implementation details on this frame.
+                bool sitting = leader != null && leader.IsSitting();
                 bool arrived = leader != null && Vector3.Distance(transform.position, leader.transform.position) <= CompanionPresencePolicy.ResumeDistance &&
                     body.GetVelocity().sqrMagnitude < 0.0625f;
                 bool passageClear = leader != null && doors != null && doors.MayRestNear(leader.gameObject);

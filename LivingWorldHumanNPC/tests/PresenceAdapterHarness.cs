@@ -93,8 +93,9 @@ public class Player : Character
     public CraftingStation currentStation;
     public bool placement;
     public Transform m_eye = new Transform();
-    public bool crouched,emote;
+    public bool crouched,sitting,emote;
     public override bool IsCrouching(){return crouched;}
+    public override bool IsSitting(){return sitting;}
     public bool InEmote(){return emote;}
     public long GetPlayerID(){return playerId;}
     public CraftingStation GetCurrentCraftingStation(){return currentStation;}
@@ -190,14 +191,14 @@ static class PresenceAdapterHarness
         leader.crouched=true;npc.transform.position=new Vector3(0,0,8);Call(presence,"Follow",person,.02f);
         Check(pose.Posture==CompanionPosture.Crouch&&sync.values["crouching"]&&!ai.lastRun,"Crouching uses native parameter and suppresses running");
         leader.crouched=false;Call(presence,"Follow",person,.02f);Check(pose.Posture==CompanionPosture.Upright&&!sync.values["crouching"],"Standing leader releases crouch");
-        npc.transform.position=new Vector3(0,0,2);leader.emote=true;leaderView.data.emote="sit";Time.time=200;pose.Refresh();
+        npc.transform.position=new Vector3(0,0,2);leader.sitting=true;leader.emote=false;leaderView.data.emote="";Time.time=200;pose.Refresh();
         Check(pose.Posture==CompanionPosture.Upright,"Do not sit instantly");Time.time=202;pose.Refresh();
-        Check(pose.Posture==CompanionPosture.Sit&&sync.values["emote_sit"],"Settle and use native looping sit");
+        Check(pose.Posture==CompanionPosture.Sit&&sync.values["emote_sit"],"Native resolved sitting settles into native looping sit without relying on emote/ZDO internals");
         moves=ai.moves;Call(presence,"Follow",person,.02f);Check(ai.moves==moves,"Seated companion does not receive travel commands");
         orders.combat=true;pose.Refresh();Check(pose.Posture==CompanionPosture.Upright&&!sync.values["emote_sit"],"Combat clears sit loop");orders.combat=false;
         doors.blocked=true;Time.time=210;pose.Refresh();Time.time=220;pose.Refresh();Check(pose.Posture==CompanionPosture.Upright,"Never sit across blocked passage");doors.blocked=false;
         Time.time=230;pose.Refresh();Time.time=232;pose.Refresh();Check(pose.Posture==CompanionPosture.Sit,"Sit request can resume after clear arrival");
-        leader.emote=false;leaderView.data.emote="";pose.Refresh();Check(pose.Posture==CompanionPosture.Upright&&!sync.values["emote_sit"],"Leader stands, companion stands");
+        leader.sitting=false;pose.Refresh();Check(pose.Posture==CompanionPosture.Upright&&!sync.values["emote_sit"],"Leader stands, companion stands");
         leader.crouched=true;body.swimming=true;pose.Refresh();Check(pose.Posture==CompanionPosture.Upright,"No crouch while swimming");body.swimming=false;
         int writes=sync.writes;view.owner=false;orders.eligible=false;pose.Refresh();Check(sync.writes==writes,"Remote instance does not write animation state");
         view.owner=true;orders.eligible=true;pose.Refresh();Check(pose.Posture==CompanionPosture.Crouch,"New authority recomputes posture, not stale pose");
@@ -206,4 +207,3 @@ static class PresenceAdapterHarness
         Console.WriteLine("PresenceAdapterHarness PASS: "+checks+" actual-adapter checks with managed doubles. Unity NOT RUN.");
     }
 }
-

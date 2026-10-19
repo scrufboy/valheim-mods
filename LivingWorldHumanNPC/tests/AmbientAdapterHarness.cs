@@ -95,8 +95,8 @@ static class AmbientAdapterHarness
         f=new Fixture();Station();f.Select();f.doors.blocked=true;f.Step(f.selectedAt+.1f);
         Check(!f.ambient.Active&&Vector3.Distance(f.ai.lastGoal,f.leader.transform.position)<.01f,
             "door precedence cancels ambience and preserves the real leader route anchor");
-        f=new Fixture();Station();f.Select();f.leader.emote=true;f.person.Get<ZNetView>().data.emote="sit";f.Step(f.selectedAt+.1f);
-        Check(!f.ambient.Active&&f.animator.GetInteger("crafting")==0,"player sit cancels optional crafting; baseline sit timing remains separate");
+        f=new Fixture();Station();f.Select();f.leader.sitting=true;f.leader.emote=false;f.person.Get<ZNetView>().data.emote="";f.Step(f.selectedAt+.1f);
+        Check(!f.ambient.Active&&f.animator.GetInteger("crafting")==0,"native resolved player sit cancels optional crafting without relying on emote/ZDO internals");
 
         f=new Fixture();Station();f.Select();f.Step(f.selectedAt+6);
         Check(!f.ambient.Active&&f.body.hides==0,"stalled approach fails after bounded progress deadline");
