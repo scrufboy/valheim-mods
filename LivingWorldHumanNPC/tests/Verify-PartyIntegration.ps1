@@ -93,6 +93,9 @@ try {
  Has $equipment PairSelectedShield 'Humanoid::EquipItem'
  Require (@(Calls (Method $equipment PairSelectedShield)|Where-Object {$_ -match 'LookAt|DoAttack|MoveTo|SetTarget|SetFollowTarget|UnequipItem'}).Count -eq 0) 'shield pairing cannot move, turn, target, attack, or replace native weapon selection'
  Has (TypeDef $native MonsterAI) SelectBestAttack 'Humanoid::EquipBestWeapon'
+ $nativeTargetUpdate=Method (TypeDef $native MonsterAI) UpdateTarget
+ Require (@($nativeTargetUpdate.Body.Instructions|Where-Object {$_.Operand -is [Mono.Cecil.FieldReference] -and $_.Operand.Name -eq 'm_spawnPoint'}).Count -gt 0) 'native max chase is measured from the fixed spawn point, not the moving companion anchor'
+ Require (@($nativeTargetUpdate.Body.Instructions|Where-Object {$_.Operand -is [Mono.Cecil.FieldReference] -and $_.Operand.Name -eq 'm_maxChaseDistance'}).Count -gt 0) 'native UpdateTarget owns the spawn-point chase setting'
  Has $readiness EnsurePeacefulStow 'Humanoid::HideHandItems'
  Has $readiness EnsurePeacefulStow 'EquipmentPresentationPolicy::Stow'
  Has $readiness EnsurePeacefulStow 'EquipmentPresentationPolicy::VerifiedStowed'
@@ -178,7 +181,7 @@ try {
  HasFloatSetting $settings m_viewRange 30
  HasFloatSetting $settings m_hearRange 9999
  HasFloatSetting $settings m_alertRange 20
- HasFloatSetting $settings m_maxChaseDistance 30
+ HasFloatSetting $settings m_maxChaseDistance 0
  HasFloatSetting $settings m_minAttackInterval 0
  HasFloatSetting $settings m_circleTargetDistance 8
  HasFloatSetting $settings m_circleTargetDuration 6

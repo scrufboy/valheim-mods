@@ -22,8 +22,9 @@ namespace LivingWorld.HumanNpc
         public const string Schema = "human-orders-v1";
         public const float FollowResumeRange = 64f;
         // Souls of the Land enemy definitions use a 30m view range. Companion
-        // awareness and committed-threat acquisition use the same envelope;
-        // movement remains constrained independently by NpcLeash.
+        // awareness and committed-threat acquisition use the same envelope.
+        // Awareness is not permission to travel: the moving leader and nearest
+        // living party member independently constrain committed combat movement.
         public const float AwarenessRange = 30f;
         public const float TargetLeash = 12f;
         public const float NpcLeash = 14f;

@@ -70,9 +70,10 @@ namespace LivingWorld.HumanNpc
             ai.m_idleSoundChance = 0f; ai.m_idleSoundInterval = 30f;
             ai.m_canBeAlerted = true; ai.m_alertRange = 20f;
             ai.m_enableHuntPlayer = false; ai.m_attackPlayerObjects = false;
-            // Enemy factions may chase a player for hundreds of metres. A
-            // companion fire team must finish the local encounter and regroup.
-            ai.m_maxChaseDistance = CompanionPolicy.AwarenessRange; ai.m_minAttackInterval = 0f;
+            // Native max chase is measured from the actor's original spawn point,
+            // not the moving leader or formation. Disable that stale origin fence;
+            // HumanCompanion owns the live leader/peer cohesion boundary instead.
+            ai.m_maxChaseDistance = 0f; ai.m_minAttackInterval = 0f;
             ai.m_circulateWhileCharging = true; ai.m_circulateWhileChargingFlying = false;
             // Native short lateral reposition windows; these are human-owned
             // candidate settings, not inherited template tuning. A nonzero
