@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.0
+
+- Restored the complete Living World trainer surface inside the fifth Tooler page.
+- Restored lifecycle, community, combat, party, native raid, player, item/spawn, time, environment, terrain, map/admin, danger-confirmation, and console pages.
+- Added the previously missing Midnight control and direct clear, rain, thunderstorm, and fog controls.
+- Kept all four proven original Tooler pages and their feature sets intact.
+
 ## 2.2.0
 
 - Replaced the inherited ValheimTooler plugin identity with the Living World C.O.R.E. Tooler identity.
