@@ -209,8 +209,21 @@ namespace LivingWorld.HumanNpc
                 InRange(targetFromOrder, 0, targetLeash, true) && InRange(npcFromOrder, 0, TacticalNpcLeash, true);
         }
 
+        // Once combat is committed, its target must not be revoked by the much
+        // tighter formation station. These bounds are an encounter escape fence,
+        // not a per-frame tactics vote: sensing/contact renews the clocks while
+        // native MonsterAI owns the actual pursuit and attack.
+        public static bool WithinCommittedCombatBounds(float elapsed, float unsensed,
+            float targetFromOrigin, float npcFromOrigin, float targetFromOrder,
+            float npcFromOrder, float targetFromNpc)
+        {
+            return InRange(elapsed, 0, 12f, false) && InRange(unsensed, 0, 8f, false) &&
+                InRange(targetFromOrigin, 0, 45f, true) && InRange(npcFromOrigin, 0, 45f, true) &&
+                InRange(targetFromOrder, 0, 45f, true) && InRange(npcFromOrder, 0, AwarenessRange, true) &&
+                InRange(targetFromNpc, 0, AwarenessRange, true);
+        }
+
         static bool InRange(float value, float minimum, float maximum, bool inclusive)
         { return Finite(value) && value >= minimum && (inclusive ? value <= maximum : value < maximum); }
     }
 }
-

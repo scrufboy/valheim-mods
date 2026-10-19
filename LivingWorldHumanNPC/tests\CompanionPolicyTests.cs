@@ -181,10 +181,14 @@ class CompanionPolicyTests
         Check(CompanionPolicy.WithinTacticalCombatBounds(false, 7.99f, 0, 12, 10, 12, 10), "tactical melee boundary accepts its edge");
         Check(!CompanionPolicy.WithinTacticalCombatBounds(false, 8f, 0, 12, 10, 12, 10), "tactical pursuit expires at eight seconds");
         Check(!CompanionPolicy.WithinTacticalCombatBounds(true, 1, 0, 24, 10.01f, 24, 10), "tactical ranged role cannot abandon station");
+        Check(CompanionPolicy.WithinCommittedCombatBounds(11.9f,7.9f,40f,25f,40f,25f,20f), "committed combat survives ordinary formation separation and sensing gaps");
+        Check(!CompanionPolicy.WithinCommittedCombatBounds(12f,0f,1f,1f,1f,1f,1f), "committed encounter expires without renewed contact");
+        Check(!CompanionPolicy.WithinCommittedCombatBounds(0f,8f,1f,1f,1f,1f,1f), "committed target retires after extended unsensed interval");
+        Check(!CompanionPolicy.WithinCommittedCombatBounds(0f,0f,1f,1f,1f,30.1f,1f), "committed combat cannot become an unbounded leader abandonment");
+        Check(!CompanionPolicy.WithinCommittedCombatBounds(0f,0f,1f,1f,1f,1f,30.1f), "committed combat cannot chase beyond the awareness envelope");
         Check(!CompanionPolicy.WithinRangedCombatBounds(1, 0, 24.01f, 0, 24, 0), "ranged target remains bounded");
         Check(!CompanionPolicy.WithinRangedCombatBounds(1, 3, 20, 0, 20, 0), "ranged sight loss unchanged");
         Check(!CompanionPolicy.WithinRangedCombatBounds(1, 0, Single.NaN, 0, 20, 0), "ranged invalid observation fails closed");
         Console.WriteLine("PASS " + checks + " companion policy checks (pure offline; Unity execution NOT RUN)");
     }
 }
-

@@ -143,7 +143,10 @@ namespace LivingWorld.HumanNpc
             MethodInfo enemy = typeof(BaseAI).GetMethod("IsEnemy", BindingFlags.Public | BindingFlags.Static,
                 null, new[] { typeof(Character), typeof(Character) }, null);
             if (enemy == null) throw new MissingMethodException("BaseAI.IsEnemy(Character,Character)");
-            Patch(harmony, update, "BeforeUpdate"); Patch(harmony, target, "BeforeTarget");
+            Patch(harmony, update, "BeforeUpdate");
+            harmony.Patch(target,
+                prefix: new HarmonyMethod(typeof(HumanCompanion).GetMethod("BeforeTarget", BindingFlags.Static | BindingFlags.NonPublic)),
+                postfix: new HarmonyMethod(typeof(HumanCompanion).GetMethod("AfterTarget", BindingFlags.Static | BindingFlags.NonPublic)));
             Patch(harmony, damaged, "BeforeDamaged"); Patch(harmony, setTarget, "BeforeSetTarget");
             Patch(harmony, attack, "BeforeAttack"); Patch(harmony, trigger, "BeforeAttackTrigger");
             harmony.Patch(enemy, postfix: new HarmonyMethod(typeof(HumanCompanion).GetMethod("AfterEnemy", BindingFlags.Static | BindingFlags.NonPublic)));
@@ -322,6 +325,39 @@ namespace LivingWorld.HumanNpc
             return true;
         }
 
+        bool LegalCombatTarget(Character target)
+        {
+            if (!Ready() || target == null || target.IsDead() || target == body || target.IsPlayer() ||
+                target.IsTamed() || target.GetComponent<HumanCompanion>() != null || !OrderActive()) return false;
+            bool enemy;
+            rawEnemyQuery++;
+            try { enemy = BaseAI.IsEnemy(body, target); }
+            finally { rawEnemyQuery--; }
+            return enemy;
+        }
+
+        void ObserveAttributedDamage(float damage, Character attacker)
+        {
+            if (!CompanionPolicy.Finite(damage) || damage <= 0f || !LegalCombatTarget(attacker)) return;
+            float distance = Vector3.Distance(transform.position, attacker.transform.position);
+            if (distance > DetectionLeash) return;
+            lastAttributedDamage = Time.time;
+            lastNearbyThreat = Time.time;
+            // Damage from a second hostile proves that the encounter is still live,
+            // but it must not pretend the currently committed target was re-sensed.
+            // Native MonsterAI remains free to finish that target before reacquiring.
+            if (authorizedTarget == null || authorizedTarget == attacker)
+                lastSensed = Time.time;
+            encounterOwned = true;
+            encounterClearObserved = false;
+            encounterClearScans = 0;
+            encounterUntil = Mathf.Max(encounterUntil, Time.time + 3f);
+            // Damage renews the encounter but never makes a companion abandon a
+            // living target mid-strike. Acquire the attacker only when combat has
+            // no target; native combat finishes the current opponent first.
+            if (authorizedTarget == null) Authorize(attacker, false, damage);
+        }
+
         bool LocalSelfDefense(Character target, float damage, float targetDistance)
         {
             var hostile = target == null ? null : target.GetComponent<MonsterAI>();
@@ -446,17 +482,17 @@ namespace LivingWorld.HumanNpc
             // short native alert, sight and hearing gaps. The old immediate
             // drop here bypassed that retention contract, producing the exact
             // acquire/idle/acquire loop recorded in the 2026-10-17 lab run.
-            if (best != null && best != authorizedTarget)
+            if (authorizedTarget != null)
             {
-                // Do not abandon a legal in-progress fight merely because a
-                // scan found another valid enemy. Switch only for higher duty.
-                if (authorizedTarget != null && AuthorizationValid(authorizedTarget) &&
-                    !CompanionPolicy.ShouldSwitchThreat(ThreatPriority(authorizedTarget), bestPriority)) return;
-                if (authorizedTarget != null)
-                {
-                    retiredPursuitTarget = authorizedTarget;
-                    authorizedTarget = null;
-                }
+                // A committed fight is stable. Repeated quarter-second scans may
+                // observe the rest of the encounter, but they never replace a
+                // living legal target and reset native movement/attack cadence.
+                encounterClearScans = 0;
+                encounterClearObserved = false;
+                return;
+            }
+            if (best != null)
+            {
                 if (Authorize(best, false, 0f)) status = "Companion tactics selected the highest-duty active threat";
             }
             else if (best == null && encounterOwned)
@@ -482,16 +518,20 @@ namespace LivingWorld.HumanNpc
 
         bool AuthorizationValid(Character candidate)
         {
-            if (!Ready() || candidate == null || authorizedTarget != candidate || candidate.IsDead() || candidate.IsPlayer() ||
-                candidate.IsTamed() || candidate.GetComponent<HumanCompanion>() != null || !OrderActive()) return false;
+            if (candidate != authorizedTarget || !LegalCombatTarget(candidate)) return false;
             Vector3 anchor = OrderAnchor();
+            float targetFromNpc = Vector3.Distance(candidate.transform.position, transform.position);
+            bool sensed = LocalSelfDefense(candidate, 0f, targetFromNpc) || ai.CanSeeTarget(candidate) || ai.CanHearTarget(candidate);
+            if (sensed) lastSensed = Time.time;
+            if (sensed || IsActiveThreat(candidate) || Time.time - lastAttributedDamage < 3f)
+                lastNearbyThreat = Time.time;
             if (recoveryDefense)
                 return CompanionPolicy.WithinRecoveryDefenseBounds(Time.time - lastNearbyThreat, Time.time - lastSensed,
                     Vector3.Distance(candidate.transform.position, combatOrigin), Vector3.Distance(transform.position, combatOrigin),
-                    Vector3.Distance(candidate.transform.position, transform.position));
-            return CompanionPolicy.WithinTacticalCombatBounds(RangedParty, Time.time - lastNearbyThreat, Time.time - lastSensed,
+                    targetFromNpc);
+            return CompanionPolicy.WithinCommittedCombatBounds(Time.time - lastNearbyThreat, Time.time - lastSensed,
                 Vector3.Distance(candidate.transform.position, combatOrigin), Vector3.Distance(transform.position, combatOrigin),
-                Vector3.Distance(candidate.transform.position, anchor), Vector3.Distance(transform.position, anchor));
+                Vector3.Distance(candidate.transform.position, anchor), Vector3.Distance(transform.position, anchor), targetFromNpc);
         }
 
         static bool SafeNativeAttack(Attack attack)
@@ -666,23 +706,35 @@ namespace LivingWorld.HumanNpc
             return true;
         }
 
-        void UpdateTarget(float dt, ref bool canHear, ref bool canSee)
+        bool PrepareNativeTarget(ref bool canHear, ref bool canSee)
         {
             canHear = false; canSee = false;
             if (!Ready() || authorizedTarget == null || !AuthorizationValid(authorizedTarget))
-            { if (authorizedTarget != null) DropCombatTarget(); else ClearNativeCombat(); return; }
-            canHear = ai.CanHearTarget(authorizedTarget); canSee = ai.CanSeeTarget(authorizedTarget);
-            // Keep the saved follow order, but remove its runtime steering while
-            // combat owns movement and facing. ReconcileLeader restores it once
-            // authorization ends.
+            { if (authorizedTarget != null) DropCombatTarget(); else ClearNativeCombat(); return false; }
+            // Supply the entry decision, then let the unmodified native target
+            // update own sensing, chase timers, last-known position and cadence.
+            // Saved companion follow remains intact and resumes after combat.
             ai.SetFollowTarget(null);
-            if (canHear || canSee) lastSensed = Time.time;
+            bool entering = (TargetField.GetValue(ai) as Character) != authorizedTarget;
             TargetField.SetValue(ai, authorizedTarget); StaticTargetField.SetValue(ai, null);
-            if (canHear || canSee)
+            if (entering)
             { LastPositionField.SetValue(ai, authorizedTarget.transform.position); BeenAtPositionField.SetValue(ai, false); }
             TargetInfoMethod.Invoke(ai, new object[] { authorizedTarget.GetZDOID() });
             AlertMethod.Invoke(ai, new object[] { true });
-            AttackTimerField.SetValue(ai, (float)AttackTimerField.GetValue(ai) + dt);
+            return true;
+        }
+
+        void ObserveNativeTarget(bool canHear, bool canSee)
+        {
+            if (authorizedTarget == null) return;
+            if (canHear || canSee) lastSensed = Time.time;
+            var native = TargetField.GetValue(ai) as Character;
+            if (native == authorizedTarget) return;
+            // Native combat may end pursuit after its own lost-target/death/path
+            // rules. Treat that as target retirement, retain the encounter long
+            // enough to select another active threat, and do not resurrect it.
+            retiredPursuitTarget = authorizedTarget;
+            DropCombatTarget();
         }
 
         void Fault(Exception error)
@@ -717,16 +769,24 @@ namespace LivingWorld.HumanNpc
         {
             var companion = __instance.GetComponent<HumanCompanion>();
             if (companion == null) return true;
-            try { companion.UpdateTarget(__1, ref __2, ref __3); }
+            try { return companion.PrepareNativeTarget(ref __2, ref __3); }
             catch (Exception error) { companion.Fault(error); __2 = false; __3 = false; }
             return false;
+        }
+
+        static void AfterTarget(MonsterAI __instance, ref bool __2, ref bool __3)
+        {
+            var companion = __instance.GetComponent<HumanCompanion>();
+            if (companion == null) return;
+            try { companion.ObserveNativeTarget(__2, __3); }
+            catch (Exception error) { companion.Fault(error); }
         }
 
         static void BeforeDamaged(MonsterAI __instance, float __0, Character __1)
         {
             var companion = __instance.GetComponent<HumanCompanion>();
             if (companion == null) return;
-            try { companion.Authorize(__1, false, __0); }
+            try { companion.ObserveAttributedDamage(__0, __1); }
             catch (Exception error) { companion.Fault(error); }
         }
 
@@ -792,4 +852,3 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
-

@@ -37,9 +37,10 @@ try{
  $follow=GetTypeDef $candidate HumanFollowPresence;$ambient=GetTypeDef $candidate HumanCompanionAmbient;$posture=GetTypeDef $candidate HumanCompanionPosture
  $companion=GetTypeDef $candidate HumanCompanion;$old=GetTypeDef $baseline HumanCompanion
  foreach($before in $old.Methods|Where-Object HasBody){
+   if($before.Name -eq 'UpdateTarget'){continue} # Replaced by the separately verified native-target prefix/postfix handoff.
    $after=@($companion.Methods|Where-Object FullName -eq $before.FullName)
    Require ($after.Count -eq 1) "baseline companion method retained: $($before.Name)"
-   if($before.Name -in @('get_PresenceLeader','get_MayTravelThroughDoors','IsDoorTravelGoal','Authorize','IsActiveThreat','RefreshNearbyThreat','FindActiveThreat','AuthorizationValid','SafeEquippedWeapon','StopCombat','StopCombatCore','DropCombatTarget','Tick','UpdateTarget','BeforeUpdate','BeforeAttack','BeforeAttackTrigger')){continue} # Explicit party/encounter/door integration checked separately.
+   if($before.Name -in @('InstallPatches','get_PresenceLeader','get_MayTravelThroughDoors','IsDoorTravelGoal','Authorize','IsActiveThreat','RefreshNearbyThreat','FindActiveThreat','AuthorizationValid','SafeEquippedWeapon','StopCombat','StopCombatCore','DropCombatTarget','Tick','UpdateTarget','BeforeUpdate','BeforeTarget','BeforeDamaged','BeforeSetTarget','BeforeAttack','BeforeAttackTrigger','AfterEnemy')){continue} # Explicit party/encounter/door integration checked separately.
    $hooked=$before.Name -eq 'Authorize'
    Require ((Canonical $before $false) -ceq (Canonical $after[0] $hooked)) "unchanged baseline companion logic except explicit release hook: $($before.Name)"
  }

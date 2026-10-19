@@ -22,6 +22,7 @@ function HasFloatSetting($method,[string]$field,[single]$value){
 try {
  $companion=TypeDef $party HumanCompanion
  $equipment=TypeDef $party HumanPartyEquipment
+ $defense=TypeDef $party HumanCombatDefense
  $readiness=TypeDef $party HumanEquipmentReadiness
  $cleric=TypeDef $party HumanCleric
  $torch=TypeDef $party HumanUtilityTorch
@@ -34,10 +35,11 @@ try {
  Has $companion BeforeAttack 'HumanPartyEquipment::MayAttack'
  Has $companion BeforeAttackTrigger 'HumanPartyEquipment::MayAttack'
  Has $companion SafeEquippedWeapon 'HumanPartyEquipment::AllowsWeapon'
- Has $companion AuthorizationValid 'CompanionPolicy::WithinTacticalCombatBounds'
+ Has $companion AuthorizationValid 'CompanionPolicy::WithinCommittedCombatBounds'
  Has $companion AuthorizationValid 'CompanionPolicy::WithinRecoveryDefenseBounds'
  Has $companion ThreatPriority 'CompanionPolicy::ThreatPriority'
  Has $companion FindActiveThreat 'CompanionPolicy::ShouldSwitchThreat'
+ Require (@((Method $companion FindActiveThreat).Body.Instructions|Where-Object {$_.OpCode.Code.ToString() -eq 'Stfld' -and $_.Operand -is [Mono.Cecil.FieldReference] -and $_.Operand.Name -eq 'authorizedTarget'}).Count -eq 0) 'quarter-second scan cannot replace or erase the committed target'
  Has $companion Authorize 'get_DetectionLeash'
  Has $companion Authorize 'HumanCleric::InterruptForCombat'
  Has $companion Authorize 'HumanFollowPresence::ReleaseForCombat'
@@ -69,6 +71,14 @@ try {
  Require (@($combatUpdateCalls|Where-Object {$_ -match 'LookAt|DoAttack|PartyCombatPolicy::Weapon|ReactToAttack|EquipItem|UnequipItem'}).Count -eq 0) 'equipment update does not run a parallel combat controller'
  Require (@($equipment.Methods|Where-Object {$_.Name -in @('AfterSelect','AdvanceDraw','ObserveBlock','TryRiposte','OnBlockResolved')}).Count -eq 0) 'manual weapon, draw, block and riposte decision methods removed'
  Require (@(Strings (Method $equipment InstallPatches)|Where-Object {$_ -eq 'BlockAttack'}).Count -eq 0) 'equipment does not patch native block decisions'
+ Has $defense Update 'PartyCombatPolicy::ReactToAttack'
+ Has $defense IncomingAttack 'Character::GetAllCharacters'
+ Has $defense IncomingAttack 'BaseAI::GetTargetCreature'
+ Has $defense IncomingAttack 'Character::InAttack'
+ Has $defense IncomingAttack 'BaseAI::CanSeeTarget'
+ Has $defense SetRaised 'System.Reflection.FieldInfo::SetValue'
+ $defenseCalls=@($defense.Methods|Where-Object HasBody|ForEach-Object {Calls $_})
+ Require (@($defenseCalls|Where-Object {$_ -match 'LookAt|DoAttack|MoveTo|SetTarget|SetFollowTarget|EquipItem|UnequipItem|Animator::Play'}).Count -eq 0) 'shield defense never targets, moves, turns, equips, attacks or forces animation'
  Require (@(Calls (Method $equipment MayAttack)|Where-Object {$_.Contains('GetAttackDrawPercentage')}).Count -eq 0) 'bow permission never waits on a Player-only draw percentage'
  $validate=Method $equipment ValidateItems
  Require (@($validate.Body.Instructions|Where-Object {$_.Operand -is [Mono.Cecil.FieldReference] -and $_.Operand.Name -eq 'm_aiAttackInterval'}).Count -eq 0) 'party equipment does not impose a slower bow attack interval'
@@ -127,6 +137,7 @@ try {
  Has $lab BeforePieceDamage 'ZNetView::IsOwner'
  Has $lab BeforePieceDamage 'ZDO::GetString'
  Has $plugin PrepareParty 'HumanPartyEquipment::PrepareArcher'
+ Has (TypeDef $party NativeHumanFactory) Create 'AddComponent<LivingWorld.HumanNpc.HumanCombatDefense>'
  Has $plugin PrepareParty 'HumanIdentity::InitializeFresh'
  Has $plugin BeginCombat 'ManualPartyLab::CaptureProtection'
  $spawn=Method $lab SpawnWave
@@ -169,4 +180,3 @@ try {
  Require ($circulate.OpCode.Code.ToString() -eq 'Ldc_I4_1') 'native circulate-while-charging is enabled'
  'PartyIntegration PASS: '+$checks+' compiled integration/native-contract assertions. No Unity acceptance claimed.'
 } finally {$party.Dispose();$native.Dispose()}
-

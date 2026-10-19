@@ -60,6 +60,7 @@ namespace LivingWorld.HumanNpc
                 root.AddComponent<HumanPartyConfidence>();
                 root.AddComponent<HumanCompanionAmbient>();
                 root.AddComponent<HumanEquipmentReadiness>();
+                root.AddComponent<HumanCombatDefense>();
                 root.AddComponent<HumanPartyEquipment>();
                 root.AddComponent<HumanCleric>();
                 root.AddComponent<HumanUtilityTorch>();
@@ -291,4 +292,3 @@ namespace LivingWorld.HumanNpc
         }
     }
 }
-

@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace LivingWorld.ManualTest
 {
-    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.51")]
+    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.52")]
     [BepInIncompatibility("local.livingworld.manualtest")]
     [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     public sealed class ManualTestPlugin : BaseUnityPlugin
@@ -666,6 +666,7 @@ namespace LivingWorld.ManualTest
                 Report("Human: " + (human == null ? "adapter missing" : human.State));
                 Report("Composition: " + npc.GetComponent<HumanCompositionIdentity>().Status);
                 Report("Companion: " + npc.GetComponent<HumanCompanion>().Status);
+                Report("Combat defense: " + npc.GetComponent<HumanCombatDefense>().Describe());
                 Report("Door travel: " + npc.GetComponent<HumanDoorTraversal>().Status);
                 Report("Companion presence: " + npc.GetComponent<HumanFollowPresence>().Status);
                 Report("Resources: " + npc.GetComponent<HumanResources>().Describe());
@@ -725,7 +726,7 @@ namespace LivingWorld.ManualTest
             Report("ORDERS/TESTS: lwtest follow | hold | move | combat | stop | status. WORLD/LIFECYCLE: lwtest setup | spawn | migrate | cleanup | help.");
             Report("Use existing character " + ManualAcceptance.ProfileName + " and world " + ManualAcceptance.WorldName + "; leave Start Server off. Do not rebuild the existing lab.");
             Report("Existing scout: inspect status; only legacy 0.2.x requires lwtest migrate. follow/hold persist orders. move is a temporary 6-20m check. combat is the old single-enemy measurement, not the new wave test. stop ends that measurement; wave stop ends waves. spawn creates a replacement beside you whenever no living scout is loaded. WARNING: cleanup removes loaded marked lab objects and companions.");
-            Report("0.3.19 separates peaceful door etiquette from combat pursuit: peaceful companions close what they open; combat pursuit opens, crosses and leaves the passage available to the party. Retreat/breach tactics remain separate future behaviors. It remains a lab candidate, not certified gameplay.");
+            Report("Combat owns native target update, movement, facing and attacks after legal authorization. Companion follow, ambient, torch and door behavior cannot steer combat. This remains a lab candidate until live telemetry confirms the encounter.");
         }
         void OnDestroy()
         {
@@ -741,4 +742,3 @@ namespace LivingWorld.ManualTest
         // Marker only. Saved metadata is inspected, never blessed automatically.
     }
 }
-

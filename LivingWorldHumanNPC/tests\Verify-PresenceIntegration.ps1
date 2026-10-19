@@ -99,7 +99,7 @@ Has (Method $readiness WantsWeapons) 'HumanCompanion::get_CombatOwnsActor'
    foreach($m in $old.Methods | Where-Object HasBody){
      if($name -eq 'HumanDoorTraversal' -and $m.Name -like '<Discover>*'){continue}
      # Explicit 0.3.8 party and retained door-close responsibility changes.
-     if($name -eq 'HumanCompanion' -and $m.Name -in @('get_PresenceLeader','get_MayTravelThroughDoors','IsDoorTravelGoal','Authorize','IsActiveThreat','RefreshNearbyThreat','FindActiveThreat','AuthorizationValid','SafeEquippedWeapon','Tick','UpdateTarget','BeforeUpdate','BeforeAttack','BeforeAttackTrigger')){continue}
+     if($name -eq 'HumanCompanion' -and $m.Name -in @('InstallPatches','get_PresenceLeader','get_MayTravelThroughDoors','IsDoorTravelGoal','Authorize','IsActiveThreat','RefreshNearbyThreat','FindActiveThreat','AuthorizationValid','SafeEquippedWeapon','Tick','UpdateTarget','BeforeUpdate','BeforeTarget','BeforeDamaged','BeforeSetTarget','BeforeAttack','BeforeAttackTrigger','AfterEnemy')){continue}
      if($name -eq 'HumanCompanion' -and $m.Name -in @('StopCombatCore','DropCombatTarget')){continue}
      if($name -eq 'CompanionPolicy' -and $m.Name -eq 'Motion'){continue}
      if($name -eq 'HumanDoorTraversal' -and $m.Name -in @('Step','Discover','Observe','Cancel','NeedsCloseFollow','CrossingClear')){continue}

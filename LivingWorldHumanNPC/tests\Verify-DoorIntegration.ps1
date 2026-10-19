@@ -109,7 +109,7 @@ try {
    Require ($null -ne $oldType -and $null -ne $newType) "baseline type $name"
    foreach($oldMethod in $oldType.Methods | Where-Object HasBody){
      # 0.3.8 opt-in party extension: these exact changes are checked by Verify-PartyIntegration.
-     if($name -eq 'HumanCompanion' -and $oldMethod.Name -in @('get_PresenceLeader','Authorize','IsActiveThreat','RefreshNearbyThreat','FindActiveThreat','AuthorizationValid','SafeEquippedWeapon','StopCombatCore','DropCombatTarget','Tick','UpdateTarget','BeforeUpdate','BeforeAttack','BeforeAttackTrigger')){continue}
+     if($name -eq 'HumanCompanion' -and $oldMethod.Name -in @('InstallPatches','get_PresenceLeader','Authorize','IsActiveThreat','RefreshNearbyThreat','FindActiveThreat','AuthorizationValid','SafeEquippedWeapon','StopCombatCore','DropCombatTarget','Tick','UpdateTarget','BeforeUpdate','BeforeTarget','BeforeDamaged','BeforeSetTarget','BeforeAttack','BeforeAttackTrigger','AfterEnemy')){continue}
      if($name -eq 'CompanionPolicy' -and $oldMethod.Name -eq 'Motion'){continue}
      if($name -eq 'HumanAppearance' -and $oldMethod.Name -eq 'Update'){continue} # IdentityAdapterHarness covers new optional identity path.
      if($name -eq 'HumanCompanion' -and $oldMethod.Name -in @('Authorize','StopCombat')){continue} # Optional activity cancellation, verified by integration tests.

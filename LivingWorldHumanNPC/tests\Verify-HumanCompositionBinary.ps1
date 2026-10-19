@@ -41,7 +41,7 @@ try {
     $createCalls=@(Calls $create)
     Require (@($createCalls | Where-Object {$_.Operand.FullName -eq 'System.Void UnityEngine.GameObject::.ctor(System.String)'}).Count -eq 2) 'definition container plus fresh named GameObject root constructed explicitly'
     Require (@($createCalls | Where-Object {$_.Operand.Name -match 'Instantiate|GetPrefab|CreateClonedPrefab'}).Count -eq 0) 'fresh-root factory does not obtain or instantiate character/template prefab'
-    foreach($component in @('UnityEngine.CapsuleCollider','UnityEngine.Rigidbody','ZNetView','ZSyncTransform','ZSyncAnimation','Humanoid','MonsterAI','LivingWorld.HumanNpc.HumanCompositionIdentity','LivingWorld.HumanNpc.HumanCompanion','LivingWorld.HumanNpc.HumanEquipmentReadiness','LivingWorld.HumanNpc.HumanEnvironmentStatus')){
+    foreach($component in @('UnityEngine.CapsuleCollider','UnityEngine.Rigidbody','ZNetView','ZSyncTransform','ZSyncAnimation','Humanoid','MonsterAI','LivingWorld.HumanNpc.HumanCompositionIdentity','LivingWorld.HumanNpc.HumanCompanion','LivingWorld.HumanNpc.HumanEquipmentReadiness','LivingWorld.HumanNpc.HumanCombatDefense','LivingWorld.HumanNpc.HumanEnvironmentStatus')){
         Require (@($createCalls | Where-Object {$_.Operand.FullName.Contains('AddComponent<'+$component+'>')}).Count -eq 1) "fresh explicit component $component"
     }
     $environment=FindMethod LivingWorld.HumanNpc.HumanEnvironmentStatus Update
@@ -76,4 +76,3 @@ try {
     "HumanCompositionBinary PASS: $checks independent IL checks. Binary SHA256: $((Get-FileHash -LiteralPath $AssemblyPath -Algorithm SHA256).Hash)"
     'Unity load, migration, pathfinding, attacks and save/reload NOT RUN by this audit.'
 } finally {$assembly.Dispose()}
-

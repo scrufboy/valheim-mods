@@ -47,7 +47,7 @@ try {
         $anchor=@($install.Body.Instructions | Where-Object {$_.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldstr -and $_.Operand -eq $name})
         Require ($anchor.Count -eq 1 -and $anchor[0].Previous.Previous.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldtoken -and $anchor[0].Previous.Previous.Operand.FullName -eq $patchOwners[$name]) "$name resolves exactly $($patchOwners[$name]), not Player/Humanoid/Character/Animator"
     }
-    foreach($pair in @(@('BeforeUpdate','::Tick', $true),@('BeforeTarget','::UpdateTarget',$true),@('BeforeDamaged','::Authorize',$false),@('BeforeSetTarget','::AuthorizationValid',$true),@('BeforeAttack','::AuthorizationValid',$true),@('BeforeAttackTrigger','::AuthorizationValid',$true),@('AfterEnemy','::AuthorizationValid',$false))){ScopedPrefix $pair[0] $pair[1] $pair[2]}
+    foreach($pair in @(@('BeforeUpdate','::Tick', $true),@('BeforeTarget','::PrepareNativeTarget',$true),@('AfterTarget','::ObserveNativeTarget',$false),@('BeforeDamaged','::ObserveAttributedDamage',$false),@('BeforeSetTarget','::AuthorizationValid',$true),@('BeforeAttack','::AuthorizationValid',$true),@('BeforeAttackTrigger','::AuthorizationValid',$true),@('AfterEnemy','::AuthorizationValid',$false))){ScopedPrefix $pair[0] $pair[1] $pair[2]}
     HasCalls (Method Owner) @('ZNetView::IsValid','ZNetView::IsOwner')
     $ready=Method Ready
     HasCalls $ready @('UnityEngine.Behaviour::get_isActiveAndEnabled','::Owner','Character::IsDead','BaseAI::HuntPlayer','MonsterAI::DespawnInDay','MonsterAI::IsEventCreature','BaseAI::IsSleeping','HumanCompositionIdentity::get_IsReady','::ReadOrder')
@@ -73,7 +73,9 @@ try {
     HasCalls (Method IsActiveThreat) @('GetComponent<MonsterAI>','BaseAI::GetTargetCreature','BaseAI::CanSeeTarget','BaseAI::CanHearTarget','BaseAI::IsEnemy','BaseAI::IsAlerted','CompanionPolicy::HostileCommitted','::ProtectingOwner')
     Require (@(Calls (Method IsActiveThreat) | Where-Object {$_.Operand.Name -eq 'IsAlerted'}).Count -eq 1) 'hostile alert is observed once as awareness evidence, while native party targeting governs commitment'
     HasCalls (Method ProtectingOwner) @('Character::IsDead','CompanionPolicy::MayProtectOwner','::OrderAnchor')
-    HasCalls (Method AuthorizationValid) @('::Ready','Character::IsDead','Character::IsPlayer','Character::IsTamed','CompanionPolicy::WithinTacticalCombatBounds')
+    HasCalls (Method LegalCombatTarget) @('::Ready','Character::IsDead','Character::IsPlayer','Character::IsTamed','BaseAI::IsEnemy')
+    HasCalls (Method ObserveAttributedDamage) @('::LegalCombatTarget','::Authorize')
+    HasCalls (Method AuthorizationValid) @('::LegalCombatTarget','BaseAI::CanHearTarget','BaseAI::CanSeeTarget','CompanionPolicy::WithinCommittedCombatBounds','CompanionPolicy::WithinRecoveryDefenseBounds')
     HasCalls (Method BeforeAttack) @('::AuthorizationValid','::SafeEquippedWeapon','::DropCombatTarget')
     HasCalls (Method BeforeAttackTrigger) @('System.Object::ReferenceEquals','::AuthorizationValid','::SafeEquippedWeapon','::SafeNativeAttack','::DropCombatTarget')
     HasCalls (Method DropCombatTarget) @('::StopCombatCore')
@@ -87,7 +89,9 @@ try {
     $fields=@($clear.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.FieldReference] -and $_.Operand.FullName.Contains('HumanCompanion::CurrentAttackField')})
     Require ($fields.Count -ge 2) 'current attack is read then retired after abort/conditional stop'
     HasCalls (Method Tick) @('::Owner','::Ready','::ClearNativeCombat','::ReconcileLeader','::RefreshNearbyThreat','::FindActiveThreat','BaseAI::StopMoving')
-    HasCalls (Method UpdateTarget) @('::Ready','::AuthorizationValid','BaseAI::CanHearTarget','BaseAI::CanSeeTarget')
+    HasCalls (Method PrepareNativeTarget) @('::Ready','::AuthorizationValid','MonsterAI::SetFollowTarget','System.Reflection.FieldInfo::SetValue','System.Reflection.MethodBase::Invoke')
+    HasFields (Method PrepareNativeTarget) @('HumanCompanion::TargetField','HumanCompanion::StaticTargetField','HumanCompanion::TargetInfoMethod','HumanCompanion::AlertMethod')
+    HasCalls (Method ObserveNativeTarget) @('::DropCombatTarget')
     Require (@($companion.Fields | Where-Object Name -eq 'rawEnemyQuery' | ForEach-Object {$_.CustomAttributes | Where-Object {$_.AttributeType.FullName -eq 'System.ThreadStaticAttribute'}}).Count -eq 1) 'native eligibility bypass is thread-local'
     "HumanCompanionBinary PASS: $checks structural IL integration checks. Binary SHA256: $((Get-FileHash -LiteralPath $AssemblyPath -Algorithm SHA256).Hash)"
     'Native Harmony routing, physics, animation, companion persistence and full combat gameplay NOT RUN.'
