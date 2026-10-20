@@ -1,15 +1,18 @@
-LIVING WORLD HUMAN NPC 0.3.61 — SPAWN + APPEARANCE REPAIR
+LIVING WORLD HUMAN NPC 0.3.62 — VISIBLE HAIR + BEARD REPAIR
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:
 
 plugins\LivingWorldHumanNpc\LivingWorld.HumanNpc.dll
 
-0.3.61 removes the invalid Player prefix/count catalog assumption that blocked
-lwparty before actor creation. Fresh companions resolve Valheim's actual
-contiguous Hair1..N and Beard1..N selectable styles from ObjectDB, excluding
-HairNone and internal helmet-remap variants. A selected style must still attach
-as a real visual object before the companion is accepted.
+0.3.62 fixes the false appearance success exposed by the 2026-10-20 video.
+Valheim had allocated the selected Hair14/Beard22 and Hair34 objects, but the
+adapter accepted those objects before proving that their renderers were active,
+materialized, attached to the human rig, and present in the human LOD. The
+adapter now completes Valheim's native visual pass twice: first to construct
+the attachments, then to apply their native hair material/property block. It
+will not initialize an actor unless the resulting hair and optional beard have
+a live renderer on the rig.
 
 This build preserves the 0.3.56 native combat authority, the 0.3.57 fire-team
 cohesion repair, and corrects the meaning of native chase distance:

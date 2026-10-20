@@ -75,6 +75,14 @@ try {
     foreach($field in @('HairInstance','BeardInstance','CurrentHairHash','CurrentBeardHash')){
         Require ($facialFields -contains $field) "appearance readiness verifies $field"
     }
+    $refresh=FindMethod LivingWorld.HumanNpc.HumanAppearance RefreshNativeAppearance
+    $refreshCalls=@(Calls $refresh | Where-Object {$_.Operand.Name -eq 'Invoke'})
+    Require ($refreshCalls.Count -eq 2) 'appearance performs a construction pass and a material pass before commit'
+    $render=FindMethod LivingWorld.HumanNpc.HumanAppearance AttachmentRenders
+    $renderCalls=@(Calls $render)
+    Require (@($renderCalls | Where-Object {$_.Operand.Name -eq 'GetComponentsInChildren'}).Count -eq 1) 'appearance readiness inspects the selected attachment renderers'
+    Require (@($renderCalls | Where-Object {$_.Operand.Name -eq 'GetLODs'}).Count -ge 1) 'appearance readiness requires the selected attachment in the human LOD'
+    Require (@($render.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'get_activeInHierarchy'}).Count -ge 2) 'appearance readiness rejects inactive attachment objects/renderers'
     $identity=@($types | Where-Object FullName -eq LivingWorld.HumanNpc.HumanCompositionIdentity)[0]
     Require (@($identity.Methods | Where-Object {$_.Name -in @('Awake','Start','Update','FixedUpdate','OnEnable')}).Count -eq 0) 'no automatic identity/migration callback'
     $identityCalls=@($identity.Methods | Where-Object HasBody | ForEach-Object {Calls $_})

@@ -8,25 +8,56 @@ using UnityEngine;
 
 namespace UnityEngine
 {
+    public class Object { }
+    public class Component : Object
+    {
+        public GameObject gameObject;
+        public Transform transform { get { return gameObject == null ? null : gameObject.transform; } }
+        public T GetComponentInParent<T>() where T : class { return gameObject == null ? null : gameObject.Get<T>(); }
+    }
     public class GameObject
     {
         public readonly List<MonoBehaviour> components = new List<MonoBehaviour>();
-        public readonly Transform transform = new Transform();
+        public readonly Transform transform;
+        public bool activeInHierarchy = true;
+        public GameObject() { transform = new Transform(); transform.gameObject = this; }
         public T Add<T>() where T : MonoBehaviour, new() { var value = new T(); value.gameObject = this; components.Add(value); return value; }
         public T Get<T>() where T : class { foreach (var value in components) if (value is T) return value as T; return null; }
         public T GetComponent<T>() where T : class { return Get<T>(); }
+        public T[] GetComponentsInChildren<T>(bool includeInactive) where T : class
+        {
+            var value = Get<T>(); return value == null ? new T[0] : new[] { value };
+        }
     }
-    public class Transform
+    public class Transform : Component
     {
         readonly HashSet<string> children = new HashSet<string>();
+        public Transform parent;
         public void Add(string name) { children.Add(name); }
         public Transform Find(string name) { return children.Contains(name) ? new Transform() : null; }
+        public bool IsChildOf(Transform parent) { return true; }
     }
-    public class MonoBehaviour
+    public class MonoBehaviour : Component
     {
-        public GameObject gameObject;
         public bool enabled = true;
         public T GetComponent<T>() where T : class { return gameObject.Get<T>(); }
+    }
+    public class Material : Object { }
+    public class Mesh : Object { }
+    public class Renderer : MonoBehaviour
+    {
+        public Material[] sharedMaterials = { new Material() };
+    }
+    public class SkinnedMeshRenderer : Renderer
+    {
+        public Mesh sharedMesh = new Mesh();
+        public Transform rootBone = new Transform();
+    }
+    public struct LOD { public Renderer[] renderers; }
+    public class LODGroup : MonoBehaviour
+    {
+        public readonly List<Renderer> renderers = new List<Renderer>();
+        public LOD[] GetLODs() { return new[] { new LOD { renderers = renderers.ToArray() } }; }
     }
     public struct Vector3
     {
@@ -87,7 +118,8 @@ public class VisEquipment : MonoBehaviour
     public bool m_isPlayer = true;
     public Player m_playerComponent;
     public PlayerModel[] m_models = { new PlayerModel(), new PlayerModel() };
-    public int writes, model = -1, hair = -1, beard = -1, loseOwnerAfter;
+    public int writes, refreshes, model = -1, hair = -1, beard = -1, loseOwnerAfter;
+    public SkinnedMeshRenderer m_bodyModel;
     public GameObject m_hairItemInstance, m_beardItemInstance;
     public int m_currentHairItemHash, m_currentBeardItemHash;
     public Vector3 skin, tint;
@@ -95,8 +127,17 @@ public class VisEquipment : MonoBehaviour
     public void SetModel(int value) { Write(); model = value; }
     public void SetSkinColor(Vector3 value) { Write(); skin = value; }
     public void SetHairColor(Vector3 value) { Write(); tint = value; }
-    public void SetHairItem(int value) { Write(); hair = value; m_currentHairItemHash = value; m_hairItemInstance = value == 0 ? null : new GameObject(); }
-    public void SetBeardItem(int value) { Write(); beard = value; m_currentBeardItemHash = value; m_beardItemInstance = value == 0 ? null : new GameObject(); }
+    void BuildAttachment(ref GameObject instance, int value)
+    {
+        if (value == 0) { instance = null; return; }
+        instance = new GameObject(); var renderer = instance.Add<SkinnedMeshRenderer>();
+        instance.transform.parent = gameObject.transform;
+        renderer.rootBone.gameObject = gameObject;
+        var lod = gameObject.Get<LODGroup>(); if (lod != null) lod.renderers.Add(renderer);
+    }
+    public void SetHairItem(int value) { Write(); hair = value; m_currentHairItemHash = value; BuildAttachment(ref m_hairItemInstance, value); }
+    public void SetBeardItem(int value) { Write(); beard = value; m_currentBeardItemHash = value; BuildAttachment(ref m_beardItemInstance, value); }
+    void UpdateVisuals() { ++refreshes; }
 }
 public class ZNetScene
 {
@@ -152,7 +193,9 @@ static class IdentityAdapterHarness
         view.data.data[HumanMigrationPolicy.OriginKey] = HumanMigrationPolicy.FreshOrigin;
         view.data.data[HumanMigrationPolicy.CompositionKey] = HumanMigrationPolicy.CompositionRevision;
         view.data.data[HumanProfile.RequiredKey] = "1";
-        actor.Add<Humanoid>(); actor.Add<MonsterAI>(); actor.Add<VisEquipment>(); actor.Add<HumanCompositionIdentity>(); actor.Add<HumanIdentity>();
+        actor.Add<Humanoid>(); actor.Add<MonsterAI>(); var vis = actor.Add<VisEquipment>();
+        vis.m_bodyModel = actor.Add<SkinnedMeshRenderer>(); vis.m_bodyModel.transform.parent = actor.transform; actor.Add<LODGroup>();
+        actor.Add<HumanCompositionIdentity>(); actor.Add<HumanIdentity>();
         var appearance = actor.Add<HumanAppearance>(); appearance.RequiredItems = new[] { "Sword" }; appearance.WeaponName = "Sword";
         Call(appearance, "Start"); return actor;
     }
@@ -172,12 +215,12 @@ static class IdentityAdapterHarness
             id.InitializeFresh("invalid new seed ignored", HairChoices, BeardChoices);
             Check(view.data.writes.Count == 1 && view.data.GetString(HumanProfile.RecordKey, "") == saved, "idempotence before visual commit ignores seed without reroll");
             Tick(actor);
-            Check(appearance.Initialized && vis.writes == 5, "actual appearance adapter initializes profile once");
+            Check(appearance.Initialized && vis.writes == 5 && vis.refreshes == 2, "actual appearance adapter refreshes the materialized native profile twice");
             Check(vis.model == (int)profile.Sex && vis.hair == profile.Hair.GetStableHashCode() && vis.beard == (profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode()), "profile model/hair/beard used");
             Check(Math.Abs(vis.skin.x - profile.SkinR / 255f) < .00001 && Math.Abs(vis.tint.z - profile.HairB / 255f) < .00001, "persisted colors used");
             Check(actor.Get<Humanoid>().m_name == profile.Name, "stable name hydrated");
             id.InitializeFresh("another ignored seed", HairChoices, BeardChoices); Tick(actor);
-            Check(view.data.writes.Count == 2 && vis.writes == 5, "after commit repeated init/tick has no persistent or visual writes");
+            Check(view.data.writes.Count == 2 && vis.writes == 5 && vis.refreshes == 2, "after commit repeated init/tick has no persistent or visual writes");
 
             string femaleSeed = null;
             for (int i = 0; i < 100; ++i)
@@ -196,10 +239,9 @@ static class IdentityAdapterHarness
             // A loaded native VisEquipment has already reconstructed its saved
             // customization instances before this adapter verifies them. Model
             // that replication without counting it as an adapter write.
-            vis.m_currentHairItemHash = profile.Hair.GetStableHashCode();
-            vis.m_hairItemInstance = new GameObject();
-            vis.m_currentBeardItemHash = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
-            vis.m_beardItemInstance = profile.Beard == "" ? null : new GameObject();
+            vis.SetHairItem(profile.Hair.GetStableHashCode());
+            vis.SetBeardItem(profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode());
+            vis.writes = 0; vis.refreshes = 0;
             Tick(actor);
             Check(actor.Get<HumanAppearance>().Initialized && vis.writes == 0 && view.data.writes.Count == 0, "loaded profile never rerolls or rewrites existing appearance");
             Check(actor.Get<Humanoid>().m_name == profile.Name, "loaded name restored");

@@ -15,6 +15,7 @@ namespace LivingWorld.HumanNpc
         static readonly FieldInfo BeardInstance = typeof(VisEquipment).GetField("m_beardItemInstance", Native);
         static readonly FieldInfo CurrentHairHash = typeof(VisEquipment).GetField("m_currentHairItemHash", Native);
         static readonly FieldInfo CurrentBeardHash = typeof(VisEquipment).GetField("m_currentBeardItemHash", Native);
+        static readonly MethodInfo UpdateVisuals = typeof(VisEquipment).GetMethod("UpdateVisuals", Native);
         public string[] RequiredItems = new string[0];
         public string WeaponName = "";
         public string State = "Awaiting native initialization";
@@ -58,7 +59,8 @@ namespace LivingWorld.HumanNpc
                 if (!hadAuthority) { hadAuthority = true; deadline = Time.realtimeSinceStartup + 10f; }
                 var vis = GetComponent<VisEquipment>();
                 HumanRigPolicy.Require(vis != null && HairInstance != null && BeardInstance != null &&
-                    CurrentHairHash != null && CurrentBeardHash != null, "Native facial-hair presentation members changed.");
+                    CurrentHairHash != null && CurrentBeardHash != null && UpdateVisuals != null,
+                    "Native facial-hair presentation members changed.");
                 bool pendingAppearanceCommit = HumanRigPolicy.MayInitializeAppearance(true, true, saved);
                 if (pendingAppearanceCommit)
                 {
@@ -90,6 +92,14 @@ namespace LivingWorld.HumanNpc
                         if (!view.IsOwner()) { hadAuthority = false; return; }
                         vis.SetBeardItem(profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode());
                     }
+                }
+                if (profile != null)
+                {
+                    // SetHairItem/SetBeardItem only write the native selection.
+                    // The first native visual pass creates the attachment; the
+                    // second applies its hair material/property block after the
+                    // renderer exists.  Do both before accepting the revision.
+                    RefreshNativeAppearance(vis);
                 }
                 string facialHairReason;
                 if (profile != null && !FacialHairAttached(vis, profile, out facialHairReason))
@@ -144,9 +154,53 @@ namespace LivingWorld.HumanNpc
             var beardObject = BeardInstance.GetValue(vis) as GameObject;
             if ((int)CurrentHairHash.GetValue(vis) != hair || hairObject == null)
             { reason = "native hair visual attachment for " + profile.Hair; return false; }
+            if (!AttachmentRenders(hairObject, vis, out reason))
+            { reason = "visible native hair " + profile.Hair + ": " + reason; return false; }
             if ((int)CurrentBeardHash.GetValue(vis) != beard || (beard != 0 && beardObject == null) || (beard == 0 && beardObject != null))
             { reason = "native beard visual attachment for " + (profile.Beard == "" ? "clean-shaven" : profile.Beard); return false; }
+            if (beardObject != null && !AttachmentRenders(beardObject, vis, out reason))
+            { reason = "visible native beard " + profile.Beard + ": " + reason; return false; }
             reason = ""; return true;
+        }
+
+        static void RefreshNativeAppearance(VisEquipment vis)
+        {
+            try
+            {
+                UpdateVisuals.Invoke(vis, null);
+                UpdateVisuals.Invoke(vis, null);
+            }
+            catch (TargetInvocationException error)
+            {
+                throw error.InnerException ?? error;
+            }
+        }
+
+        static bool AttachmentRenders(GameObject attachment, VisEquipment vis, out string reason)
+        {
+            if (!attachment.activeInHierarchy)
+            { reason = "attachment is inactive"; return false; }
+            var visualRoot = vis.m_bodyModel == null ? null : vis.m_bodyModel.transform.parent;
+            if (visualRoot == null || (!ReferenceEquals(attachment.transform, visualRoot) && !attachment.transform.IsChildOf(visualRoot)))
+            { reason = "attachment escaped the human visual rig"; return false; }
+            var renderers = attachment.GetComponentsInChildren<Renderer>(true);
+            if (renderers == null || renderers.Length == 0)
+            { reason = "attachment has no renderer"; return false; }
+            var lod = vis.m_bodyModel.GetComponentInParent<LODGroup>();
+            var lodRenderers = lod == null || lod.GetLODs().Length == 0 ? null : lod.GetLODs()[0].renderers;
+            foreach (var renderer in renderers)
+            {
+                if (renderer == null || !renderer.enabled || !renderer.gameObject.activeInHierarchy) continue;
+                if (renderer.sharedMaterials == null || renderer.sharedMaterials.Length == 0 ||
+                    renderer.sharedMaterials.All(material => material == null)) continue;
+                var skin = renderer as SkinnedMeshRenderer;
+                if (skin != null && (skin.sharedMesh == null || skin.rootBone == null ||
+                    (!ReferenceEquals(skin.rootBone, visualRoot) && !skin.rootBone.IsChildOf(visualRoot)))) continue;
+                if (lodRenderers != null && !lodRenderers.Contains(renderer)) continue;
+                reason = ""; return true;
+            }
+            reason = "attachment has no active, materialized renderer in the human LOD";
+            return false;
         }
 
         static void Report(string message)
