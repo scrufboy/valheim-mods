@@ -31,11 +31,13 @@ Validation checks provider-prefab strings in installed MadHatter and RunicPack a
 | Internal prefab | Existing display name | Default Living World display name | Registration verification |
 |---|---|---|---|
 | `RRRN_Neckman` | Swamp Neckman | Fen Draugr | Runtime overlay logs `verified=True` after lookup |
-| `RRRN_Servant` | Corrupted Servant | Myrkvidr Wanderer | Runtime overlay logs `verified=True` after lookup |
+| `RRRN_Servant` | Corrupted Servant | Myrkvidr Thrall | Runtime overlay logs `verified=True` after lookup |
 | `RRRN_OrcBrute` | Krauguk Legions | Eitrherjar Legionary (working name) | Runtime overlay logs `verified=True` after lookup |
 
 `RRRN_NinoBosque`, `RRRN_WoodsSoul`, and `RRRN_Pillager` are deliberately unchanged.
 The overlay touches only `Character.m_name` on the registered prefab. IDs, factions,
 biomes, stats, equipment, attacks, and spawning remain owned by their source definitions.
 The default ASCII `Myrkvidr` spelling is safe for the generated BepInEx config and can
-be changed by Brian to `Myrkviðr Wanderer` after confirming local config encoding.
+be changed by Brian to `Myrkviðr Thrall` after confirming local config encoding. `Thrall`
+preserves the existing Corrupted Servant's identity; the earlier word `Wanderer` was only
+an informal description used while recalling which existing NPC was meant.

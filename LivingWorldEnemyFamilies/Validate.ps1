@@ -46,7 +46,7 @@ foreach ($binary in $binaryChecks.Keys) {
     foreach ($prefab in $binaryChecks[$binary]) { if (-not ($ascii.Contains($prefab) -or $unicode.Contains($prefab))) { throw "Installed provider does not expose: $prefab" } }
 }
 $overlaySource = Get-Content -Raw -LiteralPath (Join-Path $root 'src\LivingWorldLoreNameOverlay.cs')
-foreach ($mapping in @('RRRN_Neckman','Fen Draugr','RRRN_Servant','Myrkvidr Wanderer','RRRN_OrcBrute','Eitrherjar Legionary')) {
+foreach ($mapping in @('RRRN_Neckman','Fen Draugr','RRRN_Servant','Myrkvidr Thrall','RRRN_OrcBrute','Eitrherjar Legionary')) {
     if ($overlaySource -notmatch [regex]::Escape($mapping)) { throw "Lore overlay mapping missing: $mapping" }
 }
 foreach ($excluded in @('RRRN_NinoBosque','RRRN_WoodsSoul','RRRN_Pillager')) {

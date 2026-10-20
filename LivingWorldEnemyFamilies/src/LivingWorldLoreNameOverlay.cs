@@ -30,7 +30,7 @@ namespace LivingWorld.RegionalPeoples
         {
             overlayEnabled = Config.Bind("General", "Enabled", true, "Apply configurable Living World display names without changing prefab IDs or source JSON.");
             mappings.Add(Bind("RRRN_Neckman", "Swamp Neckman", "Fen Draugr"));
-            mappings.Add(Bind("RRRN_Servant", "Corrupted Servant", "Myrkvidr Wanderer"));
+            mappings.Add(Bind("RRRN_Servant", "Corrupted Servant", "Myrkvidr Thrall"));
             mappings.Add(Bind("RRRN_OrcBrute", "Krauguk Legions", "Eitrherjar Legionary"));
             Logger.LogInfo("Lore-name overlay loaded; waiting for RRR prefab registration.");
         }
