@@ -4,6 +4,13 @@ This is one monorepo with a separate directory for each installable mod or syste
 
 Each active mod directory owns its source, manifest, build script, documentation, tests, and package metadata. Shared architecture lives in `LivingWorldCORE/`; historical candidates live in `archive/`.
 
+`LivingWorldCORE/` owns the standalone foundation and replacement contracts.
+`LivingWorldHumanNPC/` owns the Formidable NPC implementation and consumes those
+contracts as they become available. Enemy species and biome variants are optional
+content packages; they do not belong inside the Core runtime. Local RRRCore,
+RunicPack, or Souls repairs belong only under `compatibility/` and may not become
+release dependencies of the completed Living World Core.
+
 ## Naming
 
 - GitHub owner: `scrufboy`
