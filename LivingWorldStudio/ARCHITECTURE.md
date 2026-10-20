@@ -1,6 +1,9 @@
 # Living World Studio — architecture and feasibility gate
 Date: 2026-10-20. Owner: Brian / scrufboy.
-Status: SOURCE-INSPECTED design; NOT IMPLEMENTED, NOT INSTALLED, NOT LIVE-PROVEN.
+Original design baseline: SOURCE-INSPECTED; NOT INSTALLED, NOT LIVE-PROVEN.
+Update: player/scenery lab 0.1.0 is now implemented and offline-compiled; see README.md
+for its deliberately narrower scope. The full target architecture below is not yet
+implemented, especially real subjects, posing and multiplayer authority.
 Baseline: scrufboy/valheim-mods main 91f80f29b7b86a78a61d1f364df539271ae733f2.
 
 ## Identity and isolation
@@ -259,9 +262,10 @@ after drain; 30-minute stationary screenshot session; no drops/damage/wandering;
 normal camera; controller without keyboard; baseline companion behavior after exit.
 No release until all requested behaviors have evidence or explicit scope labels.
 
-## Current decision
+## Original design-stage decision
 Design is concrete enough for a geometry probe, but a complete live-transfer mod
 is not safe to implement from the currently exposed companion APIs.
 No installable DLL is produced or claimed by this design submission.
 The next safe implementation is the isolated rendering probe plus journal tests;
 real companion integration remains gated on authoritative restoration support.
+
