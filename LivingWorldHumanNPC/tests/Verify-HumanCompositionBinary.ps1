@@ -50,6 +50,10 @@ try {
     }
     Require (@($createCalls | Where-Object {$_.Operand.FullName -match 'NativeHumanFactory::Remove<PlayerController>|NativeHumanFactory::Remove<Talker>|NativeHumanFactory::Remove<Skills>'}).Count -eq 3) 'Player-only controller, talk and skill components are removed before lifecycle'
     Require (@($createCalls | Where-Object {$_.Operand.FullName -match 'DestroyImmediate\(UnityEngine.Object\)'}).Count -ge 1) 'Player component is destroyed while the prefab remains inactive'
+    Require (@($createCalls | Where-Object {$_.Operand.FullName -match 'System.Reflection|FieldInfo::SetValue'}).Count -eq 0) 'factory does not broadly copy serialized Player fields into the NPC'
+    $createFields=@($create.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.FieldReference]} | ForEach-Object {$_.Operand.FullName})
+    Require (@($createFields | Where-Object {$_ -eq 'UnityEngine.Transform Character::m_eye'}).Count -eq 2) 'factory transfers only the established native eye reference'
+    Require (@($createFields | Where-Object {$_ -eq 'ItemDrop Humanoid::m_unarmedWeapon'}).Count -eq 2) 'factory transfers only the established native unarmed weapon reference'
     $environment=FindMethod LivingWorld.HumanNpc.HumanEnvironmentStatus Update
     $environmentCalls=@(Calls $environment)
     Require (@($environmentCalls | Where-Object {$_.Operand.FullName -eq 'System.Boolean EnvMan::IsWet()'}).Count -eq 1) 'environment adapter reads native rain state'

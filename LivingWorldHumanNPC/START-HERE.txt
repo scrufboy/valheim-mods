@@ -1,11 +1,11 @@
-LIVING WORLD HUMAN NPC 0.3.63 — NATIVE HUMAN GRAPH REPAIR
+LIVING WORLD HUMAN NPC 0.3.64 — BEHAVIOR-PRESERVING HUMAN GRAPH REPAIR
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:
 
 plugins\LivingWorldHumanNpc\LivingWorld.HumanNpc.dll
 
-0.3.63 rejects the failed 0.3.61/0.3.62 appearance construction. Those builds
+0.3.64 rejects the failed 0.3.61/0.3.62 appearance construction. Those builds
 copied only a live Player object's Visual subtree into a newly assembled root;
 0.3.61 could falsely accept invisible hair and 0.3.62's attempted refresh left
 every actor uninitialized, preventing the cleric, follow and recovery paths.
@@ -18,6 +18,11 @@ here as an independent Living World implementation. Valheim still owns hair,
 beard, helmet mapping, LOD registration and color updates. Living World accepts
 the actor only when the selected hair and optional beard have a live renderer
 on that native graph.
+
+The factory does not copy Player gameplay fields. It carries forward only the
+same native eye and unarmed-weapon references used by the preceding factory,
+then applies the same explicit Living World physics, AI, inventory, equipment,
+resource and behavior values. Combat and companion modules are unchanged.
 
 This build preserves the 0.3.56 native combat authority, the 0.3.57 fire-team
 cohesion repair, and corrects the meaning of native chase distance:

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Jotunn.Managers;
 using UnityEngine;
 
@@ -32,11 +31,12 @@ namespace LivingWorld.HumanNpc
                     transformSync != null && animationSync != null && vis != null,
                     "Native Player clone is missing its human body, network or visual graph.");
 
-                // Add and populate the NPC Humanoid while the cloned Player is
-                // still available as a same-object serialized source. Runtime
-                // caches, delegates and inventory are deliberately not copied.
+                // Preserve only the two native human references the preceding
+                // fresh-root factory explicitly used. Do not inherit Player
+                // gameplay tuning, effects, resources or hidden runtime state.
                 var human = root.AddComponent<Humanoid>();
-                CopySerializedHumanFields(sourcePlayer, human);
+                human.m_eye = sourcePlayer.m_eye;
+                human.m_unarmedWeapon = sourcePlayer.m_unarmedWeapon;
                 var ai = root.AddComponent<MonsterAI>();
 
                 Remove<PlayerController>(root);
@@ -72,20 +72,6 @@ namespace LivingWorld.HumanNpc
                 return root;
             }
             catch { UnityEngine.Object.DestroyImmediate(root); throw; }
-        }
-
-        static void CopySerializedHumanFields(Player source, Humanoid target)
-        {
-            for (Type type = typeof(Humanoid); type != null && type != typeof(MonoBehaviour); type = type.BaseType)
-            {
-                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public |
-                    BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
-                {
-                    if (field.IsStatic || field.IsInitOnly || field.IsNotSerialized) continue;
-                    if (!field.IsPublic && !field.IsDefined(typeof(SerializeField), true)) continue;
-                    field.SetValue(target, field.GetValue(source));
-                }
-            }
         }
 
         static void ConfigureNativeVisual(GameObject root, Humanoid human, VisEquipment vis,
