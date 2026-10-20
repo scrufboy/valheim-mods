@@ -12,5 +12,8 @@ framework-owned services are implemented and migrated.
 
 The authoritative package boundaries, capability gates, enemy-family track, and
 migration sequence are defined in [PROJECT-BOUNDARIES.md](./PROJECT-BOUNDARIES.md).
+The staged order for combat acceptance, framework consolidation, the settlement
+laboratory, regional enemies, and village reclamation is defined in
+[INTEGRATION-ROADMAP.md](./INTEGRATION-ROADMAP.md).
 
 Owner: Brian (`scrufboy`).

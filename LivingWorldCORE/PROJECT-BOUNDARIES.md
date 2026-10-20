@@ -83,29 +83,31 @@ describes the complete actor, not only combat:
 - Friendly and hostile humanoids share core actor capabilities; faction, role,
   loadout, initiative, and content profiles produce the differences.
 
-## Souls Forest Child lineage and regional content track
+## Souls benchmark and regional peoples track
 
-Souls of the Land already establishes two Forest Child variants used by the lab
-benchmark:
+Souls of the Land supplies private benchmark opponents, including its established
+Forest Child variants and their poison and falling-ice attacks. Those characters
+remain part of the benchmark pack. Living World does not rename them, redistribute
+them, or extend them with more child enemies.
 
-- **Green Forest Child:** poison special attack.
-- **Blue Forest Child:** falling/crashing ice-crystal special attack.
+Living World's regional additions are distinct adult humanoid peoples:
 
-Living World's story expands that same creature lineage with two new regional
-counterparts rather than replacing it with an unrelated generic enemy family:
-
-- **Northern/Mountain Child:** winter-white treatment, larger antlers,
-  fur-layered clothing/armor, cold-region glow and effects, and a falling
-  ice-crystal, snow/ice bombardment, or frost-blast special derived from available
-  vanilla effects.
-- **Southern/Ashlands Child:** ragged or flowing heat-region clothing/armor,
-  Ashlands glow and effects, and a telegraphed fire projectile, burning impact, or
-  bounded fire-area special derived from vanilla Surtling/Ashlands effects.
+- **Rimebound:** stocky northern/Mountain or Deep North humanoids with wolf and
+  fur layers, cold-region glow and effects, heavy melee roles, and a telegraphed
+  falling-ice, snow/ice bombardment, or frost-blast special built through the
+  common attack-profile contract.
+- **Emberworn:** adult Ashlands humanoids with ragged or flowing heat-region
+  clothing, ember/fire presentation, melee and ranged roles, and a telegraphed
+  fire projectile, burning impact, thrown explosive, or bounded fire-area special.
+- **Dwarf folk:** reduced-height, broad, heavily bearded male-presenting humanoids
+  with axe, hammer, shield, smithing, mining, settlement, hero, and hostile roles.
+  They are a culture and actor family, not a renamed vanilla Dvergr prefab.
 
 Their appearance, factions, names, story roles, encounter placement, decision
-profiles, and balance are Living World content. Their common registration, visual,
-equipment, projectile, status, and AOE capabilities belong in the reusable
-framework so hero and enemy classes can both use them.
+profiles, and balance are Living World content. Registration, visual assembly,
+equipment, projectile, status, thrown-weapon, and area-effect capabilities belong
+in the reusable framework so friendly, hero, resident, pillager, and enemy roles
+can all use them without duplicating runtime code.
 
 MadHatter and RunicPack content may be consumed through optional adapters when the
 corresponding pack is installed. Resized vanilla objects should be cloned from the
@@ -132,8 +134,8 @@ must be able to declare:
 
 The first acceptance scenario is a bounded, telegraphed vanilla-derived bomb/AOE
 attack that damages legal hostiles without harming its owner or friendly faction.
-Only after that common path passes should child variants receive specialized
-versions.
+Only after that common path passes should regional enemy or hero profiles receive
+specialized versions.
 
 ## Acceptance sequence
 
@@ -146,7 +148,8 @@ versions.
 4. Implement a minimal standalone framework vertical slice: register one networked
    NPC, equip it, persist it, assign a faction, and execute melee, ranged, and
    thrown/AOE attacks without RRRCore.
-5. Migrate one Formidable NPC and one hostile child definition to the framework.
+5. Migrate one Formidable NPC and one hostile regional-person definition to the
+   framework.
 6. Run side-by-side parity and performance tests, then expand migration.
 7. Declare replacement status only when the lab profile can disable RRRCore and all
    Living World acceptance scenarios still pass.
