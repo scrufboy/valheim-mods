@@ -95,10 +95,10 @@ namespace LivingWorld.HumanNpc
                 }
                 if (profile != null)
                 {
-                    // SetHairItem/SetBeardItem only write the native selection.
-                    // The first native visual pass creates the attachment; the
-                    // second applies its hair material/property block after the
-                    // renderer exists.  Do both before accepting the revision.
+                    // SetHairItem/SetBeardItem write the native selection. One
+                    // native visual pass reads that selection, performs helmet
+                    // hair mapping and creates the attachment. Color refresh is
+                    // left to Valheim's ordinary following visual update.
                     RefreshNativeAppearance(vis);
                 }
                 string facialHairReason;
@@ -152,12 +152,18 @@ namespace LivingWorld.HumanNpc
             int beard = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
             var hairObject = HairInstance.GetValue(vis) as GameObject;
             var beardObject = BeardInstance.GetValue(vis) as GameObject;
-            if ((int)CurrentHairHash.GetValue(vis) != hair || hairObject == null)
-            { reason = "native hair visual attachment for " + profile.Hair; return false; }
+            int currentHair = (int)CurrentHairHash.GetValue(vis);
+            if (currentHair != hair)
+            { reason = "native hair hash " + currentHair + " != " + hair + " for " + profile.Hair; return false; }
+            if (hairObject == null)
+            { reason = "native hair object missing for " + profile.Hair; return false; }
             if (!AttachmentRenders(hairObject, vis, out reason))
             { reason = "visible native hair " + profile.Hair + ": " + reason; return false; }
-            if ((int)CurrentBeardHash.GetValue(vis) != beard || (beard != 0 && beardObject == null) || (beard == 0 && beardObject != null))
-            { reason = "native beard visual attachment for " + (profile.Beard == "" ? "clean-shaven" : profile.Beard); return false; }
+            int currentBeard = (int)CurrentBeardHash.GetValue(vis);
+            if (currentBeard != beard)
+            { reason = "native beard hash " + currentBeard + " != " + beard + " for " + (profile.Beard == "" ? "clean-shaven" : profile.Beard); return false; }
+            if ((beard != 0 && beardObject == null) || (beard == 0 && beardObject != null))
+            { reason = "native beard object mismatch for " + (profile.Beard == "" ? "clean-shaven" : profile.Beard); return false; }
             if (beardObject != null && !AttachmentRenders(beardObject, vis, out reason))
             { reason = "visible native beard " + profile.Beard + ": " + reason; return false; }
             reason = ""; return true;
@@ -167,7 +173,6 @@ namespace LivingWorld.HumanNpc
         {
             try
             {
-                UpdateVisuals.Invoke(vis, null);
                 UpdateVisuals.Invoke(vis, null);
             }
             catch (TargetInvocationException error)

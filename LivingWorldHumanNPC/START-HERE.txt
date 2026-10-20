@@ -1,18 +1,23 @@
-LIVING WORLD HUMAN NPC 0.3.62 — VISIBLE HAIR + BEARD REPAIR
+LIVING WORLD HUMAN NPC 0.3.63 — NATIVE HUMAN GRAPH REPAIR
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:
 
 plugins\LivingWorldHumanNpc\LivingWorld.HumanNpc.dll
 
-0.3.62 fixes the false appearance success exposed by the 2026-10-20 video.
-Valheim had allocated the selected Hair14/Beard22 and Hair34 objects, but the
-adapter accepted those objects before proving that their renderers were active,
-materialized, attached to the human rig, and present in the human LOD. The
-adapter now completes Valheim's native visual pass twice: first to construct
-the attachments, then to apply their native hair material/property block. It
-will not initialize an actor unless the resulting hair and optional beard have
-a live renderer on the rig.
+0.3.63 rejects the failed 0.3.61/0.3.62 appearance construction. Those builds
+copied only a live Player object's Visual subtree into a newly assembled root;
+0.3.61 could falsely accept invisible hair and 0.3.62's attempted refresh left
+every actor uninitialized, preventing the cleric, follow and recovery paths.
+
+The candidate now clones Valheim's inactive Player prefab as one internally
+consistent human visual/equipment graph, creates the NPC Humanoid, and removes
+the Player controller before any native lifecycle can run. This is the proven
+native construction boundary used by successful human-companion mods, written
+here as an independent Living World implementation. Valheim still owns hair,
+beard, helmet mapping, LOD registration and color updates. Living World accepts
+the actor only when the selected hair and optional beard have a live renderer
+on that native graph.
 
 This build preserves the 0.3.56 native combat authority, the 0.3.57 fire-team
 cohesion repair, and corrects the meaning of native chase distance:
@@ -60,7 +65,10 @@ cohesion repair, and corrects the meaning of native chase distance:
 - fresh hair and beard choices come only from the native Player catalog, not a
   broad search across every installed customization pack;
 - a fresh actor is not marked initialized until its chosen facial-hair assets
-  have actually attached to the human rig.
+  have actually attached to the human rig;
+- one `lwparty` remains the complete transaction: scout, archer preparation,
+  cleric creation, recovery where needed, and follow. Appearance failure cannot
+  be reported as party success.
 
 Offline verification proves the structural boundary and package integrity. Live
 Unity combat remains the acceptance test. Bed use is not implemented in this candidate.

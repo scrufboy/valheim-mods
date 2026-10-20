@@ -215,12 +215,12 @@ static class IdentityAdapterHarness
             id.InitializeFresh("invalid new seed ignored", HairChoices, BeardChoices);
             Check(view.data.writes.Count == 1 && view.data.GetString(HumanProfile.RecordKey, "") == saved, "idempotence before visual commit ignores seed without reroll");
             Tick(actor);
-            Check(appearance.Initialized && vis.writes == 5 && vis.refreshes == 2, "actual appearance adapter refreshes the materialized native profile twice");
+            Check(appearance.Initialized && vis.writes == 5 && vis.refreshes == 1, "actual appearance adapter performs one ordinary native visual refresh");
             Check(vis.model == (int)profile.Sex && vis.hair == profile.Hair.GetStableHashCode() && vis.beard == (profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode()), "profile model/hair/beard used");
             Check(Math.Abs(vis.skin.x - profile.SkinR / 255f) < .00001 && Math.Abs(vis.tint.z - profile.HairB / 255f) < .00001, "persisted colors used");
             Check(actor.Get<Humanoid>().m_name == profile.Name, "stable name hydrated");
             id.InitializeFresh("another ignored seed", HairChoices, BeardChoices); Tick(actor);
-            Check(view.data.writes.Count == 2 && vis.writes == 5 && vis.refreshes == 2, "after commit repeated init/tick has no persistent or visual writes");
+            Check(view.data.writes.Count == 2 && vis.writes == 5 && vis.refreshes == 1, "after commit repeated init/tick has no persistent or visual writes");
 
             string femaleSeed = null;
             for (int i = 0; i < 100; ++i)

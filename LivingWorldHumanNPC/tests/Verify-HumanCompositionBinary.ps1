@@ -25,8 +25,9 @@ try {
     $strings=@($allInstructions | Where-Object {$_.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldstr} | ForEach-Object {$_.Operand})
     Require (@($strings | Where-Object {$_ -match '(?i)dvergr|dverger'}).Count -eq 0) 'no rejected template identifier anywhere in compiled strings'
     $cloneSites=@($methods | Where-Object { @(Calls $_ | Where-Object {$_.Operand.Name -eq 'CreateClonedPrefab'}).Count -gt 0 })
-    Require ($cloneSites.Count -eq 1 -and $cloneSites[0].DeclaringType.FullName -eq 'LivingWorld.ManualTest.ManualTestPlugin' -and
-        $cloneSites[0].Name -eq 'Register' -and @(Calls $cloneSites[0] | Where-Object {$_.Operand.Name -eq 'CreateClonedPrefab'}).Count -eq 1) 'only the private alert effect uses Jotunn inactive-container cloning'
+    Require ($cloneSites.Count -eq 2 -and
+        @($cloneSites | Where-Object {$_.DeclaringType.FullName -eq 'LivingWorld.ManualTest.ManualTestPlugin' -and $_.Name -eq 'Register'}).Count -eq 1 -and
+        @($cloneSites | Where-Object {$_.DeclaringType.FullName -eq 'LivingWorld.HumanNpc.NativeHumanFactory' -and $_.Name -eq 'Create'}).Count -eq 1) 'only the alert effect and native Player human graph use Jotunn inactive-container cloning'
     Require (@($allCalls | Where-Object {$_.Operand.FullName -match 'AddComponent<Player>|System.Void Player::.ctor'}).Count -eq 0) 'no constructed Player component/lifecycle'
     Require (@($allCalls | Where-Object {$_.Operand.FullName -match 'System.IO.|System.Net.|System.Diagnostics.Process|ZNet::SetServer|Game::SetProfile|ZNetView::ClaimOwnership|ZNetView::ResetZDO'}).Count -eq 0) 'no file/network/profile launch/reset/ownership mutation path'
     Require ($assembly.MainModule.Resources.Count -eq 0) 'no bundled game/legacy resources'
@@ -39,11 +40,16 @@ try {
     Require (($acceptance.Fields | Where-Object Name -eq WorldName).Constant -eq 'LWC_HumanLab_v1' -and ($acceptance.Fields | Where-Object Name -eq ProfileName).Constant -eq 'LWC_Tester') 'same existing world and short character name retained'
     $create=FindMethod LivingWorld.HumanNpc.NativeHumanFactory Create
     $createCalls=@(Calls $create)
-    Require (@($createCalls | Where-Object {$_.Operand.FullName -eq 'System.Void UnityEngine.GameObject::.ctor(System.String)'}).Count -eq 2) 'definition container plus fresh named GameObject root constructed explicitly'
-    Require (@($createCalls | Where-Object {$_.Operand.Name -match 'Instantiate|GetPrefab|CreateClonedPrefab'}).Count -eq 0) 'fresh-root factory does not obtain or instantiate character/template prefab'
-    foreach($component in @('UnityEngine.CapsuleCollider','UnityEngine.Rigidbody','ZNetView','ZSyncTransform','ZSyncAnimation','Humanoid','MonsterAI','LivingWorld.HumanNpc.HumanCompositionIdentity','LivingWorld.HumanNpc.HumanCompanion','LivingWorld.HumanNpc.HumanEquipmentReadiness','LivingWorld.HumanNpc.HumanCombatDefense','LivingWorld.HumanNpc.HumanEnvironmentStatus')){
-        Require (@($createCalls | Where-Object {$_.Operand.FullName.Contains('AddComponent<'+$component+'>')}).Count -eq 1) "fresh explicit component $component"
+    Require (@($createCalls | Where-Object {$_.Operand.Name -eq 'CreateClonedPrefab'}).Count -eq 1) 'factory clones one complete native Player human graph inside the inactive prefab container'
+    Require (@($createCalls | Where-Object {$_.Operand.Name -eq 'Instantiate'}).Count -eq 0) 'factory does not separately instantiate or rebuild a visual subtree'
+    foreach($component in @('Humanoid','MonsterAI','LivingWorld.HumanNpc.HumanCompositionIdentity','LivingWorld.HumanNpc.HumanCompanion','LivingWorld.HumanNpc.HumanEquipmentReadiness','LivingWorld.HumanNpc.HumanCombatDefense','LivingWorld.HumanNpc.HumanEnvironmentStatus')){
+        Require (@($createCalls | Where-Object {$_.Operand.FullName.Contains('AddComponent<'+$component+'>')}).Count -eq 1) "explicit NPC component $component"
     }
+    foreach($component in @('UnityEngine.CapsuleCollider','UnityEngine.Rigidbody','ZNetView','ZSyncTransform','ZSyncAnimation','VisEquipment','FootStep')){
+        Require (@($createCalls | Where-Object {$_.Operand.FullName.Contains('AddComponent<'+$component+'>')}).Count -eq 0) "native graph retains existing $component instead of duplicating it"
+    }
+    Require (@($createCalls | Where-Object {$_.Operand.FullName -match 'NativeHumanFactory::Remove<PlayerController>|NativeHumanFactory::Remove<Talker>|NativeHumanFactory::Remove<Skills>'}).Count -eq 3) 'Player-only controller, talk and skill components are removed before lifecycle'
+    Require (@($createCalls | Where-Object {$_.Operand.FullName -match 'DestroyImmediate\(UnityEngine.Object\)'}).Count -ge 1) 'Player component is destroyed while the prefab remains inactive'
     $environment=FindMethod LivingWorld.HumanNpc.HumanEnvironmentStatus Update
     $environmentCalls=@(Calls $environment)
     Require (@($environmentCalls | Where-Object {$_.Operand.FullName -eq 'System.Boolean EnvMan::IsWet()'}).Count -eq 1) 'environment adapter reads native rain state'
@@ -55,10 +61,9 @@ try {
     Require (@($environmentType.Fields | Where-Object {$_.Name -eq 'TriggerStartEffects' -and $_.FieldType.FullName -eq 'System.Reflection.MethodInfo'}).Count -eq 1) 'wet presentation caches the exact native start-effect method contract'
     Require (@($environment.Body.Instructions | Where-Object {$_.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Stfld -and $_.Operand.FullName -match 'StatusEffect::m_effectsOnlyOnPlayer'}).Count -eq 1) 'wet presentation changes only the actor runtime status player-only gate'
     Require (@($environmentCalls | Where-Object {$_.Operand.FullName -match 'System.Reflection.MethodBase::Invoke'}).Count -eq 1) 'wet presentation retriggers the native networked start effect once'
-    $apply=FindMethod LivingWorld.HumanNpc.NativeHumanFactory ApplyVisual
+    $apply=FindMethod LivingWorld.HumanNpc.NativeHumanFactory ConfigureNativeVisual
     $applyCalls=@(Calls $apply)
-    Require (@($applyCalls | Where-Object {$_.Operand.Name -eq 'Instantiate'}).Count -eq 1) 'one human visual subtree instantiate in visual adapter'
-    Require (@($applyCalls | Where-Object {$_.Operand.Name -match 'GetPrefab|CreateClonedPrefab'}).Count -eq 0) 'visual adapter does not fetch alternate native templates'
+    Require (@($applyCalls | Where-Object {$_.Operand.Name -match 'Instantiate|GetPrefab|CreateClonedPrefab'}).Count -eq 0) 'visual adapter retains the already-cloned native graph'
     Require (@($apply.Body.Instructions | Where-Object {$_.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldstr -and $_.Operand -eq 'Visual'}).Count -ge 1) 'visual adapter explicitly selects native Visual subtree'
     $catalog=FindMethod LivingWorld.ManualTest.ManualTestPlugin NativeAppearanceChoices
     $catalogCalls=@(Calls $catalog)
@@ -77,7 +82,7 @@ try {
     }
     $refresh=FindMethod LivingWorld.HumanNpc.HumanAppearance RefreshNativeAppearance
     $refreshCalls=@(Calls $refresh | Where-Object {$_.Operand.Name -eq 'Invoke'})
-    Require ($refreshCalls.Count -eq 2) 'appearance performs a construction pass and a material pass before commit'
+    Require ($refreshCalls.Count -eq 1) 'appearance performs one ordinary native visual pass before commit'
     $render=FindMethod LivingWorld.HumanNpc.HumanAppearance AttachmentRenders
     $renderCalls=@(Calls $render)
     Require (@($renderCalls | Where-Object {$_.Operand.Name -eq 'GetComponentsInChildren'}).Count -eq 1) 'appearance readiness inspects the selected attachment renderers'

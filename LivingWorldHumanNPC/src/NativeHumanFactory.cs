@@ -2,53 +2,57 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Jotunn.Managers;
 using UnityEngine;
 
 namespace LivingWorld.HumanNpc
 {
-    // Fresh, explicitly configured human NPC component composition. Only the
-    // human visual subtree is instantiated; no character/template root is cloned.
+    // Fresh, explicitly configured human NPC component composition. The native
+    // Player prefab supplies one internally consistent human visual/equipment
+    // graph. Its Player controller is removed while the clone is still beneath
+    // Jotunn's inactive prefab container, before Unity can run its lifecycle.
     internal static class NativeHumanFactory
     {
-        static readonly string[] VisualFields = {
-            "m_bodyModel", "m_leftHand", "m_rightHand", "m_helmet", "m_backShield",
-            "m_backMelee", "m_backTwohandedMelee", "m_backBow", "m_backTool", "m_backAtgeir",
-            "m_useAllTrails", "m_overrideHairMaterial", "m_disableHairShadows"
-        };
-        static GameObject definitions;
-
         internal static GameObject Create(string id, GameObject player, GameObject[] outfit)
         {
             HumanRigPolicy.Require(!String.IsNullOrEmpty(id) && player != null, "Human identity and native visual source required.");
-            if (definitions == null)
-            {
-                definitions = new GameObject("LivingWorld_HumanDefinitions");
-                definitions.SetActive(false);
-                UnityEngine.Object.DontDestroyOnLoad(definitions);
-            }
-            var root = new GameObject(id);
-            root.SetActive(false); // NO MonoBehaviour exists before this point.
-            root.transform.SetParent(definitions.transform, false);
+            HumanRigPolicy.Require(outfit != null && outfit.Length > 0, "Native human outfit required.");
+            var root = PrefabManager.Instance.CreateClonedPrefab(id, player);
+            HumanRigPolicy.Require(root != null && !root.activeInHierarchy,
+                "Native Player clone must remain beneath Jotunn's inactive prefab container.");
             try
             {
-                HumanRigPolicy.Require(!root.activeInHierarchy, "Human definition parent must remain inactive.");
-                var characterLayer = LayerMask.NameToLayer("character");
-                HumanRigPolicy.Require(characterLayer >= 0, "Native character physics layer missing.");
-                root.layer = characterLayer;
-                root.AddComponent<CapsuleCollider>();
-                var body = root.AddComponent<Rigidbody>();
-                var view = root.AddComponent<ZNetView>();
+                var sourcePlayer = root.GetComponent<Player>();
+                var body = root.GetComponent<Rigidbody>();
+                var view = root.GetComponent<ZNetView>();
+                var transformSync = root.GetComponent<ZSyncTransform>();
+                var animationSync = root.GetComponent<ZSyncAnimation>();
+                var vis = root.GetComponent<VisEquipment>();
+                HumanRigPolicy.Require(sourcePlayer != null && body != null && view != null &&
+                    transformSync != null && animationSync != null && vis != null,
+                    "Native Player clone is missing its human body, network or visual graph.");
+
+                // Add and populate the NPC Humanoid while the cloned Player is
+                // still available as a same-object serialized source. Runtime
+                // caches, delegates and inventory are deliberately not copied.
+                var human = root.AddComponent<Humanoid>();
+                CopySerializedHumanFields(sourcePlayer, human);
+                var ai = root.AddComponent<MonsterAI>();
+
+                Remove<PlayerController>(root);
+                Remove<Talker>(root);
+                Remove<Skills>(root);
+                UnityEngine.Object.DestroyImmediate(sourcePlayer);
+                HumanRigPolicy.Require(root.GetComponent<Player>() == null && root.GetComponents<Character>().Length == 1,
+                    "Player controller removal did not leave exactly one NPC Humanoid.");
+
                 view.m_persistent = true; view.m_distant = false;
                 view.m_type = ZDO.ObjectType.Prioritized; view.m_syncInitialScale = false;
-                var transformSync = root.AddComponent<ZSyncTransform>();
                 transformSync.m_syncPosition = true; transformSync.m_syncRotation = true;
                 transformSync.m_syncScale = false; transformSync.m_syncBodyVelocity = true;
                 transformSync.m_characterParentSync = true;
-                root.AddComponent<ZSyncAnimation>();
-                var human = root.AddComponent<Humanoid>();
-                var ai = root.AddComponent<MonsterAI>();
                 HumanNpcSettings.Configure(human, ai, body);
-                ApplyVisual(root, player, outfit);
+                ConfigureNativeVisual(root, human, vis, animationSync, outfit);
                 root.AddComponent<HumanCompositionIdentity>();
                 root.AddComponent<HumanCompanion>();
                 root.AddComponent<HumanDoorTraversal>();
@@ -65,85 +69,72 @@ namespace LivingWorld.HumanNpc
                 root.AddComponent<HumanCleric>();
                 root.AddComponent<HumanUtilityTorch>();
                 Validate(root, false);
-                root.SetActive(true); // Inactive parent: native Awake still has NOT run.
                 return root;
             }
             catch { UnityEngine.Object.DestroyImmediate(root); throw; }
         }
 
-        static void ApplyVisual(GameObject clone, GameObject player, GameObject[] outfit)
+        static void CopySerializedHumanFields(Player source, Humanoid target)
         {
-            var playerCharacter = player.GetComponent<Player>();
-            var playerVis = player.GetComponent<VisEquipment>();
-            var originalVisual = player.transform.Find("Visual");
-            HumanRigPolicy.Require(playerCharacter != null && playerVis != null && originalVisual != null, "Native human visual topology changed.");
-            ValidateVisualSource(originalVisual.gameObject, playerVis);
-            string sourceBefore = SourceFingerprint(player);
-
-            var humanVisual = UnityEngine.Object.Instantiate(originalVisual.gameObject, clone.transform, false);
-            humanVisual.name = "Visual_HumanStaged";
-            var mapped = new Dictionary<UnityEngine.Object, UnityEngine.Object>();
-            MapTree(originalVisual, humanVisual.transform, mapped);
-            mapped[player] = clone; mapped[player.transform] = clone.transform;
-            mapped[player.GetComponent<ZNetView>()] = clone.GetComponent<ZNetView>();
-
-            var vis = clone.AddComponent<VisEquipment>();
-            foreach (string name in VisualFields)
+            for (Type type = typeof(Humanoid); type != null && type != typeof(MonoBehaviour); type = type.BaseType)
             {
-                var field = typeof(VisEquipment).GetField(name, BindingFlags.Instance | BindingFlags.Public);
-                HumanRigPolicy.Require(field != null, "Native visual field changed: " + name);
-                field.SetValue(vis, CopyMapped(field.GetValue(playerVis), mapped));
+                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public |
+                    BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                {
+                    if (field.IsStatic || field.IsInitOnly || field.IsNotSerialized) continue;
+                    if (!field.IsPublic && !field.IsDefined(typeof(SerializeField), true)) continue;
+                    field.SetValue(target, field.GetValue(source));
+                }
             }
-            vis.m_models = CloneModels(playerVis.m_models);
-            vis.m_clothColliders = playerVis.m_clothColliders.Select(collider => (MagicaCloth2.ColliderComponent)CopyMapped(collider, mapped)).ToList();
+        }
+
+        static void ConfigureNativeVisual(GameObject root, Humanoid human, VisEquipment vis,
+            ZSyncAnimation sync, GameObject[] outfit)
+        {
+            var visual = root.transform.Find("Visual");
+            HumanRigPolicy.Require(visual != null, "Native human Visual root missing from Player clone.");
+            ValidateVisualSource(visual.gameObject, vis);
+            vis.m_models = CloneModels(vis.m_models);
+            vis.m_clothColliders = new List<MagicaCloth2.ColliderComponent>(vis.m_clothColliders);
             vis.m_isPlayer = true; // body models, armor textures and hair, NOT Player.IsPlayer().
             vis.m_playerComponent = null;
             vis.m_nViewOverride = null;
             vis.m_randomModelIndex = false;
             vis.m_npcHairChance = 0f; vis.m_npcBeardChance = 0f;
             vis.m_isArmorStand = false;
-            humanVisual.name = "Visual";
-            humanVisual.SetActive(true);
 
-            var humanoid = clone.GetComponent<Humanoid>();
-            humanoid.m_nViewOverride = null;
-            humanoid.m_unarmedWeapon = playerCharacter.m_unarmedWeapon;
-            ValidateNativeWeapon(humanoid.m_unarmedWeapon == null ? null : humanoid.m_unarmedWeapon.gameObject);
+            human.m_nViewOverride = null;
+            ValidateNativeWeapon(human.m_unarmedWeapon == null ? null : human.m_unarmedWeapon.gameObject);
             ValidateNativeWeapon(outfit.Single(item => item.name == "SwordBronze"));
-            humanoid.m_defaultItems = (GameObject[])outfit.Clone();
-            humanoid.m_randomWeapon = new GameObject[0]; humanoid.m_randomArmor = new GameObject[0];
-            humanoid.m_randomShield = new GameObject[0]; humanoid.m_randomSets = new Humanoid.ItemSet[0];
-            humanoid.m_randomItems = new Humanoid.RandomItem[0];
-            humanoid.m_deathEffects = new EffectList(); // Corpse/tombstone lifecycle is not copied.
-            humanoid.m_hitEffects = new EffectList();
-            humanoid.m_deathAnimation = true;
-            humanoid.m_eye = RemapEye(playerCharacter.m_eye, player.transform, clone.transform, mapped);
+            human.m_defaultItems = (GameObject[])outfit.Clone();
+            human.m_randomWeapon = new GameObject[0]; human.m_randomArmor = new GameObject[0];
+            human.m_randomShield = new GameObject[0]; human.m_randomSets = new Humanoid.ItemSet[0];
+            human.m_randomItems = new Humanoid.RandomItem[0];
+            human.m_deathEffects = new EffectList(); // Corpse/tombstone lifecycle is not copied.
+            human.m_hitEffects = new EffectList();
+            human.m_deathAnimation = true;
 
-            var capsule = clone.GetComponent<CapsuleCollider>();
-            var sourceCapsule = player.GetComponent<CapsuleCollider>();
-            HumanRigPolicy.Require(capsule != null && sourceCapsule != null, "Native body capsule missing.");
-            capsule.center = sourceCapsule.center; capsule.radius = sourceCapsule.radius;
-            capsule.height = sourceCapsule.height; capsule.direction = sourceCapsule.direction;
-            capsule.sharedMaterial = sourceCapsule.sharedMaterial;
-            capsule.isTrigger = false;
-
-            var sync = clone.GetComponent<ZSyncAnimation>();
-            var sourceSync = player.GetComponent<ZSyncAnimation>();
-            HumanRigPolicy.Require(sync != null && sourceSync != null, "Native animation synchronization missing.");
-            sync.m_syncBools = new List<string>(sourceSync.m_syncBools);
+            sync.m_syncBools = new List<string>(sync.m_syncBools);
             if (!sync.m_syncBools.Contains("emote_sit")) sync.m_syncBools.Add("emote_sit");
             if (!sync.m_syncBools.Contains("crouching")) sync.m_syncBools.Add("crouching");
-            sync.m_syncFloats = new List<string>(sourceSync.m_syncFloats);
-            sync.m_syncInts = new List<string>(sourceSync.m_syncInts);
+            sync.m_syncFloats = new List<string>(sync.m_syncFloats);
+            sync.m_syncInts = new List<string>(sync.m_syncInts);
             if (!sync.m_syncInts.Contains("crafting")) sync.m_syncInts.Add("crafting");
-            sync.m_smoothCharacterSpeeds = sourceSync.m_smoothCharacterSpeeds;
-            ReplaceFootStep(clone, player, mapped);
-            // Preserve native Player Animator controller/avatar/update mode and root-motion
-            // setting exactly; no hand-authored animation playback or pose forcing.
-            var appearance = clone.AddComponent<HumanAppearance>();
+            var foot = root.GetComponent<FootStep>();
+            HumanRigPolicy.Require(foot != null, "Native human footstep graph missing from Player clone.");
+            foot.m_effects = CloneFootEffects(foot.m_effects);
+            foreach (var animator in root.GetComponentsInChildren<Animator>(true))
+                animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+
+            var appearance = root.AddComponent<HumanAppearance>();
             appearance.RequiredItems = outfit.Select(item => item.GetComponent<ItemDrop>().m_itemData.m_shared.m_name).ToArray();
             appearance.WeaponName = outfit.Single(item => item.name == "SwordBronze").GetComponent<ItemDrop>().m_itemData.m_shared.m_name;
-            HumanRigPolicy.Require(sourceBefore == SourceFingerprint(player), "The human visual source changed during construction.");
+        }
+
+        static void Remove<T>(GameObject root) where T : Component
+        {
+            var component = root.GetComponent<T>();
+            if (component != null) UnityEngine.Object.DestroyImmediate(component);
         }
 
         static void ValidateNativeWeapon(GameObject prefab)
@@ -203,30 +194,6 @@ namespace LivingWorld.HumanNpc
             HumanRigPolicy.Require(root.GetComponent<Character>().m_eye != null && root.GetComponent<Character>().m_eye.IsChildOf(root.transform), "NPC eye is not local.");
         }
 
-        static Transform RemapEye(Transform eye, Transform sourceRoot, Transform targetRoot, Dictionary<UnityEngine.Object, UnityEngine.Object> mapped)
-        {
-            HumanRigPolicy.Require(eye != null && eye.IsChildOf(sourceRoot), "Native eye is missing or external.");
-            UnityEngine.Object replacement;
-            if (mapped.TryGetValue(eye, out replacement)) return (Transform)replacement;
-            var own = new GameObject("HumanEye").transform;
-            own.SetParent(targetRoot, false);
-            own.localPosition = sourceRoot.InverseTransformPoint(eye.position);
-            own.localRotation = Quaternion.Inverse(sourceRoot.rotation) * eye.rotation;
-            return own;
-        }
-
-        static void ReplaceFootStep(GameObject clone, GameObject player, Dictionary<UnityEngine.Object, UnityEngine.Object> mapped)
-        {
-            var original = player.GetComponent<FootStep>();
-            HumanRigPolicy.Require(original != null, "Native human footstep source missing.");
-            var feet = clone.AddComponent<FootStep>();
-            feet.m_footlessFootsteps = original.m_footlessFootsteps;
-            feet.m_footlessTriggerDistance = original.m_footlessTriggerDistance;
-            feet.m_footstepCullDistance = original.m_footstepCullDistance;
-            feet.m_feet = original.m_feet.Select(f => (Transform)CopyMapped(f, mapped)).ToArray();
-            feet.m_effects = CloneFootEffects(original.m_effects);
-        }
-
         // Pure managed-container copies. Unity asset references are deliberately
         // preserved, never instantiated or mutated by these helpers.
         internal static VisEquipment.PlayerModel[] CloneModels(VisEquipment.PlayerModel[] source)
@@ -258,37 +225,5 @@ namespace LivingWorld.HumanNpc
             return result;
         }
 
-        static void MapTree(Transform source, Transform target, Dictionary<UnityEngine.Object, UnityEngine.Object> mapped)
-        {
-            mapped[source] = target; mapped[source.gameObject] = target.gameObject;
-            var originals = source.GetComponents<Component>(); var copies = target.GetComponents<Component>();
-            HumanRigPolicy.Require(originals.Length == copies.Length && source.childCount == target.childCount, "Visual clone topology mismatch.");
-            for (int i = 0; i < originals.Length; i++) { HumanRigPolicy.Require(originals[i] != null && copies[i] != null, "Missing visual component."); mapped[originals[i]] = copies[i]; }
-            for (int i = 0; i < source.childCount; i++) MapTree(source.GetChild(i), target.GetChild(i), mapped);
-        }
-
-        static object CopyMapped(object value, Dictionary<UnityEngine.Object, UnityEngine.Object> mapped)
-        {
-            if (value == null) return null;
-            var native = value as UnityEngine.Object;
-            if (native != null)
-            {
-                UnityEngine.Object replacement;
-                if (mapped.TryGetValue(native, out replacement)) return replacement;
-                HumanRigPolicy.Require(!(native is Component) && !(native is GameObject), "Unmapped source hierarchy reference: " + native.name);
-                return native; // Read-only mesh/material asset; never modified by this factory.
-            }
-            var type = value.GetType();
-            if (type.IsValueType || type == typeof(string)) return value;
-            throw new InvalidOperationException("Unreviewed visual configuration type: " + type.FullName);
-        }
-
-        static string SourceFingerprint(GameObject player)
-        {
-            var vis = player.GetComponent<VisEquipment>();
-            return player.GetInstanceID() + ":" + player.GetComponentsInChildren<Component>(true).Length + ":" +
-                vis.m_bodyModel.GetInstanceID() + ":" + vis.m_isPlayer + ":" + vis.m_models.Length + ":" +
-                String.Join(",", vis.m_bodyModel.bones.Select(b => b.GetInstanceID().ToString()).ToArray());
-        }
     }
 }
