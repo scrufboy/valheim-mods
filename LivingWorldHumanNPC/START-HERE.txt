@@ -1,9 +1,15 @@
-LIVING WORLD HUMAN NPC 0.3.60 — ENCOUNTER + PRESENTATION CONTRACTS
+LIVING WORLD HUMAN NPC 0.3.61 — SPAWN + APPEARANCE REPAIR
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:
 
 plugins\LivingWorldHumanNpc\LivingWorld.HumanNpc.dll
+
+0.3.61 removes the invalid Player prefix/count catalog assumption that blocked
+lwparty before actor creation. Fresh companions resolve Valheim's actual
+contiguous Hair1..N and Beard1..N selectable styles from ObjectDB, excluding
+HairNone and internal helmet-remap variants. A selected style must still attach
+as a real visual object before the companion is accepted.
 
 This build preserves the 0.3.56 native combat authority, the 0.3.57 fire-team
 cohesion repair, and corrects the meaning of native chase distance:

@@ -130,11 +130,7 @@ public class Humanoid : Character
 }
 public class Player : Humanoid { public static Player m_localPlayer; }
 public class MonsterAI : MonoBehaviour { }
-public class VisEquipment : MonoBehaviour
-{
-    public string m_hairPrefabPrefix = "Hair", m_beardPrefabPrefix = "Beard";
-    public int m_hairPrefabCount = 4, m_beardPrefabCount = 3;
-}
+public class VisEquipment : MonoBehaviour { }
 public class ItemDrop : MonoBehaviour
 {
     public ItemData m_itemData = new ItemData();
@@ -163,7 +159,13 @@ public class ObjectDB
         var item = new GameObject { name = search + "_Native" }.Add<ItemDrop>();
         return new List<ItemDrop> { item };
     }
-    public GameObject GetItemPrefab(string name) { return new GameObject { name = name }.Add<ItemDrop>().gameObject; }
+    public GameObject GetItemPrefab(string name)
+    {
+        int value;
+        string suffix = name.StartsWith("Hair") ? name.Substring(4) : name.StartsWith("Beard") ? name.Substring(5) : "";
+        if (!Int32.TryParse(suffix, out value) || value < 1 || value > (name.StartsWith("Hair") ? 4 : 3)) return null;
+        return new GameObject { name = name }.Add<ItemDrop>().gameObject;
+    }
 }
 namespace LivingWorld.HumanNpc
 {

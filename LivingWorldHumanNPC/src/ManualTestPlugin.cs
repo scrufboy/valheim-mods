@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace LivingWorld.ManualTest
 {
-    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.60")]
+    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.61")]
     [BepInIncompatibility("local.livingworld.manualtest")]
     [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     public sealed class ManualTestPlugin : BaseUnityPlugin
@@ -265,7 +265,7 @@ namespace LivingWorld.ManualTest
             // writing any persistent scout state. No guessed prefab names.
             string[] availableHair = NativeAppearanceChoices("Hair", false);
             string[] availableBeards = NativeAppearanceChoices("Beard", true);
-            Report("APPEARANCE catalog verified from the native Player facial-hair contract: hair=" + availableHair.Length +
+            Report("APPEARANCE catalog verified from Valheim's selectable base styles: hair=" + availableHair.Length +
                 "; beard=" + (availableBeards.Length - 1) + ".");
             FindNpc();
             if (npc != null) { Report("One scout already exists nearby; no duplicate spawned."); return; }
@@ -346,22 +346,22 @@ namespace LivingWorld.ManualTest
         {
             if (ObjectDB.instance == null)
                 throw new InvalidOperationException("Native appearance catalogs are not ready.");
-            var player = PrefabManager.Instance == null ? null : PrefabManager.Instance.GetPrefab("Player");
-            var native = player == null ? null : player.GetComponent<VisEquipment>();
-            if (native == null) throw new InvalidOperationException("Native Player appearance source is unavailable.");
-            string prefix;
-            int count;
-            if (search == "Hair") { prefix = native.m_hairPrefabPrefix; count = native.m_hairPrefabCount; }
-            else if (search == "Beard") { prefix = native.m_beardPrefabPrefix; count = native.m_beardPrefabCount; }
-            else throw new ArgumentException("Only the native Hair or Beard catalog may be requested.", "search");
-            if (String.IsNullOrEmpty(prefix) || count <= 0 || count > 64)
-                throw new InvalidOperationException("Native " + search.ToLowerInvariant() + " catalog metadata is invalid.");
+            if (search != "Hair" && search != "Beard")
+                throw new ArgumentException("Only the native Hair or Beard catalog may be requested.", "search");
+
+            // The native Player prefab deliberately has an empty NPC-random
+            // prefix/count. Player-selectable styles instead use Valheim's
+            // contiguous Hair1..N and Beard1..N ObjectDB contract. Stop at the
+            // first gap exactly as the live catalog does. This excludes
+            // HairNone and the internal _2/_3 helmet-remap prefabs while still
+            // resolving every accepted choice from the loaded ObjectDB.
             var result = new List<string>();
             if (allowEmpty) result.Add("");
-            for (int index = 1; index <= count; ++index)
+            for (int index = 1; ; ++index)
             {
-                string name = prefix + index;
+                string name = search + index;
                 var prefab = ObjectDB.instance.GetItemPrefab(name);
+                if (prefab == null) break;
                 var drop = prefab == null ? null : prefab.GetComponent<ItemDrop>();
                 bool hasAttachment = prefab != null &&
                     (prefab.transform.Find("attach") != null || prefab.transform.Find("attach_skin") != null);
@@ -370,6 +370,8 @@ namespace LivingWorld.ManualTest
                     throw new InvalidOperationException("Native Player " + search.ToLowerInvariant() + " entry is not attachable: " + name);
                 result.Add(name);
             }
+            if (result.Count == (allowEmpty ? 1 : 0))
+                throw new InvalidOperationException("Valheim exposed no attachable native " + search.ToLowerInvariant() + " styles.");
             return result.ToArray();
         }
 

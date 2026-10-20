@@ -63,9 +63,9 @@ try {
     $catalog=FindMethod LivingWorld.ManualTest.ManualTestPlugin NativeAppearanceChoices
     $catalogCalls=@(Calls $catalog)
     $catalogFields=@($catalog.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.FieldReference]} | ForEach-Object {$_.Operand.Name})
-    Require (@($catalogCalls | Where-Object {$_.Operand.Name -eq 'GetAllItems'}).Count -eq 0) 'fresh identity never searches every modded customization item as native hair'
+    Require (@($catalogCalls | Where-Object {$_.Operand.Name -eq 'GetAllItems'}).Count -eq 0) 'fresh identity never searches every customization item as a selectable base style'
     foreach($field in @('m_hairPrefabPrefix','m_hairPrefabCount','m_beardPrefabPrefix','m_beardPrefabCount')){
-        Require ($catalogFields -contains $field) "native Player facial-hair catalog reads $field"
+        Require ($catalogFields -notcontains $field) "catalog does not invent Player style metadata from NPC-random field $field"
     }
     Require (@($catalogCalls | Where-Object {$_.Operand.Name -eq 'GetItemPrefab'}).Count -eq 1) 'each native Player facial-hair entry is resolved through ObjectDB'
     $catalogStrings=@($catalog.Body.Instructions | Where-Object {$_.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldstr} | ForEach-Object {$_.Operand})
