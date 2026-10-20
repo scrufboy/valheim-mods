@@ -14,7 +14,8 @@ The exchange is append-only: both agents preserve prior evidence, distinguish of
 
 ## Active projects
 
-- [LivingWorldCORE](./LivingWorldCORE) — independent community-facing core and the staged replacement for current RRRCore capabilities
+- [FormidableNPCFramework](./FormidableNPCFramework) — standalone community NPC framework and staged replacement for current RRRCore capabilities
+- [LivingWorldCORE](./LivingWorldCORE) — Characters, Origins, Roles & Encounters story, faction, settlement, and world architecture
 - [LivingWorldHumanNPC](./LivingWorldHumanNPC) — Living World Formidable NPC runtime: human actors, community behavior, parties, combat, recovery, and raid testing
 - [LivingWorldCORETooler](./LivingWorldCORETooler) — unified in-game development and NPC test panel
 - [LivingWorldTelemetry](./LivingWorldTelemetry) — focused runtime telemetry
@@ -31,7 +32,8 @@ The exchange is append-only: both agents preserve prior evidence, distinguish of
 - [PopVillageWorkers](./PopVillageWorkers)
 
 The repaired RRRCore/Runic/Souls stack is a temporary private benchmark and
-migration environment. It is not part of Living World Core. See the
+migration environment. It is not the Formidable NPC Framework and is not part of
+the released Living World Core. See the
 [project boundaries](./LivingWorldCORE/PROJECT-BOUNDARIES.md) for the standalone
 Core, Formidable NPC, optional enemy-family, asset, and special-attack plan.
 

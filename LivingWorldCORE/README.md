@@ -1,12 +1,14 @@
 # Living World C.O.R.E.
 
-Independently implemented foundation and shared contracts for **Characters,
-Origins, Roles & Encounters**.
+Story, character, settlement, faction, and encounter architecture for
+**Characters, Origins, Roles & Encounters**.
 
-Living World Core is the planned community-facing replacement for the NPC creation
-and runtime capabilities presently supplied by RRRCore in the private lab stack.
-The replacement is not complete: current RRR/Souls compatibility repairs remain
-test infrastructure while Living World-owned services are implemented and migrated.
+The standalone **Formidable NPC Framework** is the planned community-facing
+replacement for the NPC creation/runtime capabilities presently supplied by
+RRRCore in the private lab stack. Living World C.O.R.E. uses that framework for its
+friendly, resident, hero, and enemy content. The replacement is not complete:
+current RRR/Souls compatibility repairs remain test infrastructure while
+framework-owned services are implemented and migrated.
 
 The authoritative package boundaries, capability gates, enemy-family track, and
 migration sequence are defined in [PROJECT-BOUNDARIES.md](./PROJECT-BOUNDARIES.md).
