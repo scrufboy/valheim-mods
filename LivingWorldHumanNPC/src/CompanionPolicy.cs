@@ -40,6 +40,12 @@ namespace LivingWorld.HumanNpc
         public const float CombatPairLeash = 18f;
         public const float RecoveryDefenseRange = 8f;
         public const float RecoveryDefenseSeconds = 8f;
+        // Encounter release is deliberately slower than target acquisition.
+        // Four complete scans establish a candidate all-clear; five additional
+        // uninterrupted seconds are then required before peaceful systems may
+        // own the actor again.
+        public const int EncounterClearScanCount = 4;
+        public const float EncounterClearSeconds = 5f;
 
         public static bool Finite(float value) { return !Single.IsNaN(value) && !Single.IsInfinity(value); }
 
@@ -187,6 +193,22 @@ namespace LivingWorld.HumanNpc
             // owns a real encounter, however, an alerted sensed hostile is part
             // of that encounter even during native target handoff gaps.
             return encounterOwned && enemy && alerted && sensed && !passiveWildlife;
+        }
+
+        public static int AdvanceEncounterClearScans(int current, bool partyCombatEvidence,
+            bool hostileObserved)
+        {
+            if (partyCombatEvidence || hostileObserved) return 0;
+            if (current < 0) current = 0;
+            return Math.Min(EncounterClearScanCount, current + 1);
+        }
+
+        public static bool EncounterClearVerified(int clearScans, float uninterruptedClearSeconds,
+            bool partyCombatEvidence, bool hostileObserved)
+        {
+            return !partyCombatEvidence && !hostileObserved &&
+                clearScans >= EncounterClearScanCount && Finite(uninterruptedClearSeconds) &&
+                uninterruptedClearSeconds >= EncounterClearSeconds;
         }
 
         public static bool WithinRecoveryDefenseBounds(float elapsed, float unsensed,

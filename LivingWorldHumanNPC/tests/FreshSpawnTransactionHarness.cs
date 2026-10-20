@@ -54,7 +54,11 @@ namespace UnityEngine
         public string name { get { return gameObject.name; } }
         public T GetComponent<T>() where T : class { return gameObject.GetComponent<T>(); }
     }
-    public class Transform { public Vector3 position, forward; public Quaternion rotation; }
+    public class Transform
+    {
+        public Vector3 position, forward; public Quaternion rotation;
+        public Transform Find(string name) { return name == "attach" ? new Transform() : null; }
+    }
     public struct Quaternion { }
     public struct Vector3
     {
@@ -126,10 +130,30 @@ public class Humanoid : Character
 }
 public class Player : Humanoid { public static Player m_localPlayer; }
 public class MonsterAI : MonoBehaviour { }
+public class VisEquipment : MonoBehaviour
+{
+    public string m_hairPrefabPrefix = "Hair", m_beardPrefabPrefix = "Beard";
+    public int m_hairPrefabCount = 4, m_beardPrefabCount = 3;
+}
 public class ItemDrop : MonoBehaviour
 {
     public ItemData m_itemData = new ItemData();
-    public class ItemData { public enum ItemType { Customization } }
+    public class ItemData
+    {
+        public SharedData m_shared = new SharedData();
+        public enum ItemType { Customization }
+        public class SharedData { public ItemType m_itemType = ItemType.Customization; }
+    }
+}
+public class PrefabManager
+{
+    public static PrefabManager Instance = new PrefabManager();
+    public GameObject GetPrefab(string name)
+    {
+        var player = new GameObject { name = name };
+        player.Add<VisEquipment>();
+        return player;
+    }
 }
 public class ObjectDB
 {

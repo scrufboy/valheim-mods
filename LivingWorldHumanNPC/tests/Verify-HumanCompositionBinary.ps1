@@ -60,6 +60,21 @@ try {
     Require (@($applyCalls | Where-Object {$_.Operand.Name -eq 'Instantiate'}).Count -eq 1) 'one human visual subtree instantiate in visual adapter'
     Require (@($applyCalls | Where-Object {$_.Operand.Name -match 'GetPrefab|CreateClonedPrefab'}).Count -eq 0) 'visual adapter does not fetch alternate native templates'
     Require (@($apply.Body.Instructions | Where-Object {$_.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldstr -and $_.Operand -eq 'Visual'}).Count -ge 1) 'visual adapter explicitly selects native Visual subtree'
+    $catalog=FindMethod LivingWorld.ManualTest.ManualTestPlugin NativeAppearanceChoices
+    $catalogCalls=@(Calls $catalog)
+    $catalogFields=@($catalog.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.FieldReference]} | ForEach-Object {$_.Operand.Name})
+    Require (@($catalogCalls | Where-Object {$_.Operand.Name -eq 'GetAllItems'}).Count -eq 0) 'fresh identity never searches every modded customization item as native hair'
+    foreach($field in @('m_hairPrefabPrefix','m_hairPrefabCount','m_beardPrefabPrefix','m_beardPrefabCount')){
+        Require ($catalogFields -contains $field) "native Player facial-hair catalog reads $field"
+    }
+    Require (@($catalogCalls | Where-Object {$_.Operand.Name -eq 'GetItemPrefab'}).Count -eq 1) 'each native Player facial-hair entry is resolved through ObjectDB'
+    $catalogStrings=@($catalog.Body.Instructions | Where-Object {$_.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldstr} | ForEach-Object {$_.Operand})
+    Require ($catalogStrings -contains 'attach' -and $catalogStrings -contains 'attach_skin') 'catalog requires a native visual attachment before identity generation'
+    $facial=FindMethod LivingWorld.HumanNpc.HumanAppearance FacialHairAttached
+    $facialFields=@($facial.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.FieldReference]} | ForEach-Object {$_.Operand.Name})
+    foreach($field in @('HairInstance','BeardInstance','CurrentHairHash','CurrentBeardHash')){
+        Require ($facialFields -contains $field) "appearance readiness verifies $field"
+    }
     $identity=@($types | Where-Object FullName -eq LivingWorld.HumanNpc.HumanCompositionIdentity)[0]
     Require (@($identity.Methods | Where-Object {$_.Name -in @('Awake','Start','Update','FixedUpdate','OnEnable')}).Count -eq 0) 'no automatic identity/migration callback'
     $identityCalls=@($identity.Methods | Where-Object HasBody | ForEach-Object {Calls $_})

@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace LivingWorld.ManualTest
 {
-    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.59")]
+    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.60")]
     [BepInIncompatibility("local.livingworld.manualtest")]
     [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     public sealed class ManualTestPlugin : BaseUnityPlugin
@@ -265,7 +265,7 @@ namespace LivingWorld.ManualTest
             // writing any persistent scout state. No guessed prefab names.
             string[] availableHair = NativeAppearanceChoices("Hair", false);
             string[] availableBeards = NativeAppearanceChoices("Beard", true);
-            Report("APPEARANCE catalog verified from ObjectDB customization items: hair=" + availableHair.Length +
+            Report("APPEARANCE catalog verified from the native Player facial-hair contract: hair=" + availableHair.Length +
                 "; beard=" + (availableBeards.Length - 1) + ".");
             FindNpc();
             if (npc != null) { Report("One scout already exists nearby; no duplicate spawned."); return; }
@@ -346,21 +346,30 @@ namespace LivingWorld.ManualTest
         {
             if (ObjectDB.instance == null)
                 throw new InvalidOperationException("Native appearance catalogs are not ready.");
+            var player = PrefabManager.Instance == null ? null : PrefabManager.Instance.GetPrefab("Player");
+            var native = player == null ? null : player.GetComponent<VisEquipment>();
+            if (native == null) throw new InvalidOperationException("Native Player appearance source is unavailable.");
+            string prefix;
+            int count;
+            if (search == "Hair") { prefix = native.m_hairPrefabPrefix; count = native.m_hairPrefabCount; }
+            else if (search == "Beard") { prefix = native.m_beardPrefabPrefix; count = native.m_beardPrefabCount; }
+            else throw new ArgumentException("Only the native Hair or Beard catalog may be requested.", "search");
+            if (String.IsNullOrEmpty(prefix) || count <= 0 || count > 64)
+                throw new InvalidOperationException("Native " + search.ToLowerInvariant() + " catalog metadata is invalid.");
             var result = new List<string>();
             if (allowEmpty) result.Add("");
-            var items = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Customization, search);
-            if (items != null)
-                foreach (var item in items)
-                {
-                    if (item == null || item.gameObject == null) continue;
-                    string name = item.gameObject.name;
-                    var prefab = String.IsNullOrEmpty(name) ? null : ObjectDB.instance.GetItemPrefab(name);
-                    if (prefab == null || prefab.GetComponent<ItemDrop>() == null || result.Contains(name)) continue;
-                    result.Add(name);
-                }
-            result.Sort(StringComparer.Ordinal);
-            if (result.Count == (allowEmpty ? 1 : 0))
-                throw new InvalidOperationException("Valheim exposed no registered native " + search.ToLowerInvariant() + " assets.");
+            for (int index = 1; index <= count; ++index)
+            {
+                string name = prefix + index;
+                var prefab = ObjectDB.instance.GetItemPrefab(name);
+                var drop = prefab == null ? null : prefab.GetComponent<ItemDrop>();
+                bool hasAttachment = prefab != null &&
+                    (prefab.transform.Find("attach") != null || prefab.transform.Find("attach_skin") != null);
+                if (drop == null || drop.m_itemData == null || drop.m_itemData.m_shared == null ||
+                    drop.m_itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Customization || !hasAttachment)
+                    throw new InvalidOperationException("Native Player " + search.ToLowerInvariant() + " entry is not attachable: " + name);
+                result.Add(name);
+            }
             return result.ToArray();
         }
 

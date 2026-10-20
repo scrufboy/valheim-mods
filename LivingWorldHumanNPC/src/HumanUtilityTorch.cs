@@ -69,14 +69,22 @@ namespace LivingWorld.HumanNpc
                 { Disable("ambient crafting owns hands"); return; }
                 if (eligibleSince < 0) eligibleSince = Time.time;
                 if (Time.time - eligibleSince < 3f) { SetState("waiting for sustained darkness"); return; }
-                if (TorchVisible()) { SetState("on"); return; }
+                var stow = GetComponent<HumanEquipmentReadiness>();
+                if (TorchVisible())
+                {
+                    if (stow != null && stow.MaintainUtilityBackStow(true)) SetState("on");
+                    else Disable("utility presentation lost its verified back stow");
+                    return;
+                }
                 EnsureTorch();
+                if (stow == null || !stow.PrepareForUtility())
+                { SetState("waiting for verified weapon stow"); return; }
                 // Saved inventories can retain m_equipped while the native hand
                 // slots contain no torch after load. Never treat that metadata
                 // flag as visible equipment: clear it, then run the real native
                 // equip transaction so the hand model and light are restored.
                 if (torch.m_equipped && !TorchVisible()) body.UnequipItem(torch, false);
-                if (body.EquipItem(torch, false) && TorchVisible()) SetState("on");
+                if (body.EquipItem(torch, false) && TorchVisible() && stow.MaintainUtilityBackStow(true)) SetState("on");
                 else Disable("native equip refused");
             }
             catch (Exception error) { fault = true; Disable("fault: " + error.Message); }
@@ -188,10 +196,11 @@ namespace LivingWorld.HumanNpc
             busy |= weapon != null && weapon.m_shared.m_attack.m_bowDraw;
             var posture = GetComponent<HumanCompanionPosture>();
             if (busy || (posture != null && (posture.OwnsAmbientHands || posture.HasAmbientPose))) return false;
-            // nearBuiltLight is the cached result of the bounded half-second
-            // physics scan in Update.  Readiness may consult this method ten
-            // times per second but must never start another world scan.
-            return AmbientDark() && !nearBuiltLight;
+            // Darkness establishes eligibility in Update. Readiness yields
+            // only after the completed native presentation is visible and the
+            // combat pair remains verified on the back.
+            var presentation = GetComponent<HumanEquipmentReadiness>();
+            return presentation != null && presentation.UtilityPresentationVerified(TorchVisible());
         }
         internal void ReleaseForWeapons()
         {

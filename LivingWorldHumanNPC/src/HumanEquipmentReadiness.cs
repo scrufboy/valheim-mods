@@ -128,6 +128,38 @@ namespace LivingWorld.HumanNpc
             RestoreBasePair(!WantsWeapons());
         }
 
+        // Utility equipment may be equipped only after the ordinary peaceful
+        // stow transaction has completed. Eligibility for a torch is not hand
+        // ownership and may never bypass this gate.
+        internal bool PrepareForUtility()
+        {
+            if (!HandsSafe() || WantsWeapons()) return false;
+            return EnsurePeacefulStow();
+        }
+
+        // Native EquipItem(torch) clears the hidden hand slots. Re-establish
+        // the same persistent sword/shield references as back presentation
+        // without equipping either combat item alongside the torch.
+        internal bool MaintainUtilityBackStow(bool torchVisible)
+        {
+            if (!HandsSafe() || !torchVisible) return false;
+            var items = body.GetInventory().GetAllItems();
+            var sword = items.FirstOrDefault(item => item != null && item.m_dropPrefab != null && item.m_dropPrefab.name == "SwordBronze");
+            var shield = items.FirstOrDefault(item => item != null && item.m_dropPrefab != null && item.m_dropPrefab.name == "ShieldWood");
+            if (sword == null || shield == null) throw new InvalidOperationException("Persistent sword/shield loadout missing");
+            if (VisibleCombat(body)) return false;
+            HiddenLeft.SetValue(body, shield);
+            HiddenRight.SetValue(body, sword);
+            SyncBackVisuals(true);
+            return EquipmentPresentationPolicy.UtilityOwnsHands(true, VisibleCombat(body), HiddenCombat(body));
+        }
+
+        internal bool UtilityPresentationVerified(bool torchVisible)
+        {
+            Cache();
+            return EquipmentPresentationPolicy.UtilityOwnsHands(torchVisible, VisibleCombat(body), HiddenCombat(body));
+        }
+
         void RestoreBasePair(bool stow)
         {
             var items = body.GetInventory().GetAllItems();

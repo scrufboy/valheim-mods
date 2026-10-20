@@ -118,10 +118,19 @@ namespace LivingWorld.HumanNpc
                 model < 0 || model >= vis.m_models.Length || vis.m_models[model] == null ||
                 vis.m_models[model].m_mesh == null || vis.m_models[model].m_baseMaterial == null)
                 throw new InvalidOperationException("Selected native human body model is unavailable.");
-            if (ObjectDB.instance == null ||
-                (profile.Hair != "" && ObjectDB.instance.GetItemPrefab(profile.Hair) == null) ||
-                (profile.Beard != "" && ObjectDB.instance.GetItemPrefab(profile.Beard) == null))
-                throw new InvalidOperationException("Selected native human hair/beard asset is unavailable; saved identity is preserved.");
+            ValidateCustomization(profile.Hair, "hair");
+            if (profile.Beard != "") ValidateCustomization(profile.Beard, "beard");
+        }
+
+        static void ValidateCustomization(string name, string kind)
+        {
+            var prefab = ObjectDB.instance == null ? null : ObjectDB.instance.GetItemPrefab(name);
+            var drop = prefab == null ? null : prefab.GetComponent<ItemDrop>();
+            bool hasAttachment = prefab != null &&
+                (prefab.transform.Find("attach") != null || prefab.transform.Find("attach_skin") != null);
+            if (drop == null || drop.m_itemData == null || drop.m_itemData.m_shared == null ||
+                drop.m_itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Customization || !hasAttachment)
+                throw new InvalidOperationException("Selected native human " + kind + " asset cannot attach to the human rig; saved identity is preserved: " + name);
         }
 
         void Update()

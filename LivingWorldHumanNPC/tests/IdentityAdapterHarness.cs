@@ -11,8 +11,16 @@ namespace UnityEngine
     public class GameObject
     {
         public readonly List<MonoBehaviour> components = new List<MonoBehaviour>();
+        public readonly Transform transform = new Transform();
         public T Add<T>() where T : MonoBehaviour, new() { var value = new T(); value.gameObject = this; components.Add(value); return value; }
         public T Get<T>() where T : class { foreach (var value in components) if (value is T) return value as T; return null; }
+        public T GetComponent<T>() where T : class { return Get<T>(); }
+    }
+    public class Transform
+    {
+        readonly HashSet<string> children = new HashSet<string>();
+        public void Add(string name) { children.Add(name); }
+        public Transform Find(string name) { return children.Contains(name) ? new Transform() : null; }
     }
     public class MonoBehaviour
     {
@@ -63,6 +71,16 @@ public class Humanoid : MonoBehaviour
 }
 public class Player : Humanoid { }
 public class MonsterAI : MonoBehaviour { }
+public class ItemDrop : MonoBehaviour
+{
+    public ItemData m_itemData = new ItemData();
+    public class ItemData
+    {
+        public SharedData m_shared = new SharedData();
+        public enum ItemType { None, Customization }
+        public class SharedData { public ItemType m_itemType = ItemType.Customization; }
+    }
+}
 public class VisEquipment : MonoBehaviour
 {
     public class PlayerModel { public object m_mesh = new object(), m_baseMaterial = new object(); }
@@ -70,13 +88,15 @@ public class VisEquipment : MonoBehaviour
     public Player m_playerComponent;
     public PlayerModel[] m_models = { new PlayerModel(), new PlayerModel() };
     public int writes, model = -1, hair = -1, beard = -1, loseOwnerAfter;
+    public GameObject m_hairItemInstance, m_beardItemInstance;
+    public int m_currentHairItemHash, m_currentBeardItemHash;
     public Vector3 skin, tint;
     void Write() { ++writes; if (loseOwnerAfter == writes) GetComponent<ZNetView>().owner = false; }
     public void SetModel(int value) { Write(); model = value; }
     public void SetSkinColor(Vector3 value) { Write(); skin = value; }
     public void SetHairColor(Vector3 value) { Write(); tint = value; }
-    public void SetHairItem(int value) { Write(); hair = value; }
-    public void SetBeardItem(int value) { Write(); beard = value; }
+    public void SetHairItem(int value) { Write(); hair = value; m_currentHairItemHash = value; m_hairItemInstance = value == 0 ? null : new GameObject(); }
+    public void SetBeardItem(int value) { Write(); beard = value; m_currentBeardItemHash = value; m_beardItemInstance = value == 0 ? null : new GameObject(); }
 }
 public class ZNetScene
 {
@@ -90,7 +110,12 @@ public class ObjectDB
     public static ObjectDB instance = new ObjectDB();
     public bool assets = true;
     public Action onLookup;
-    public GameObject GetItemPrefab(string name) { if (onLookup != null) onLookup(); return assets ? new GameObject() : null; }
+    public GameObject GetItemPrefab(string name)
+    {
+        if (onLookup != null) onLookup();
+        if (!assets) return null;
+        var prefab = new GameObject(); prefab.Add<ItemDrop>(); prefab.transform.Add("attach"); return prefab;
+    }
 }
 public static class Hash
 {
@@ -168,6 +193,13 @@ static class IdentityAdapterHarness
             actor = Actor(); view = actor.Get<ZNetView>(); vis = actor.Get<VisEquipment>();
             view.data.data[HumanProfile.RecordKey] = saved;
             view.data.data[HumanMigrationPolicy.VisualKey] = HumanRigPolicy.Revision;
+            // A loaded native VisEquipment has already reconstructed its saved
+            // customization instances before this adapter verifies them. Model
+            // that replication without counting it as an adapter write.
+            vis.m_currentHairItemHash = profile.Hair.GetStableHashCode();
+            vis.m_hairItemInstance = new GameObject();
+            vis.m_currentBeardItemHash = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
+            vis.m_beardItemInstance = profile.Beard == "" ? null : new GameObject();
             Tick(actor);
             Check(actor.Get<HumanAppearance>().Initialized && vis.writes == 0 && view.data.writes.Count == 0, "loaded profile never rerolls or rewrites existing appearance");
             Check(actor.Get<Humanoid>().m_name == profile.Name, "loaded name restored");

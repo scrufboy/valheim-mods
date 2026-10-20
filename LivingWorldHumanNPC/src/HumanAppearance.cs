@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace LivingWorld.HumanNpc
@@ -9,6 +10,11 @@ namespace LivingWorld.HumanNpc
     public sealed class HumanAppearance : MonoBehaviour
     {
         const string RevisionKey = "livingworld_human_rig_revision";
+        static readonly BindingFlags Native = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        static readonly FieldInfo HairInstance = typeof(VisEquipment).GetField("m_hairItemInstance", Native);
+        static readonly FieldInfo BeardInstance = typeof(VisEquipment).GetField("m_beardItemInstance", Native);
+        static readonly FieldInfo CurrentHairHash = typeof(VisEquipment).GetField("m_currentHairItemHash", Native);
+        static readonly FieldInfo CurrentBeardHash = typeof(VisEquipment).GetField("m_currentBeardItemHash", Native);
         public string[] RequiredItems = new string[0];
         public string WeaponName = "";
         public string State = "Awaiting native initialization";
@@ -50,9 +56,12 @@ namespace LivingWorld.HumanNpc
                         "Saved/required human profile exists without its identity adapter.");
                 if (!view.IsOwner()) { hadAuthority = false; State = "Remote visual replication; no local initialization writes"; return; }
                 if (!hadAuthority) { hadAuthority = true; deadline = Time.realtimeSinceStartup + 10f; }
-                if (HumanRigPolicy.MayInitializeAppearance(true, true, saved))
+                var vis = GetComponent<VisEquipment>();
+                HumanRigPolicy.Require(vis != null && HairInstance != null && BeardInstance != null &&
+                    CurrentHairHash != null && CurrentBeardHash != null, "Native facial-hair presentation members changed.");
+                bool pendingAppearanceCommit = HumanRigPolicy.MayInitializeAppearance(true, true, saved);
+                if (pendingAppearanceCommit)
                 {
-                    var vis = GetComponent<VisEquipment>();
                     if (profile == null)
                     {
                         // Unchanged legacy scout path. A load never generates an
@@ -81,6 +90,15 @@ namespace LivingWorld.HumanNpc
                         if (!view.IsOwner()) { hadAuthority = false; return; }
                         vis.SetBeardItem(profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode());
                     }
+                }
+                string facialHairReason;
+                if (profile != null && !FacialHairAttached(vis, profile, out facialHairReason))
+                { WaitOrFail(facialHairReason); return; }
+                // The revision is a visual commit marker, not merely proof that
+                // hashes were written. A fresh actor cannot become ready while
+                // its selected hair/beard failed to instantiate on the rig.
+                if (pendingAppearanceCommit)
+                {
                     if (!view.IsOwner()) { hadAuthority = false; return; }
                     zdo.Set(RevisionKey, HumanRigPolicy.Revision);
                 }
@@ -97,7 +115,10 @@ namespace LivingWorld.HumanNpc
                 NativeHumanFactory.Validate(gameObject, true);
                 HumanRigPolicy.Require(!humanoid.IsPlayer() && GetComponent<Player>() == null, "NPC unexpectedly has player semantics.");
                 Initialized = true; finished = true;
-                State = "Human graph and equipped inventory initialized; gameplay NOT certified";
+                State = "Human graph, equipped inventory and facial hair initialized" +
+                    (profile == null ? "; legacy appearance; gameplay NOT certified" :
+                    "; hair=" + profile.Hair + "; beard=" + (profile.Beard == "" ? "clean-shaven" : profile.Beard) +
+                    "; gameplay NOT certified");
                 Report(State);
             }
             catch (Exception error)
@@ -113,6 +134,19 @@ namespace LivingWorld.HumanNpc
         {
             State = "Awaiting " + reason;
             if (Time.realtimeSinceStartup >= deadline) throw new InvalidOperationException("10-second initialization deadline: " + reason);
+        }
+
+        static bool FacialHairAttached(VisEquipment vis, HumanProfile profile, out string reason)
+        {
+            int hair = profile.Hair.GetStableHashCode();
+            int beard = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
+            var hairObject = HairInstance.GetValue(vis) as GameObject;
+            var beardObject = BeardInstance.GetValue(vis) as GameObject;
+            if ((int)CurrentHairHash.GetValue(vis) != hair || hairObject == null)
+            { reason = "native hair visual attachment for " + profile.Hair; return false; }
+            if ((int)CurrentBeardHash.GetValue(vis) != beard || (beard != 0 && beardObject == null) || (beard == 0 && beardObject != null))
+            { reason = "native beard visual attachment for " + (profile.Beard == "" ? "clean-shaven" : profile.Beard); return false; }
+            reason = ""; return true;
         }
 
         static void Report(string message)

@@ -213,6 +213,18 @@ class CompanionPolicyTests
         Check(!CompanionPolicy.EncounterThreat(true, true, false, true, false), "unalarmed hostile does not prolong encounter");
         Check(!CompanionPolicy.EncounterThreat(true, true, true, false, false), "unsensed hostile does not prolong encounter");
         Check(!CompanionPolicy.EncounterThreat(true, true, true, true, true), "passive wildlife remains reserved for Hunt mode");
+        int clearScans = 0;
+        for (int i = 0; i < CompanionPolicy.EncounterClearScanCount; ++i)
+            clearScans = CompanionPolicy.AdvanceEncounterClearScans(clearScans, false, false);
+        Check(clearScans == 4, "four consecutive party-clear scans establish an all-clear candidate");
+        Check(CompanionPolicy.AdvanceEncounterClearScans(clearScans, false, false) == 4, "clear scan count is bounded");
+        Check(CompanionPolicy.AdvanceEncounterClearScans(clearScans, true, false) == 0, "another companion target resets all clear scans");
+        Check(CompanionPolicy.AdvanceEncounterClearScans(clearScans, false, true) == 0, "observed hostile resets all clear scans");
+        Check(!CompanionPolicy.EncounterClearVerified(clearScans, 4.99f, false, false), "five additional quiet seconds are mandatory");
+        Check(CompanionPolicy.EncounterClearVerified(clearScans, 5f, false, false), "four scans plus five quiet seconds release the encounter");
+        Check(!CompanionPolicy.EncounterClearVerified(clearScans, 5f, true, false), "party combat evidence vetoes release at the boundary");
+        Check(!CompanionPolicy.EncounterClearVerified(clearScans, 5f, false, true), "hostile observation vetoes release at the boundary");
+        Check(!CompanionPolicy.EncounterClearVerified(clearScans, Single.NaN, false, false), "invalid clear duration fails closed");
         Check(!CompanionPolicy.WithinRangedCombatBounds(1, 0, 24.01f, 0, 24, 0), "ranged target remains bounded");
         Check(!CompanionPolicy.WithinRangedCombatBounds(1, 3, 20, 0, 20, 0), "ranged sight loss unchanged");
         Check(!CompanionPolicy.WithinRangedCombatBounds(1, 0, Single.NaN, 0, 20, 0), "ranged invalid observation fails closed");

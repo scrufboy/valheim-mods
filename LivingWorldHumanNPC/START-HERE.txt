@@ -1,4 +1,4 @@
-LIVING WORLD HUMAN NPC 0.3.59 — HAIR CONTRACT
+LIVING WORLD HUMAN NPC 0.3.60 — ENCOUNTER + PRESENTATION CONTRACTS
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:
@@ -18,10 +18,15 @@ cohesion repair, and corrects the meaning of native chase distance:
 - no custom movement loop scripts attacks or replaces native pathfinding;
 - companions may break formation to fight, but crossing an 18-metre leader or
   living-party-member boundary converts that fight into bounded local defense;
-- after that immediate exchange, the companion releases combat and regroups
-  instead of chaining another distant target;
+- after that immediate exchange, the companion retires the local target but
+  retains party combat ownership and follows back toward the leader armed;
 - an owned encounter retains alerted, sensed hostiles through ordinary native
   target handoff gaps, without turning peaceful awareness into an attack;
+- live target/damage/alert evidence is shared across companions bound to the
+  same owner, so one member cannot enter peaceful behavior while the other is
+  still engaged;
+- combat ends only after four complete party-clear scans followed by five
+  additional uninterrupted clear seconds;
 - an already-started cleric heal survives a momentary line-of-sight obstruction,
   while death, ownership, range, full health and immediate personal threat still
   cancel it;
@@ -40,6 +45,13 @@ cohesion repair, and corrects the meaning of native chase distance:
   directly to native combat;
 - torch, follow, visible-back stowing, wetness, doors, posture, sitting and
   workstation behavior remain intact and are locked out by the same combat owner.
+- torch eligibility cannot bypass the established peaceful stow transaction;
+  a visible torch is valid only with no visible combat item and the sword/shield
+  pair still represented on the back;
+- fresh hair and beard choices come only from the native Player catalog, not a
+  broad search across every installed customization pack;
+- a fresh actor is not marked initialized until its chosen facial-hair assets
+  have actually attached to the human rig.
 
 Offline verification proves the structural boundary and package integrity. Live
 Unity combat remains the acceptance test. Bed use is not implemented in this candidate.

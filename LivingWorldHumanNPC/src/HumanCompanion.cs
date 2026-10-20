@@ -42,7 +42,8 @@ namespace LivingWorld.HumanNpc
         float lastSensed;
         float lastAttributedDamage = Single.NegativeInfinity;
         float nextThreatScan;
-        float encounterUntil;
+        float encounterEvidenceUntil;
+        float encounterClearSince;
         bool encounterOwned;
         bool encounterClearObserved;
         bool recoveryDefense;
@@ -58,7 +59,7 @@ namespace LivingWorld.HumanNpc
         public string Status { get { return status; } }
         public bool HasAuthorizedCombat { get { return authorizedTarget != null; } }
         public bool CombatReadinessActive
-        { get { return authorizedTarget != null || (encounterOwned && (!encounterClearObserved || Time.time < encounterUntil)); } }
+        { get { return authorizedTarget != null || encounterOwned; } }
         // Single ownership boundary consumed by every non-combat subsystem.
         // Native attack/draw/block details are consequences of combat, never
         // separate votes that can independently enter or exit this state.
@@ -320,7 +321,8 @@ namespace LivingWorld.HumanNpc
             recoveryDefense = recovery;
             lastNearbyThreat = Time.time; lastSensed = Time.time;
             encounterOwned = true; encounterClearObserved = false; encounterClearScans = 0;
-            encounterUntil = Time.time + 1.5f;
+            encounterEvidenceUntil = Time.time + 1f;
+            encounterClearSince = Single.NegativeInfinity;
             lastAttributedDamage = CompanionPolicy.Finite(damage) && damage > 0f ? Time.time : Single.NegativeInfinity;
             retiredPursuitTarget = null;
             // This is the single companion-to-combat handoff. After it, native
@@ -393,7 +395,7 @@ namespace LivingWorld.HumanNpc
             {
                 lastSensed = Time.time;
                 lastNearbyThreat = Time.time;
-                encounterUntil = Mathf.Max(encounterUntil, Time.time + 1.5f);
+                MarkEncounterEvidence(1f);
             }
             return true;
         }
@@ -413,7 +415,8 @@ namespace LivingWorld.HumanNpc
             encounterOwned = true;
             encounterClearObserved = false;
             encounterClearScans = 0;
-            encounterUntil = Mathf.Max(encounterUntil, Time.time + 3f);
+            encounterEvidenceUntil = Mathf.Max(encounterEvidenceUntil, Time.time + 1f);
+            encounterClearSince = Single.NegativeInfinity;
             // Damage renews the encounter but never makes a companion abandon a
             // living target mid-strike. Acquire the attacker only when combat has
             // no target; native combat finishes the current opponent first.
@@ -474,7 +477,37 @@ namespace LivingWorld.HumanNpc
             if (sensed) lastSensed = Time.time;
             if (CompanionPolicy.RefreshEngagement(IsActiveThreat(authorizedTarget), sensed,
                 Time.time - lastAttributedDamage, distance))
-            { lastNearbyThreat = Time.time; encounterOwned = true; encounterClearObserved = false; encounterUntil = Time.time + 1.5f; }
+            { lastNearbyThreat = Time.time; MarkEncounterEvidence(1f); }
+        }
+
+        void MarkEncounterEvidence(float seconds)
+        {
+            encounterOwned = true;
+            encounterClearObserved = false;
+            encounterClearScans = 0;
+            encounterClearSince = Single.NegativeInfinity;
+            encounterEvidenceUntil = Mathf.Max(encounterEvidenceUntil, Time.time + Mathf.Max(0f, seconds));
+        }
+
+        bool PartyCombatEvidence()
+        {
+            long ownParty; Player ownLeader;
+            if (!TryGetConfidenceParty(out ownParty, out ownLeader))
+                return authorizedTarget != null;
+            foreach (Character candidate in Character.GetAllCharacters())
+            {
+                if (candidate == null || candidate.IsDead()) continue;
+                var companion = candidate.GetComponent<HumanCompanion>();
+                if (companion == null) continue;
+                long candidateParty; Player candidateLeader;
+                if (!companion.TryGetConfidenceParty(out candidateParty, out candidateLeader) || candidateParty != ownParty) continue;
+                // Only real evidence may be shared. Reading another member's
+                // short evidence pulse never renews it, so party arbitration
+                // cannot form a self-sustaining feedback loop.
+                if (companion.authorizedTarget != null ||
+                    (companion != this && Time.time < companion.encounterEvidenceUntil)) return true;
+            }
+            return false;
         }
 
         float ThreatPriority(Character candidate)
@@ -553,6 +586,8 @@ namespace LivingWorld.HumanNpc
                 // living legal target and reset native movement/attack cadence.
                 encounterClearScans = 0;
                 encounterClearObserved = false;
+                encounterClearSince = Single.NegativeInfinity;
+                encounterEvidenceUntil = Mathf.Max(encounterEvidenceUntil, Time.time + 1f);
                 return;
             }
             if (best != null)
@@ -561,18 +596,38 @@ namespace LivingWorld.HumanNpc
             }
             else if (best == null && encounterOwned)
             {
-                if (encounterHostileObserved)
+                bool partyCombatEvidence = PartyCombatEvidence();
+                bool recentLocalEvidence = Time.time < encounterEvidenceUntil;
+                if (encounterHostileObserved || partyCombatEvidence || recentLocalEvidence)
                 {
                     encounterClearScans = 0;
                     encounterClearObserved = false;
-                    encounterUntil = Mathf.Max(encounterUntil, Time.time + 1.5f);
+                    encounterClearSince = Single.NegativeInfinity;
+                    if (encounterHostileObserved) encounterEvidenceUntil = Time.time + 1f;
                     return;
                 }
-                // One missed quarter-second scan is not an all-clear. Require
-                // repeated observations and the retention interval together.
-                encounterClearScans++;
-                encounterClearObserved = encounterClearScans >= 4;
-                if (encounterClearObserved && Time.time >= encounterUntil) encounterOwned = false;
+                // Clear scans and the quiet interval are sequential, not
+                // parallel. Old clear observations from a previous target may
+                // never satisfy the next target handoff.
+                int previous = encounterClearScans;
+                encounterClearScans = CompanionPolicy.AdvanceEncounterClearScans(encounterClearScans,
+                    partyCombatEvidence, encounterHostileObserved);
+                if (previous < CompanionPolicy.EncounterClearScanCount &&
+                    encounterClearScans >= CompanionPolicy.EncounterClearScanCount)
+                {
+                    encounterClearObserved = true;
+                    encounterClearSince = Time.time;
+                }
+                float clearSeconds = encounterClearSince < 0f ? 0f : Time.time - encounterClearSince;
+                if (CompanionPolicy.EncounterClearVerified(encounterClearScans, clearSeconds,
+                    PartyCombatEvidence(), false))
+                {
+                    encounterOwned = false;
+                    recoveryDefense = false;
+                    encounterEvidenceUntil = Single.NegativeInfinity;
+                    ClearNativeCombat();
+                    status = "Party encounter clear verified; peaceful companion behavior released";
+                }
             }
         }
 
@@ -665,25 +720,23 @@ namespace LivingWorld.HumanNpc
 
         void StopCombatCore(bool endEncounter)
         {
-            if (!Owner()) { authorizedTarget = null; if (endEncounter) { recoveryDefense = false; encounterOwned = false; encounterClearObserved = true; encounterClearScans = 0; encounterUntil = 0f; } return; }
+            if (!Owner()) { authorizedTarget = null; if (endEncounter) { recoveryDefense = false; encounterOwned = false; encounterClearObserved = true; encounterClearScans = 0; encounterEvidenceUntil = Single.NegativeInfinity; encounterClearSince = Single.NegativeInfinity; } return; }
             ReleaseOptionalActivity();
             retiredPursuitTarget = authorizedTarget != null ? authorizedTarget : retiredPursuitTarget;
             authorizedTarget = null;
-            if (endEncounter) { recoveryDefense = false; encounterOwned = false; encounterClearObserved = true; encounterClearScans = 0; encounterUntil = 0f; }
+            if (endEncounter) { recoveryDefense = false; encounterOwned = false; encounterClearObserved = true; encounterClearScans = 0; encounterEvidenceUntil = Single.NegativeInfinity; encounterClearSince = Single.NegativeInfinity; }
             ClearNativeCombat(); status = "Combat stopped; persistent movement order retained";
         }
 
         void DropCombatTarget()
         {
-            if (recoveryDefense)
-            {
-                StopCombatCore(true);
-                status = "Local defense complete; combat released for party regroup";
-                return;
-            }
-            encounterUntil = Mathf.Max(encounterUntil, Time.time + 3f);
-            encounterOwned = true; encounterClearObserved = false; encounterClearScans = 0;
+            bool recovering = recoveryDefense;
+            recoveryDefense = false;
+            MarkEncounterEvidence(.5f);
             StopCombatCore(false);
+            status = recovering ?
+                "Local defense target ended; party encounter retained while regrouping" :
+                "Target ended; party encounter retained through target handoff";
         }
 
         void ReleaseOptionalActivity()
@@ -744,7 +797,7 @@ namespace LivingWorld.HumanNpc
                 ? CompanionMotion.Follow : CompanionMotion.WaitForLeader;
             if (motion == CompanionMotion.Follow)
             {
-                if (CombatReadinessActive) ai.SetFollowTarget(null);
+                if (authorizedTarget != null) ai.SetFollowTarget(null);
                 else
                 {
                     if (CompanionPolicy.MustClearPatrol(activeMotion, motion, ai.GetFollowTarget() == leader.gameObject))
@@ -783,13 +836,13 @@ namespace LivingWorld.HumanNpc
             if (!Owner())
             {
                 // Never claim authority. Remote state remains native replication.
-                hadAuthority = false; authorizedTarget = null; recoveryDefense = false; encounterOwned = false; encounterClearObserved = true; temporaryFollow = false; temporaryLeader = null;
+                hadAuthority = false; authorizedTarget = null; recoveryDefense = false; encounterOwned = false; encounterClearObserved = true; encounterEvidenceUntil = Single.NegativeInfinity; encounterClearSince = Single.NegativeInfinity; temporaryFollow = false; temporaryLeader = null;
                 activeMotion = CompanionMotion.Invalid; haveWaitAnchor = false; ObserveLeader(null);
                 status = "Remote instance: no companion writes"; return false;
             }
             if (!hadAuthority)
             {
-                hadAuthority = true; authorizedTarget = null; recoveryDefense = false; encounterOwned = false; encounterClearObserved = true; patrolApplied = false;
+                hadAuthority = true; authorizedTarget = null; recoveryDefense = false; encounterOwned = false; encounterClearObserved = true; encounterEvidenceUntil = Single.NegativeInfinity; encounterClearSince = Single.NegativeInfinity; patrolApplied = false;
                 ClearNativeCombat(); // Combat authorizations never survive reload/ownership transfer.
             }
             if (!Ready())
@@ -806,12 +859,19 @@ namespace LivingWorld.HumanNpc
             RefreshNearbyThreat();
             if (authorizedTarget != null && !AuthorizationValid(authorizedTarget))
             { DropCombatTarget(); status = "Target ended; encounter ownership retained while nearby threats are checked"; }
+            if (!encounterOwned && PartyCombatEvidence())
+            {
+                MarkEncounterEvidence(1f);
+                status = "Party encounter shared from an engaged companion";
+            }
             FindActiveThreat();
             // Do not fall back into leader-follow during the short gap between
             // a dead/lost target and the encounter's next threat selection.
             // Combat movement remains authoritative until repeated clear scans
             // end encounter ownership.
-            if (CombatReadinessActive) ai.SetFollowTarget(null);
+            if (authorizedTarget != null) ai.SetFollowTarget(null);
+            else if (encounterOwned && activeMotion == CompanionMotion.Follow && observedLeader != null)
+                ai.SetFollowTarget(observedLeader.gameObject);
             if (activeMotion == CompanionMotion.WaitForLeader && authorizedTarget == null)
             {
                 ClearNativeCombat(); ai.StopMoving();
