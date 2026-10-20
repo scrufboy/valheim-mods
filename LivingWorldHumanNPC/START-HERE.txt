@@ -1,4 +1,4 @@
-LIVING WORLD HUMAN NPC 0.3.58 — MOVING-ANCHOR DEFENSE
+LIVING WORLD HUMAN NPC 0.3.59 — HAIR CONTRACT
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:

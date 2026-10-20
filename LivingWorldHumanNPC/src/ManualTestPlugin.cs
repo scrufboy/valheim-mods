@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace LivingWorld.ManualTest
 {
-    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.58")]
+    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.59")]
     [BepInIncompatibility("local.livingworld.manualtest")]
     [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     public sealed class ManualTestPlugin : BaseUnityPlugin
@@ -263,9 +263,9 @@ namespace LivingWorld.ManualTest
         {
             // Resolve the catalogs Valheim actually loaded before allocating or
             // writing any persistent scout state. No guessed prefab names.
-            string[] availableHair = NativeAppearanceChoices("Hair");
-            string[] availableBeards = NativeAppearanceChoices("Beard");
-            Report("APPEARANCE catalog verified from ObjectDB customization items: hair=" + (availableHair.Length - 1) +
+            string[] availableHair = NativeAppearanceChoices("Hair", false);
+            string[] availableBeards = NativeAppearanceChoices("Beard", true);
+            Report("APPEARANCE catalog verified from ObjectDB customization items: hair=" + availableHair.Length +
                 "; beard=" + (availableBeards.Length - 1) + ".");
             FindNpc();
             if (npc != null) { Report("One scout already exists nearby; no duplicate spawned."); return; }
@@ -342,11 +342,12 @@ namespace LivingWorld.ManualTest
             }
         }
 
-        internal static string[] NativeAppearanceChoices(string search)
+        internal static string[] NativeAppearanceChoices(string search, bool allowEmpty)
         {
             if (ObjectDB.instance == null)
                 throw new InvalidOperationException("Native appearance catalogs are not ready.");
-            var result = new List<string> { "" };
+            var result = new List<string>();
+            if (allowEmpty) result.Add("");
             var items = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Customization, search);
             if (items != null)
                 foreach (var item in items)
@@ -358,7 +359,7 @@ namespace LivingWorld.ManualTest
                     result.Add(name);
                 }
             result.Sort(StringComparer.Ordinal);
-            if (result.Count == 1)
+            if (result.Count == (allowEmpty ? 1 : 0))
                 throw new InvalidOperationException("Valheim exposed no registered native " + search.ToLowerInvariant() + " assets.");
             return result.ToArray();
         }
@@ -393,7 +394,7 @@ namespace LivingWorld.ManualTest
             ZoneSystem.instance.RemoveGlobalKey(guard);
             var prefab = ZNetScene.instance.GetPrefab(NpcId);
             if (!registered || prefab == null || !ReferenceEquals(prefab, registeredPrefab)) throw new InvalidOperationException("Human prefab registration incomplete");
-            string[] hair = NativeAppearanceChoices("Hair"), beards = NativeAppearanceChoices("Beard");
+            string[] hair = NativeAppearanceChoices("Hair", false), beards = NativeAppearanceChoices("Beard", true);
             var at = FindPartySpawnPoint();
             GameObject created = null;
             try

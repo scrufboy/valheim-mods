@@ -19,7 +19,7 @@ static class HumanProfileTests
         {
             var original = HumanProfile.Generate(Seed, HairChoices, BeardChoices);
             string saved = original.Save();
-            Check(saved == "1|0123456789abcdef0123456789abcdef|Egan Brook|0|Hair2|Beard1|211|174|139|119|48|26|20|41|50|unassigned", "version-one golden generation record");
+            Check(saved == "1|0123456789abcdef0123456789abcdef|Gunnar Knutsson|0|Hair2|Beard1|211|174|139|119|48|26|20|41|50|unassigned", "version-one golden generation record");
             Check(original.Id == "human-" + Seed, "stable individual ID");
             Check(original.InitialRole == "unassigned", "no class or settlement assignment");
             Check(saved.Length <= HumanProfile.MaximumRecordLength, "bounded generated record");
@@ -53,6 +53,12 @@ static class HumanProfileTests
             bool threw = false;
             try { HumanProfile.Generate("bad", HairChoices, BeardChoices); } catch (ArgumentException) { threw = true; }
             Check(threw, "invalid fresh seed refused");
+            threw = false;
+            try { HumanProfile.Generate(Seed, new[] { "", "Hair1" }, BeardChoices); } catch (ArgumentException) { threw = true; }
+            Check(threw, "blank fresh hair choice refused");
+            threw = false;
+            try { HumanProfile.Generate(Seed, new[] { "Hair1" }, new[] { "", "Beard1" }); } catch (ArgumentException) { threw = true; }
+            Check(!threw, "blank beard remains a valid clean-shaven choice");
             var sexes = new HashSet<HumanSex>(); var names = new HashSet<string>(); var hair = new HashSet<string>(); var ids = new HashSet<string>();
             for (int i = 0; i < 512; i++)
             {
@@ -62,7 +68,12 @@ static class HumanProfileTests
                 Check(profile.Sex != HumanSex.Female || profile.Beard == "", "female model beard compatibility " + i);
                 sexes.Add(profile.Sex); names.Add(profile.Name); hair.Add(profile.Hair);
             }
-            Check(sexes.Count == 2 && names.Count > 100 && hair.Count == 4, "small generator yields human variety");
+            Check(sexes.Count == 2 && names.Count > 350 && hair.Count == 4, "expanded generator yields broad human variety");
+            Check(!saved.Contains("Ashford") && !saved.Contains("Brook") && !saved.Contains("Hearth") && !saved.Contains("Vale"),
+                "fresh identity excludes retired fantasy family names");
+            foreach (string identity in names)
+                Check(identity.EndsWith("son", StringComparison.Ordinal) || identity.EndsWith("dottir", StringComparison.Ordinal),
+                    "fresh identity uses a normalized patronymic: " + identity);
             Console.WriteLine("HumanProfile PASS: " + checks + " assertions; pure deterministic generation/serialization only.");
             Console.WriteLine("Stable sample: " + saved);
             return 0;

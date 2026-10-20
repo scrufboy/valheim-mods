@@ -29,9 +29,41 @@ namespace LivingWorld.HumanNpc
         public byte InitialSociability { get; private set; }
         public string InitialRole { get; private set; }
 
-        static readonly string[] MaleNames = { "Alden", "Bren", "Corin", "Egan", "Finn", "Galen", "Ivar", "Leif", "Orin", "Rowan", "Soren", "Torin" };
-        static readonly string[] FemaleNames = { "Alva", "Bryn", "Cora", "Eira", "Freya", "Halla", "Iona", "Lina", "Maren", "Nessa", "Runa", "Tova" };
-        static readonly string[] FamilyNames = { "Ashford", "Brook", "Fern", "Field", "Flint", "Grove", "Hearth", "Hill", "Moss", "Reed", "Vale", "Willow" };
+        // Normalized ASCII forms of Viking-age and Old Norse names. Runtime
+        // identity strings stay compatible with Valheim's existing text path,
+        // while avoiding the prior modern-fantasy given names and decorative
+        // nature surnames. Patronymics provide believable variety without
+        // inventing hereditary fantasy houses.
+        static readonly string[] MaleNames = {
+            "Alf", "Amund", "Anund", "Arne", "Arnfinn", "Arnketil", "Asbjorn", "Asgot", "Aslak", "Audun",
+            "Bjorn", "Bove", "Brand", "Einar", "Eirik", "Finn", "Frode", "Geir", "Gisle", "Gorm", "Grim",
+            "Gunnar", "Gunne", "Guthorm", "Halfdan", "Hallvard", "Harald", "Hastein", "Helge", "Holmger",
+            "Hrolf", "Ingvar", "Ivar", "Ketil", "Knut", "Leif", "Odd", "Olaf", "Orm", "Ragnar", "Ragnvald",
+            "Sigfast", "Sigurd", "Skarde", "Sten", "Stig", "Sven", "Thorgeir", "Thorgny", "Thorger",
+            "Thorsten", "Toke", "Trygve", "Ulf", "Vestein"
+        };
+        static readonly string[] FemaleNames = {
+            "Alfhild", "Arnfrid", "Asa", "Astrid", "Aud", "Borghild", "Bothild", "Freydis", "Geirlaug",
+            "Gerlaug", "Gerd", "Gudfrid", "Gudlaug", "Gudrid", "Gunborg", "Gunhild", "Gulla", "Gyrid",
+            "Hallfrid", "Helga", "Hild", "Holmfrid", "Holmvi", "Inga", "Ingeborg", "Ingegerd", "Ingethora",
+            "Ingrid", "Jorunn", "Ketilvi", "Ragnfrid", "Ragnhild", "Runa", "Sigrid", "Signy", "Svanhild",
+            "Thora", "Thorfrid", "Thorgunn", "Tove", "Turid", "Ulfhild", "Unn", "Vigdis", "Yrsa"
+        };
+        static readonly string[] MalePatronymics = {
+            "Alfsson", "Amundsson", "Anundsson", "Arnason", "Asbjornsson", "Asgotsson", "Aslaksson", "Audunsson",
+            "Bjornsson", "Brandsson", "Einarsson", "Eriksson", "Finnsson", "Geirsson", "Gormsson", "Grimsson",
+            "Gunnarsson", "Guthormsson", "Halfdansson", "Haraldsson", "Hasteinsson", "Helgason", "Ingvarsson",
+            "Ivarsson", "Ketilsson", "Knutsson", "Leifsson", "Olafsson", "Ormsson", "Ragnarsson",
+            "Ragnvaldsson", "Sigurdsson", "Svensson", "Thorgeirsson", "Thorstensson", "Ulfsson"
+        };
+        static readonly string[] FemalePatronymics = {
+            "Alfsdottir", "Amundsdottir", "Anundsdottir", "Arnadottir", "Asbjornsdottir", "Asgotsdottir",
+            "Aslaksdottir", "Audunsdottir", "Bjornsdottir", "Brandsdottir", "Einarsdottir", "Eriksdottir",
+            "Finnsdottir", "Geirsdottir", "Gormsdottir", "Grimsdottir", "Gunnarsdottir", "Guthormsdottir",
+            "Halfdansdottir", "Haraldsdottir", "Hasteinsdottir", "Helgadottir", "Ingvarsdottir", "Ivarsdottir",
+            "Ketilsdottir", "Knutsdottir", "Leifsdottir", "Olafsdottir", "Ormsdottir", "Ragnarsdottir",
+            "Ragnvaldsdottir", "Sigurdsdottir", "Svensdottir", "Thorgeirsdottir", "Thorstensdottir", "Ulfsdottir"
+        };
         static readonly byte[][] SkinColors = {
             new byte[] { 235, 205, 181 }, new byte[] { 211, 174, 139 }, new byte[] { 177, 133, 96 },
             new byte[] { 143, 99, 65 }, new byte[] { 104, 72, 50 }, new byte[] { 78, 52, 37 }
@@ -51,12 +83,17 @@ namespace LivingWorld.HumanNpc
             if (!ValidSeed(seed)) throw new ArgumentException("A lowercase 32-digit hexadecimal identity seed is required.", "seed");
             if (availableHair == null || availableHair.Length == 0) throw new ArgumentException("At least one runtime-verified native hair choice is required.", "availableHair");
             if (availableBeards == null || availableBeards.Length == 0) throw new ArgumentException("At least one runtime-verified native beard choice is required.", "availableBeards");
-            foreach (string value in availableHair) if (!ValidAppearanceName(value)) throw new ArgumentException("Invalid runtime hair choice.", "availableHair");
+            // A blank beard is a valid clean-shaven presentation. A blank hair
+            // item is not part of the companion appearance contract: it made
+            // freshly generated people appear bald even though the live game
+            // exposed a complete native hair catalog.
+            foreach (string value in availableHair) if (String.IsNullOrEmpty(value) || !ValidAppearanceName(value)) throw new ArgumentException("Fresh humans require a concrete runtime hair choice.", "availableHair");
             foreach (string value in availableBeards) if (!ValidAppearanceName(value)) throw new ArgumentException("Invalid runtime beard choice.", "availableBeards");
             var random = new Sequence(seed);
             var sex = (HumanSex)random.Take(2);
             var names = sex == HumanSex.Male ? MaleNames : FemaleNames;
-            string name = names[random.Take(names.Length)] + " " + FamilyNames[random.Take(FamilyNames.Length)];
+            var patronymics = sex == HumanSex.Male ? MalePatronymics : FemalePatronymics;
+            string name = names[random.Take(names.Length)] + " " + patronymics[random.Take(patronymics.Length)];
             string hair = availableHair[random.Take(availableHair.Length)];
             string beard = sex == HumanSex.Male ? availableBeards[random.Take(availableBeards.Length)] : "";
             var skin = SkinColors[random.Take(SkinColors.Length)];
