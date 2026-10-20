@@ -77,7 +77,7 @@ namespace LivingWorld.HumanNpc
                         if (!view.IsOwner()) { hadAuthority = false; return; }
                         vis.SetHairColor(new Vector3(profile.HairR / 255f, profile.HairG / 255f, profile.HairB / 255f));
                         if (!view.IsOwner()) { hadAuthority = false; return; }
-                        vis.SetHairItem(profile.Hair.GetStableHashCode());
+                        vis.SetHairItem(profile.Hair == "" ? 0 : profile.Hair.GetStableHashCode());
                         if (!view.IsOwner()) { hadAuthority = false; return; }
                         vis.SetBeardItem(profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode());
                     }

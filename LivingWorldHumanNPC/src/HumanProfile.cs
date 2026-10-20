@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Text;
 
 namespace LivingWorld.HumanNpc
 {
@@ -29,8 +30,10 @@ namespace LivingWorld.HumanNpc
         public byte InitialSociability { get; private set; }
         public string InitialRole { get; private set; }
 
-        static readonly string[] MaleNames = { "Alden", "Bren", "Corin", "Egan", "Finn", "Galen", "Ivar", "Leif", "Orin", "Rowan", "Soren", "Torin" };
-        static readonly string[] FemaleNames = { "Alva", "Bryn", "Cora", "Eira", "Freya", "Halla", "Iona", "Lina", "Maren", "Nessa", "Runa", "Tova" };
+        static readonly string[] MaleNames = { "Alden", "Bren", "Corin", "Egan", "Finn", "Galen", "Ivar", "Leif", "Orin", "Rowan", "Soren", "Torin",
+            "Björn", "Søren", "Håkon", "Ásgeir", "Eiríkr", "Þórir", "Ólafr", "Gunnarr", "Sigurðr", "Úlfar", "Ívarr", "Ragnarr" };
+        static readonly string[] FemaleNames = { "Alva", "Bryn", "Cora", "Eira", "Freya", "Halla", "Iona", "Lina", "Maren", "Nessa", "Runa", "Tova",
+            "Ása", "Ástríðr", "Frøya", "Sigríðr", "Þóra", "Guðrún", "Ingríðr", "Ragnhildr", "Sólveig", "Hildr", "Yrsa", "Rán" };
         static readonly string[] FamilyNames = { "Ashford", "Brook", "Fern", "Field", "Flint", "Grove", "Hearth", "Hill", "Moss", "Reed", "Vale", "Willow" };
         static readonly byte[][] SkinColors = {
             new byte[] { 235, 205, 181 }, new byte[] { 211, 174, 139 }, new byte[] { 177, 133, 96 },
@@ -57,8 +60,8 @@ namespace LivingWorld.HumanNpc
             var sex = (HumanSex)random.Take(2);
             var names = sex == HumanSex.Male ? MaleNames : FemaleNames;
             string name = names[random.Take(names.Length)] + " " + FamilyNames[random.Take(FamilyNames.Length)];
-            string hair = availableHair[random.Take(availableHair.Length)];
-            string beard = sex == HumanSex.Male ? availableBeards[random.Take(availableBeards.Length)] : "";
+            string hair = AppearanceChoice(availableHair, random.Take(availableHair.Length), sex == HumanSex.Male);
+            string beard = sex == HumanSex.Male ? AppearanceChoice(availableBeards, random.Take(availableBeards.Length), true) : "";
             var skin = SkinColors[random.Take(SkinColors.Length)];
             var tint = HairColors[random.Take(HairColors.Length)];
             return new HumanProfile {
@@ -67,6 +70,39 @@ namespace LivingWorld.HumanNpc
                 InitialCourage = (byte)random.Take(101), InitialPatience = (byte)random.Take(101), InitialSociability = (byte)random.Take(101),
                 InitialRole = "unassigned"
             };
+        }
+
+        static string AppearanceChoice(string[] choices, int selected, bool preferVisible)
+        {
+            // Fresh male policy only. Preserve the existing draw count and every
+            // nonempty selection; skip the optional empty customization when an
+            // eligible nonempty asset exists. Saved profiles never use this path.
+            if (!preferVisible || VisibleAppearanceName(choices[selected])) return choices[selected];
+            for (int offset = 1; offset < choices.Length; ++offset)
+            {
+                string next = choices[(selected + offset) % choices.Length];
+                if (VisibleAppearanceName(next)) return next;
+            }
+            return ""; // An explicitly empty-only catalog remains representable.
+        }
+
+        static bool VisibleAppearanceName(string value)
+        {
+            // Known native no-geometry customization identifiers are not visible
+            // male choices. Other runtime assets still require adapter validation.
+            return value != "" && value != "HairNone" && value != "BeardNone";
+        }
+
+        public HumanProfile WithAppearance(string hair, string beard)
+        {
+            if (!ValidAppearanceName(hair)) throw new ArgumentException("Invalid hair asset name.", "hair");
+            if (!ValidAppearanceName(beard) || (Sex == HumanSex.Female && beard != ""))
+                throw new ArgumentException("Invalid beard asset name for this model.", "beard");
+            // This pure value edit does not validate runtime asset availability,
+            // persist anything or touch native visuals. The authority adapter must.
+            var edited = (HumanProfile)MemberwiseClone();
+            edited.Hair = hair; edited.Beard = beard;
+            return edited;
         }
 
         public string Save()
@@ -83,7 +119,8 @@ namespace LivingWorld.HumanNpc
             value = null;
             if (String.IsNullOrEmpty(record) || record.Length > MaximumRecordLength) return false;
             var fields = record.Split('|');
-            if (fields.Length != 16 || fields[0] != "1" || fields[15] != "unassigned" || !ValidSeed(fields[1]) || !ValidName(fields[2]) ||
+            string normalizedName;
+            if (fields.Length != 16 || fields[0] != "1" || fields[15] != "unassigned" || !ValidSeed(fields[1]) || !TryNormalizeName(fields[2], out normalizedName) ||
                 (fields[3] != "0" && fields[3] != "1") || !ValidAppearanceName(fields[4]) || !ValidAppearanceName(fields[5]) ||
                 (fields[3] == "1" && fields[5] != "")) return false;
             var numbers = new byte[9];
@@ -91,7 +128,7 @@ namespace LivingWorld.HumanNpc
                 if (!Byte.TryParse(fields[6 + i], NumberStyles.None, CultureInfo.InvariantCulture, out numbers[i]) ||
                     Number(numbers[i]) != fields[6 + i] || (i >= 6 && numbers[i] > 100)) return false;
             value = new HumanProfile {
-                Seed = fields[1], Name = fields[2], Sex = fields[3] == "0" ? HumanSex.Male : HumanSex.Female,
+                Seed = fields[1], Name = normalizedName, Sex = fields[3] == "0" ? HumanSex.Male : HumanSex.Female,
                 Hair = fields[4], Beard = fields[5], SkinR = numbers[0], SkinG = numbers[1], SkinB = numbers[2],
                 HairR = numbers[3], HairG = numbers[4], HairB = numbers[5],
                 InitialCourage = numbers[6], InitialPatience = numbers[7], InitialSociability = numbers[8], InitialRole = fields[15]
@@ -106,10 +143,27 @@ namespace LivingWorld.HumanNpc
             return true;
         }
 
-        static bool ValidName(string name)
+        static bool TryNormalizeName(string name, out string normalized)
         {
+            normalized = null;
             if (String.IsNullOrEmpty(name) || name.Length > 40 || name[0] == ' ' || name[name.Length - 1] == ' ') return false;
-            foreach (char c in name) if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && c != ' ' && c != '-' && c != '\'') return false;
+            try
+            {
+                // Accept canonical NFC bytes only; loading must not silently
+                // rewrite an existing actor's spelling or stored record.
+                if (!name.IsNormalized(NormalizationForm.FormC)) return false;
+                normalized = name;
+            }
+            catch (ArgumentException) { return false; }
+            bool mayCombine = false;
+            foreach (char c in normalized)
+            {
+                if (Char.IsLetter(c)) { mayCombine = true; continue; }
+                UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(c);
+                if ((category == UnicodeCategory.NonSpacingMark || category == UnicodeCategory.SpacingCombiningMark) && mayCombine) continue;
+                if (c == ' ' || c == '-' || c == '\'' || c == '\u2019') { mayCombine = false; continue; }
+                return false;
+            }
             return true;
         }
 
