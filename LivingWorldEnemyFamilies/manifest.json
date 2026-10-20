@@ -1,0 +1,12 @@
+{
+  "name": "LivingWorld_Rimebound_and_Emberworn",
+  "version_number": "0.1.0",
+  "website_url": "https://github.com/scrufboy/valheim-mods",
+  "description": "Living World Rimebound and Emberworn adult regional-people approval definitions for the transitional RRR/Souls lab runtime.",
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2351",
+    "ASharpPen-Spawn_That-1.2.20",
+    "ValheimModding-Jotunn-2.30.2",
+    "OdinPlus-MadHatter-2.2.4"
+  ]
+}

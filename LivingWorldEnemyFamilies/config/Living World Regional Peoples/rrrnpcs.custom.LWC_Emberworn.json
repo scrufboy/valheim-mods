@@ -1,0 +1,106 @@
+{
+  "sOriginalPrefabName": "RRR_NPC",
+  "sNewPrefabName": "LWC_Emberworn",
+  "Category_Appearance": {
+    "vScale": { "fX": 1.0, "fY": 1.0, "fZ": 1.0 },
+    "cTintColor": { "fRed": 0.95, "fGreen": 0.24, "fBlue": 0.08 },
+    "cTintItems": { "fRed": 0.65, "fGreen": 0.18, "fBlue": 0.06 },
+    "cBodySmoke": { "fRed": 0.35, "fGreen": 0.08, "fBlue": 0.02 },
+    "cBodyFlames": { "fRed": 1.5, "fGreen": 0.32, "fBlue": 0.04 },
+    "sCustomTexture": null
+  },
+  "Category_Character": {
+    "sName": "Emberworn",
+    "sFaction": "Demon",
+    "bBoss": false, "sBossEvent": "", "sDefeatSetGlobalKey": "",
+    "fMoveSpeedMulti": 1.0, "bToleratesWater": false,
+    "bToleratesFire": true, "bToleratesSmoke": true, "fHealth": 230,
+    "dDamageTaken": {
+      "m_blunt": "Normal", "m_slash": "Normal", "m_pierce": "Normal",
+      "m_chop": "Immune", "m_pickaxe": "Immune", "m_fire": "Resistant",
+      "m_frost": "Weak", "m_lightning": "Normal", "m_poison": "Normal",
+      "m_spirit": "Immune"
+    }
+  },
+  "Category_Humanoid": {
+    "dtAttackDamageOverride": {
+      "fDamage": 0, "fBlunt": 0, "fSlash": 32, "fPierce": 8,
+      "fChop": 8, "fPickaxe": 0, "fFire": 8, "fFrost": 0,
+      "fLightning": 0, "fPoison": 0, "fSpirit": 0
+    },
+    "fAttackDamageTotalOverride": null,
+    "sAttackProjectileOverride": null,
+    "aDefaultItems": ["@1", "ArmorFenringChest", "ArmorFenringLegs", "Dragon_Headdress", "CapeLinen"],
+    "aRandomWeapon": ["RunicAxeRed"],
+    "aRandomArmor": [], "aRandomShield": [], "aaRandomSets": [],
+    "aHitEffects": ["vfx_player_hit", "RRR_NPC_sfx_hit"],
+    "aDeathEffects": ["vfx_player_death", "RRR_NPC_ragdoll", "RRR_NPC_sfx_death"],
+    "aConsumeItemEffects": ["sfx_eat"],
+    "aAdvancedCustomAttacks": [
+      {
+        "sOriginalPrefabName": "imp_fireball_attack",
+        "sTargetAnim": "mace_secondary",
+        "fAIAttackInterval": 14,
+        "bAIPrioritized": null,
+        "dtAttackDamageOverride": {
+          "fDamage": 0, "fBlunt": 6, "fSlash": 0, "fPierce": 0,
+          "fChop": 0, "fPickaxe": 0, "fFire": 28, "fFrost": 0,
+          "fLightning": 0, "fPoison": 0, "fSpirit": 0
+        },
+        "fAttackDamageTotalOverride": null,
+        "sAttackProjectileOverride": "Imp_fireball_projectile",
+        "aStartEffects": ["sfx_unarmed_swing"],
+        "aHitEffects": null,
+        "aTriggerEffects": null
+      }
+    ]
+  },
+  "Category_BaseAI": {
+    "fViewRange": 30, "fViewAngle": 90, "fHearRange": 9999,
+    "aAlertedEffects": ["RRR_NPC_sfx_alerted"], "aIdleEffects": ["RRR_NPC_sfx_idle"],
+    "fIdleEffectsInterval": 10, "fIdleEffectsChance": 0.5,
+    "sPathAgentType": "Humanoid", "fRandomCircleInterval": 2,
+    "fRandomMoveInterval": 30, "fRandomMoveRange": 3,
+    "bRandomFly": false, "fChanceToTakeoff": 1, "fChanceToLand": 1,
+    "fGroundDuration": 10, "fAirDuration": 10, "fMaxLandAltitude": 5,
+    "fFlyAltitudeMin": 3, "fFlyAltitudeMax": 10, "fTakeoffTime": 5,
+    "bAvoidFire": false, "bAfraidOfFire": false, "bAvoidWater": true,
+    "sSpawnMessage": "", "sDeathMessage": ""
+  },
+  "Category_MonsterAI": {
+    "fAlertRange": 20, "bFleeIfHurtWhenTargetCantBeReached": true,
+    "bFleeIfNotAlerted": false, "fFleeIfLowHealth": 0,
+    "bCirculateWhileCharging": true, "bCirculateWhileChargingFlying": false,
+    "bEnableHuntPlayer": false, "bAttackPlayerObjects": true,
+    "bAttackPlayerObjectsWhenAlerted": null, "fInterceptTimeMax": 2,
+    "fInterceptTimeMin": 0, "fMaxChaseDistance": 300, "fMinAttackInterval": 0,
+    "fCircleTargetInterval": 8, "fCircleTargetDuration": 6,
+    "fCircleTargetDistance": 8, "bSleeping": false, "bNoiseWakeup": false,
+    "fNoiseRangeScale": 1, "fWakeupRange": 5, "aWakeupEffects": [],
+    "bAvoidLand": false, "aConsumeItems": ["Sausages"],
+    "fConsumeRange": 2, "fConsumeSearchRange": 5,
+    "fConsumeSearchInterval": 10, "fConsumeHeal": 12
+  },
+  "Category_CharacterDrop": {
+    "bReplaceOriginalDrops": true,
+    "drDrops": [
+      {"sPrefabName":"CharredBone","iAmountMin":1,"iAmountMax":2,"fChance":0.55,"bOnePerPlayer":false,"bLevelMultiplier":true},
+      {"sPrefabName":"Coal","iAmountMin":1,"iAmountMax":3,"fChance":0.7,"bOnePerPlayer":false,"bLevelMultiplier":true}
+    ]
+  },
+  "Category_Special": {
+    "bCanTame": false, "bAlwaysTame": false, "bCommandableWhenTame": false,
+    "bCanProcreateWhenTame": false, "bFxNoTame": false,
+    "bSfxNoAlert": true, "bSfxNoIdle": true, "bSfxNoHit": true, "bSfxNoDeath": true
+  },
+  "Category_NpcOnly": {
+    "bIsFemale": false, "bRandomGender": false, "bNoBeardIfFemale": false,
+    "aBeardIds": [""], "aHairIds": ["HairNone", "Hair1", "Hair5", "Hair10"],
+    "cSkinColorMin": {"fRed":0.45,"fGreen":0.15,"fBlue":0.08},
+    "cSkinColorMax": {"fRed":0.8,"fGreen":0.34,"fBlue":0.16},
+    "cHairColorMin": {"fRed":0.12,"fGreen":0.04,"fBlue":0.02},
+    "cHairColorMax": {"fRed":0.4,"fGreen":0.12,"fBlue":0.04},
+    "fHairValueMin": 0.35, "fHairValueMax": 0.8
+  },
+  "sConfigFormatVersion": "0.2.0"
+}
