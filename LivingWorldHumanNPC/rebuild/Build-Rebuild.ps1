@@ -10,9 +10,13 @@ $null=New-Item -ItemType Directory -Force -Path $build
 $sources=@(
     'HumanIdentityRecord.cs',
     'CompanionStateLatch.cs',
+    'HumanBehaviorStateMachine.cs',
     'NativeHumanFactoryV2.cs',
     'HumanAppearanceV2.cs',
     'HumanCompanionV2.cs',
+    'HumanTraversalModule.cs',
+    'HumanEquipmentModule.cs',
+    'HumanBehaviorController.cs',
     'HumanNpcPlugin.cs'
 ) | ForEach-Object { Join-Path $PSScriptRoot $_ }
 foreach($source in $sources){if(-not (Test-Path -LiteralPath $source -PathType Leaf)){throw "Missing rebuild source: $source"}}
@@ -25,8 +29,10 @@ if($allText -match '(?i)RRRCore|HarmonyPatch|HumanCompanion\b|HumanAppearance\b|
 }
 if($allText -notmatch 'CopySerializedHumanState\(player, human\)' -or
    $allText -notmatch 'GetTargetCreature\(\)' -or
-   $allText -notmatch 'GetAllZDOsWithPrefabIterative'){
-    throw 'The rebuild is missing its native-copy, native-combat, or global-cleanup boundary.'
+   $allText -notmatch 'GetAllZDOsWithPrefabIterative' -or
+   $allText -notmatch 'HumanBehaviorState\.NativeCombat' -or
+   $allText -notmatch 'HumanEquipmentModule'){
+    throw 'The rebuild is missing its native-copy, state-owned combat, equipment, or global-cleanup boundary.'
 }
 if($allText -match 'Items\([^\)]*"HelmetIron"'){
     throw 'The visible-identity acceptance loadout cannot contain a hair-hiding iron helmet.'
@@ -44,17 +50,18 @@ foreach($reference in $referencePaths){if(-not (Test-Path -LiteralPath $referenc
 $references=@($referencePaths | ForEach-Object {"/reference:$_"})
 $dll=Join-Path $build 'LivingWorld.HumanNpc.dll'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:library "/out:$dll" $references $sources
-if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.4.1 compilation failed.'}
+if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.5.0 compilation failed.'}
 
 $testExe=Join-Path $build 'FoundationContractTests.exe'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:exe "/out:$testExe" `
-    (Join-Path $PSScriptRoot 'HumanIdentityRecord.cs') (Join-Path $PSScriptRoot 'CompanionStateLatch.cs') $contractTest
+    (Join-Path $PSScriptRoot 'HumanIdentityRecord.cs') (Join-Path $PSScriptRoot 'CompanionStateLatch.cs') `
+    (Join-Path $PSScriptRoot 'HumanBehaviorStateMachine.cs') $contractTest
 if($LASTEXITCODE -ne 0){throw 'Foundation contract test compilation failed.'}
 & $testExe
 if($LASTEXITCODE -ne 0){throw 'Foundation contract tests failed.'}
 
 $manifest=[ordered]@{
-    Version='0.4.1'
+    Version='0.5.0'
     Status='PASS'
     Dll=$dll
     Sha256=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
@@ -62,8 +69,11 @@ $manifest=[ordered]@{
     Contracts=@(
         'Complete serialized Humanoid/Character state copied before Player removal',
         'No RRRCore or Harmony combat dependency',
-        'Native MonsterAI retains target, facing, pursuit and attack ownership',
-        'lwparty globally removes legacy/current ZDO records before exactly two spawns',
+        'One state machine is the sole behavior-state writer and retains exact state on invalid input',
+        'Native MonsterAI exclusively owns targeting, facing, pursuit and attacks from commit through verified clear',
+        'Traversal owns only calm/readiness movement and releases its formation lease during combat',
+        'Equipment posture stows and redraws the native last-equipped pair without hardcoded weapon substitution',
+        'lwparty is explicitly a laboratory transaction that removes stale records before exactly two spawns',
         'Hair is mandatory; every male receives a native beard; females receive none',
         'Acceptance loadouts contain no helmet that can suppress visible facial hair'
     )
@@ -71,5 +81,5 @@ $manifest=[ordered]@{
     Installed=$false
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
-Write-Output "HumanNpc 0.4.1 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
-Write-Output 'Live Unity appearance, party replacement, follow, stow and combat remain to be tested.'
+Write-Output "HumanNpc 0.5.0 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
+Write-Output 'Live Unity identity preservation, pace matching, visible stow/draw, and native-combat handoff remain to be tested.'

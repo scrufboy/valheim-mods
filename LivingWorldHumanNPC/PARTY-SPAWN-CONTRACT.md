@@ -1,6 +1,8 @@
-# Party spawn transaction authority
+# Laboratory party-spawn transaction authority
 
-`lwparty` is the single public party-creation command.
+`lwparty` is the laboratory replacement command. Its exactly-two guarantee is
+an acceptance-test transaction, not a population rule for future wilderness
+encounters, recruitment, settlements, or authored groups.
 
 When neither companion exists, one invocation must:
 
@@ -8,7 +10,7 @@ When neither companion exists, one invocation must:
 2. generate and save an independent random valid human profile for each actor;
 3. let both native appearance adapters complete concurrently;
 4. reject readiness unless each actor has its selected visible head hair and any selected male beard;
-5. attach the unchanged companion behavior suite separately to each approved human;
+5. attach the current verified behavior modules separately to each approved human;
 6. initialize orders, prepare roles, and issue Follow only after both actors pass;
 7. report party success only when both complete companions are following.
 
@@ -17,6 +19,8 @@ be exposed as additional console commands or require the player to spawn,
 prepare, or recover individual members manually. A failed or incomplete actor
 cannot be reported as party success, and a retry cannot duplicate a valid actor.
 
-This contract changes construction order only. It does not authorize changes to
+This contract governs the `lwparty` laboratory transaction only. Every world
+NPC still uses the same proven individual human factory, but a world encounter
+may deliberately contain one person or any authored group size. Changes to
 combat, follow, formation, torch, stow, wetness, doors, ambient, workstation,
-cleric, or other accepted behavior implementations.
+cleric, or other behavior remain governed by their own state/module contracts.

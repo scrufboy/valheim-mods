@@ -15,7 +15,7 @@ namespace LivingWorld.HumanNpcV2
     {
         internal const string Guid = "local.livingworld.humannpc";
         internal const string Name = "Living World Human NPC";
-        internal const string Version = "0.4.1";
+        internal const string Version = "0.5.0";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -31,11 +31,11 @@ namespace LivingWorld.HumanNpcV2
             Instance = this;
             PrefabManager.OnVanillaPrefabsAvailable += RegisterPrefabs;
             partyCommand = new Terminal.ConsoleCommand("lwparty",
-                "Replace every stale Living World test companion with exactly two fresh native humans",
+                "Lab command: replace stale test companions with exactly two fresh native humans",
                 new Terminal.ConsoleEvent(OnParty));
             statusCommand = new Terminal.ConsoleCommand("lwstatus", "Show the exact Living World v2 party state",
                 new Terminal.ConsoleEvent(OnStatus));
-            Report("0.4.1 clean human foundation loaded. Commands: lwparty, lwstatus.");
+            Report("0.5.0 state-owned companion kernel loaded. Commands: lwparty, lwstatus.");
         }
 
         void RegisterPrefabs()
@@ -149,7 +149,7 @@ namespace LivingWorld.HumanNpcV2
             }
 
             foreach (GameObject actor in created) actor.GetComponent<HumanCompanionV2>().Bind(leader, generation);
-            Report("PARTY READY: exactly two new visible randomized humans follow you; stale records removed=" + removed + ".");
+            Report("LAB PARTY READY: exactly two visible randomized humans are bound; stale records removed=" + removed + ".");
         }
 
         IEnumerator RemovePrefabRecords(string prefabName, Action<int> completed)
@@ -216,12 +216,15 @@ namespace LivingWorld.HumanNpcV2
         {
             var party = Character.GetAllCharacters().Where(character => character != null &&
                 character.GetComponent<HumanAppearanceV2>() != null).ToArray();
-            Report("STATUS 0.4.1: registered=" + registered + "; partyBusy=" + partyBusy + "; loadedV2=" + party.Length + ".");
+            Report("STATUS 0.5.0: registered=" + registered + "; partyBusy=" + partyBusy + "; loadedV2=" + party.Length + ".");
             foreach (Character character in party)
             {
                 HumanAppearanceV2 appearance = character.GetComponent<HumanAppearanceV2>();
-                HumanCompanionV2 companion = character.GetComponent<HumanCompanionV2>();
-                Report(appearance.Status + "; companion=" + companion.State + "; health=" + character.GetHealth().ToString("0") + ".");
+                HumanBehaviorController behavior = character.GetComponent<HumanBehaviorController>();
+                Report(appearance.Status + "; behavior=" + (behavior == null ? "missing" : behavior.Status) +
+                    "; traversal=" + (behavior == null ? "missing" : behavior.TraversalStatus) +
+                    "; equipment=" + (behavior == null ? "missing" : behavior.EquipmentStatus) +
+                    "; health=" + character.GetHealth().ToString("0") + ".");
             }
         }
 
@@ -230,7 +233,7 @@ namespace LivingWorld.HumanNpcV2
             if (Player.m_localPlayer == null || ZNet.instance == null || ZNetScene.instance == null ||
                 ZDOMan.instance == null || ZoneSystem.instance == null)
                 throw new InvalidOperationException("Enter a local world and wait until your player is standing on loaded terrain.");
-            if (!ZNet.instance.IsServer()) throw new InvalidOperationException("The 0.4.1 party replacement command currently requires local/server authority.");
+            if (!ZNet.instance.IsServer()) throw new InvalidOperationException("The 0.5.0 lab party command currently requires local/server authority.");
         }
 
         internal static void ReportStatic(string message)

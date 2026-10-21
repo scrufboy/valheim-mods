@@ -46,6 +46,9 @@ namespace LivingWorld.HumanNpcV2
                 identity.Role = role;
                 HumanCompanionV2 companion = root.AddComponent<HumanCompanionV2>();
                 companion.Role = role;
+                root.AddComponent<HumanTraversalModule>();
+                root.AddComponent<HumanEquipmentModule>();
+                root.AddComponent<HumanBehaviorController>();
 
                 Validate(root);
                 return root;
@@ -178,8 +181,10 @@ namespace LivingWorld.HumanNpcV2
                 root.GetComponent<ZSyncTransform>() == null || root.GetComponent<ZSyncAnimation>() == null ||
                 root.GetComponent<Rigidbody>() == null || root.GetComponent<CapsuleCollider>() == null)
                 throw new InvalidOperationException("The native network, visual, animation, or physics graph is incomplete.");
-            if (root.GetComponent<HumanAppearanceV2>() == null || root.GetComponent<HumanCompanionV2>() == null)
-                throw new InvalidOperationException("The modular identity or companion adapter is missing.");
+            if (root.GetComponent<HumanAppearanceV2>() == null || root.GetComponent<HumanCompanionV2>() == null ||
+                root.GetComponent<HumanBehaviorController>() == null || root.GetComponent<HumanTraversalModule>() == null ||
+                root.GetComponent<HumanEquipmentModule>() == null)
+                throw new InvalidOperationException("The modular identity, binding, behavior, traversal, or equipment component is missing.");
         }
     }
 }

@@ -17,8 +17,8 @@ namespace LivingWorld.TelemetryV2
     public sealed class TelemetryV2 : BaseUnityPlugin
     {
         public const string Guid = "local.livingworld.telemetry";
-        public const string Version = "0.3.0";
-        const int Schema = 3;
+        public const string Version = "0.4.0";
+        const int Schema = 4;
         const float SampleSeconds = .5f;
         const long MaxBytes = 64L * 1024L * 1024L;
         const int MaxRecords = 200000;
@@ -51,7 +51,7 @@ namespace LivingWorld.TelemetryV2
         {
             if (Left == null || Right == null || HiddenLeft == null || HiddenRight == null)
                 throw new MissingMemberException("Valheim's native hand-item observation fields changed.");
-            Logger.LogInfo("Read-only 0.4 companion telemetry armed; no gameplay methods are patched.");
+            Logger.LogInfo("Read-only 0.5 behavior-kernel telemetry armed; no gameplay methods are patched.");
         }
 
         void Update()
@@ -159,6 +159,7 @@ namespace LivingWorld.TelemetryV2
             Humanoid human = actor as Humanoid;
             MonsterAI ai = actor.GetComponent<MonsterAI>();
             HumanCompanionV2 companion = actor.GetComponent<HumanCompanionV2>();
+            HumanBehaviorController behavior = actor.GetComponent<HumanBehaviorController>();
             HumanAppearanceV2 appearance = actor.GetComponent<HumanAppearanceV2>();
             Character target = ai == null ? null : ai.GetTargetCreature();
             GameObject follow = ai == null ? null : ai.GetFollowTarget();
@@ -178,6 +179,9 @@ namespace LivingWorld.TelemetryV2
             string state = String.Join("|", new[] {
                 appearance == null ? "appearance-missing" : appearance.Status,
                 companion == null ? "companion-missing" : companion.State,
+                behavior == null ? "behavior-missing" : behavior.Status,
+                behavior == null ? "traversal-missing" : behavior.TraversalStatus,
+                behavior == null ? "equipment-missing" : behavior.EquipmentStatus,
                 ai == null ? "ai-missing" : ai.IsAlerted().ToString(), targetId,
                 left, right, hiddenLeft, hiddenRight, Wet(actor).ToString()
             });
@@ -190,6 +194,13 @@ namespace LivingWorld.TelemetryV2
                 "appearanceReady", appearance != null && appearance.Ready,
                 "appearanceStatus", appearance == null ? "missing" : appearance.Status,
                 "companionState", companion == null ? "missing" : companion.State,
+                "behaviorState", behavior == null ? "missing" : behavior.State.ToString(),
+                "behaviorStatus", behavior == null ? "missing" : behavior.Status,
+                "formationSlot", behavior == null ? -1 : behavior.FormationSlot,
+                "combatClearScans", behavior == null ? -1 : behavior.ClearScans,
+                "combatClearRequired", behavior == null ? -1 : behavior.RequiredClearScans,
+                "traversalStatus", behavior == null ? "missing" : behavior.TraversalStatus,
+                "equipmentStatus", behavior == null ? "missing" : behavior.EquipmentStatus,
                 "alerted", ai != null && ai.IsAlerted(), "target", targetId,
                 "followTarget", follow == null ? "" : follow.name,
                 "health", actor.GetHealth(), "maxHealth", actor.GetMaxHealth(), "wet", Wet(actor),

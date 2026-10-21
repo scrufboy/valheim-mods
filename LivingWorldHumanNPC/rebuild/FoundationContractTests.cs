@@ -52,12 +52,68 @@ internal static class FoundationContractTests
         Check(latch.Observe(true) && latch.ClearScans == 0, "a reacquired threat cancels accumulated clear evidence");
     }
 
+    static HumanBehaviorSignal Signal(float leaderDistance, float formationDistance)
+    {
+        return new HumanBehaviorSignal
+        {
+            InputValid = true,
+            AppearanceReady = true,
+            LeaderAvailable = true,
+            LeaderDistance = leaderDistance,
+            FormationDistance = formationDistance
+        };
+    }
+
+    static void ExclusiveBehaviorStates()
+    {
+        var machine = new HumanBehaviorStateMachine(3);
+        HumanBehaviorSignal signal = Signal(3f, 1f);
+        Check(machine.Step(signal) == HumanBehaviorState.IdleGuard, "ready calm actor must enter idle guard");
+
+        signal.LeaderMoving = true;
+        Check(machine.Step(signal) == HumanBehaviorState.Traversal, "moving leader must select traversal");
+        signal.LeaderSprinting = true;
+        Check(machine.Step(signal) == HumanBehaviorState.TraversalSprint, "sprinting leader must select sprint traversal");
+        signal.LeaderArmed = true;
+        Check(machine.Step(signal) == HumanBehaviorState.CombatReadiness, "drawn leader weapon must select readiness without inventing a target");
+
+        signal.CommittedThreat = true;
+        Check(machine.Step(signal) == HumanBehaviorState.NativeCombat, "committed threat must hand off to native combat immediately");
+        signal.CommittedThreat = false;
+        signal.LeaderArmed = false;
+        Check(machine.Step(signal) == HumanBehaviorState.CombatClear && machine.ClearScans == 1,
+            "first clear scan must keep combat ownership");
+        HumanBehaviorState retained = machine.Step(new HumanBehaviorSignal { InputValid = false });
+        Check(retained == HumanBehaviorState.CombatClear && machine.ClearScans == 1,
+            "invalid input must retain state and may not count as clear evidence");
+        Check(machine.Step(signal) == HumanBehaviorState.CombatClear && machine.ClearScans == 2,
+            "second clear scan must keep combat ownership");
+        Check(machine.Step(signal) == HumanBehaviorState.Regroup, "only complete clear verification may enter regroup");
+
+        signal.FormationDistance = 3f;
+        Check(machine.Step(signal) == HumanBehaviorState.Regroup, "regroup must persist until its formation destination is reached");
+        signal.FormationDistance = 1f;
+        signal.LeaderMoving = false;
+        signal.LeaderSprinting = false;
+        Check(machine.Step(signal) == HumanBehaviorState.IdleGuard, "completed regroup must return to calm state selection");
+
+        var distanceMachine = new HumanBehaviorStateMachine(3);
+        signal = Signal(13f, 13f);
+        Check(distanceMachine.Step(signal) == HumanBehaviorState.CatchUp, "twelve metre separation must enter catch-up");
+        signal.LeaderDistance = 8f;
+        Check(distanceMachine.Step(signal) == HumanBehaviorState.CatchUp, "catch-up hysteresis must prevent boundary flicker");
+        signal.LeaderDistance = 6f;
+        signal.LeaderMoving = true;
+        Check(distanceMachine.Step(signal) == HumanBehaviorState.Traversal, "catch-up may release only inside seven metres");
+    }
+
     public static int Main()
     {
         Identity();
         DurableCombatState();
+        ExclusiveBehaviorStates();
         if (failures != 0) return 1;
-        Console.WriteLine("Foundation contracts PASS: randomized visible identity and durable combat state.");
+        Console.WriteLine("Foundation contracts PASS: identity, durable combat ownership, and exclusive behavior transitions.");
         return 0;
     }
 }
