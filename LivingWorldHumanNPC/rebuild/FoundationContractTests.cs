@@ -128,13 +128,28 @@ internal static class FoundationContractTests
             "completed clear verification with a remaining alert returns to readiness");
     }
 
+    static void GuardCoverage()
+    {
+        var coverage = new GuardCoverageV2();
+        Check(coverage.Choose(0, 3) == 3, "fresh guard coverage starts at its stable actor offset");
+        coverage.Resolve(3, 10d);
+        Check(coverage.Choose(0, 0) == 9, "completed scan makes the opposing sector next");
+        Check(GuardCoverageV2.Opposite(9) == 3, "opposing guard sectors are symmetric");
+        Check(coverage.Choose(1 << 3, 0) == 9, "a second guard covers the opposing field");
+        Check(coverage.Choose((1 << 0) | (1 << 4), 0) == 8,
+            "additional guards maximize separation from every occupied sector");
+        coverage.Reset();
+        Check(coverage.Choose(0, 7) == 7, "new-area reset discards previous coverage history");
+    }
+
     public static int Main()
     {
         Identity();
         DurableCombatState();
         ExclusiveBehaviorStates();
+        GuardCoverage();
         if (failures != 0) return 1;
-        Console.WriteLine("Foundation contracts PASS: identity, durable combat ownership, and exclusive behavior transitions.");
+        Console.WriteLine("Foundation contracts PASS: identity, combat ownership, exclusive states, and coordinated guard coverage.");
         return 0;
     }
 }

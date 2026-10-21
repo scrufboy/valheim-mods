@@ -15,7 +15,7 @@ namespace LivingWorld.HumanNpcV2
     {
         internal const string Guid = "local.livingworld.humannpc";
         internal const string Name = "Living World Human NPC";
-        internal const string Version = "0.5.3";
+        internal const string Version = "0.6.0";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -35,7 +35,7 @@ namespace LivingWorld.HumanNpcV2
                 new Terminal.ConsoleEvent(OnParty));
             statusCommand = new Terminal.ConsoleCommand("lwstatus", "Show the exact Living World v2 party state",
                 new Terminal.ConsoleEvent(OnStatus));
-            Report("0.5.3 governed companion movement loaded. Commands: lwparty, lwstatus.");
+            Report("0.6.0 settled guard coverage loaded. Commands: lwparty, lwstatus.");
         }
 
         void RegisterPrefabs()
@@ -216,13 +216,14 @@ namespace LivingWorld.HumanNpcV2
         {
             var party = Character.GetAllCharacters().Where(character => character != null &&
                 character.GetComponent<HumanAppearanceV2>() != null).ToArray();
-            Report("STATUS 0.5.3: registered=" + registered + "; partyBusy=" + partyBusy + "; loadedV2=" + party.Length + ".");
+            Report("STATUS 0.6.0: registered=" + registered + "; partyBusy=" + partyBusy + "; loadedV2=" + party.Length + ".");
             foreach (Character character in party)
             {
                 HumanAppearanceV2 appearance = character.GetComponent<HumanAppearanceV2>();
                 HumanBehaviorController behavior = character.GetComponent<HumanBehaviorController>();
                 Report(appearance.Status + "; behavior=" + (behavior == null ? "missing" : behavior.Status) +
                     "; traversal=" + (behavior == null ? "missing" : behavior.TraversalStatus) +
+                    "; guard=" + (behavior == null ? "missing" : behavior.SettledGuardStatus) +
                     "; equipment=" + (behavior == null ? "missing" : behavior.EquipmentStatus) +
                     "; health=" + character.GetHealth().ToString("0") + ".");
             }
@@ -233,7 +234,7 @@ namespace LivingWorld.HumanNpcV2
             if (Player.m_localPlayer == null || ZNet.instance == null || ZNetScene.instance == null ||
                 ZDOMan.instance == null || ZoneSystem.instance == null)
                 throw new InvalidOperationException("Enter a local world and wait until your player is standing on loaded terrain.");
-            if (!ZNet.instance.IsServer()) throw new InvalidOperationException("The 0.5.3 lab party command currently requires local/server authority.");
+            if (!ZNet.instance.IsServer()) throw new InvalidOperationException("The 0.6.0 lab party command currently requires local/server authority.");
         }
 
         internal static void ReportStatic(string message)

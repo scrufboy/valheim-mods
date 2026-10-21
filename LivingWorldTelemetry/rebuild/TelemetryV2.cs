@@ -17,8 +17,8 @@ namespace LivingWorld.TelemetryV2
     public sealed class TelemetryV2 : BaseUnityPlugin
     {
         public const string Guid = "local.livingworld.telemetry";
-        public const string Version = "0.5.1";
-        const int Schema = 6;
+        public const string Version = "0.6.0";
+        const int Schema = 7;
         const float SampleSeconds = .5f;
         const long MaxBytes = 64L * 1024L * 1024L;
         const int MaxRecords = 200000;
@@ -51,7 +51,7 @@ namespace LivingWorld.TelemetryV2
         {
             if (Left == null || Right == null || HiddenLeft == null || HiddenRight == null)
                 throw new MissingMemberException("Valheim's native hand-item observation fields changed.");
-            Logger.LogInfo("Read-only 0.5.3 state-boundary telemetry armed; no gameplay methods are patched.");
+            Logger.LogInfo("Read-only 0.6.0 settled-guard telemetry armed; no gameplay methods are patched.");
         }
 
         void Update()
@@ -194,6 +194,7 @@ namespace LivingWorld.TelemetryV2
                 behavior == null ? "behavior-missing" : behavior.Status,
                 behavior == null ? "traversal-missing" : behavior.TraversalStatus,
                 behavior == null ? "equipment-missing" : behavior.EquipmentStatus,
+                behavior == null ? "guard-missing" : behavior.SettledGuardStatus,
                 behavior == null ? "boundary-missing" : behavior.CombatBoundaryReleases.ToString(CultureInfo.InvariantCulture),
                 ai == null ? "ai-missing" : ai.IsAlerted().ToString(), targetId,
                 left, right, hiddenLeft, hiddenRight, Wet(actor).ToString()
@@ -217,6 +218,9 @@ namespace LivingWorld.TelemetryV2
                 "combatClearRequired", behavior == null ? -1 : behavior.RequiredClearScans,
                 "traversalStatus", behavior == null ? "missing" : behavior.TraversalStatus,
                 "equipmentStatus", behavior == null ? "missing" : behavior.EquipmentStatus,
+                "settledGuardStatus", behavior == null ? "missing" : behavior.SettledGuardStatus,
+                "guardSector", behavior == null ? -1 : behavior.GuardSector,
+                "guardPhase", behavior == null ? "missing" : behavior.GuardPhase,
                 "nativeAlert", behavior != null && behavior.NativeAlert,
                 "committedThreat", behavior != null && behavior.CommittedThreat,
                 "leaderArmed", behavior != null && behavior.LeaderArmed,

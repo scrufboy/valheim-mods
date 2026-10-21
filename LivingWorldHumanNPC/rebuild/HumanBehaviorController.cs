@@ -22,6 +22,7 @@ namespace LivingWorld.HumanNpcV2
         HumanCompanionV2 companion;
         HumanTraversalModule traversal;
         HumanEquipmentModule equipment;
+        HumanSettledGuardModule settledGuard;
         HumanBehaviorStateMachine machine;
         float nextDecision;
         float nextFaultLog;
@@ -42,6 +43,9 @@ namespace LivingWorld.HumanNpcV2
         public float FormationHeading { get { return traversal == null ? 0f : traversal.FormationHeading; } }
         public float FormationTargetDistance { get { return traversal == null ? -1f : traversal.FormationTargetDistance; } }
         public int CombatBoundaryReleases { get; private set; }
+        public string SettledGuardStatus { get { return settledGuard == null ? "missing" : settledGuard.Status; } }
+        public int GuardSector { get { return settledGuard == null ? -1 : settledGuard.Sector; } }
+        public string GuardPhase { get { return settledGuard == null ? "missing" : settledGuard.Phase; } }
 
         void Awake()
         {
@@ -52,6 +56,7 @@ namespace LivingWorld.HumanNpcV2
             companion = GetComponent<HumanCompanionV2>();
             traversal = GetComponent<HumanTraversalModule>();
             equipment = GetComponent<HumanEquipmentModule>();
+            settledGuard = GetComponent<HumanSettledGuardModule>();
             if (VisibleLeft == null || VisibleRight == null || ClearNativeTarget == null)
                 throw new MissingMemberException("Valheim's native hand or combat-target boundary changed.");
             machine = new HumanBehaviorStateMachine(CombatClearScans);
@@ -84,7 +89,7 @@ namespace LivingWorld.HumanNpcV2
         void Decide()
         {
             bool ownerReady = view != null && view.IsValid() && view.IsOwner() && ai != null && human != null &&
-                companion != null && traversal != null && equipment != null;
+                companion != null && traversal != null && equipment != null && settledGuard != null;
             if (!ownerReady)
             {
                 machine.Step(new HumanBehaviorSignal { InputValid = false });
@@ -138,6 +143,7 @@ namespace LivingWorld.HumanNpcV2
 
             traversal.Configure(state, leader);
             equipment.Configure(state);
+            settledGuard.Configure(state, leader);
 
             string detail = state.ToString();
             if (state == HumanBehaviorState.NativeCombat)

@@ -25,6 +25,10 @@ namespace LivingWorld.HumanNpcV2
         float baseWalkSpeed;
         float baseRunSpeed;
         float nextFaultLog;
+        HumanSettledGuardModule settledOwner;
+        Vector3 settledDestination;
+        Vector3 settledFollowAnchor;
+        bool settledHold;
 
         public int FormationSlot { get { return slot; } }
         public string Status { get; private set; }
@@ -36,6 +40,8 @@ namespace LivingWorld.HumanNpcV2
         {
             get
             {
+                if (settledOwner != null && state == HumanBehaviorState.IdleGuard)
+                    return Vector3.Distance(transform.position, settledDestination);
                 return leader == null || slot < 0 ? -1f :
                     Vector3.Distance(transform.position, FormationLeasesV2.Position(leader, slot, formationForward));
             }
@@ -62,6 +68,7 @@ namespace LivingWorld.HumanNpcV2
 
             if (nextState == HumanBehaviorState.NativeCombat || nextState == HumanBehaviorState.CombatClear)
             {
+                ClearSettledDestination(null);
                 ReleaseFormation();
                 RestorePace();
                 if (ai != null) ai.SetFollowTarget(nextLeader == null ? null : nextLeader.gameObject);
@@ -71,12 +78,15 @@ namespace LivingWorld.HumanNpcV2
 
             if (!OwnsTraversal(nextState) || nextLeader == null)
             {
+                ClearSettledDestination(null);
                 ReleaseFormation();
                 RestorePace();
                 if (ai != null) ai.SetFollowTarget(null);
                 Status = "inactive";
                 return;
             }
+
+            if (nextState != HumanBehaviorState.IdleGuard) ClearSettledDestination(null);
 
             EnsureFormationFrame(nextLeader);
             EnsureFormation(nextLeader);
@@ -113,8 +123,10 @@ namespace LivingWorld.HumanNpcV2
 
                 UpdateFormationFrame(leader);
                 EnsureFormation(leader);
-                Vector3 destination = FormationLeasesV2.Position(leader, slot, formationForward);
-                Vector3 followAnchor = FollowAnchorPosition(leader, destination);
+                bool settled = settledOwner != null && state == HumanBehaviorState.IdleGuard;
+                Vector3 destination = settled ? settledDestination :
+                    FormationLeasesV2.Position(leader, slot, formationForward);
+                Vector3 followAnchor = settled ? settledFollowAnchor : FollowAnchorPosition(leader, destination);
                 anchor.transform.position = followAnchor;
                 anchor.transform.rotation = Quaternion.LookRotation(formationForward, Vector3.up);
                 if (ai.GetFollowTarget() != anchor) ai.SetFollowTarget(anchor);
@@ -122,15 +134,16 @@ namespace LivingWorld.HumanNpcV2
                 float leaseDistance = Vector3.Distance(transform.position, destination);
                 float anchorDistance = Vector3.Distance(transform.position, followAnchor);
                 float leaderDistance = Vector3.Distance(transform.position, leader.transform.position);
-                bool run = state == HumanBehaviorState.TraversalSprint || state == HumanBehaviorState.CatchUp ||
+                bool run = !settled && (state == HumanBehaviorState.TraversalSprint || state == HumanBehaviorState.CatchUp ||
                     ((state == HumanBehaviorState.CombatReadiness || state == HumanBehaviorState.Regroup) &&
-                        (leader.IsRunning() || leaderDistance > 7f));
+                        (leader.IsRunning() || leaderDistance > 7f)));
                 ApplyPace(run, state == HumanBehaviorState.CatchUp || leaderDistance > 12f);
 
                 // Native Follow remains the only movement/path writer. This only
                 // selects its pace after it has supplied the movement direction.
                 human.SetRun(run && anchorDistance > NativeFollowArrivalDistance + .15f);
-                Status = "slot=" + slot + "; native " + (run ? "run" : "trot") +
+                Status = (settled ? "settled guard" + (settledHold ? " scan" : " approach") : "slot=" + slot) +
+                    "; native " + (run ? "run" : "trot") +
                     "; leaseDistance=" + leaseDistance.ToString("0.0") +
                     "; anchorDistance=" + anchorDistance.ToString("0.0") +
                     "; heading=" + FormationHeading.ToString("0");
@@ -178,7 +191,8 @@ namespace LivingWorld.HumanNpcV2
                 anchor.hideFlags = HideFlags.HideAndDontSave;
             }
             Vector3 destination = FormationLeasesV2.Position(nextLeader, slot, formationForward);
-            anchor.transform.position = FollowAnchorPosition(nextLeader, destination);
+            anchor.transform.position = settledOwner != null && state == HumanBehaviorState.IdleGuard ?
+                settledFollowAnchor : FollowAnchorPosition(nextLeader, destination);
             anchor.transform.rotation = Quaternion.LookRotation(formationForward, Vector3.up);
             if (ai != null && ai.GetFollowTarget() != anchor) ai.SetFollowTarget(anchor);
         }
@@ -194,6 +208,29 @@ namespace LivingWorld.HumanNpcV2
             // leader is travelling, so the actor's native arrival point is the
             // leased formation position instead of three metres behind it.
             return destination + formationForward * MovingAnchorLead;
+        }
+
+        internal bool SetSettledDestination(HumanSettledGuardModule owner, Vector3 destination, Vector3 followAnchor)
+        {
+            if (owner == null || state != HumanBehaviorState.IdleGuard || leader == null ||
+                (settledOwner != null && settledOwner != owner)) return false;
+            settledOwner = owner;
+            settledDestination = destination;
+            settledFollowAnchor = followAnchor;
+            settledHold = false;
+            return true;
+        }
+
+        internal void SetSettledHold(HumanSettledGuardModule owner, bool hold)
+        {
+            if (owner != null && settledOwner == owner) settledHold = hold;
+        }
+
+        internal void ClearSettledDestination(HumanSettledGuardModule owner)
+        {
+            if (owner != null && settledOwner != owner) return;
+            settledOwner = null;
+            settledHold = false;
         }
 
         void ApplyPace(bool run, bool catchUp)

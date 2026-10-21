@@ -93,7 +93,7 @@ Formation is a set of available leases around the player, not permanent archer/c
 - A small player turn while settled does not immediately force repositioning. Repositioning requires meaningful travel, obstruction, unsafe spacing, or a threat-facing need.
 - Native pathfinding owns terrain, inclines, obstacles, and doors.
 
-The 0.5.3 kernel supplies six available rear/flank leases, assigns the nearest
+The 0.6.0 kernel supplies six available rear/flank leases, assigns the nearest
 unclaimed lease, releases it for combat, and permits either companion to claim
 any available position after regroup. The formation frame follows actual leader
 travel and remains fixed while the leader is stationary, so camera/body turning
@@ -128,6 +128,23 @@ When Follow is active and the party is settled:
 - Guard/observe can coexist with carrying a torch.
 - Actual workstation/crafting animation owns the hands and temporarily defers a torch.
 - Party members use staggered timing so their animations and decisions do not look hive-minded.
+
+The 0.6.0 settled-guard module implements the first bounded activity in this
+owner. After the actor reaches its formation lease and the leader remains still,
+it may request one safe, path-tested guard point from the existing traversal
+module. Twelve temporary coverage sectors are shared across the party: active
+companions cannot lease the same sector and are scored toward opposing uncovered
+fields. Arrival begins a six-second left/center/right sweep. Only completing that
+sweep records the sector as covered and prefers its opposite next. Each actor's
+formation slot adds a small deterministic timing offset so the party does not
+move or scan in lockstep. Travel, alert, combat, unsafe footing, leader
+displacement, swimming, attacking, drawing, blocking, loss of authority, or
+destruction immediately cancels the optional activity and releases its lease.
+
+The settled-guard module never targets, attacks, equips, or issues a movement
+command. `HumanTraversalModule` remains the sole native Follow/path writer;
+settled guard can only request or release a peaceful destination while
+`IdleGuard` owns the actor.
 
 ## Utility torch
 

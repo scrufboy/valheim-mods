@@ -14,8 +14,10 @@ $sources=@(
     'NativeHumanFactoryV2.cs',
     'HumanAppearanceV2.cs',
     'HumanCompanionV2.cs',
+    'GuardCoverageV2.cs',
     'HumanTraversalModule.cs',
     'HumanEquipmentModule.cs',
+    'HumanSettledGuardModule.cs',
     'HumanBehaviorController.cs',
     'HumanNpcPlugin.cs'
 ) | ForEach-Object { Join-Path $PSScriptRoot $_ }
@@ -40,6 +42,7 @@ if($allText -match 'Items\([^\)]*"HelmetIron"'){
 $traversalText=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'HumanTraversalModule.cs') -Raw
 $stateText=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'HumanBehaviorStateMachine.cs') -Raw
 $companionText=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'HumanCompanionV2.cs') -Raw
+$guardText=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'HumanSettledGuardModule.cs') -Raw
 if($traversalText -match 'MoveTo\.Invoke|GetMethod\("MoveTo"'){
     throw 'Traversal cannot add a second movement writer beside native MonsterAI.Follow.'
 }
@@ -56,6 +59,10 @@ if($controllerText -match 'leader\.GetCurrentWeapon\(\)' -or
 }
 if($traversalText -notmatch 'MovingAnchorLead' -or $traversalText -notmatch 'FollowAnchorPosition'){
     throw 'Native follow arrival-radius compensation is missing.'
+}
+if($guardText -match 'SetFollowTarget|MoveTo|SetMoveDir|SetRun|EquipItem|UnequipItem|SetTarget|DoAttack|StartAttack' -or
+   $guardText -notmatch 'GuardCoverageV2' -or $guardText -notmatch 'SetSettledDestination'){
+    throw 'Settled guard must use coverage leases and request the sole traversal writer without controlling combat or equipment.'
 }
 $factoryText=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'NativeHumanFactoryV2.cs') -Raw
 if($factoryText -notmatch 'm_maxChaseDistance = 0f' -or $factoryText -notmatch 'm_alertRange = 20f'){
@@ -74,18 +81,18 @@ foreach($reference in $referencePaths){if(-not (Test-Path -LiteralPath $referenc
 $references=@($referencePaths | ForEach-Object {"/reference:$_"})
 $dll=Join-Path $build 'LivingWorld.HumanNpc.dll'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:library "/out:$dll" $references $sources
-if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.5.3 compilation failed.'}
+if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.6.0 compilation failed.'}
 
 $testExe=Join-Path $build 'FoundationContractTests.exe'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:exe "/out:$testExe" `
     (Join-Path $PSScriptRoot 'HumanIdentityRecord.cs') (Join-Path $PSScriptRoot 'CompanionStateLatch.cs') `
-    (Join-Path $PSScriptRoot 'HumanBehaviorStateMachine.cs') $contractTest
+    (Join-Path $PSScriptRoot 'HumanBehaviorStateMachine.cs') (Join-Path $PSScriptRoot 'GuardCoverageV2.cs') $contractTest
 if($LASTEXITCODE -ne 0){throw 'Foundation contract test compilation failed.'}
 & $testExe
 if($LASTEXITCODE -ne 0){throw 'Foundation contract tests failed.'}
 
 $manifest=[ordered]@{
-    Version='0.5.3'
+    Version='0.6.0'
     Status='PASS'
     Dll=$dll
     Sha256=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
@@ -100,6 +107,8 @@ $manifest=[ordered]@{
         'Native alert without a creature target selects readiness rather than committed combat',
         'Native combat releases the formation lease while retaining a leader follow tether inside an explicit moving combat boundary',
         'Previously saved 0.5.1 actors migrate only the obsolete tame bit to false',
+        'Settled guard is an IdleGuard-only module with temporary opposing coverage leases and completed field-of-view scans',
+        'Settled guard requests a destination from the sole traversal writer and cannot target, attack, equip, or issue movement',
         'Readiness observes only visible hand weapons and never Valheim unarmed fallback data',
         'Native Follow remains the only path writer; a moving destination lead compensates its native arrival radius',
         'Equipment posture stows and redraws the native last-equipped pair without hardcoded weapon substitution',
@@ -111,5 +120,5 @@ $manifest=[ordered]@{
     Installed=$false
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
-Write-Output "HumanNpc 0.5.3 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
+Write-Output "HumanNpc 0.6.0 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
 Write-Output 'Live Unity identity preservation, pace matching, visible stow/draw, and native-combat handoff remain to be tested.'
