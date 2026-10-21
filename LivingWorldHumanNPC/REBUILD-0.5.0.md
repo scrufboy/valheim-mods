@@ -1,5 +1,8 @@
 # Living World Human NPC 0.5.0 behavior kernel
 
+> Historical build note: the 2026-10-21 live run failed traversal acceptance.
+> `REBUILD-0.5.1.md` records the measured causes and ownership correction.
+
 0.5.0 preserves the accepted 0.4.1 native-human creation and appearance path.
 The individual human factory, randomized sex/body/hair/beard identity, saved
 appearance record, and helmet-free acceptance loadouts were not redesigned.

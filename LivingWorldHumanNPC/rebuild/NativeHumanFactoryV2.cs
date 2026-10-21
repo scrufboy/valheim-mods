@@ -153,7 +153,11 @@ namespace LivingWorld.HumanNpcV2
             ai.m_circulateWhileChargingFlying = false;
             ai.m_interceptTimeMin = 0f;
             ai.m_interceptTimeMax = 2f;
-            ai.m_maxChaseDistance = 300f;
+            // The native chase distance is measured from the actor's original
+            // spawn point, not from its moving leader. A travelling companion
+            // therefore disables that obsolete fixed-origin limit and uses the
+            // native tamed follow-target alert range as its moving combat bound.
+            ai.m_maxChaseDistance = 0f;
             ai.m_minAttackInterval = 0f;
             ai.m_circleTargetInterval = 8f;
             ai.m_circleTargetDuration = 6f;

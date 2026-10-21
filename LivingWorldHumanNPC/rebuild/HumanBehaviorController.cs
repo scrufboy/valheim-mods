@@ -27,6 +27,13 @@ namespace LivingWorld.HumanNpcV2
         public string TraversalStatus { get { return traversal == null ? "missing" : traversal.Status; } }
         public string EquipmentStatus { get { return equipment == null ? "missing" : equipment.Status; } }
         public int FormationSlot { get { return traversal == null ? -1 : traversal.FormationSlot; } }
+        public bool NativeAlert { get; private set; }
+        public bool CommittedThreat { get; private set; }
+        public bool LeaderArmed { get; private set; }
+        public float LeaderDistance { get; private set; }
+        public float LeaderSpeed { get; private set; }
+        public float FormationHeading { get { return traversal == null ? 0f : traversal.FormationHeading; } }
+        public float FormationTargetDistance { get { return traversal == null ? -1f : traversal.FormationTargetDistance; } }
 
         void Awake()
         {
@@ -78,7 +85,8 @@ namespace LivingWorld.HumanNpcV2
             Player leader;
             bool hasLeader = companion.TryResolveLeader(out leader);
             Character target = ai.GetTargetCreature();
-            bool committedThreat = target != null || ai.IsAlerted();
+            bool committedThreat = target != null;
+            bool nativeAlert = ai.IsAlerted();
             Vector3 velocity = hasLeader ? leader.GetVelocity() : Vector3.zero;
             float planarSpeed = new Vector2(velocity.x, velocity.z).magnitude;
             float leaderDistance = hasLeader ? Vector3.Distance(transform.position, leader.transform.position) : -1f;
@@ -86,6 +94,11 @@ namespace LivingWorld.HumanNpcV2
             ItemDrop.ItemData leaderWeapon = hasLeader ? leader.GetCurrentWeapon() : null;
             bool leaderArmed = leaderWeapon != null && leaderWeapon.IsWeapon() &&
                 leaderWeapon.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Torch;
+            NativeAlert = nativeAlert;
+            CommittedThreat = committedThreat;
+            LeaderArmed = leaderArmed;
+            LeaderDistance = leaderDistance;
+            LeaderSpeed = planarSpeed;
 
             HumanBehaviorState state = machine.Step(new HumanBehaviorSignal
             {
@@ -95,6 +108,7 @@ namespace LivingWorld.HumanNpcV2
                 LeaderMoving = planarSpeed > .35f,
                 LeaderSprinting = hasLeader && leader.IsRunning() && planarSpeed > .35f,
                 LeaderArmed = leaderArmed,
+                NativeAlert = nativeAlert,
                 CommittedThreat = committedThreat,
                 LeaderDistance = leaderDistance,
                 FormationDistance = formationDistance
@@ -108,6 +122,9 @@ namespace LivingWorld.HumanNpcV2
                 detail += target == null ? "; alerted" : "; target=" + target.GetHoverName();
             else if (state == HumanBehaviorState.CombatClear)
                 detail += "; clear=" + machine.ClearScans + "/" + machine.RequiredClearScans;
+            else if (state == HumanBehaviorState.CombatReadiness)
+                detail += "; reason=" + (nativeAlert ? "native alert" : "leader armed") +
+                    "; leaderDistance=" + leaderDistance.ToString("0.0") + "; slot=" + traversal.FormationSlot;
             else if (hasLeader)
                 detail += "; leaderDistance=" + leaderDistance.ToString("0.0") + "; slot=" + traversal.FormationSlot;
             Status = detail;

@@ -77,6 +77,11 @@ internal static class FoundationContractTests
         signal.LeaderArmed = true;
         Check(machine.Step(signal) == HumanBehaviorState.CombatReadiness, "drawn leader weapon must select readiness without inventing a target");
 
+        signal.LeaderDistance = 13f;
+        Check(machine.Step(signal) == HumanBehaviorState.CombatReadiness,
+            "readiness must outrank catch-up so movement cannot stow an armed companion");
+        signal.LeaderDistance = 3f;
+
         signal.CommittedThreat = true;
         Check(machine.Step(signal) == HumanBehaviorState.NativeCombat, "committed threat must hand off to native combat immediately");
         signal.CommittedThreat = false;
@@ -105,6 +110,22 @@ internal static class FoundationContractTests
         signal.LeaderDistance = 6f;
         signal.LeaderMoving = true;
         Check(distanceMachine.Step(signal) == HumanBehaviorState.Traversal, "catch-up may release only inside seven metres");
+
+        var alertMachine = new HumanBehaviorStateMachine(2);
+        signal = Signal(3f, 1f);
+        signal.NativeAlert = true;
+        Check(alertMachine.Step(signal) == HumanBehaviorState.CombatReadiness,
+            "native alert without a creature target is readiness, not committed combat");
+        signal.NativeAlert = false;
+        signal.CommittedThreat = true;
+        Check(alertMachine.Step(signal) == HumanBehaviorState.NativeCombat,
+            "a real creature target must still commit native combat");
+        signal.CommittedThreat = false;
+        signal.NativeAlert = true;
+        Check(alertMachine.Step(signal) == HumanBehaviorState.CombatClear,
+            "alert does not bypass the verified combat-clear window");
+        Check(alertMachine.Step(signal) == HumanBehaviorState.CombatReadiness,
+            "completed clear verification with a remaining alert returns to readiness");
     }
 
     public static int Main()

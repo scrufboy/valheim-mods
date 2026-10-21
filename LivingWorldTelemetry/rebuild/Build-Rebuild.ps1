@@ -19,22 +19,23 @@ foreach($path in @($source)+$references){if(-not(Test-Path -LiteralPath $path -P
 
 $text=Get-Content -LiteralPath $source -Raw
 if($text -match 'Harmony|LivingWorld\.HumanNpc;' -or $text -notmatch 'HumanCompanionV2'){
-    throw 'Telemetry must observe the 0.4 boundary without patching gameplay methods.'
+    throw 'Telemetry must observe the 0.5 boundary without patching gameplay methods.'
 }
 $dll=Join-Path $build 'LivingWorld.Telemetry.dll'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:library "/out:$dll" ($references|ForEach-Object{"/reference:$_"}) $source
-if($LASTEXITCODE -ne 0){throw 'Living World Telemetry 0.4.0 compilation failed.'}
+if($LASTEXITCODE -ne 0){throw 'Living World Telemetry 0.5.0 compilation failed.'}
 
 $manifest=[ordered]@{
-    Version='0.4.0';Status='PASS';Dll=$dll;
+    Version='0.5.0';Status='PASS';Dll=$dll;
     Sha256=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash;
     HumanNpcSha256=(Get-FileHash -LiteralPath $HumanNpcAssembly -Algorithm SHA256).Hash;
     Contracts=@(
         'No Harmony or gameplay-method patches',
         'Observes only HumanCompanionV2 actors',
-        'Records identity, exclusive behavior state, formation lease, traversal, equipment posture, native target, health and position',
+        'Records identity, exclusive behavior state, alert-versus-target evidence, formation frame, traversal, equipment posture, tamed tether, health and position',
+        'Records the leader position, velocity, travel speed, facing, posture and weapon every sample',
         'Bounded local JSONL output with automatic world lifecycle'
     );Installed=$false
 }
 $manifest|ConvertTo-Json -Depth 5|Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
-Write-Output "Telemetry 0.4.0 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
+Write-Output "Telemetry 0.5.0 rebuild PASS. DLL SHA256: $($manifest.Sha256)"

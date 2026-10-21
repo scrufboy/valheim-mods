@@ -17,8 +17,8 @@ namespace LivingWorld.TelemetryV2
     public sealed class TelemetryV2 : BaseUnityPlugin
     {
         public const string Guid = "local.livingworld.telemetry";
-        public const string Version = "0.4.0";
-        const int Schema = 4;
+        public const string Version = "0.5.0";
+        const int Schema = 5;
         const float SampleSeconds = .5f;
         const long MaxBytes = 64L * 1024L * 1024L;
         const int MaxRecords = 200000;
@@ -51,7 +51,7 @@ namespace LivingWorld.TelemetryV2
         {
             if (Left == null || Right == null || HiddenLeft == null || HiddenRight == null)
                 throw new MissingMemberException("Valheim's native hand-item observation fields changed.");
-            Logger.LogInfo("Read-only 0.5 behavior-kernel telemetry armed; no gameplay methods are patched.");
+            Logger.LogInfo("Read-only 0.5.1 movement-ownership telemetry armed; no gameplay methods are patched.");
         }
 
         void Update()
@@ -148,9 +148,20 @@ namespace LivingWorld.TelemetryV2
             foreach (Character actor in actors) SampleActor(actor, actors, initial);
             Player player = Player.m_localPlayer;
             if (player != null)
+            {
+                Vector3 velocity = player.GetVelocity();
+                Vector3 forward = player.transform.forward;
+                Emit("LeaderSample", Id(player),
+                    "x", player.transform.position.x, "y", player.transform.position.y, "z", player.transform.position.z,
+                    "vx", velocity.x, "vy", velocity.y, "vz", velocity.z,
+                    "speed", new Vector2(velocity.x, velocity.z).magnitude,
+                    "forwardX", forward.x, "forwardZ", forward.z,
+                    "running", player.IsRunning(), "crouched", player.IsCrouching(),
+                    "weapon", Item(player.GetCurrentWeapon()), "wet", Wet(player));
                 EmitChanged("player.environment", "Observation", Id(player), "wet=" + Wet(player),
                     "wet", Wet(player), "health", player.GetHealth(), "x", player.transform.position.x,
                     "y", player.transform.position.y, "z", player.transform.position.z);
+            }
         }
 
         void SampleActor(Character actor, Character[] party, bool initial)
@@ -197,12 +208,20 @@ namespace LivingWorld.TelemetryV2
                 "behaviorState", behavior == null ? "missing" : behavior.State.ToString(),
                 "behaviorStatus", behavior == null ? "missing" : behavior.Status,
                 "formationSlot", behavior == null ? -1 : behavior.FormationSlot,
+                "formationHeading", behavior == null ? 0f : behavior.FormationHeading,
+                "formationTargetDistance", behavior == null ? -1f : behavior.FormationTargetDistance,
                 "combatClearScans", behavior == null ? -1 : behavior.ClearScans,
                 "combatClearRequired", behavior == null ? -1 : behavior.RequiredClearScans,
                 "traversalStatus", behavior == null ? "missing" : behavior.TraversalStatus,
                 "equipmentStatus", behavior == null ? "missing" : behavior.EquipmentStatus,
+                "nativeAlert", behavior != null && behavior.NativeAlert,
+                "committedThreat", behavior != null && behavior.CommittedThreat,
+                "leaderArmed", behavior != null && behavior.LeaderArmed,
+                "controllerLeaderDistance", behavior == null ? -1f : behavior.LeaderDistance,
+                "controllerLeaderSpeed", behavior == null ? -1f : behavior.LeaderSpeed,
                 "alerted", ai != null && ai.IsAlerted(), "target", targetId,
                 "followTarget", follow == null ? "" : follow.name,
+                "tamed", actor.IsTamed(),
                 "health", actor.GetHealth(), "maxHealth", actor.GetMaxHealth(), "wet", Wet(actor),
                 "left", left, "right", right, "stowedLeft", hiddenLeft, "stowedRight", hiddenRight,
                 "weapon", human == null ? "" : Item(human.GetCurrentWeapon()));

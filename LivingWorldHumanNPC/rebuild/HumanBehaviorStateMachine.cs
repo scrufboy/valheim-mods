@@ -24,6 +24,7 @@ namespace LivingWorld.HumanNpcV2
         internal bool LeaderMoving;
         internal bool LeaderSprinting;
         internal bool LeaderArmed;
+        internal bool NativeAlert;
         internal bool CommittedThreat;
         internal float LeaderDistance;
         internal float FormationDistance;
@@ -78,6 +79,12 @@ namespace LivingWorld.HumanNpcV2
                     return State;
                 }
 
+                if (signal.NativeAlert || signal.LeaderArmed)
+                {
+                    State = HumanBehaviorState.CombatReadiness;
+                    return State;
+                }
+
                 State = HumanBehaviorState.Regroup;
                 return State;
             }
@@ -88,6 +95,12 @@ namespace LivingWorld.HumanNpcV2
                 return State;
             }
 
+            if (signal.NativeAlert || signal.LeaderArmed)
+            {
+                State = HumanBehaviorState.CombatReadiness;
+                return State;
+            }
+
             if (State == HumanBehaviorState.Regroup && signal.FormationDistance > RegroupArrivalDistance)
                 return State;
 
@@ -95,12 +108,6 @@ namespace LivingWorld.HumanNpcV2
                 (State == HumanBehaviorState.CatchUp && signal.LeaderDistance > CatchUpReleaseDistance))
             {
                 State = HumanBehaviorState.CatchUp;
-                return State;
-            }
-
-            if (signal.LeaderArmed)
-            {
-                State = HumanBehaviorState.CombatReadiness;
                 return State;
             }
 
