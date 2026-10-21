@@ -281,5 +281,15 @@ Verified package SHA-256:
 
 `243679DC10FB51DDF90EF61302EF5F4C540BDE87944E421A8E4524C9AB88F4E3`
 
-At the time this record was written, Valheim was still running. 0.3.68 was
-built and packaged but was intentionally not copied into the live profile.
+After Valheim closed, the complete 0.3.67 log and telemetry were preserved with
+the failed DLL. The log also proved two fresh 0.3.67 actors (Hair36 and Hair20)
+failed identically; this was not limited to the older saved pair. Because no
+actor passed appearance initialization, the behavior installer never activated
+follow, guard, ambient, combat, torch, door, wetness or workstation services.
+The telemetry consequently contains a player stream but no NPC behavior stream.
+
+0.3.68 was then installed and its active assembly metadata and SHA-256 were
+verified. The failed 0.3.67 DLL, complete log, telemetry, and replacement record
+are preserved at:
+
+`C:\Users\scruf\AppData\Roaming\r2modmanPlus-local\Valheim\profiles\LWC Human Lab v1\BepInEx\LivingWorldBackups\HumanNpc\20261021-failed-0.3.67-saved-and-fresh-bald-inert`
