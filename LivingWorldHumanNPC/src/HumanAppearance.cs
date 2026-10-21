@@ -21,6 +21,10 @@ namespace LivingWorld.HumanNpc
         static readonly FieldInfo RequestedHair = typeof(VisEquipment).GetField("m_hairItem", Native);
         static readonly FieldInfo RequestedBeard = typeof(VisEquipment).GetField("m_beardItem", Native);
         static readonly MethodInfo UpdateVisuals = typeof(VisEquipment).GetMethod("UpdateVisuals", Native);
+        static readonly MethodInfo EquipHair = typeof(VisEquipment).GetMethod("SetHairEquipped", Native, null, new[] { typeof(int) }, null);
+        static readonly MethodInfo EquipBeard = typeof(VisEquipment).GetMethod("SetBeardEquipped", Native, null, new[] { typeof(int) }, null);
+        static readonly MethodInfo UpdateLodgroup = typeof(VisEquipment).GetMethod("UpdateLodgroup", Native);
+        static readonly MethodInfo UpdateColors = typeof(VisEquipment).GetMethod("UpdateColors", Native);
         public string[] RequiredItems = new string[0];
         public string WeaponName = "";
         public string State = "Awaiting native initialization";
@@ -67,7 +71,8 @@ namespace LivingWorld.HumanNpc
                 HumanRigPolicy.Require(vis != null && HairInstance != null && BeardInstance != null &&
                     CurrentHairHash != null && CurrentBeardHash != null && RequestedModel != null &&
                     RequestedSkinColor != null && RequestedHairColor != null && RequestedHair != null &&
-                    RequestedBeard != null && UpdateVisuals != null,
+                    RequestedBeard != null && UpdateVisuals != null && EquipHair != null &&
+                    EquipBeard != null && UpdateLodgroup != null && UpdateColors != null,
                     "Native facial-hair presentation members changed.");
                 bool pendingAppearanceCommit = HumanRigPolicy.MayInitializeAppearance(true, true, saved);
                 if (pendingAppearanceCommit)
@@ -117,6 +122,11 @@ namespace LivingWorld.HumanNpc
                     // hair mapping and creates the attachment. Color refresh is
                     // left to Valheim's ordinary following visual update.
                     RefreshNativeAppearance(vis);
+                    if (pendingAppearanceCommit)
+                    {
+                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
+                        AttachFreshNativeFacialHair(vis, profile);
+                    }
                 }
                 string facialHairReason;
                 if (profile != null && !FacialHairAttached(vis, profile, out facialHairReason))
@@ -190,6 +200,36 @@ namespace LivingWorld.HumanNpc
             zdo.Set(ZDOVars.s_beardItem, beard, false);
             if (zdo.GetInt(ZDOVars.s_hairItem, 0) != hair || zdo.GetInt(ZDOVars.s_beardItem, 0) != beard)
                 throw new InvalidOperationException("Fresh facial-hair selection did not persist to the native ZDO.");
+        }
+
+        // Valheim 1.0.20 separates a facial-hair request from the native method
+        // that creates its visible attachment.  The live 0.3.66 run proved that
+        // UpdateVisuals can leave both current hashes at zero on this converted
+        // Player graph even after the correct owner ZDO hashes are present.  A
+        // fresh, authoritative transaction therefore finishes through the same
+        // private native equip methods used by UpdateEquipmentVisuals, then
+        // rebuilds the native LOD and applies the already-selected hair color.
+        // This does not instantiate a replacement mesh or alter saved identity.
+        static void AttachFreshNativeFacialHair(VisEquipment vis, HumanProfile profile)
+        {
+            int hair = profile.Hair.GetStableHashCode();
+            int beard = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
+            InvokeNative(EquipHair, vis, hair);
+            InvokeNative(EquipBeard, vis, beard);
+            InvokeNative(UpdateLodgroup, vis);
+            InvokeNative(UpdateColors, vis);
+        }
+
+        static object InvokeNative(MethodInfo method, VisEquipment vis, params object[] arguments)
+        {
+            try
+            {
+                return method.Invoke(vis, arguments);
+            }
+            catch (TargetInvocationException error)
+            {
+                throw error.InnerException ?? error;
+            }
         }
 
         void WaitOrFail(string reason)

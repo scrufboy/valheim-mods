@@ -115,6 +115,13 @@ try {
     $commitCall=@($appearanceUpdate.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'CommitFreshFacialHair'})
     $refreshCall=@($appearanceUpdate.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'RefreshNativeAppearance'})
     Require ($commitCall.Count -eq 1 -and $refreshCall.Count -eq 1 -and $commitCall[0].Offset -lt $refreshCall[0].Offset) 'native ZDO facial-hair commit precedes the visual attachment pass'
+    $attachHair=FindMethod LivingWorld.HumanNpc.HumanAppearance AttachFreshNativeFacialHair
+    $attachFields=@($attachHair.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.FieldReference]} | ForEach-Object {$_.Operand.Name})
+    foreach($field in @('EquipHair','EquipBeard','UpdateLodgroup','UpdateColors')){
+        Require ($attachFields -contains $field) "fresh appearance completes native presentation through $field"
+    }
+    $attachCall=@($appearanceUpdate.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'AttachFreshNativeFacialHair'})
+    Require ($attachCall.Count -eq 1 -and $refreshCall[0].Offset -lt $attachCall[0].Offset) 'ordinary native visual pass precedes explicit fresh facial-hair attachment completion'
     $render=FindMethod LivingWorld.HumanNpc.HumanAppearance AttachmentRenders
     $renderCalls=@(Calls $render)
     Require (@($renderCalls | Where-Object {$_.Operand.Name -eq 'GetComponentsInChildren'}).Count -eq 1) 'appearance readiness inspects the selected attachment renderers'

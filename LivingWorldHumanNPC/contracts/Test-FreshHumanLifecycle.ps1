@@ -75,6 +75,8 @@ try {
     Has VisEquipment UpdateEquipmentVisuals 'ZDO::GetInt(System.Int32,System.Int32)'
     Has VisEquipment UpdateEquipmentVisuals 'VisEquipment::SetHairEquipped'
     Has VisEquipment UpdateEquipmentVisuals 'VisEquipment::SetBeardEquipped'
+    Has VisEquipment SetHairEquipped 'VisEquipment::AttachItem'
+    Has VisEquipment SetBeardEquipped 'VisEquipment::AttachItem'
     Has FootStep Start 'Character::m_onLand'
     Has FootStep Start 'ZNetView::Register'
     Has EffectList '.ctor' 'System.Array::Empty<EffectList/EffectData>'

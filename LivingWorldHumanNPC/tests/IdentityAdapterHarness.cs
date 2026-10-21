@@ -127,7 +127,7 @@ public class VisEquipment : MonoBehaviour
     public bool m_isPlayer = true;
     public Player m_playerComponent;
     public PlayerModel[] m_models = { new PlayerModel(), new PlayerModel() };
-    public int writes, refreshes, model = -1, hair = -1, beard = -1, loseOwnerAfter;
+    public int writes, refreshes, facialEquips, model = -1, hair = -1, beard = -1, loseOwnerAfter;
     public int m_modelIndex = -1, m_hairItem, m_beardItem;
     public SkinnedMeshRenderer m_bodyModel;
     public GameObject m_hairItemInstance, m_beardItemInstance;
@@ -165,9 +165,11 @@ public class VisEquipment : MonoBehaviour
         ++refreshes;
         var zdo = GetComponent<ZNetView>().data;
         hair = zdo.GetInt(ZDOVars.s_hairItem, 0); beard = zdo.GetInt(ZDOVars.s_beardItem, 0);
-        if (m_currentHairItemHash != hair) { m_currentHairItemHash = hair; BuildAttachment(ref m_hairItemInstance, hair); }
-        if (m_currentBeardItemHash != beard) { m_currentBeardItemHash = beard; BuildAttachment(ref m_beardItemInstance, beard); }
     }
+    bool SetHairEquipped(int value) { ++facialEquips; m_currentHairItemHash = value; BuildAttachment(ref m_hairItemInstance, value); return true; }
+    bool SetBeardEquipped(int value) { ++facialEquips; m_currentBeardItemHash = value; BuildAttachment(ref m_beardItemInstance, value); return true; }
+    void UpdateLodgroup() { }
+    void UpdateColors() { }
 }
 public class ZNetScene
 {
@@ -253,7 +255,8 @@ static class IdentityAdapterHarness
             vis.m_hairItem = profile.Hair.GetStableHashCode();
             vis.m_beardItem = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
             Tick(actor);
-            Check(appearance.Initialized && vis.writes == 5 && vis.refreshes == 1, "fresh adapter defeats matching Player request caches and performs one native visual refresh");
+            Check(appearance.Initialized && vis.writes == 5 && vis.refreshes == 1 && vis.facialEquips == 2,
+                "fresh adapter defeats matching Player request caches and explicitly completes both native facial-hair equips");
             Check(view.data.GetInt(ZDOVars.s_hairItem, 0) == profile.Hair.GetStableHashCode() &&
                 view.data.GetInt(ZDOVars.s_beardItem, 0) == (profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode()),
                 "fresh adapter commits and reads back native facial-hair ZDO selections before visual readiness");
@@ -282,6 +285,8 @@ static class IdentityAdapterHarness
             // that replication without counting it as an adapter write.
             vis.SetHairItem(profile.Hair.GetStableHashCode());
             vis.SetBeardItem(profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode());
+            typeof(VisEquipment).GetMethod("SetHairEquipped", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vis, new object[] { profile.Hair.GetStableHashCode() });
+            typeof(VisEquipment).GetMethod("SetBeardEquipped", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vis, new object[] { profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode() });
             vis.writes = 0; vis.refreshes = 0;
             Tick(actor);
             Check(actor.Get<HumanAppearance>().Initialized && vis.writes == 0 && view.data.writes.Count == 0, "loaded profile never rerolls or rewrites existing appearance");

@@ -204,3 +204,49 @@ not be minimized.
 See `ACCESS-REQUIREMENTS.md` in this folder. The local files are not magically
 available to Claude merely because they are named here. They must be mounted,
 uploaded, or otherwise shared explicitly.
+
+## 0.3.66 live failure and 0.3.67 response
+
+The 2026-10-21 0.3.66 recovery test failed. The profile loaded exactly 0.3.66,
+then the two saved profiled humans failed again with current native hair hashes
+of zero. A subsequent fresh actor also failed. The exact selections were
+Hair7, Hair25 and Hair19. `lwparty` refused readiness, so no companion behavior
+or follow system was installed. No video is required to establish this result;
+the version load, three initialization failures and party refusal are all in
+`BepInEx\LogOutput.log`.
+
+Static inspection of Valheim 1.0.20 confirmed the missing boundary:
+`SetHairItem` and `SetBeardItem` only write request/ZDO state. The visible
+objects are created by the private native `SetHairEquipped` and
+`SetBeardEquipped` methods through `VisEquipment.AttachItem`. The 0.3.66 live
+run proved the ordinary `UpdateVisuals` pass did not reach that completed state
+on this converted graph even when the expected owner hashes had been committed.
+
+0.3.67 now retains the normal setter/ZDO transaction and normal visual pass,
+then, only for an uncommitted authoritative appearance transaction, completes
+both selections through those two native equip methods and invokes Valheim's
+native LOD and color updates. It still refuses readiness until the real native
+current hashes and visible renderer objects pass inspection. It does not add a
+replacement mesh and does not touch combat, follow, formation, torch, stow,
+wetness, doors, ambient work, workstations, cleric, raids or pathfinding code.
+
+The complete offline suite passed. Installed DLL:
+
+`B5E6EB3E5F88DA090FEEAAB3980FD4CACA5F9114D7F46E02F9D7C379B03A9E57`
+
+Package:
+
+`LivingWorld-HumanNPC-0.3.67-NATIVE-HAIR-ATTACH-LAB.zip`
+
+Package SHA-256:
+
+`28AABB0C548333B98C87DED231233BC2A4CC5A32B2BCBA23B48F7FDC91DFE019`
+
+The failed 0.3.66 DLL and replacement record are preserved at:
+
+`C:\Users\scruf\AppData\Roaming\r2modmanPlus-local\Valheim\profiles\LWC Human Lab v1\BepInEx\LivingWorldBackups\HumanNpc\20261021-failed-0.3.66-hair-recovery`
+
+0.3.67 is installed but has not been launched. Its only live acceptance gate is
+the existing single `lwparty` command: both humans must display valid randomized
+hair/beard rules, both must become ready, and both must follow. Any bald actor,
+party refusal or missing follower is a failed build.
