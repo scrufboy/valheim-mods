@@ -18,7 +18,7 @@ preserves every accepted behavior and proves the result live.
 
 - Repository: `https://github.com/scrufboy/valheim-mods.git`
 - Branch: `handoff-rimebound-emberworn`
-- Current implementation commit: `06b7255` — `Make lwparty an atomic two-human transaction`
+- Current implementation commit: `b654162` — `Repair native facial hair commit before party readiness`
 - Local checkout:
   `C:\Users\scruf\.codex\.chatgpt-projects\g-p-6acbfeacfc1c81918b6bf81f40fe6336\work\github-sync-forest-children`
 - Human NPC source:
@@ -32,13 +32,13 @@ preserves every accepted behavior and proves the result live.
 
 - Profile:
   `C:\Users\scruf\AppData\Roaming\r2modmanPlus-local\Valheim\profiles\LWC Human Lab v1`
-- Installed plugin version: `0.3.65`
+- Installed plugin version: `0.3.66`
 - Installed DLL SHA-256:
-  `46BCF63461B5E5AEB2AF4A8C049ABB0C18F3F78C9607FEF3C96663CE469928F5`
+  `5FD74D100BC6BDB22D0761D52955DC10BD944995A94152DA43A1DD1ECA8B01D2`
 - Package archive:
-  `LivingWorldHumanNPC/LivingWorld-HumanNPC-0.3.65-ATOMIC-NATIVE-PARTY-LAB.zip`
+  `LivingWorldHumanNPC/LivingWorld-HumanNPC-0.3.66-NATIVE-HAIR-COMMIT-LAB.zip`
 - Package SHA-256:
-  `3DC8B352720CE16625FDD618778B48BA66AC4A5FB450FE82A87C0A549337499F`
+  `23954E6DF31D0F015FBDF38766EAB9B2265B4CBCDF429B58E4FEBA9331DAFD75`
 - Status: **installed, offline-tested, not launched, not live-proven**.
 
 The failed 0.3.64 installed binary was preserved at:
@@ -77,6 +77,33 @@ a clean 0.3.65 two-person creation failed, because no new `lwparty` spawn was
 present in the log before this event. It is live evidence that 0.3.65 did not
 automatically repair the saved broken actor. Recovery of a prior failed actor
 must therefore be classified **failed**, not unknown or successful.
+
+## Clean 0.3.65 two-person failure and 0.3.66 response
+
+After `killall` removed the saved Hair9 actor, the user built new test structures
+and ran the single `lwparty` command. The command created two fresh named actors.
+The video shows both bald and inert. The log records two independent failures:
+
+`native hair hash 0 != -74603963 for Hair25`
+
+`native hair hash 0 != 1043840417 for Hair7`
+
+The joint party transaction then refused readiness and follow. Telemetry emitted
+no NPC behavior stream because neither actor passed appearance initialization.
+This cleanly rejects 0.3.65.
+
+The false offline proof was identified in `IdentityAdapterHarness`: its fake
+`SetHairItem`/`SetBeardItem` methods immediately changed the current render hash
+and created attachment objects. Valheim 1.0.20 does not do that. The real setters
+update requested/ZDO state; `UpdateVisuals` later reads the ZDO and builds the
+attachments. Version 0.3.66 now commits and reads back Valheim's native
+`s_hairItem`/`s_beardItem` ZDO records before the native visual pass, and the
+managed double models that real sequence. The complete offline suite passed and
+0.3.66 is installed, but it is not yet live-proven.
+
+The failed 0.3.65 DLL is preserved at:
+
+`C:\Users\scruf\AppData\Roaming\r2modmanPlus-local\Valheim\profiles\LWC Human Lab v1\BepInEx\LivingWorldBackups\HumanNpc\20261021-failed-0.3.65-two-bald-inert-party`
 
 ## What 0.3.65 changed
 
@@ -124,11 +151,12 @@ unchanged.
 
 | Boundary | Evidence | Current judgment |
 |---|---|---|
-| One-command complete party | 0.3.64 live failure | Failed in the last live run |
-| Visible hair/beard | 0.3.64 live failure | Failed in the last live run |
-| 0.3.65 cache repair | source + managed harness + IL checks | Offline-tested only |
-| 0.3.65 two-person transaction | production-method managed harness | Offline-tested only |
-| Combat/follow/torch/stow/wet/door modules | unchanged-method audit | Preserved structurally, not live-proven in 0.3.65 |
+| One-command complete party | clean 0.3.65 live run | Failed: two fresh actors, neither ready/following |
+| Visible hair/beard | clean 0.3.65 live run and video | Failed: both fresh actors bald |
+| 0.3.65 cache repair | clean 0.3.65 live run | Failed for Hair25 and Hair7 |
+| 0.3.66 native ZDO commit repair | source + corrected managed harness + native IL checks | Offline-tested and installed; live proof pending |
+| 0.3.65 two-person allocation | clean live log/video | Passed allocation only; readiness/follow failed |
+| Combat/follow/torch/stow/wet/door modules | unchanged-source boundary + full suite | Preserved structurally, not live-proven in 0.3.66 |
 | Runtime `AddComponent` staging | no Unity run | Unknown; lifecycle ordering must be observed |
 | Existing failed 0.3.64 actor recovery | 0.3.65 startup log on 2026-10-21 | Failed: saved Hair9 actor repeated the same initialization deadline and required `killall` |
 | Remote/multiplayer ownership | source concern | Unknown and potentially incomplete: remote appearance readiness and behavior installation need independent review |
@@ -138,7 +166,7 @@ unchanged.
 The repeated process failure was patch-forward development without maintaining
 one continuously enforced live champion. Offline suites prevented many direct
 method regressions, but they did not prevent Unity lifecycle, presentation, or
-transaction failures. Versions 0.3.59 through 0.3.64 repeatedly changed the
+transaction failures. Versions 0.3.59 through 0.3.65 repeatedly changed the
 appearance boundary without producing a live-proven complete party. This must
 not be minimized.
 
@@ -160,15 +188,15 @@ not be minimized.
 
 ## Required independent review before another patch
 
-1. Read every development note from 0.3.42 through 0.3.65 and compare its claim
+1. Read every development note from 0.3.42 through 0.3.66 and compare its claim
    to the associated code, tests, live log, telemetry, and video.
 2. Inspect Git history and retained binaries rather than trusting version prose.
-3. Reconstruct the complete 0.3.59–0.3.65 appearance/spawn causal chain.
-4. Review 0.3.65's runtime staging for Unity lifecycle and network ownership,
+3. Reconstruct the complete 0.3.59–0.3.66 appearance/spawn causal chain.
+4. Review 0.3.66's runtime staging for Unity lifecycle and network ownership,
    including remote clients.
-5. Do not change gameplay code until the current 0.3.65 live result is captured,
+5. Do not change gameplay code until the current 0.3.66 live result is captured,
    unless static review proves it unsafe to launch.
-6. If 0.3.65 is safe to launch, the first gate is only `lwparty`: two visible,
+6. If 0.3.66 is safe to launch, the first gate is only `lwparty`: two visible,
    complete humans and two following companions. Stop on failure.
 
 ## Evidence locations
