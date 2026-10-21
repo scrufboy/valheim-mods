@@ -5,7 +5,7 @@ $ErrorActionPreference='Stop'
 if(Get-Process -Name valheim,valheim_server -ErrorAction SilentlyContinue){throw 'Valheim must be closed before installing the rebuilt human foundation.'}
 $profile=(Resolve-Path -LiteralPath $ProfileRoot).Path
 $plugins=Join-Path $profile 'BepInEx\plugins'
-$backupRoot=Join-Path $profile ('BepInEx\LivingWorldBackups\Rebuild\'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'-pre-0.5.2')
+$backupRoot=Join-Path $profile ('BepInEx\LivingWorldBackups\Rebuild\'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'-pre-0.5.3')
 $humanSource=Join-Path $PSScriptRoot 'build\LivingWorld.HumanNpc.dll'
 $telemetrySource=Join-Path $PSScriptRoot '..\..\LivingWorldTelemetry\rebuild\build\LivingWorld.Telemetry.dll'
 $humanTarget=Join-Path $plugins 'LivingWorldHumanNpc\LivingWorld.HumanNpc.dll'
@@ -41,10 +41,10 @@ if($duplicates.Count){throw 'A duplicate human or telemetry DLL remains under Be
 
 [ordered]@{
     InstalledAt=(Get-Date).ToString('o');Profile=$profile;Backup=$backupRoot;
-    HumanNpc=[ordered]@{Version='0.5.2';Path=$humanTarget;Sha256=$humanHash};
+    HumanNpc=[ordered]@{Version='0.5.3';Path=$humanTarget;Sha256=$humanHash};
     Telemetry=[ordered]@{Version='0.5.1';Path=$telemetryTarget;Sha256=$telemetryHash};
     DuplicateDlls=0
 }|ConvertTo-Json -Depth 5|Set-Content -LiteralPath (Join-Path $backupRoot 'install-verification.json') -Encoding utf8
-Write-Output "Installed HumanNpc 0.5.2: $humanHash"
+Write-Output "Installed HumanNpc 0.5.3: $humanHash"
 Write-Output "Installed Telemetry 0.5.1: $telemetryHash"
 Write-Output "Previous active DLLs and the nested telemetry backup were preserved at: $backupRoot"

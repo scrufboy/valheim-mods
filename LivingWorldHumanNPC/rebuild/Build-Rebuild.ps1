@@ -45,8 +45,8 @@ if($traversalText -match 'MoveTo\.Invoke|GetMethod\("MoveTo"'){
 }
 if($traversalText -notmatch 'GetVelocity\(\)' -or $traversalText -notmatch 'native leader tether' -or
    $stateText -notmatch 'signal\.NativeAlert \|\| signal\.LeaderArmed' -or
-   $companionText -match 'SetTamed\(true\)'){
-    throw 'The governed movement/readiness contract is missing or fake tame state returned.'
+   $companionText -match 'SetTamed\(true\)' -or $companionText -notmatch 'SetTamed\(false\)'){
+    throw 'The governed movement/readiness contract or one-way legacy tame migration is missing.'
 }
 $controllerText=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'HumanBehaviorController.cs') -Raw
 if($controllerText -match 'leader\.GetCurrentWeapon\(\)' -or
@@ -74,7 +74,7 @@ foreach($reference in $referencePaths){if(-not (Test-Path -LiteralPath $referenc
 $references=@($referencePaths | ForEach-Object {"/reference:$_"})
 $dll=Join-Path $build 'LivingWorld.HumanNpc.dll'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:library "/out:$dll" $references $sources
-if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.5.2 compilation failed.'}
+if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.5.3 compilation failed.'}
 
 $testExe=Join-Path $build 'FoundationContractTests.exe'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:exe "/out:$testExe" `
@@ -85,7 +85,7 @@ if($LASTEXITCODE -ne 0){throw 'Foundation contract test compilation failed.'}
 if($LASTEXITCODE -ne 0){throw 'Foundation contract tests failed.'}
 
 $manifest=[ordered]@{
-    Version='0.5.2'
+    Version='0.5.3'
     Status='PASS'
     Dll=$dll
     Sha256=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
@@ -99,6 +99,7 @@ $manifest=[ordered]@{
         'Formation orientation follows actual travel and remains fixed while the leader is stationary',
         'Native alert without a creature target selects readiness rather than committed combat',
         'Native combat releases the formation lease while retaining a leader follow tether inside an explicit moving combat boundary',
+        'Previously saved 0.5.1 actors migrate only the obsolete tame bit to false',
         'Readiness observes only visible hand weapons and never Valheim unarmed fallback data',
         'Native Follow remains the only path writer; a moving destination lead compensates its native arrival radius',
         'Equipment posture stows and redraws the native last-equipped pair without hardcoded weapon substitution',
@@ -110,5 +111,5 @@ $manifest=[ordered]@{
     Installed=$false
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
-Write-Output "HumanNpc 0.5.2 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
+Write-Output "HumanNpc 0.5.3 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
 Write-Output 'Live Unity identity preservation, pace matching, visible stow/draw, and native-combat handoff remain to be tested.'

@@ -51,7 +51,7 @@ namespace LivingWorld.TelemetryV2
         {
             if (Left == null || Right == null || HiddenLeft == null || HiddenRight == null)
                 throw new MissingMemberException("Valheim's native hand-item observation fields changed.");
-            Logger.LogInfo("Read-only 0.5.2 state-boundary telemetry armed; no gameplay methods are patched.");
+            Logger.LogInfo("Read-only 0.5.3 state-boundary telemetry armed; no gameplay methods are patched.");
         }
 
         void Update()
@@ -207,6 +207,7 @@ namespace LivingWorld.TelemetryV2
                 "appearanceReady", appearance != null && appearance.Ready,
                 "appearanceStatus", appearance == null ? "missing" : appearance.Status,
                 "companionState", companion == null ? "missing" : companion.State,
+                "legacyTameCleared", companion != null && companion.LegacyTameCleared,
                 "behaviorState", behavior == null ? "missing" : behavior.State.ToString(),
                 "behaviorStatus", behavior == null ? "missing" : behavior.Status,
                 "formationSlot", behavior == null ? -1 : behavior.FormationSlot,

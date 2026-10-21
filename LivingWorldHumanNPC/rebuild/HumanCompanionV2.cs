@@ -21,6 +21,9 @@ namespace LivingWorld.HumanNpcV2
         ZNetView view;
         Player leader;
         long leaderId;
+        bool legacyTameChecked;
+
+        public bool LegacyTameCleared { get; private set; }
 
         void Awake()
         {
@@ -35,6 +38,7 @@ namespace LivingWorld.HumanNpcV2
             leader = player;
             view.GetZDO().Set(LeaderKey, leaderId);
             view.GetZDO().Set(GenerationKey, generation);
+            ClearLegacyTameState();
         }
 
         internal bool TryResolveLeader(out Player resolved)
@@ -47,8 +51,26 @@ namespace LivingWorld.HumanNpcV2
             if (leaderId == 0L) leaderId = view.GetZDO().GetLong(LeaderKey, 0L);
             if (leader == null || leader.IsDead() || leader.GetPlayerID() != leaderId)
                 leader = leaderId == 0L ? null : Player.GetPlayer(leaderId);
+            ClearLegacyTameState();
             resolved = leader;
             return resolved != null;
+        }
+
+        void ClearLegacyTameState()
+        {
+            if (legacyTameChecked || view == null || !view.IsValid() || !view.IsOwner()) return;
+            Humanoid human = GetComponent<Humanoid>();
+            if (human == null) throw new InvalidOperationException("The companion's native Humanoid is missing.");
+            if (human.IsTamed())
+            {
+                // 0.5.1 persisted this bit while borrowing a native pet range
+                // rule. Human companions do not implement Tameable's feeding or
+                // interaction lifecycle, so migrate only that obsolete save bit.
+                human.SetTamed(false);
+                LegacyTameCleared = true;
+                HumanNpcPlugin.ReportStatic("Migrated " + human.m_name + " from the obsolete tame flag.");
+            }
+            legacyTameChecked = true;
         }
     }
 }
