@@ -69,11 +69,20 @@ namespace UnityEngine
 public class ZDO
 {
     public readonly Dictionary<string, string> data = new Dictionary<string, string>();
+    public readonly Dictionary<int, int> ints = new Dictionary<int, int>();
     public readonly List<string> writes = new List<string>();
+    public readonly List<int> intWrites = new List<int>();
     public int prefab = HumanRigPolicy.PrefabId.GetStableHashCode();
     public int GetPrefab() { return prefab; }
     public string GetString(string key, string fallback) { string value; return data.TryGetValue(key, out value) ? value : fallback; }
     public void Set(string key, string value) { data[key] = value; writes.Add(key); }
+    public int GetInt(int key, int fallback) { int value; return ints.TryGetValue(key, out value) ? value : fallback; }
+    public void Set(int key, int value, bool sync) { ints[key] = value; intWrites.Add(key); }
+}
+public static class ZDOVars
+{
+    public const int s_hairItem = 101;
+    public const int s_beardItem = 102;
 }
 public class ZNetView : MonoBehaviour
 {
@@ -137,9 +146,28 @@ public class VisEquipment : MonoBehaviour
         renderer.rootBone.gameObject = gameObject;
         var lod = gameObject.Get<LODGroup>(); if (lod != null) lod.renderers.Add(renderer);
     }
-    public void SetHairItem(int value) { if (m_hairItem == value) return; Write(); m_hairItem = value; hair = value; m_currentHairItemHash = value; BuildAttachment(ref m_hairItemInstance, value); }
-    public void SetBeardItem(int value) { if (m_beardItem == value) return; Write(); m_beardItem = value; beard = value; m_currentBeardItemHash = value; BuildAttachment(ref m_beardItemInstance, value); }
-    void UpdateVisuals() { ++refreshes; }
+    // Match Valheim 1.0.20: these setters update the request and owner ZDO;
+    // they do not create the visible attachment themselves.
+    public void SetHairItem(int value)
+    {
+        if (m_hairItem == value) return;
+        Write(); m_hairItem = value;
+        var view = GetComponent<ZNetView>(); if (view.data != null && view.owner) view.data.Set(ZDOVars.s_hairItem, value, false);
+    }
+    public void SetBeardItem(int value)
+    {
+        if (m_beardItem == value) return;
+        Write(); m_beardItem = value;
+        var view = GetComponent<ZNetView>(); if (view.data != null && view.owner) view.data.Set(ZDOVars.s_beardItem, value, false);
+    }
+    void UpdateVisuals()
+    {
+        ++refreshes;
+        var zdo = GetComponent<ZNetView>().data;
+        hair = zdo.GetInt(ZDOVars.s_hairItem, 0); beard = zdo.GetInt(ZDOVars.s_beardItem, 0);
+        if (m_currentHairItemHash != hair) { m_currentHairItemHash = hair; BuildAttachment(ref m_hairItemInstance, hair); }
+        if (m_currentBeardItemHash != beard) { m_currentBeardItemHash = beard; BuildAttachment(ref m_beardItemInstance, beard); }
+    }
 }
 public class ZNetScene
 {
@@ -226,6 +254,9 @@ static class IdentityAdapterHarness
             vis.m_beardItem = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
             Tick(actor);
             Check(appearance.Initialized && vis.writes == 5 && vis.refreshes == 1, "fresh adapter defeats matching Player request caches and performs one native visual refresh");
+            Check(view.data.GetInt(ZDOVars.s_hairItem, 0) == profile.Hair.GetStableHashCode() &&
+                view.data.GetInt(ZDOVars.s_beardItem, 0) == (profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode()),
+                "fresh adapter commits and reads back native facial-hair ZDO selections before visual readiness");
             Check(vis.model == (int)profile.Sex && vis.hair == profile.Hair.GetStableHashCode() && vis.beard == (profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode()), "profile model/hair/beard used");
             Check(Math.Abs(vis.skin.x - profile.SkinR / 255f) < .00001 && Math.Abs(vis.tint.z - profile.HairB / 255f) < .00001, "persisted colors used");
             Check(actor.Get<Humanoid>().m_name == profile.Name, "stable name hydrated");

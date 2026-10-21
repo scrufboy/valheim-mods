@@ -101,9 +101,13 @@ namespace LivingWorld.HumanNpc
                         if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
                         vis.SetHairColor(new Vector3(profile.HairR / 255f, profile.HairG / 255f, profile.HairB / 255f));
                         if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
-                        vis.SetHairItem(profile.Hair.GetStableHashCode());
+                        int hair = profile.Hair.GetStableHashCode();
+                        int beard = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
+                        vis.SetHairItem(hair);
                         if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
-                        vis.SetBeardItem(profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode());
+                        vis.SetBeardItem(beard);
+                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
+                        CommitFreshFacialHair(zdo, hair, beard);
                     }
                 }
                 if (profile != null)
@@ -168,6 +172,24 @@ namespace LivingWorld.HumanNpc
             RequestedHairColor.SetValue(vis, new Vector3(-1f, -1f, -1f));
             RequestedHair.SetValue(vis, hair ^ Int32.MinValue);
             RequestedBeard.SetValue(vis, beard ^ Int32.MinValue);
+        }
+
+        // Valheim's facial-hair setters update request caches and normally copy
+        // the requested hashes into the owner's ZDO.  The live 0.3.64/0.3.65
+        // Player-graph clones proved that the request-cache path is not a safe
+        // persistence boundary for a freshly converted NPC: both selected
+        // hairs remained zero even after the setter pass.  UpdateVisuals reads
+        // these canonical ZDO keys before SetHairEquipped/SetBeardEquipped can
+        // build the native attachments, so commit and verify those exact native
+        // selections at the fresh-owner boundary before invoking it.  Saved
+        // actors never enter this method because their visual revision exists.
+        static void CommitFreshFacialHair(ZDO zdo, int hair, int beard)
+        {
+            if (zdo == null) throw new InvalidOperationException("Fresh facial-hair selection has no native ZDO.");
+            zdo.Set(ZDOVars.s_hairItem, hair, false);
+            zdo.Set(ZDOVars.s_beardItem, beard, false);
+            if (zdo.GetInt(ZDOVars.s_hairItem, 0) != hair || zdo.GetInt(ZDOVars.s_beardItem, 0) != beard)
+                throw new InvalidOperationException("Fresh facial-hair selection did not persist to the native ZDO.");
         }
 
         void WaitOrFail(string reason)

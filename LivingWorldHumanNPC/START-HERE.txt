@@ -1,19 +1,23 @@
-LIVING WORLD HUMAN NPC 0.3.65 — ATOMIC NATIVE PARTY REPAIR
+LIVING WORLD HUMAN NPC 0.3.66 — NATIVE FACIAL-HAIR COMMIT REPAIR
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:
 
 plugins\LivingWorldHumanNpc\LivingWorld.HumanNpc.dll
 
-0.3.65 rejects the failed 0.3.64 live party. That build retained native private
-appearance-request caches from the cloned Player graph; Valheim then correctly
-treated the selected hair as unchanged even though the fresh ZDO and visible
-attachment were empty. The result was one bald, unready actor and no full party.
+0.3.66 rejects the failed 0.3.65 live party. That build created two fresh named
+actors, but both native hair hashes remained zero. The visible result was two
+bald, inert people; appearance readiness failed, so the behavior installer and
+joint Follow transaction correctly remained closed.
 
-This candidate dirties only those exact native request caches before the first
-ordinary native appearance setters. It also makes native-human approval an
-explicit construction boundary: companion behavior and native AI remain dormant
-until visible hair and any selected male beard are proven.
+The offline appearance double had incorrectly modeled SetHairItem and
+SetBeardItem as creating attachments immediately. Valheim 1.0.20 actually uses
+those setters to update request/ZDO state; UpdateVisuals then reads the native
+ZDO hashes and builds the attachments. This candidate models that real sequence,
+commits and reads back the selected hair/beard hashes at the fresh owner boundary,
+then invokes Valheim's native visual update and requires the live renderers.
+Native-human approval remains explicit: behavior and AI stay dormant until
+visible hair and any selected male beard are proven.
 
 One `lwparty` command allocates both missing native humans in the same command
 pass, lets both appearance checks complete concurrently, then attaches the

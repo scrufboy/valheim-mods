@@ -105,6 +105,16 @@ try {
     foreach($field in @('RequestedModel','RequestedSkinColor','RequestedHairColor','RequestedHair','RequestedBeard')){
         Require ($prepareFields -contains $field) "fresh appearance invalidates $field"
     }
+    $commitHair=FindMethod LivingWorld.HumanNpc.HumanAppearance CommitFreshFacialHair
+    $commitHairCalls=@(Calls $commitHair)
+    Require (@($commitHairCalls | Where-Object {$_.Operand.DeclaringType.FullName -eq 'ZDO' -and $_.Operand.Name -eq 'Set'}).Count -eq 2) 'fresh appearance commits both native facial-hair ZDO hashes'
+    Require (@($commitHairCalls | Where-Object {$_.Operand.DeclaringType.FullName -eq 'ZDO' -and $_.Operand.Name -eq 'GetInt'}).Count -eq 2) 'fresh appearance reads both native facial-hair ZDO hashes back'
+    $commitHairFields=@($commitHair.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.FieldReference]} | ForEach-Object {$_.Operand.FullName})
+    Require ($commitHairFields -contains 'System.Int32 ZDOVars::s_hairItem' -and $commitHairFields -contains 'System.Int32 ZDOVars::s_beardItem') 'fresh appearance uses Valheim native hair and beard keys'
+    $appearanceUpdate=FindMethod LivingWorld.HumanNpc.HumanAppearance Update
+    $commitCall=@($appearanceUpdate.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'CommitFreshFacialHair'})
+    $refreshCall=@($appearanceUpdate.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'RefreshNativeAppearance'})
+    Require ($commitCall.Count -eq 1 -and $refreshCall.Count -eq 1 -and $commitCall[0].Offset -lt $refreshCall[0].Offset) 'native ZDO facial-hair commit precedes the visual attachment pass'
     $render=FindMethod LivingWorld.HumanNpc.HumanAppearance AttachmentRenders
     $renderCalls=@(Calls $render)
     Require (@($renderCalls | Where-Object {$_.Operand.Name -eq 'GetComponentsInChildren'}).Count -eq 1) 'appearance readiness inspects the selected attachment renderers'
