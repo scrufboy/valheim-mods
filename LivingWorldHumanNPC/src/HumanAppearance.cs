@@ -115,6 +115,7 @@ namespace LivingWorld.HumanNpc
                         CommitFreshFacialHair(zdo, hair, beard);
                     }
                 }
+                string facialHairReason = "";
                 if (profile != null)
                 {
                     // SetHairItem/SetBeardItem write the native selection. One
@@ -122,13 +123,16 @@ namespace LivingWorld.HumanNpc
                     // hair mapping and creates the attachment. Color refresh is
                     // left to Valheim's ordinary following visual update.
                     RefreshNativeAppearance(vis);
-                    if (pendingAppearanceCommit)
+                    // A saved native-human-v1 marker from the older readiness
+                    // boundary can coexist with missing runtime attachments.
+                    // Repair that presentation from the immutable saved profile
+                    // without rerolling identity or rewriting its record.
+                    if (!FacialHairAttached(vis, profile, out facialHairReason))
                     {
                         if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
-                        AttachFreshNativeFacialHair(vis, profile);
+                        AttachProfileNativeFacialHair(vis, profile);
                     }
                 }
-                string facialHairReason;
                 if (profile != null && !FacialHairAttached(vis, profile, out facialHairReason))
                 { WaitOrFail(facialHairReason); return; }
                 // The revision is a visual commit marker, not merely proof that
@@ -210,7 +214,7 @@ namespace LivingWorld.HumanNpc
         // private native equip methods used by UpdateEquipmentVisuals, then
         // rebuilds the native LOD and applies the already-selected hair color.
         // This does not instantiate a replacement mesh or alter saved identity.
-        static void AttachFreshNativeFacialHair(VisEquipment vis, HumanProfile profile)
+        static void AttachProfileNativeFacialHair(VisEquipment vis, HumanProfile profile)
         {
             int hair = profile.Hair.GetStableHashCode();
             int beard = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();

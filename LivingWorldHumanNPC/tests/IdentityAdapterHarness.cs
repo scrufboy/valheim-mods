@@ -280,16 +280,13 @@ static class IdentityAdapterHarness
             actor = Actor(); view = actor.Get<ZNetView>(); vis = actor.Get<VisEquipment>();
             view.data.data[HumanProfile.RecordKey] = saved;
             view.data.data[HumanMigrationPolicy.VisualKey] = HumanRigPolicy.Revision;
-            // A loaded native VisEquipment has already reconstructed its saved
-            // customization instances before this adapter verifies them. Model
-            // that replication without counting it as an adapter write.
-            vis.SetHairItem(profile.Hair.GetStableHashCode());
-            vis.SetBeardItem(profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode());
-            typeof(VisEquipment).GetMethod("SetHairEquipped", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vis, new object[] { profile.Hair.GetStableHashCode() });
-            typeof(VisEquipment).GetMethod("SetBeardEquipped", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(vis, new object[] { profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode() });
-            vis.writes = 0; vis.refreshes = 0;
+            // Exact 0.3.67 launch failure: saved revision and native selections
+            // exist, but runtime current hashes/attachments were never rebuilt.
+            view.data.Set(ZDOVars.s_hairItem, profile.Hair.GetStableHashCode(), false);
+            view.data.Set(ZDOVars.s_beardItem, profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode(), false);
             Tick(actor);
-            Check(actor.Get<HumanAppearance>().Initialized && vis.writes == 0 && view.data.writes.Count == 0, "loaded profile never rerolls or rewrites existing appearance");
+            Check(actor.Get<HumanAppearance>().Initialized && vis.writes == 0 && vis.facialEquips == 2 && view.data.writes.Count == 0,
+                "loaded profile repairs missing native attachments without rerolling or rewriting saved identity");
             Check(actor.Get<Humanoid>().m_name == profile.Name, "loaded name restored");
 
             actor = Actor(); view = actor.Get<ZNetView>(); vis = actor.Get<VisEquipment>();

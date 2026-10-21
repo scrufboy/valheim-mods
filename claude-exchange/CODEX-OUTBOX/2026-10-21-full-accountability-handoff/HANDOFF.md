@@ -250,3 +250,36 @@ The failed 0.3.66 DLL and replacement record are preserved at:
 the existing single `lwparty` command: both humans must display valid randomized
 hair/beard rules, both must become ready, and both must follow. Any bald actor,
 party refusal or missing follower is a failed build.
+
+## 0.3.67 saved-actor recovery failure and 0.3.68 response
+
+0.3.67 loaded successfully, but both saved companions were still bald before
+`lwparty`. The log reported Hair7 and Hair19 with native current hashes of zero.
+The code review after this failure found that 0.3.67's direct native attachment
+completion was incorrectly restricted to `pendingAppearanceCommit`, while these
+saved actors already carried the old `native-human-v1` marker. The repair path
+therefore never executed. This invalidates the previous assertion that these
+specific actors necessarily lacked the revision marker.
+
+0.3.68 moves presentation repair to the saved-profile boundary. After the
+ordinary native visual pass, every authoritative actor with a valid immutable
+`HumanProfile` verifies its actual current hashes and renderer attachments. A
+missing presentation is repaired through Valheim's native `SetHairEquipped` and
+`SetBeardEquipped` methods. The identity is not rerolled and the saved profile
+record is not rewritten.
+
+The managed harness now reproduces the exact 0.3.67 saved state: profile,
+compatible visual revision and native ZDO selections exist, but current hashes
+are zero and runtime attachments are absent. The suite passes only when both
+native attachment methods restore that actor without a profile write.
+
+Verified 0.3.68 DLL SHA-256:
+
+`9953E6FA83ED0131343310AEB6E680DB74F60D4D7C1C86427DF1653649C5B42B`
+
+Verified package SHA-256:
+
+`243679DC10FB51DDF90EF61302EF5F4C540BDE87944E421A8E4524C9AB88F4E3`
+
+At the time this record was written, Valheim was still running. 0.3.68 was
+built and packaged but was intentionally not copied into the live profile.
