@@ -15,16 +15,6 @@ namespace LivingWorld.HumanNpc
         static readonly FieldInfo BeardInstance = typeof(VisEquipment).GetField("m_beardItemInstance", Native);
         static readonly FieldInfo CurrentHairHash = typeof(VisEquipment).GetField("m_currentHairItemHash", Native);
         static readonly FieldInfo CurrentBeardHash = typeof(VisEquipment).GetField("m_currentBeardItemHash", Native);
-        static readonly FieldInfo RequestedModel = typeof(VisEquipment).GetField("m_modelIndex", Native);
-        static readonly FieldInfo RequestedSkinColor = typeof(VisEquipment).GetField("m_skinColor", Native);
-        static readonly FieldInfo RequestedHairColor = typeof(VisEquipment).GetField("m_hairColor", Native);
-        static readonly FieldInfo RequestedHair = typeof(VisEquipment).GetField("m_hairItem", Native);
-        static readonly FieldInfo RequestedBeard = typeof(VisEquipment).GetField("m_beardItem", Native);
-        static readonly MethodInfo UpdateVisuals = typeof(VisEquipment).GetMethod("UpdateVisuals", Native);
-        static readonly MethodInfo EquipHair = typeof(VisEquipment).GetMethod("SetHairEquipped", Native, null, new[] { typeof(int) }, null);
-        static readonly MethodInfo EquipBeard = typeof(VisEquipment).GetMethod("SetBeardEquipped", Native, null, new[] { typeof(int) }, null);
-        static readonly MethodInfo UpdateLodgroup = typeof(VisEquipment).GetMethod("UpdateLodgroup", Native);
-        static readonly MethodInfo UpdateColors = typeof(VisEquipment).GetMethod("UpdateColors", Native);
         public string[] RequiredItems = new string[0];
         public string WeaponName = "";
         public string State = "Awaiting native initialization";
@@ -34,7 +24,42 @@ namespace LivingWorld.HumanNpc
         float deadline;
         bool finished;
         bool hadAuthority;
-        bool freshSelectionPrepared;
+        bool freshProfileStaged;
+
+        // Called synchronously by the explicit fresh-spawn transaction, after
+        // identity persistence and before Unity runs Start on VisEquipment.
+        // This is the same public native presentation sequence used by working
+        // Player-clone NPC implementations: select the human first, then allow
+        // Valheim's own Start/UpdateVisuals path to create the attachments.
+        public void StageFreshProfile()
+        {
+            if (Initialized || freshProfileStaged) throw new InvalidOperationException("Fresh appearance was already staged.");
+            var localView = GetComponent<ZNetView>();
+            if (localView == null || !localView.IsValid() || !localView.IsOwner() || localView.GetZDO() == null)
+                throw new InvalidOperationException("Fresh appearance requires its original locally owned human.");
+            var zdo = localView.GetZDO();
+            if (zdo.GetString(RevisionKey, "") != "")
+                throw new InvalidOperationException("Fresh appearance cannot replace an existing visual revision.");
+            HumanProfile profile;
+            var identity = GetComponent<HumanIdentity>();
+            if (identity == null || identity.Read(out profile) != HumanProfileState.Ready || profile == null)
+                throw new InvalidOperationException(identity == null ? "Fresh identity adapter missing." : identity.Status);
+            identity.ValidateAppearance(profile);
+            var vis = GetComponent<VisEquipment>();
+            if (vis == null) throw new InvalidOperationException("Native appearance equipment missing.");
+
+            int hair = profile.Hair.GetStableHashCode();
+            int beard = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
+            vis.SetModel((int)profile.Sex);
+            vis.SetSkinColor(new Vector3(profile.SkinR / 255f, profile.SkinG / 255f, profile.SkinB / 255f));
+            vis.SetHairColor(new Vector3(profile.HairR / 255f, profile.HairG / 255f, profile.HairB / 255f));
+            vis.SetHairItem(hair);
+            vis.SetBeardItem(beard);
+            if (zdo.GetInt(ZDOVars.s_hairItem, 0) != hair || zdo.GetInt(ZDOVars.s_beardItem, 0) != beard)
+                throw new InvalidOperationException("Native fresh hair/beard selection did not persist before visual startup.");
+            freshProfileStaged = true;
+            State = "Random native human staged; awaiting Valheim visual startup";
+        }
 
         void Start()
         {
@@ -51,7 +76,7 @@ namespace LivingWorld.HumanNpc
                 var composition = GetComponent<HumanCompositionIdentity>();
                 if (composition == null || !composition.IsCompositionReady)
                 {
-                    hadAuthority = false; freshSelectionPrepared = false;
+                    hadAuthority = false;
                     State = "Awaiting explicit compatible composition: " + (composition == null ? "identity missing" : composition.Status);
                     return;
                 }
@@ -65,14 +90,11 @@ namespace LivingWorld.HumanNpc
                 else
                     HumanRigPolicy.Require(zdo.GetString(HumanProfile.RecordKey, "") == "" && zdo.GetString(HumanProfile.RequiredKey, "") == "",
                         "Saved/required human profile exists without its identity adapter.");
-                if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; State = "Remote visual replication; no local initialization writes"; return; }
-                if (!hadAuthority) { hadAuthority = true; freshSelectionPrepared = false; deadline = Time.realtimeSinceStartup + 10f; }
+                if (!view.IsOwner()) { hadAuthority = false; State = "Remote visual replication; no local initialization writes"; return; }
+                if (!hadAuthority) { hadAuthority = true; deadline = Time.realtimeSinceStartup + 10f; }
                 var vis = GetComponent<VisEquipment>();
                 HumanRigPolicy.Require(vis != null && HairInstance != null && BeardInstance != null &&
-                    CurrentHairHash != null && CurrentBeardHash != null && RequestedModel != null &&
-                    RequestedSkinColor != null && RequestedHairColor != null && RequestedHair != null &&
-                    RequestedBeard != null && UpdateVisuals != null && EquipHair != null &&
-                    EquipBeard != null && UpdateLodgroup != null && UpdateColors != null,
+                    CurrentHairHash != null && CurrentBeardHash != null,
                     "Native facial-hair presentation members changed.");
                 bool pendingAppearanceCommit = HumanRigPolicy.MayInitializeAppearance(true, true, saved);
                 if (pendingAppearanceCommit)
@@ -92,47 +114,11 @@ namespace LivingWorld.HumanNpc
                     else
                     {
                         identity.ValidateAppearance(profile);
-                        if (!freshSelectionPrepared)
-                        {
-                            PrepareFreshNativeSelection(vis, profile);
-                            freshSelectionPrepared = true;
-                        }
-                        // Native setters replicate the profile only before the
-                        // visual commit marker. Owner loss cannot commit it.
-                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
-                        vis.SetModel((int)profile.Sex);
-                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
-                        vis.SetSkinColor(new Vector3(profile.SkinR / 255f, profile.SkinG / 255f, profile.SkinB / 255f));
-                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
-                        vis.SetHairColor(new Vector3(profile.HairR / 255f, profile.HairG / 255f, profile.HairB / 255f));
-                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
-                        int hair = profile.Hair.GetStableHashCode();
-                        int beard = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
-                        vis.SetHairItem(hair);
-                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
-                        vis.SetBeardItem(beard);
-                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
-                        CommitFreshFacialHair(zdo, hair, beard);
+                        HumanRigPolicy.Require(freshProfileStaged,
+                            "Fresh random human was not staged before Valheim visual startup.");
                     }
                 }
                 string facialHairReason = "";
-                if (profile != null)
-                {
-                    // SetHairItem/SetBeardItem write the native selection. One
-                    // native visual pass reads that selection, performs helmet
-                    // hair mapping and creates the attachment. Color refresh is
-                    // left to Valheim's ordinary following visual update.
-                    RefreshNativeAppearance(vis);
-                    // A saved native-human-v1 marker from the older readiness
-                    // boundary can coexist with missing runtime attachments.
-                    // Repair that presentation from the immutable saved profile
-                    // without rerolling identity or rewriting its record.
-                    if (!FacialHairAttached(vis, profile, out facialHairReason))
-                    {
-                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
-                        AttachProfileNativeFacialHair(vis, profile);
-                    }
-                }
                 if (profile != null && !FacialHairAttached(vis, profile, out facialHairReason))
                 { WaitOrFail(facialHairReason); return; }
                 // The revision is a visual commit marker, not merely proof that
@@ -140,7 +126,7 @@ namespace LivingWorld.HumanNpc
                 // its selected hair/beard failed to instantiate on the rig.
                 if (pendingAppearanceCommit)
                 {
-                    if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
+                    if (!view.IsOwner()) { hadAuthority = false; return; }
                     zdo.Set(RevisionKey, HumanRigPolicy.Revision);
                 }
                 var items = humanoid.GetInventory().GetAllItems();
@@ -171,71 +157,6 @@ namespace LivingWorld.HumanNpc
             }
         }
 
-        // A cloned native Player graph can carry private VisEquipment request
-        // caches even though its new ZDO has no matching values. Valheim's
-        // setters intentionally no-op when a requested value equals that cache.
-        // Make each first native setter observably dirty without touching the
-        // rendered/current hashes or any saved actor. This runs once per fresh
-        // owner transaction and never after the visual revision is committed.
-        static void PrepareFreshNativeSelection(VisEquipment vis, HumanProfile profile)
-        {
-            int hair = profile.Hair.GetStableHashCode();
-            int beard = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
-            RequestedModel.SetValue(vis, profile.Sex == HumanSex.Male ? 1 : 0);
-            RequestedSkinColor.SetValue(vis, new Vector3(-1f, -1f, -1f));
-            RequestedHairColor.SetValue(vis, new Vector3(-1f, -1f, -1f));
-            RequestedHair.SetValue(vis, hair ^ Int32.MinValue);
-            RequestedBeard.SetValue(vis, beard ^ Int32.MinValue);
-        }
-
-        // Valheim's facial-hair setters update request caches and normally copy
-        // the requested hashes into the owner's ZDO.  The live 0.3.64/0.3.65
-        // Player-graph clones proved that the request-cache path is not a safe
-        // persistence boundary for a freshly converted NPC: both selected
-        // hairs remained zero even after the setter pass.  UpdateVisuals reads
-        // these canonical ZDO keys before SetHairEquipped/SetBeardEquipped can
-        // build the native attachments, so commit and verify those exact native
-        // selections at the fresh-owner boundary before invoking it.  Saved
-        // actors never enter this method because their visual revision exists.
-        static void CommitFreshFacialHair(ZDO zdo, int hair, int beard)
-        {
-            if (zdo == null) throw new InvalidOperationException("Fresh facial-hair selection has no native ZDO.");
-            zdo.Set(ZDOVars.s_hairItem, hair, false);
-            zdo.Set(ZDOVars.s_beardItem, beard, false);
-            if (zdo.GetInt(ZDOVars.s_hairItem, 0) != hair || zdo.GetInt(ZDOVars.s_beardItem, 0) != beard)
-                throw new InvalidOperationException("Fresh facial-hair selection did not persist to the native ZDO.");
-        }
-
-        // Valheim 1.0.20 separates a facial-hair request from the native method
-        // that creates its visible attachment.  The live 0.3.66 run proved that
-        // UpdateVisuals can leave both current hashes at zero on this converted
-        // Player graph even after the correct owner ZDO hashes are present.  A
-        // fresh, authoritative transaction therefore finishes through the same
-        // private native equip methods used by UpdateEquipmentVisuals, then
-        // rebuilds the native LOD and applies the already-selected hair color.
-        // This does not instantiate a replacement mesh or alter saved identity.
-        static void AttachProfileNativeFacialHair(VisEquipment vis, HumanProfile profile)
-        {
-            int hair = profile.Hair.GetStableHashCode();
-            int beard = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
-            InvokeNative(EquipHair, vis, hair);
-            InvokeNative(EquipBeard, vis, beard);
-            InvokeNative(UpdateLodgroup, vis);
-            InvokeNative(UpdateColors, vis);
-        }
-
-        static object InvokeNative(MethodInfo method, VisEquipment vis, params object[] arguments)
-        {
-            try
-            {
-                return method.Invoke(vis, arguments);
-            }
-            catch (TargetInvocationException error)
-            {
-                throw error.InnerException ?? error;
-            }
-        }
-
         void WaitOrFail(string reason)
         {
             State = "Awaiting " + reason;
@@ -263,18 +184,6 @@ namespace LivingWorld.HumanNpc
             if (beardObject != null && !AttachmentRenders(beardObject, vis, out reason))
             { reason = "visible native beard " + profile.Beard + ": " + reason; return false; }
             reason = ""; return true;
-        }
-
-        static void RefreshNativeAppearance(VisEquipment vis)
-        {
-            try
-            {
-                UpdateVisuals.Invoke(vis, null);
-            }
-            catch (TargetInvocationException error)
-            {
-                throw error.InnerException ?? error;
-            }
         }
 
         static bool AttachmentRenders(GameObject attachment, VisEquipment vis, out string reason)

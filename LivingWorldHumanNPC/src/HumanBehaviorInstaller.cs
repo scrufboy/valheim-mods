@@ -8,8 +8,13 @@ namespace LivingWorld.HumanNpc
     // appearance adapter has proved the body, equipment, hair and beard.
     public sealed class HumanBehaviorInstaller : MonoBehaviour
     {
-        float capacity, recovery, missingBonus, spendDelay;
-        bool configured, attempted;
+        // These values are configured on the registered inactive prefab and
+        // therefore must be Unity-serialized into every network instance.
+        // Keeping them as ordinary private fields made the live clone lose its
+        // stamina contract even though the prefab had been configured.
+        [SerializeField] float capacity, recovery, missingBonus, spendDelay;
+        [SerializeField] bool configured;
+        bool attempted;
 
         public bool Installed { get; private set; }
         public string Status = "Waiting for a complete native human";

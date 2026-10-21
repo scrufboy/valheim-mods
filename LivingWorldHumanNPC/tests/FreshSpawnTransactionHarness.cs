@@ -170,7 +170,8 @@ public class ObjectDB
 namespace LivingWorld.HumanNpc
 {
     public static class HumanProfile { public const string RequiredKey = "livingworld_human_identity_required"; }
-    public class HumanAppearance : MonoBehaviour { public bool Initialized; }
+    public class HumanAppearance : MonoBehaviour
+    { public bool Initialized; public void StageFreshProfile() { SpawnFixture.Events.Add("appearance:stage"); } }
     public class HumanCompanion : MonoBehaviour { }
     public class HumanBehaviorInstaller : MonoBehaviour { public bool Installed; }
     public class HumanCompositionIdentity : MonoBehaviour
@@ -227,7 +228,9 @@ static class FreshSpawnTransactionHarness
             SpawnFixture.Reset(); var plugin = new ManualTestPlugin(); plugin.Run();
             Check(SpawnFixture.Events.IndexOf("profile:required") < SpawnFixture.Events.IndexOf("composition"), "persist profile requirement before composition commit");
             Check(SpawnFixture.Events.IndexOf("composition") < SpawnFixture.Events.IndexOf("identity"), "composition before explicit identity");
-            Check(SpawnFixture.Events.IndexOf("identity") < SpawnFixture.Events.IndexOf("equip"), "profile before success equipment");
+            Check(SpawnFixture.Events.IndexOf("identity") < SpawnFixture.Events.IndexOf("appearance:stage") &&
+                SpawnFixture.Events.IndexOf("appearance:stage") < SpawnFixture.Events.IndexOf("equip"),
+                "profile becomes a staged native human before equipment and behavior");
             Check(!ZoneSystem.instance.GetGlobalKey("spawned") && ZNetScene.instance.destroyed.Count == 0, "successful fresh actor preserved without permanent spawn lock");
 
             SpawnFixture.Reset(); SpawnFixture.FailIdentity = true; plugin = new ManualTestPlugin(); var scene = ZNetScene.instance;

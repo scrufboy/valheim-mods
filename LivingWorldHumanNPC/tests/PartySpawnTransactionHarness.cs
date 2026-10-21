@@ -108,7 +108,11 @@ public class ZNetScene
 namespace LivingWorld.HumanNpc
 {
     public static class HumanProfile { public const string RequiredKey = "profile"; }
-    public class HumanAppearance : MonoBehaviour { public bool Initialized; public string State = "pending"; }
+    public class HumanAppearance : MonoBehaviour
+    {
+        public bool Initialized; public string State = "pending";
+        public void StageFreshProfile() { PartyFixture.Events.Add("appearance:stage"); }
+    }
     public class HumanBehaviorInstaller : MonoBehaviour { public bool Installed; public string Status = "pending"; }
     public class HumanCompositionIdentity : MonoBehaviour
     {
@@ -171,6 +175,8 @@ static class PartySpawnTransactionHarness
                 "one command pass allocates exactly scout and support");
             Check(PartyFixture.Events.Count(value => value == "identity") == 2 && PartyFixture.Events.Count(value => value == "base-profile") == 2,
                 "both independent random profile transactions begin in the same pass");
+            Check(PartyFixture.Events.Count(value => value == "appearance:stage") == 1,
+                "support is staged in the extracted party transaction; scout staging is covered by the spawn transaction");
             Check(!Has("follow") && !Has("archer") && !Has("report:Party ready"),
                 "no partial actor is ordered or reported ready");
             foreach (var actor in PartyFixture.Actors) PartyFixture.Approve(actor);

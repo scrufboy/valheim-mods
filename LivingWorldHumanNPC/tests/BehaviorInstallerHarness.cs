@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace UnityEngine
 {
+    public sealed class SerializeField : Attribute { }
     public class Component { public GameObject gameObject; public T GetComponent<T>() where T : Component { return gameObject.GetComponent<T>(); } }
     public class MonoBehaviour : Component { }
     public class GameObject
@@ -105,6 +106,9 @@ static class BehaviorInstallerHarness
             var resources = actor.GetComponent<HumanResources>();
             Check(resources.Capacity == 80 && resources.Recovery == 7 && Math.Abs(resources.Bonus - 1.4f) < .001f && resources.Delay == 1,
                 "native stamina values cross the staging boundary");
+            foreach (string field in new[] { "capacity", "recovery", "missingBonus", "spendDelay", "configured" })
+                Check(typeof(HumanBehaviorInstaller).GetField(field, BindingFlags.Instance | BindingFlags.NonPublic)
+                    .IsDefined(typeof(SerializeField), false), "prefab-configured " + field + " survives live instantiation");
 
             actor = Actor(out appearance, out ai, out installer);
             actor.AddComponent<HumanCompanion>(); appearance.Initialized = true; Tick(installer);

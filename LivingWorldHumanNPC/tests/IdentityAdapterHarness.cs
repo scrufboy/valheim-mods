@@ -165,7 +165,9 @@ public class VisEquipment : MonoBehaviour
         ++refreshes;
         var zdo = GetComponent<ZNetView>().data;
         hair = zdo.GetInt(ZDOVars.s_hairItem, 0); beard = zdo.GetInt(ZDOVars.s_beardItem, 0);
+        SetHairEquipped(hair); SetBeardEquipped(beard);
     }
+    void Start() { UpdateVisuals(); }
     bool SetHairEquipped(int value) { ++facialEquips; m_currentHairItemHash = value; BuildAttachment(ref m_hairItemInstance, value); return true; }
     bool SetBeardEquipped(int value) { ++facialEquips; m_currentBeardItemHash = value; BuildAttachment(ref m_beardItemInstance, value); return true; }
     void UpdateLodgroup() { }
@@ -232,6 +234,13 @@ static class IdentityAdapterHarness
         Call(appearance, "Start"); return actor;
     }
     static void Tick(GameObject actor) { Call(actor.Get<HumanIdentity>(), "Update"); Call(actor.Get<HumanAppearance>(), "Update"); }
+    static void NativeStart(GameObject actor) { Call(actor.Get<VisEquipment>(), "Start"); }
+    static void StageStartAndTick(GameObject actor)
+    {
+        actor.Get<HumanAppearance>().StageFreshProfile();
+        NativeStart(actor);
+        Tick(actor);
+    }
     public static int Main()
     {
         try
@@ -246,17 +255,9 @@ static class IdentityAdapterHarness
             Check(id.Read(out profile) == HumanProfileState.Ready && profile.Seed == Seed && profile.InitialRole == "unassigned", "created profile readable");
             id.InitializeFresh("invalid new seed ignored", HairChoices, BeardChoices);
             Check(view.data.writes.Count == 1 && view.data.GetString(HumanProfile.RecordKey, "") == saved, "idempotence before visual commit ignores seed without reroll");
-            // Reproduce the 0.3.64 live failure: the cloned Player graph says
-            // the desired selections were already requested, while the fresh
-            // actor has no corresponding ZDO values or attachment instances.
-            vis.m_modelIndex = (int)profile.Sex;
-            vis.m_skinColor = new Vector3(profile.SkinR / 255f, profile.SkinG / 255f, profile.SkinB / 255f);
-            vis.m_hairColor = new Vector3(profile.HairR / 255f, profile.HairG / 255f, profile.HairB / 255f);
-            vis.m_hairItem = profile.Hair.GetStableHashCode();
-            vis.m_beardItem = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
-            Tick(actor);
+            StageStartAndTick(actor);
             Check(appearance.Initialized && vis.writes == 5 && vis.refreshes == 1 && vis.facialEquips == 2,
-                "fresh adapter defeats matching Player request caches and explicitly completes both native facial-hair equips");
+                "fresh profile is selected before the one native visual startup pass attaches facial hair");
             Check(view.data.GetInt(ZDOVars.s_hairItem, 0) == profile.Hair.GetStableHashCode() &&
                 view.data.GetInt(ZDOVars.s_beardItem, 0) == (profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode()),
                 "fresh adapter commits and reads back native facial-hair ZDO selections before visual readiness");
@@ -273,7 +274,7 @@ static class IdentityAdapterHarness
                 if (HumanProfile.Generate(candidate, HairChoices, BeardChoices).Sex == HumanSex.Female) { femaleSeed = candidate; break; }
             }
             Check(femaleSeed != null, "female seed available");
-            var femaleActor = Actor(); femaleActor.Get<HumanIdentity>().InitializeFresh(femaleSeed, HairChoices, BeardChoices); Tick(femaleActor);
+            var femaleActor = Actor(); femaleActor.Get<HumanIdentity>().InitializeFresh(femaleSeed, HairChoices, BeardChoices); StageStartAndTick(femaleActor);
             Check(femaleActor.Get<HumanAppearance>().Initialized && femaleActor.Get<VisEquipment>().model == 1 && femaleActor.Get<VisEquipment>().beard == 0,
                 "actual adapter selects native female model without beard");
 
@@ -284,21 +285,21 @@ static class IdentityAdapterHarness
             // exist, but runtime current hashes/attachments were never rebuilt.
             view.data.Set(ZDOVars.s_hairItem, profile.Hair.GetStableHashCode(), false);
             view.data.Set(ZDOVars.s_beardItem, profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode(), false);
-            Tick(actor);
+            NativeStart(actor); Tick(actor);
             Check(actor.Get<HumanAppearance>().Initialized && vis.writes == 0 && vis.facialEquips == 2 && view.data.writes.Count == 0,
-                "loaded profile repairs missing native attachments without rerolling or rewriting saved identity");
+                "loaded profile is rebuilt by Valheim's native visual startup without rerolling or rewriting saved identity");
             Check(actor.Get<Humanoid>().m_name == profile.Name, "loaded name restored");
 
             actor = Actor(); view = actor.Get<ZNetView>(); vis = actor.Get<VisEquipment>();
             view.data.data.Remove(HumanProfile.RequiredKey);
             view.data.data[HumanMigrationPolicy.VisualKey] = HumanRigPolicy.Revision;
             view.data.data["livingworld_human_order"] = "saved follow order";
-            Tick(actor);
+            NativeStart(actor); Tick(actor);
             Check(actor.Get<HumanAppearance>().Initialized && vis.writes == 0 && view.data.writes.Count == 0 && actor.Get<Humanoid>().m_name == "Original Scout", "saved legacy appearance/name preserved");
             Check(view.data.GetString("livingworld_human_order", "") == "saved follow order", "legacy order remains untouched");
             Refuse(() => actor.Get<HumanIdentity>().InitializeFresh(Seed, HairChoices, BeardChoices), "saved legacy cannot be randomized");
 
-            actor = Actor(); actor.Get<ZNetView>().data.data.Remove(HumanProfile.RequiredKey); Tick(actor); vis = actor.Get<VisEquipment>();
+            actor = Actor(); actor.Get<ZNetView>().data.data.Remove(HumanProfile.RequiredKey); NativeStart(actor); Tick(actor); vis = actor.Get<VisEquipment>();
             Check(vis.model == 0 && vis.m_hairItem == 0 && vis.m_beardItem == 0 &&
                 vis.m_currentHairItemHash == 0 && vis.m_currentBeardItemHash == 0 &&
                 vis.m_hairItemInstance == null && vis.m_beardItemInstance == null && Math.Abs(vis.skin.x - .90f) < .00001,
@@ -308,14 +309,14 @@ static class IdentityAdapterHarness
             {
                 actor = Actor(); view = actor.Get<ZNetView>(); view.data.data[HumanProfile.RecordKey] = malformed;
                 Refuse(() => actor.Get<HumanIdentity>().InitializeFresh(Seed, HairChoices, BeardChoices), "corruption cannot be replaced");
-                Tick(actor);
+                NativeStart(actor); Tick(actor);
                 Check(!actor.Get<HumanAppearance>().Initialized && !actor.Get<MonsterAI>().enabled && actor.Get<VisEquipment>().writes == 0,
                     "malformed profile fail closed before visual changes");
                 Check(view.data.writes.Count == 0 && view.data.GetString(HumanProfile.RecordKey, "") == malformed, "malformed bytes preserved");
             }
             actor = Actor(); view = actor.Get<ZNetView>(); view.owner = false;
             Refuse(() => actor.Get<HumanIdentity>().InitializeFresh(Seed, HairChoices, BeardChoices), "remote cannot initialize");
-            view.data.data[HumanProfile.RecordKey] = saved; Tick(actor);
+            view.data.data[HumanProfile.RecordKey] = saved; NativeStart(actor); Tick(actor);
             Check(view.data.writes.Count == 0 && actor.Get<VisEquipment>().writes == 0, "remote load no persistent/visual writes");
 
             actor = Actor(); view = actor.Get<ZNetView>();
@@ -324,11 +325,10 @@ static class IdentityAdapterHarness
             Check(view.data.writes.Count == 0, "authority loss writes zero records");
 
             actor = Actor(); view = actor.Get<ZNetView>(); actor.Get<HumanIdentity>().InitializeFresh(Seed, HairChoices, BeardChoices);
-            vis = actor.Get<VisEquipment>(); vis.loseOwnerAfter = 1; Tick(actor);
-            Check(vis.writes == 1 && view.data.GetString(HumanMigrationPolicy.VisualKey, "") == "", "appearance loses authority without subsequent writes/commit");
-            view.owner = true; vis.loseOwnerAfter = 0; Tick(actor);
-            Check(actor.Get<HumanAppearance>().Initialized && vis.writes == 6 && view.data.GetString(HumanProfile.RecordKey, "") == saved,
-                "new authority completes same saved appearance without reroll");
+            vis = actor.Get<VisEquipment>(); vis.loseOwnerAfter = 1;
+            Refuse(() => actor.Get<HumanAppearance>().StageFreshProfile(), "authority loss during native staging refuses the fresh human");
+            Check(view.data.GetString(HumanMigrationPolicy.VisualKey, "") == "" && !actor.Get<HumanAppearance>().Initialized,
+                "authority loss cannot commit a visual revision or approve behavior");
 
             actor = Actor(); view = actor.Get<ZNetView>(); view.data.prefab = -1;
             Refuse(() => actor.Get<HumanIdentity>().InitializeFresh(Seed, HairChoices, BeardChoices), "foreign prefab refused"); Check(view.data.writes.Count == 0, "foreign prefab no writes");
@@ -344,7 +344,7 @@ static class IdentityAdapterHarness
             Refuse(() => actor.Get<HumanIdentity>().InitializeFresh(Seed, HairChoices, BeardChoices), "unavailable human models refused");
 
             actor = Actor(); id = actor.Get<HumanIdentity>(); view = actor.Get<ZNetView>();
-            id.InitializeFresh(Seed, HairChoices, BeardChoices); Tick(actor);
+            id.InitializeFresh(Seed, HairChoices, BeardChoices); StageStartAndTick(actor);
             actor.Get<Humanoid>().m_name = "Display changed after hydration";
             for (int i = 0; i < 100; ++i) Call(id, "Update");
             Check(actor.Get<Humanoid>().m_name == "Display changed after hydration", "no per-frame display-name rewrite");
@@ -355,7 +355,7 @@ static class IdentityAdapterHarness
             Check(!actor.Get<HumanAppearance>().Initialized && view.data.writes.Count == 2, "owner boundary immediately detects bad saved data without persistence");
 
             actor = Actor(); id = actor.Get<HumanIdentity>(); view = actor.Get<ZNetView>();
-            id.InitializeFresh(Seed, HairChoices, BeardChoices); Tick(actor);
+            id.InitializeFresh(Seed, HairChoices, BeardChoices); StageStartAndTick(actor);
             view.data.data.Remove(HumanProfile.RecordKey);
             Time.realtimeSinceStartup = .5f; Call(id, "Update");
             Check(id.Read(out profile) == HumanProfileState.Refused && !actor.Get<HumanAppearance>().Initialized,
@@ -369,14 +369,14 @@ static class IdentityAdapterHarness
             var incompleteSave = new Dictionary<string, string>(view.data.data);
             actor = Actor(); view = actor.Get<ZNetView>();
             view.data.data.Clear(); foreach (var pair in incompleteSave) view.data.data.Add(pair.Key, pair.Value);
-            Tick(actor);
+            NativeStart(actor); Tick(actor);
             Check(!actor.Get<HumanAppearance>().Initialized && !actor.Get<MonsterAI>().enabled && actor.Get<VisEquipment>().writes == 0,
                 "unconfirmed cleanup then reload cannot activate unprofiled fresh actor");
             Check(view.data.writes.Count == 0 && !view.data.data.ContainsKey(HumanProfile.RecordKey) && view.data.GetString(HumanProfile.RequiredKey, "") == "1",
                 "pending fresh record preserved across reload without generation or appearance writes");
             actor = Actor(); view = actor.Get<ZNetView>(); view.data.data[HumanProfile.RequiredKey] = "2";
             Refuse(() => actor.Get<HumanIdentity>().InitializeFresh(Seed, HairChoices, BeardChoices), "unknown required-profile flag refused");
-            Tick(actor); Check(!actor.Get<HumanAppearance>().Initialized && view.data.writes.Count == 0, "unknown requirement stays fail closed");
+            NativeStart(actor); Tick(actor); Check(!actor.Get<HumanAppearance>().Initialized && view.data.writes.Count == 0, "unknown requirement stays fail closed");
             Console.WriteLine("IdentityAdapterHarness PASS: " + checks + " assertions executing actual identity and appearance adapters with API doubles; Unity runtime NOT RUN.");
             return 0;
         }

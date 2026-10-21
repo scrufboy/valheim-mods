@@ -50,6 +50,11 @@ try {
     }
     $install=FindMethod LivingWorld.HumanNpc.HumanBehaviorInstaller Install
     $installCalls=@(Calls $install)
+    $installerType=@($types | Where-Object FullName -eq 'LivingWorld.HumanNpc.HumanBehaviorInstaller')[0]
+    foreach($fieldName in @('capacity','recovery','missingBonus','spendDelay','configured')){
+        $field=@($installerType.Fields | Where-Object Name -eq $fieldName)
+        Require ($field.Count -eq 1 -and @($field[0].CustomAttributes | Where-Object {$_.AttributeType.FullName -eq 'UnityEngine.SerializeField'}).Count -eq 1) "prefab-configured installer field $fieldName is Unity-serialized"
+    }
     foreach($component in @('LivingWorld.HumanNpc.HumanCompanion','LivingWorld.HumanNpc.HumanDoorTraversal','LivingWorld.HumanNpc.HumanFollowPresence','LivingWorld.HumanNpc.HumanCompanionPosture','LivingWorld.HumanNpc.HumanResources','LivingWorld.HumanNpc.HumanEnvironmentStatus','LivingWorld.HumanNpc.HumanPartyConfidence','LivingWorld.HumanNpc.HumanCompanionAmbient','LivingWorld.HumanNpc.HumanEquipmentReadiness','LivingWorld.HumanNpc.HumanCombatDefense','LivingWorld.HumanNpc.HumanPartyEquipment','LivingWorld.HumanNpc.HumanCleric','LivingWorld.HumanNpc.HumanUtilityTorch')){
         Require (@($installCalls | Where-Object {$_.Operand.FullName.Contains('AddComponent<'+$component+'>')}).Count -eq 1) "post-appearance installer attaches $component exactly once"
     }
@@ -95,33 +100,19 @@ try {
     foreach($field in @('HairInstance','BeardInstance','CurrentHairHash','CurrentBeardHash')){
         Require ($facialFields -contains $field) "appearance readiness verifies $field"
     }
-    $refresh=FindMethod LivingWorld.HumanNpc.HumanAppearance RefreshNativeAppearance
-    $refreshCalls=@(Calls $refresh | Where-Object {$_.Operand.Name -eq 'Invoke'})
-    Require ($refreshCalls.Count -eq 1) 'appearance performs one ordinary native visual pass before commit'
-    $prepare=FindMethod LivingWorld.HumanNpc.HumanAppearance PrepareFreshNativeSelection
-    $prepareCalls=@(Calls $prepare | Where-Object {$_.Operand.Name -eq 'SetValue'})
-    Require ($prepareCalls.Count -eq 5) 'fresh appearance invalidates exactly five native request caches before setters'
-    $prepareFields=@($prepare.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.FieldReference]} | ForEach-Object {$_.Operand.Name})
-    foreach($field in @('RequestedModel','RequestedSkinColor','RequestedHairColor','RequestedHair','RequestedBeard')){
-        Require ($prepareFields -contains $field) "fresh appearance invalidates $field"
+    $stage=FindMethod LivingWorld.HumanNpc.HumanAppearance StageFreshProfile
+    $stageCalls=@(Calls $stage)
+    foreach($setter in @('SetModel','SetSkinColor','SetHairColor','SetHairItem','SetBeardItem')){
+        Require (@($stageCalls | Where-Object {$_.Operand.DeclaringType.FullName -eq 'VisEquipment' -and $_.Operand.Name -eq $setter}).Count -eq 1) "fresh native startup stages $setter exactly once"
     }
-    $commitHair=FindMethod LivingWorld.HumanNpc.HumanAppearance CommitFreshFacialHair
-    $commitHairCalls=@(Calls $commitHair)
-    Require (@($commitHairCalls | Where-Object {$_.Operand.DeclaringType.FullName -eq 'ZDO' -and $_.Operand.Name -eq 'Set'}).Count -eq 2) 'fresh appearance commits both native facial-hair ZDO hashes'
-    Require (@($commitHairCalls | Where-Object {$_.Operand.DeclaringType.FullName -eq 'ZDO' -and $_.Operand.Name -eq 'GetInt'}).Count -eq 2) 'fresh appearance reads both native facial-hair ZDO hashes back'
-    $commitHairFields=@($commitHair.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.FieldReference]} | ForEach-Object {$_.Operand.FullName})
-    Require ($commitHairFields -contains 'System.Int32 ZDOVars::s_hairItem' -and $commitHairFields -contains 'System.Int32 ZDOVars::s_beardItem') 'fresh appearance uses Valheim native hair and beard keys'
+    Require (@($stageCalls | Where-Object {$_.Operand.DeclaringType.FullName -eq 'ZDO' -and $_.Operand.Name -eq 'GetInt'}).Count -eq 2) 'fresh native startup reads both persisted facial-hair selections back'
+    Require (@($stageCalls | Where-Object {$_.Operand.Name -eq 'Invoke' -or $_.Operand.Name -match '^Set(Hair|Beard)Equipped$|^UpdateVisuals$|^UpdateLodgroup$|^UpdateColors$'}).Count -eq 0) 'fresh staging never forces private rendering or attachment methods'
     $appearanceUpdate=FindMethod LivingWorld.HumanNpc.HumanAppearance Update
-    $commitCall=@($appearanceUpdate.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'CommitFreshFacialHair'})
-    $refreshCall=@($appearanceUpdate.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'RefreshNativeAppearance'})
-    Require ($commitCall.Count -eq 1 -and $refreshCall.Count -eq 1 -and $commitCall[0].Offset -lt $refreshCall[0].Offset) 'native ZDO facial-hair commit precedes the visual attachment pass'
-    $attachHair=FindMethod LivingWorld.HumanNpc.HumanAppearance AttachProfileNativeFacialHair
-    $attachFields=@($attachHair.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.FieldReference]} | ForEach-Object {$_.Operand.Name})
-    foreach($field in @('EquipHair','EquipBeard','UpdateLodgroup','UpdateColors')){
-        Require ($attachFields -contains $field) "fresh appearance completes native presentation through $field"
-    }
-    $attachCall=@($appearanceUpdate.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'AttachProfileNativeFacialHair'})
-    Require ($attachCall.Count -eq 1 -and $refreshCall[0].Offset -lt $attachCall[0].Offset) 'ordinary native visual pass precedes explicit saved-profile facial-hair attachment repair'
+    $appearanceUpdateCalls=@(Calls $appearanceUpdate)
+    Require (@($appearanceUpdateCalls | Where-Object {$_.Operand.DeclaringType.FullName -eq 'VisEquipment' -and $_.Operand.Name -match '^Set(Model|SkinColor|HairColor|HairItem|BeardItem)$'}).Count -eq 5) 'only the unchanged unprofiled legacy branch writes late native presentation defaults'
+    Require (@($appearanceUpdateCalls | Where-Object {$_.Operand.Name -eq 'Invoke' -or $_.Operand.Name -match '^Set(Hair|Beard)Equipped$|^UpdateVisuals$|^UpdateLodgroup$|^UpdateColors$'}).Count -eq 0) 'appearance validation never forces private native rendering after startup'
+    $stageSites=@($methods | Where-Object { @(Calls $_ | Where-Object {$_.Operand.DeclaringType.FullName -eq 'LivingWorld.HumanNpc.HumanAppearance' -and $_.Operand.Name -eq 'StageFreshProfile'}).Count -gt 0 })
+    Require ($stageSites.Count -eq 2 -and @($stageSites | Where-Object {$_.DeclaringType.FullName -ne 'LivingWorld.ManualTest.ManualTestPlugin' -or $_.Name -notin @('Spawn','PrepareParty')}).Count -eq 0) 'only both explicit fresh party allocation paths stage native appearance'
     $render=FindMethod LivingWorld.HumanNpc.HumanAppearance AttachmentRenders
     $renderCalls=@(Calls $render)
     Require (@($renderCalls | Where-Object {$_.Operand.Name -eq 'GetComponentsInChildren'}).Count -eq 1) 'appearance readiness inspects the selected attachment renderers'

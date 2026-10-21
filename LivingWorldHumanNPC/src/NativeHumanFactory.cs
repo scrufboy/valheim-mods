@@ -158,7 +158,14 @@ namespace LivingWorld.HumanNpc
             HumanRigPolicy.ValidateBoneNames(vis.m_bodyModel.bones.Select(b => b == null ? null : b.name));
             var bodyAnimator = visual.GetComponent<Animator>();
             HumanRigPolicy.Require(bodyAnimator != null && bodyAnimator.GetComponent<CharacterAnimEvent>() != null && bodyAnimator.avatar != null && bodyAnimator.avatar.isValid && bodyAnimator.avatar.isHuman && bodyAnimator.runtimeAnimatorController != null, "Human animation graph invalid.");
-            HumanRigPolicy.Require(root.GetComponentsInChildren<Animator>(true).Length == 1, "Multiple body animators.");
+            // Equipment/customization prefabs may contain their own Animator.
+            // The body contract is one native CharacterAnimEvent receiver on
+            // the Visual animator; unrelated attachment animators are not a
+            // second body and must not invalidate an otherwise native human.
+            var eventReceivers = visual.GetComponentsInChildren<CharacterAnimEvent>(true);
+            HumanRigPolicy.Require(eventReceivers.Length == 1 &&
+                ReferenceEquals(eventReceivers[0].GetComponent<Animator>(), bodyAnimator),
+                "Native body animator/event receiver is not unique.");
             foreach (var mesh in visual.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
                 HumanRigPolicy.Require(mesh.rootBone == null || mesh.rootBone.IsChildOf(visual), "Renderer root escaped human rig.");

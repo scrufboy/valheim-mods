@@ -1,23 +1,24 @@
-LIVING WORLD HUMAN NPC 0.3.66 — NATIVE FACIAL-HAIR COMMIT REPAIR
+LIVING WORLD HUMAN NPC 0.3.69 — NATIVE HUMAN STARTUP ORDER
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:
 
 plugins\LivingWorldHumanNpc\LivingWorld.HumanNpc.dll
 
-0.3.66 rejects the failed 0.3.65 live party. That build created two fresh named
-actors, but both native hair hashes remained zero. The visible result was two
-bald, inert people; appearance readiness failed, so the behavior installer and
-joint Follow transaction correctly remained closed.
+0.3.69 rejects the failed 0.3.68 live party. That build could report a facial-
+hair attachment even while the person looked bald, lost its staged stamina
+values on the live clone, and rejected a customization attachment Animator as
+if it were a second body.
 
-The offline appearance double had incorrectly modeled SetHairItem and
-SetBeardItem as creating attachments immediately. Valheim 1.0.20 actually uses
-those setters to update request/ZDO state; UpdateVisuals then reads the native
-ZDO hashes and builds the attachments. This candidate models that real sequence,
-commits and reads back the selected hair/beard hashes at the fresh owner boundary,
-then invokes Valheim's native visual update and requires the live renderers.
-Native-human approval remains explicit: behavior and AI stay dormant until
-visible hair and any selected male beard are proven.
+Fresh identity and appearance now use the proven native startup order: the
+command creates a random male or female human, persists the name and profile,
+sets Valheim's public model/color/hair/beard selections before visual Start,
+and then lets Valheim build the attachments. Living World no longer invokes
+private hair/beard attachment or visual-refresh methods after startup. Only a
+complete native human may receive companion behavior. The prefab-configured
+stamina values are explicitly Unity-serialized into every spawned/reloaded
+instance, and attachment animators no longer invalidate the one real body
+animator.
 
 One `lwparty` command allocates both missing native humans in the same command
 pass, lets both appearance checks complete concurrently, then attaches the

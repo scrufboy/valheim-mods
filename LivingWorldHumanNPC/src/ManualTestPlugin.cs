@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace LivingWorld.ManualTest
 {
-    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.68")]
+    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.69")]
     [BepInIncompatibility("local.livingworld.manualtest")]
     [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     public sealed class ManualTestPlugin : BaseUnityPlugin
@@ -300,6 +300,7 @@ namespace LivingWorld.ManualTest
                 createdView.GetZDO().Set(NpcKey, NpcId);
                 created.GetComponent<HumanCompositionIdentity>().InitializeFreshBase(Player.m_localPlayer);
                 created.GetComponent<HumanIdentity>().InitializeFresh(Guid.NewGuid().ToString("N"), availableHair, availableBeards);
+                created.GetComponent<HumanAppearance>().StageFreshProfile();
                 created.GetComponent<Humanoid>().EquipBestWeapon(null, null, null, null);
                 Report("SPAWN created " + NpcId + " with native human body; id=" + createdId + ". Wait for initialization, then inspect clothing/animations; type lwtest status.");
             }
@@ -415,6 +416,7 @@ namespace LivingWorld.ManualTest
                     zdo.Set(LabTag, "npc"); zdo.Set(NpcKey, NpcId);
                     created.GetComponent<HumanCompositionIdentity>().InitializeFreshBase(Player.m_localPlayer);
                     created.GetComponent<HumanIdentity>().InitializeFresh(Guid.NewGuid().ToString("N"), hair, beards);
+                    created.GetComponent<HumanAppearance>().StageFreshProfile();
                     created.GetComponent<Humanoid>().EquipBestWeapon(null, null, null, null);
                     cleric = created.GetComponent<Character>();
                 }
