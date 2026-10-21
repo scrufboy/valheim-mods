@@ -23,10 +23,17 @@ namespace LivingWorld.HumanNpc
 
         internal void Configure(Player nativeValues)
         {
-            Capacity = nativeValues.m_baseStamina;
-            BaseRecovery = nativeValues.m_staminaRegen;
-            MissingFractionBonus = nativeValues.m_staminaRegenTimeMultiplier;
-            SpendDelay = nativeValues.m_staminaRegenDelay;
+            if (nativeValues == null) throw new ArgumentNullException("nativeValues");
+            Configure(nativeValues.m_baseStamina, nativeValues.m_staminaRegen,
+                nativeValues.m_staminaRegenTimeMultiplier, nativeValues.m_staminaRegenDelay);
+        }
+
+        internal void Configure(float capacity, float baseRecovery, float missingFractionBonus, float spendDelay)
+        {
+            Capacity = capacity;
+            BaseRecovery = baseRecovery;
+            MissingFractionBonus = missingFractionBonus;
+            SpendDelay = spendDelay;
             if (!ConfigurationValid()) throw new InvalidOperationException("Invalid native stamina parameters.");
         }
 

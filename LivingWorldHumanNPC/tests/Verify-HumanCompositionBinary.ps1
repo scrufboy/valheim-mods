@@ -42,9 +42,20 @@ try {
     $createCalls=@(Calls $create)
     Require (@($createCalls | Where-Object {$_.Operand.Name -eq 'CreateClonedPrefab'}).Count -eq 1) 'factory clones one complete native Player human graph inside the inactive prefab container'
     Require (@($createCalls | Where-Object {$_.Operand.Name -eq 'Instantiate'}).Count -eq 0) 'factory does not separately instantiate or rebuild a visual subtree'
-    foreach($component in @('Humanoid','MonsterAI','LivingWorld.HumanNpc.HumanCompositionIdentity','LivingWorld.HumanNpc.HumanCompanion','LivingWorld.HumanNpc.HumanEquipmentReadiness','LivingWorld.HumanNpc.HumanCombatDefense','LivingWorld.HumanNpc.HumanEnvironmentStatus')){
+    foreach($component in @('Humanoid','MonsterAI','LivingWorld.HumanNpc.HumanCompositionIdentity','LivingWorld.HumanNpc.HumanIdentity','LivingWorld.HumanNpc.HumanBehaviorInstaller')){
         Require (@($createCalls | Where-Object {$_.Operand.FullName.Contains('AddComponent<'+$component+'>')}).Count -eq 1) "explicit NPC component $component"
     }
+    foreach($component in @('LivingWorld.HumanNpc.HumanCompanion','LivingWorld.HumanNpc.HumanDoorTraversal','LivingWorld.HumanNpc.HumanFollowPresence','LivingWorld.HumanNpc.HumanCompanionPosture','LivingWorld.HumanNpc.HumanResources','LivingWorld.HumanNpc.HumanEnvironmentStatus','LivingWorld.HumanNpc.HumanPartyConfidence','LivingWorld.HumanNpc.HumanCompanionAmbient','LivingWorld.HumanNpc.HumanEquipmentReadiness','LivingWorld.HumanNpc.HumanCombatDefense','LivingWorld.HumanNpc.HumanPartyEquipment','LivingWorld.HumanNpc.HumanCleric','LivingWorld.HumanNpc.HumanUtilityTorch')){
+        Require (@($createCalls | Where-Object {$_.Operand.FullName.Contains('AddComponent<'+$component+'>')}).Count -eq 0) "factory does not pre-attach behavior $component"
+    }
+    $install=FindMethod LivingWorld.HumanNpc.HumanBehaviorInstaller Install
+    $installCalls=@(Calls $install)
+    foreach($component in @('LivingWorld.HumanNpc.HumanCompanion','LivingWorld.HumanNpc.HumanDoorTraversal','LivingWorld.HumanNpc.HumanFollowPresence','LivingWorld.HumanNpc.HumanCompanionPosture','LivingWorld.HumanNpc.HumanResources','LivingWorld.HumanNpc.HumanEnvironmentStatus','LivingWorld.HumanNpc.HumanPartyConfidence','LivingWorld.HumanNpc.HumanCompanionAmbient','LivingWorld.HumanNpc.HumanEquipmentReadiness','LivingWorld.HumanNpc.HumanCombatDefense','LivingWorld.HumanNpc.HumanPartyEquipment','LivingWorld.HumanNpc.HumanCleric','LivingWorld.HumanNpc.HumanUtilityTorch')){
+        Require (@($installCalls | Where-Object {$_.Operand.FullName.Contains('AddComponent<'+$component+'>')}).Count -eq 1) "post-appearance installer attaches $component exactly once"
+    }
+    $lastAdd=($installCalls | Where-Object {$_.Operand.Name -eq 'AddComponent'} | Sort-Object Offset | Select-Object -Last 1).Offset
+    $enable=@($install.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.MethodReference] -and $_.Operand.Name -eq 'set_enabled'} | Sort-Object Offset | Select-Object -Last 1)
+    Require ($enable.Count -eq 1 -and $enable[0].Offset -gt $lastAdd) 'native AI is enabled only after the complete behavior set is attached'
     foreach($component in @('UnityEngine.CapsuleCollider','UnityEngine.Rigidbody','ZNetView','ZSyncTransform','ZSyncAnimation','VisEquipment','FootStep')){
         Require (@($createCalls | Where-Object {$_.Operand.FullName.Contains('AddComponent<'+$component+'>')}).Count -eq 0) "native graph retains existing $component instead of duplicating it"
     }
@@ -87,6 +98,13 @@ try {
     $refresh=FindMethod LivingWorld.HumanNpc.HumanAppearance RefreshNativeAppearance
     $refreshCalls=@(Calls $refresh | Where-Object {$_.Operand.Name -eq 'Invoke'})
     Require ($refreshCalls.Count -eq 1) 'appearance performs one ordinary native visual pass before commit'
+    $prepare=FindMethod LivingWorld.HumanNpc.HumanAppearance PrepareFreshNativeSelection
+    $prepareCalls=@(Calls $prepare | Where-Object {$_.Operand.Name -eq 'SetValue'})
+    Require ($prepareCalls.Count -eq 5) 'fresh appearance invalidates exactly five native request caches before setters'
+    $prepareFields=@($prepare.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.FieldReference]} | ForEach-Object {$_.Operand.Name})
+    foreach($field in @('RequestedModel','RequestedSkinColor','RequestedHairColor','RequestedHair','RequestedBeard')){
+        Require ($prepareFields -contains $field) "fresh appearance invalidates $field"
+    }
     $render=FindMethod LivingWorld.HumanNpc.HumanAppearance AttachmentRenders
     $renderCalls=@(Calls $render)
     Require (@($renderCalls | Where-Object {$_.Operand.Name -eq 'GetComponentsInChildren'}).Count -eq 1) 'appearance readiness inspects the selected attachment renderers'
@@ -96,10 +114,10 @@ try {
     Require (@($identity.Methods | Where-Object {$_.Name -in @('Awake','Start','Update','FixedUpdate','OnEnable')}).Count -eq 0) 'no automatic identity/migration callback'
     $identityCalls=@($identity.Methods | Where-Object HasBody | ForEach-Object {Calls $_})
     Require (@($identityCalls | Where-Object {$_.Operand.Name -match 'Destroy|SetPrefab|SetPosition|SetRotation|SetHealth|SetLevel|ResetZDO|RemoveGlobalKey|Clear|Teleport'}).Count -eq 0) 'identity adapter never rewrites native identity/position/health/world or destroys actor'
-    foreach($pair in @(@('InitializeFresh','Spawn','PrepareParty'),@('TryMigrate','OnCommand'))){
+    foreach($pair in @(@('InitializeFreshBase','Spawn','PrepareParty','InitializeFresh'),@('InitializeOrders','RequirePartyMemberReady'),@('TryMigrate','OnCommand'))){
         $sites=@($methods | Where-Object { @(Calls $_ | Where-Object {$_.Operand.DeclaringType.FullName -eq 'LivingWorld.HumanNpc.HumanCompositionIdentity' -and $_.Operand.Name -eq $pair[0]}).Count -gt 0 })
         $allowed=@($pair | Select-Object -Skip 1)
-        Require ($sites.Count -eq $allowed.Count -and @($sites | Where-Object {$_.DeclaringType.FullName -ne 'LivingWorld.ManualTest.ManualTestPlugin' -or $_.Name -notin $allowed}).Count -eq 0) "$($pair[0]) only called from explicitly checked scout/party commands"
+        Require ($sites.Count -eq $allowed.Count -and @($sites | Where-Object {($_.DeclaringType.FullName -ne 'LivingWorld.ManualTest.ManualTestPlugin' -and $_.DeclaringType.FullName -ne 'LivingWorld.HumanNpc.HumanCompositionIdentity') -or $_.Name -notin $allowed}).Count -eq 0) "$($pair[0]) only called from explicitly checked scout/party commands"
     }
     $writes=FindMethod LivingWorld.HumanNpc.HumanMigrationPolicy PlanMigration
     $writeStrings=@($writes.Body.Instructions | Where-Object {$_.OpCode.Code -eq [Mono.Cecil.Cil.Code]::Ldstr} | ForEach-Object {$_.Operand})

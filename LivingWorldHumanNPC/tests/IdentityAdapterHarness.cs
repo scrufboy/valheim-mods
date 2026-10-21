@@ -119,14 +119,16 @@ public class VisEquipment : MonoBehaviour
     public Player m_playerComponent;
     public PlayerModel[] m_models = { new PlayerModel(), new PlayerModel() };
     public int writes, refreshes, model = -1, hair = -1, beard = -1, loseOwnerAfter;
+    public int m_modelIndex = -1, m_hairItem, m_beardItem;
     public SkinnedMeshRenderer m_bodyModel;
     public GameObject m_hairItemInstance, m_beardItemInstance;
     public int m_currentHairItemHash, m_currentBeardItemHash;
-    public Vector3 skin, tint;
+    public Vector3 skin, tint, m_skinColor, m_hairColor;
     void Write() { ++writes; if (loseOwnerAfter == writes) GetComponent<ZNetView>().owner = false; }
-    public void SetModel(int value) { Write(); model = value; }
-    public void SetSkinColor(Vector3 value) { Write(); skin = value; }
-    public void SetHairColor(Vector3 value) { Write(); tint = value; }
+    static bool Same(Vector3 a, Vector3 b) { return a.x == b.x && a.y == b.y && a.z == b.z; }
+    public void SetModel(int value) { if (m_modelIndex == value) return; Write(); m_modelIndex = value; model = value; }
+    public void SetSkinColor(Vector3 value) { if (Same(m_skinColor, value)) return; Write(); m_skinColor = value; skin = value; }
+    public void SetHairColor(Vector3 value) { if (Same(m_hairColor, value)) return; Write(); m_hairColor = value; tint = value; }
     void BuildAttachment(ref GameObject instance, int value)
     {
         if (value == 0) { instance = null; return; }
@@ -135,8 +137,8 @@ public class VisEquipment : MonoBehaviour
         renderer.rootBone.gameObject = gameObject;
         var lod = gameObject.Get<LODGroup>(); if (lod != null) lod.renderers.Add(renderer);
     }
-    public void SetHairItem(int value) { Write(); hair = value; m_currentHairItemHash = value; BuildAttachment(ref m_hairItemInstance, value); }
-    public void SetBeardItem(int value) { Write(); beard = value; m_currentBeardItemHash = value; BuildAttachment(ref m_beardItemInstance, value); }
+    public void SetHairItem(int value) { if (m_hairItem == value) return; Write(); m_hairItem = value; hair = value; m_currentHairItemHash = value; BuildAttachment(ref m_hairItemInstance, value); }
+    public void SetBeardItem(int value) { if (m_beardItem == value) return; Write(); m_beardItem = value; beard = value; m_currentBeardItemHash = value; BuildAttachment(ref m_beardItemInstance, value); }
     void UpdateVisuals() { ++refreshes; }
 }
 public class ZNetScene
@@ -214,8 +216,16 @@ static class IdentityAdapterHarness
             Check(id.Read(out profile) == HumanProfileState.Ready && profile.Seed == Seed && profile.InitialRole == "unassigned", "created profile readable");
             id.InitializeFresh("invalid new seed ignored", HairChoices, BeardChoices);
             Check(view.data.writes.Count == 1 && view.data.GetString(HumanProfile.RecordKey, "") == saved, "idempotence before visual commit ignores seed without reroll");
+            // Reproduce the 0.3.64 live failure: the cloned Player graph says
+            // the desired selections were already requested, while the fresh
+            // actor has no corresponding ZDO values or attachment instances.
+            vis.m_modelIndex = (int)profile.Sex;
+            vis.m_skinColor = new Vector3(profile.SkinR / 255f, profile.SkinG / 255f, profile.SkinB / 255f);
+            vis.m_hairColor = new Vector3(profile.HairR / 255f, profile.HairG / 255f, profile.HairB / 255f);
+            vis.m_hairItem = profile.Hair.GetStableHashCode();
+            vis.m_beardItem = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
             Tick(actor);
-            Check(appearance.Initialized && vis.writes == 5 && vis.refreshes == 1, "actual appearance adapter performs one ordinary native visual refresh");
+            Check(appearance.Initialized && vis.writes == 5 && vis.refreshes == 1, "fresh adapter defeats matching Player request caches and performs one native visual refresh");
             Check(vis.model == (int)profile.Sex && vis.hair == profile.Hair.GetStableHashCode() && vis.beard == (profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode()), "profile model/hair/beard used");
             Check(Math.Abs(vis.skin.x - profile.SkinR / 255f) < .00001 && Math.Abs(vis.tint.z - profile.HairB / 255f) < .00001, "persisted colors used");
             Check(actor.Get<Humanoid>().m_name == profile.Name, "stable name hydrated");
@@ -256,7 +266,9 @@ static class IdentityAdapterHarness
             Refuse(() => actor.Get<HumanIdentity>().InitializeFresh(Seed, HairChoices, BeardChoices), "saved legacy cannot be randomized");
 
             actor = Actor(); actor.Get<ZNetView>().data.data.Remove(HumanProfile.RequiredKey); Tick(actor); vis = actor.Get<VisEquipment>();
-            Check(vis.model == 0 && vis.hair == 0 && vis.beard == 0 && Math.Abs(vis.skin.x - .90f) < .00001,
+            Check(vis.model == 0 && vis.m_hairItem == 0 && vis.m_beardItem == 0 &&
+                vis.m_currentHairItemHash == 0 && vis.m_currentBeardItemHash == 0 &&
+                vis.m_hairItemInstance == null && vis.m_beardItemInstance == null && Math.Abs(vis.skin.x - .90f) < .00001,
                 "unprofiled legacy path uses native empty customization, never a guessed asset");
 
             foreach (string malformed in new[] { "broken", "2" + saved.Substring(1), new String('x', 257) })

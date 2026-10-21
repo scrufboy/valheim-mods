@@ -83,7 +83,7 @@ try{
  Has (Method $posture BeforeCraftEvent) 'Animator::GetInteger';Has (Method $posture BeforeCraftEvent) 'AmbientAnimationContract::SafeEvent'
  Has (Method $posture StopAmbient) 'HumanCompanionPosture::ClearCraftProp'
  Has (Method $posture ClearCraftProp) 'UnityEngine.Object::Destroy'
- Has (Method (GetTypeDef $candidate NativeHumanFactory) Create) 'AddComponent<LivingWorld.HumanNpc.HumanCompanionAmbient>'
+ Has (Method (GetTypeDef $candidate HumanBehaviorInstaller) Install) 'AddComponent<LivingWorld.HumanNpc.HumanCompanionAmbient>'
  $nativeEffects=GetTypeDef $native AnimationEffect
  Has (Method $nativeEffects Attach) 'UnityEngine.Object::Instantiate'
  Has (Method $nativeEffects UpdateAttachments) 'AnimationEffect::RemoveAttachments'

@@ -14,7 +14,7 @@ if($PSVersionTable.PSEdition -ne 'Core'){
 $compiler='C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $build=Join-Path $PSScriptRoot 'build'
 $null=New-Item -ItemType Directory -Force -Path $build
-[ordered]@{Version='0.3.64';Status='INCOMPLETE';Reason='Current build has not completed all checks';UnityRuntime='NOT RUN';ProfileInstalled=$false;GameLaunched=$false} |
+[ordered]@{Version='0.3.65';Status='INCOMPLETE';Reason='Current build has not completed all checks';UnityRuntime='NOT RUN';ProfileInstalled=$false;GameLaunched=$false} |
     ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
 $nativeBuild=Join-Path $SharedProjectRoot 'independent-core\build'
 $runtimeCore=Join-Path $SharedProjectRoot 'runtime\BepInEx\core'
@@ -40,6 +40,7 @@ $relativeSources=@(
     'src\HumanNpcSettings.cs',
     'src\HumanAppearance.cs',
     'src\HumanCompositionIdentity.cs',
+    'src\HumanBehaviorInstaller.cs',
     'src\CompanionPolicy.cs',
     'src\HumanCompanion.cs',
     'src\CompanionPresencePolicy.cs',
@@ -82,8 +83,8 @@ foreach($source in $sources){
     }
 }
 $pluginSource=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'src\ManualTestPlugin.cs') -Raw
-if($pluginSource -notmatch '\[BepInPlugin\("local\.livingworld\.humannpc",\s*"[^"]+",\s*"0\.3\.64"\)\]'){
-    throw 'Expected new 0.3.64 human NPC plugin declaration; never reuse frozen version.'
+if($pluginSource -notmatch '\[BepInPlugin\("local\.livingworld\.humannpc",\s*"[^"]+",\s*"0\.3\.65"\)\]'){
+    throw 'Expected new 0.3.65 human NPC plugin declaration; never reuse frozen version.'
 }
 $sourceManifest=@($sources | ForEach-Object {
     [ordered]@{Path=$_;RelativePath=[IO.Path]::GetRelativePath($PSScriptRoot,$_).Replace('\','/');Sha256=(Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash}
@@ -151,7 +152,14 @@ if($LASTEXITCODE -ne 0){throw 'Identity adapter harness compilation failed.'}
 $identityOutput=@(& $identityTest)
 if($LASTEXITCODE -ne 0){throw 'Identity adapter harness failed.'}
 CheckOutput IdentityAdapterHarness $identityOutput
+$installerTest=Join-Path $build 'BehaviorInstallerHarness.exe'
+& $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:exe "/out:$installerTest" (Join-Path $PSScriptRoot 'src\HumanBehaviorInstaller.cs') (Join-Path $PSScriptRoot 'tests\BehaviorInstallerHarness.cs')
+if($LASTEXITCODE -ne 0){throw 'Behavior installer harness compilation failed.'}
+$installerOutput=@(& $installerTest)
+if($LASTEXITCODE -ne 0){throw 'Behavior installer harness failed.'}
+CheckOutput BehaviorInstallerHarness $installerOutput
 CheckOutput FreshSpawnTransaction @(& (Join-Path $PSScriptRoot 'tests\Test-FreshSpawnTransaction.ps1'))
+CheckOutput PartySpawnTransaction @(& (Join-Path $PSScriptRoot 'tests\Test-PartySpawnTransaction.ps1'))
 $ambientHarnessSources=@(
     'src\CompanionActivities.cs', 'src\CompanionPresencePolicy.cs',
     'src\CompanionPosturePolicy.cs', 'src\AmbientAnimationContract.cs',
@@ -219,10 +227,10 @@ $referenceManifest=@($referencePaths | ForEach-Object {[ordered]@{Path=$_;Sha256
 $referenceManifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $build 'reference-manifest.json') -Encoding utf8
 $dllHash=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
 [ordered]@{
-    Version='0.3.64'; Status='PASS'; DllPath=$dll; DllSha256=$dllHash;
+    Version='0.3.65'; Status='PASS'; DllPath=$dll; DllSha256=$dllHash;
     Scope='Offline compilation, pure managed policies, container isolation and read-only native IL/asset checks only';
     UnityRuntime='NOT RUN'; ProfileInstalled=$false; GameLaunched=$false;
     Sources=$sourceManifest; Suites=@($suiteResults.ToArray())
 } | ConvertTo-Json -Depth 7 | Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
-Write-Output "HumanNpc 0.3.64 offline build PASS. DLL SHA256: $dllHash"
+Write-Output "HumanNpc 0.3.65 offline build PASS. DLL SHA256: $dllHash"
 Write-Output 'Unity load, migration, animation, movement/combat and save/reload NOT RUN. No game or live profile touched.'

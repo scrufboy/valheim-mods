@@ -57,14 +57,37 @@ namespace LivingWorld.HumanNpc
         // the exact newly instantiated instance. No saved-actor discovery calls it.
         public void InitializeFresh(Player player)
         {
-            var view = Guard(player);
             var companion = GetComponent<HumanCompanion>();
             if (companion == null) throw new InvalidOperationException("Human companion component missing; no fresh composition metadata written.");
+            InitializeFreshBase(player);
+            if (!companion.InitializeOrders(player)) throw new InvalidOperationException("Fresh composition committed, but initial companion order was refused.");
+            failure = "";
+        }
+
+        // A fresh actor first receives only the metadata needed to finish its
+        // native appearance. Companion order data is deliberately later.
+        public void InitializeFreshBase(Player player)
+        {
+            var view = Guard(player);
             var plan = HumanMigrationPolicy.PlanFresh(Read(view.GetZDO()), true, true, view.IsOwner());
             foreach (var pair in plan) view.GetZDO().Set(pair.Key, pair.Value);
             if (!IsCompositionReady) throw new InvalidOperationException("Fresh composition commit could not be read back.");
-            if (!companion.InitializeOrders(player)) throw new InvalidOperationException("Fresh composition committed, but initial companion order was refused.");
             failure = "";
+        }
+
+        public bool InitializeOrders(Player player)
+        {
+            try
+            {
+                Guard(player);
+                if (!IsReady) throw new InvalidOperationException("Native human appearance has not committed.");
+                var companion = GetComponent<HumanCompanion>();
+                if (companion == null) throw new InvalidOperationException("Companion behavior is not installed.");
+                if (!companion.InitializeOrders(player)) throw new InvalidOperationException("Companion order initialization was refused.");
+                failure = "";
+                return true;
+            }
+            catch (Exception error) { failure = "Order initialization refused: " + error.Message; return false; }
         }
 
         ZNetView Guard(Player player)

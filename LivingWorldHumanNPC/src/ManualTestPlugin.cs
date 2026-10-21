@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace LivingWorld.ManualTest
 {
-    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.64")]
+    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.65")]
     [BepInIncompatibility("local.livingworld.manualtest")]
     [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     public sealed class ManualTestPlugin : BaseUnityPlugin
@@ -92,7 +92,7 @@ namespace LivingWorld.ManualTest
         IEnumerator PreparePartyTransaction()
         {
             partyPreparing = true;
-            float expires = Time.realtimeSinceStartup + 12f;
+            float expires = Time.realtimeSinceStartup + 15f;
             while (true)
             {
                 Exception failure = null;
@@ -298,7 +298,7 @@ namespace LivingWorld.ManualTest
                 createdView.GetZDO().Set(HumanProfile.RequiredKey, "1");
                 createdView.GetZDO().Set(LabTag, "npc");
                 createdView.GetZDO().Set(NpcKey, NpcId);
-                created.GetComponent<HumanCompositionIdentity>().InitializeFresh(Player.m_localPlayer);
+                created.GetComponent<HumanCompositionIdentity>().InitializeFreshBase(Player.m_localPlayer);
                 created.GetComponent<HumanIdentity>().InitializeFresh(Guid.NewGuid().ToString("N"), availableHair, availableBeards);
                 created.GetComponent<Humanoid>().EquipBestWeapon(null, null, null, null);
                 Report("SPAWN created " + NpcId + " with native human body; id=" + createdId + ". Wait for initialization, then inspect clothing/animations; type lwtest status.");
@@ -393,50 +393,67 @@ namespace LivingWorld.ManualTest
             if (npc == null) { Spawn(); FindNpc(); }
             if (npc == null) throw new InvalidOperationException("Scout creation did not produce a loaded person");
             GuardOwner(npc);
-            npc.GetComponent<HumanPartyEquipment>().PrepareArcher();
-            if (!npc.GetComponent<HumanCompanion>().TryIssueFollow(Player.m_localPlayer)) throw new InvalidOperationException("Scout follow not ready");
             var cleric = Character.GetAllCharacters().FirstOrDefault(c => c != null && HumanCleric.IsCleric(c.gameObject));
-            if (cleric != null && !cleric.IsDead())
+            if (cleric == null || cleric.IsDead())
             {
-                if (!cleric.GetComponent<HumanCompanion>().TryIssueFollow(Player.m_localPlayer)) throw new InvalidOperationException("Cleric initialization still pending; wait, then repeat prepare");
-                Report("Party prepared: existing archer and cleric follow you. No refill, resurrection or player equipment changes."); return;
-            }
-            const string guard = "lwc_human_cleric_v1_spawned";
-            ZoneSystem.instance.RemoveGlobalKey(guard);
-            var prefab = ZNetScene.instance.GetPrefab(NpcId);
-            if (!registered || prefab == null || !ReferenceEquals(prefab, registeredPrefab)) throw new InvalidOperationException("Human prefab registration incomplete");
-            string[] hair = NativeAppearanceChoices("Hair", false), beards = NativeAppearanceChoices("Beard", true);
-            var at = FindPartySpawnPoint();
-            GameObject created = null;
-            try
-            {
-                created = Instantiate(prefab, at, Player.m_localPlayer.transform.rotation);
-                GuardOwner(created); NativeHumanFactory.Validate(created, true);
-                var zdo = created.GetComponent<ZNetView>().GetZDO();
-                zdo.Set(HumanProfile.RequiredKey, "1"); zdo.Set(HumanCleric.RoleKey, "1");
-                zdo.Set(LabTag, "npc"); zdo.Set(NpcKey, NpcId);
-                created.GetComponent<HumanCompositionIdentity>().InitializeFresh(Player.m_localPlayer);
-                created.GetComponent<HumanIdentity>().InitializeFresh(Guid.NewGuid().ToString("N"), hair, beards);
-                created.GetComponent<Humanoid>().EquipBestWeapon(null, null, null, null);
-                if (!created.GetComponent<HumanCompanion>().TryIssueFollow(Player.m_localPlayer))
-                    throw new InvalidOperationException("New companion was created but follow initialization was refused");
-                Report("Party ready: archer and support companion follow you. No refill, resurrection or raid was triggered.");
-            }
-            catch (Exception error)
-            {
-                // Appearance finishes through its bounded native lifecycle after
-                // the fresh identity transaction. Preserve that valid actor while
-                // the outer coroutine retries; otherwise every retry destroys the
-                // support member before it can ever become command-ready.
-                bool initializationPending = error.Message.IndexOf("follow initialization", StringComparison.OrdinalIgnoreCase) >= 0;
-                if (created != null && !initializationPending)
+                const string guard = "lwc_human_cleric_v1_spawned";
+                ZoneSystem.instance.RemoveGlobalKey(guard);
+                var prefab = ZNetScene.instance.GetPrefab(NpcId);
+                if (!registered || prefab == null || !ReferenceEquals(prefab, registeredPrefab)) throw new InvalidOperationException("Human prefab registration incomplete");
+                string[] hair = NativeAppearanceChoices("Hair", false), beards = NativeAppearanceChoices("Beard", true);
+                var at = FindPartySpawnPoint();
+                GameObject created = null;
+                try
                 {
-                    var view = created.GetComponent<ZNetView>();
-                    if (view != null && view.IsValid() && view.IsOwner()) ZNetScene.instance.Destroy(created);
-                    else { var ai = created.GetComponent<MonsterAI>(); if (ai != null) ai.enabled = false; }
+                    // The second native person is allocated in the same lwparty
+                    // command pass as the first. Their independent appearance
+                    // adapters then finish in parallel before either is ordered.
+                    created = Instantiate(prefab, at, Player.m_localPlayer.transform.rotation);
+                    GuardOwner(created); NativeHumanFactory.Validate(created, true);
+                    var zdo = created.GetComponent<ZNetView>().GetZDO();
+                    zdo.Set(HumanProfile.RequiredKey, "1"); zdo.Set(HumanCleric.RoleKey, "1");
+                    zdo.Set(LabTag, "npc"); zdo.Set(NpcKey, NpcId);
+                    created.GetComponent<HumanCompositionIdentity>().InitializeFreshBase(Player.m_localPlayer);
+                    created.GetComponent<HumanIdentity>().InitializeFresh(Guid.NewGuid().ToString("N"), hair, beards);
+                    created.GetComponent<Humanoid>().EquipBestWeapon(null, null, null, null);
+                    cleric = created.GetComponent<Character>();
                 }
-                throw;
+                catch
+                {
+                    if (created != null)
+                    {
+                        var view = created.GetComponent<ZNetView>();
+                        if (view != null && view.IsValid() && view.IsOwner()) ZNetScene.instance.Destroy(created);
+                        else { var ai = created.GetComponent<MonsterAI>(); if (ai != null) ai.enabled = false; }
+                    }
+                    throw;
+                }
             }
+
+            // No partial party is ever announced or commanded. Both people
+            // must independently prove native appearance and behavior install.
+            RequirePartyMemberReady(npc, "archer");
+            RequirePartyMemberReady(cleric.gameObject, "support");
+            npc.GetComponent<HumanPartyEquipment>().PrepareArcher();
+            if (!npc.GetComponent<HumanCompanion>().TryIssueFollow(Player.m_localPlayer))
+                throw new InvalidOperationException("Prepare requires a ready archer follow order");
+            if (!cleric.GetComponent<HumanCompanion>().TryIssueFollow(Player.m_localPlayer))
+                throw new InvalidOperationException("Prepare requires a ready support follow order");
+            Report("Party ready: two complete random human companions spawned together and follow you. No refill, resurrection or raid was triggered.");
+        }
+
+        static void RequirePartyMemberReady(GameObject actor, string role)
+        {
+            if (actor == null) throw new InvalidOperationException("Prepare requires a ready " + role + ": actor missing");
+            var appearance = actor.GetComponent<HumanAppearance>();
+            var installer = actor.GetComponent<HumanBehaviorInstaller>();
+            var composition = actor.GetComponent<HumanCompositionIdentity>();
+            if (appearance == null || !appearance.Initialized)
+                throw new InvalidOperationException("Prepare requires a ready " + role + ": " + (appearance == null ? "appearance missing" : appearance.State));
+            if (installer == null || !installer.Installed)
+                throw new InvalidOperationException("Prepare requires a ready " + role + ": " + (installer == null ? "behavior installer missing" : installer.Status));
+            if (composition == null || !composition.IsReady || !composition.InitializeOrders(Player.m_localPlayer))
+                throw new InvalidOperationException("Prepare requires a ready " + role + ": " + (composition == null ? "composition missing" : composition.Status));
         }
 
         Vector3 FindPartySpawnPoint()

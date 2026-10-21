@@ -91,7 +91,7 @@ Has (Method $readiness WantsWeapons) 'HumanCompanion::get_CombatOwnsActor'
  $patchStrings=@($candidate.MainModule.Types.Methods | Where-Object Name -eq InstallPatches | ForEach-Object {$_.Body.Instructions} | Where-Object {$_.OpCode.Code.ToString() -eq 'Ldstr'} | ForEach-Object Operand)
  Require (@($patchStrings | Where-Object {$_ -eq 'Follow'}).Count -eq 1) 'exactly one follow interception in plugin, not stacked movement controllers'
  Require (@($patchStrings | Where-Object {$_ -eq 'UpdateHeadRotation'}).Count -eq 1) 'one scoped head update hook'
- Has (Method ($candidate.MainModule.Types | Where-Object Name -eq NativeHumanFactory) Create) 'AddComponent<LivingWorld.HumanNpc.HumanFollowPresence>'
+ Has (Method ($candidate.MainModule.Types | Where-Object Name -eq HumanBehaviorInstaller) Install) 'AddComponent<LivingWorld.HumanNpc.HumanFollowPresence>'
  Has (Method ($candidate.MainModule.Types | Where-Object Name -eq ManualTestPlugin) Awake) 'HumanFollowPresence::InstallPatches'
  foreach($name in @('HumanCompanion','CompanionPolicy','HumanNpcSettings','HumanAppearance','HumanCompositionIdentity','HumanMigrationPolicy','ManualAcceptance','ManualLabBuilder','HumanRigPolicy','DoorTravelPolicy','HumanDoorTraversal')){
    $old=$baseline.MainModule.Types | Where-Object Name -eq $name
@@ -107,6 +107,7 @@ Has (Method $readiness WantsWeapons) 'HumanCompanion::get_CombatOwnsActor'
      # Optional persisted identity is exercised by the actual adapter harness.
      # All other appearance methods remain byte-for-byte baseline comparisons.
      if($name -eq 'HumanAppearance' -and $m.Name -eq 'Update'){continue}
+     if($name -eq 'HumanCompositionIdentity' -and $m.Name -eq 'InitializeFresh'){continue} # Appearance-first staging is verified separately.
      # Combat perception/timing is versioned by Verify-PartyIntegration. Presence
      # must preserve its own behavior without freezing fighter settings forever.
      if($name -eq 'HumanNpcSettings' -and $m.Name -eq 'Configure'){continue}

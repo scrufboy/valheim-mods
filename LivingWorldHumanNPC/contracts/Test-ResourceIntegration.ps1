@@ -52,7 +52,7 @@ try {
    Require (@($patchStrings | Where-Object {$_ -eq $name}).Count -eq 1) "one scoped $name hook"
  }
  Require (@($patchStrings | Where-Object {$_ -in 'Start','Update','OnAttackTrigger','DoAttack','BlockAttack'}).Count -eq 0) 'no duplicate attack/block debit hook'
- Has (Method (ResolveType $candidate NativeHumanFactory) Create) 'AddComponent<LivingWorld.HumanNpc.HumanResources>'
+ Has (Method (ResolveType $candidate HumanBehaviorInstaller) Install) 'AddComponent<LivingWorld.HumanNpc.HumanResources>'
  Has (Method (ResolveType $candidate ManualTestPlugin) Awake) 'HumanResources::InstallPatches'
  Require (@($candidate.MainModule.AssemblyReferences | Where-Object {$_.Name -match 'RRR|MobAI|Reclamation|LivingVillage|Souls'}).Count -eq 0) 'core human has no legacy/village/content-pack assembly dependency'
  "ResourceIntegration PASS: $checks native API, ownership and scope checks. Gameplay NOT RUN."

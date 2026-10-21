@@ -50,6 +50,6 @@ try {
  Has $leader 'Player::GetPlayer'
  Require (@(Calls $leader | Where-Object {$_ -match 'IsAlerted|IsDead|SetFollowTarget|PresenceLeader'}).Count -eq 0) 'bound party input remains available during combat, Hold and loaded leader death'
  Require (@($leader.Body.Instructions | Where-Object {$_.Operand -is [Mono.Cecil.FieldReference] -and $_.Operand.Name -match 'authorizedTarget|activeMotion'}).Count -eq 0) 'bound party input independent of combat and motion state'
- Has (Method ($candidate.MainModule.Types | Where-Object Name -eq NativeHumanFactory) Create) 'AddComponent<LivingWorld.HumanNpc.HumanPartyConfidence>'
+ Has (Method ($candidate.MainModule.Types | Where-Object Name -eq HumanBehaviorInstaller) Install) 'AddComponent<LivingWorld.HumanNpc.HumanPartyConfidence>'
  "ConfidenceIntegration PASS: $checks compiled service, input contract, authority and no-gameplay-writer checks. Unity sensing NOT RUN."
 } finally {$candidate.Dispose()}

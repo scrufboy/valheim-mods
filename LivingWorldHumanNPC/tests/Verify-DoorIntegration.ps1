@@ -96,7 +96,7 @@ try {
  Has (Method $companion IsDoorTravelGoal) 'Character::IsDead'
  Has (Method $companion IsDoorTravelGoal) 'UnityEngine.Vector3::Distance'
  $factory=$candidate.MainModule.Types | Where-Object Name -eq NativeHumanFactory
- Has (Method $factory Create) 'AddComponent<LivingWorld.HumanNpc.HumanDoorTraversal>'
+ Has (Method ($candidate.MainModule.Types | Where-Object Name -eq HumanBehaviorInstaller) Install) 'AddComponent<LivingWorld.HumanNpc.HumanDoorTraversal>'
  $plugin=$candidate.MainModule.Types | Where-Object Name -eq ManualTestPlugin
  Has (Method $plugin Awake) 'HumanDoorTraversal::InstallPatches'
  # Compare method instruction streams with the actual tested 0.3.0 binary.
@@ -113,6 +113,7 @@ try {
      if($name -eq 'HumanCompanion' -and $oldMethod.Name -in @('InstallPatches','get_PresenceLeader','Authorize','IsActiveThreat','RefreshNearbyThreat','FindActiveThreat','AuthorizationValid','SafeEquippedWeapon','StopCombatCore','DropCombatTarget','ReconcileLeader','Tick','UpdateTarget','BeforeUpdate','BeforeTarget','BeforeDamaged','BeforeSetTarget','BeforeAttack','BeforeAttackTrigger','AfterEnemy')){continue}
      if($name -eq 'CompanionPolicy' -and $oldMethod.Name -eq 'Motion'){continue}
      if($name -eq 'HumanAppearance' -and $oldMethod.Name -eq 'Update'){continue} # IdentityAdapterHarness covers new optional identity path.
+     if($name -eq 'HumanCompositionIdentity' -and $oldMethod.Name -eq 'InitializeFresh'){continue} # Appearance-first staging is verified separately.
      if($name -eq 'HumanCompanion' -and $oldMethod.Name -in @('Authorize','StopCombat')){continue} # Optional activity cancellation, verified by integration tests.
      $newMethod=@($newType.Methods | Where-Object FullName -eq $oldMethod.FullName)
      Require ($newMethod.Count -eq 1) "retained method $($oldMethod.FullName)"

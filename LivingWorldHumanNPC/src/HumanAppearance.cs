@@ -15,6 +15,11 @@ namespace LivingWorld.HumanNpc
         static readonly FieldInfo BeardInstance = typeof(VisEquipment).GetField("m_beardItemInstance", Native);
         static readonly FieldInfo CurrentHairHash = typeof(VisEquipment).GetField("m_currentHairItemHash", Native);
         static readonly FieldInfo CurrentBeardHash = typeof(VisEquipment).GetField("m_currentBeardItemHash", Native);
+        static readonly FieldInfo RequestedModel = typeof(VisEquipment).GetField("m_modelIndex", Native);
+        static readonly FieldInfo RequestedSkinColor = typeof(VisEquipment).GetField("m_skinColor", Native);
+        static readonly FieldInfo RequestedHairColor = typeof(VisEquipment).GetField("m_hairColor", Native);
+        static readonly FieldInfo RequestedHair = typeof(VisEquipment).GetField("m_hairItem", Native);
+        static readonly FieldInfo RequestedBeard = typeof(VisEquipment).GetField("m_beardItem", Native);
         static readonly MethodInfo UpdateVisuals = typeof(VisEquipment).GetMethod("UpdateVisuals", Native);
         public string[] RequiredItems = new string[0];
         public string WeaponName = "";
@@ -25,6 +30,7 @@ namespace LivingWorld.HumanNpc
         float deadline;
         bool finished;
         bool hadAuthority;
+        bool freshSelectionPrepared;
 
         void Start()
         {
@@ -41,7 +47,7 @@ namespace LivingWorld.HumanNpc
                 var composition = GetComponent<HumanCompositionIdentity>();
                 if (composition == null || !composition.IsCompositionReady)
                 {
-                    hadAuthority = false;
+                    hadAuthority = false; freshSelectionPrepared = false;
                     State = "Awaiting explicit compatible composition: " + (composition == null ? "identity missing" : composition.Status);
                     return;
                 }
@@ -55,11 +61,13 @@ namespace LivingWorld.HumanNpc
                 else
                     HumanRigPolicy.Require(zdo.GetString(HumanProfile.RecordKey, "") == "" && zdo.GetString(HumanProfile.RequiredKey, "") == "",
                         "Saved/required human profile exists without its identity adapter.");
-                if (!view.IsOwner()) { hadAuthority = false; State = "Remote visual replication; no local initialization writes"; return; }
-                if (!hadAuthority) { hadAuthority = true; deadline = Time.realtimeSinceStartup + 10f; }
+                if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; State = "Remote visual replication; no local initialization writes"; return; }
+                if (!hadAuthority) { hadAuthority = true; freshSelectionPrepared = false; deadline = Time.realtimeSinceStartup + 10f; }
                 var vis = GetComponent<VisEquipment>();
                 HumanRigPolicy.Require(vis != null && HairInstance != null && BeardInstance != null &&
-                    CurrentHairHash != null && CurrentBeardHash != null && UpdateVisuals != null,
+                    CurrentHairHash != null && CurrentBeardHash != null && RequestedModel != null &&
+                    RequestedSkinColor != null && RequestedHairColor != null && RequestedHair != null &&
+                    RequestedBeard != null && UpdateVisuals != null,
                     "Native facial-hair presentation members changed.");
                 bool pendingAppearanceCommit = HumanRigPolicy.MayInitializeAppearance(true, true, saved);
                 if (pendingAppearanceCommit)
@@ -79,17 +87,22 @@ namespace LivingWorld.HumanNpc
                     else
                     {
                         identity.ValidateAppearance(profile);
+                        if (!freshSelectionPrepared)
+                        {
+                            PrepareFreshNativeSelection(vis, profile);
+                            freshSelectionPrepared = true;
+                        }
                         // Native setters replicate the profile only before the
                         // visual commit marker. Owner loss cannot commit it.
-                        if (!view.IsOwner()) { hadAuthority = false; return; }
+                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
                         vis.SetModel((int)profile.Sex);
-                        if (!view.IsOwner()) { hadAuthority = false; return; }
+                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
                         vis.SetSkinColor(new Vector3(profile.SkinR / 255f, profile.SkinG / 255f, profile.SkinB / 255f));
-                        if (!view.IsOwner()) { hadAuthority = false; return; }
+                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
                         vis.SetHairColor(new Vector3(profile.HairR / 255f, profile.HairG / 255f, profile.HairB / 255f));
-                        if (!view.IsOwner()) { hadAuthority = false; return; }
+                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
                         vis.SetHairItem(profile.Hair.GetStableHashCode());
-                        if (!view.IsOwner()) { hadAuthority = false; return; }
+                        if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
                         vis.SetBeardItem(profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode());
                     }
                 }
@@ -109,7 +122,7 @@ namespace LivingWorld.HumanNpc
                 // its selected hair/beard failed to instantiate on the rig.
                 if (pendingAppearanceCommit)
                 {
-                    if (!view.IsOwner()) { hadAuthority = false; return; }
+                    if (!view.IsOwner()) { hadAuthority = false; freshSelectionPrepared = false; return; }
                     zdo.Set(RevisionKey, HumanRigPolicy.Revision);
                 }
                 var items = humanoid.GetInventory().GetAllItems();
@@ -138,6 +151,23 @@ namespace LivingWorld.HumanNpc
                 var ai = GetComponent<MonsterAI>(); if (ai != null) ai.enabled = false;
                 Report(State);
             }
+        }
+
+        // A cloned native Player graph can carry private VisEquipment request
+        // caches even though its new ZDO has no matching values. Valheim's
+        // setters intentionally no-op when a requested value equals that cache.
+        // Make each first native setter observably dirty without touching the
+        // rendered/current hashes or any saved actor. This runs once per fresh
+        // owner transaction and never after the visual revision is committed.
+        static void PrepareFreshNativeSelection(VisEquipment vis, HumanProfile profile)
+        {
+            int hair = profile.Hair.GetStableHashCode();
+            int beard = profile.Beard == "" ? 0 : profile.Beard.GetStableHashCode();
+            RequestedModel.SetValue(vis, profile.Sex == HumanSex.Male ? 1 : 0);
+            RequestedSkinColor.SetValue(vis, new Vector3(-1f, -1f, -1f));
+            RequestedHairColor.SetValue(vis, new Vector3(-1f, -1f, -1f));
+            RequestedHair.SetValue(vis, hair ^ Int32.MinValue);
+            RequestedBeard.SetValue(vis, beard ^ Int32.MinValue);
         }
 
         void WaitOrFail(string reason)

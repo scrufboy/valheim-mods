@@ -54,20 +54,9 @@ namespace LivingWorld.HumanNpc
                 HumanNpcSettings.Configure(human, ai, body);
                 ConfigureNativeVisual(root, human, vis, animationSync, outfit);
                 root.AddComponent<HumanCompositionIdentity>();
-                root.AddComponent<HumanCompanion>();
-                root.AddComponent<HumanDoorTraversal>();
-                root.AddComponent<HumanFollowPresence>();
-                root.AddComponent<HumanCompanionPosture>();
-                root.AddComponent<HumanResources>().Configure(player.GetComponent<Player>());
-                root.AddComponent<HumanEnvironmentStatus>();
                 root.AddComponent<HumanIdentity>();
-                root.AddComponent<HumanPartyConfidence>();
-                root.AddComponent<HumanCompanionAmbient>();
-                root.AddComponent<HumanEquipmentReadiness>();
-                root.AddComponent<HumanCombatDefense>();
-                root.AddComponent<HumanPartyEquipment>();
-                root.AddComponent<HumanCleric>();
-                root.AddComponent<HumanUtilityTorch>();
+                root.AddComponent<HumanBehaviorInstaller>().Configure(player.GetComponent<Player>());
+                ai.enabled = false;
                 Validate(root, false);
                 return root;
             }

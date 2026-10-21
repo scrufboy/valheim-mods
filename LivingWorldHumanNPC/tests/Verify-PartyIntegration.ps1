@@ -157,7 +157,7 @@ try {
  Has $lab BeforePieceDamage 'ZNetView::IsOwner'
  Has $lab BeforePieceDamage 'ZDO::GetString'
  Has $plugin PrepareParty 'HumanPartyEquipment::PrepareArcher'
- Has (TypeDef $party NativeHumanFactory) Create 'AddComponent<LivingWorld.HumanNpc.HumanCombatDefense>'
+ Has (TypeDef $party HumanBehaviorInstaller) Install 'AddComponent<LivingWorld.HumanNpc.HumanCombatDefense>'
  Has $plugin PrepareParty 'HumanIdentity::InitializeFresh'
  Has $plugin BeginCombat 'ManualPartyLab::CaptureProtection'
  $spawn=Method $lab SpawnWave

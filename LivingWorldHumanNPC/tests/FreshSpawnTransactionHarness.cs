@@ -24,7 +24,7 @@ static class SpawnFixture
     {
         Events.Add("instantiate");
         var actor = new GameObject { name = "Human(Clone)" }; Created = actor;
-        actor.Add<Humanoid>(); actor.Add<MonsterAI>(); actor.Add<HumanAppearance>(); actor.Add<HumanCompanion>();
+        actor.Add<Humanoid>(); actor.Add<MonsterAI>(); actor.Add<HumanAppearance>(); actor.Add<HumanBehaviorInstaller>();
         actor.Add<HumanIdentity>(); actor.Add<HumanCompositionIdentity>();
         var view = actor.Add<ZNetView>();
         ZDOMan.instance.records.Add(view.data.m_uid, view.data); ZNetScene.instance.instances.Add(view.data.m_uid, actor);
@@ -172,8 +172,9 @@ namespace LivingWorld.HumanNpc
     public static class HumanProfile { public const string RequiredKey = "livingworld_human_identity_required"; }
     public class HumanAppearance : MonoBehaviour { public bool Initialized; }
     public class HumanCompanion : MonoBehaviour { }
+    public class HumanBehaviorInstaller : MonoBehaviour { public bool Installed; }
     public class HumanCompositionIdentity : MonoBehaviour
-    { public void InitializeFresh(Player player) { SpawnFixture.Events.Add("composition"); } }
+    { public void InitializeFreshBase(Player player) { SpawnFixture.Events.Add("composition"); } }
     public class HumanIdentity : MonoBehaviour
     {
         public void InitializeFresh(string seed, string[] availableHair, string[] availableBeards)
@@ -216,8 +217,8 @@ static class FreshSpawnTransactionHarness
     {
         Check(!actor.GetComponent<HumanAppearance>().enabled && !actor.GetComponent<HumanAppearance>().Initialized,
             "failed fresh appearance cannot enter legacy fallback");
-        Check(!actor.GetComponent<HumanCompanion>().enabled && !actor.GetComponent<MonsterAI>().enabled,
-            "failed actor has no companion/native AI execution");
+        Check(!actor.GetComponent<HumanBehaviorInstaller>().Installed && !actor.GetComponent<MonsterAI>().enabled,
+            "failed actor has no companion behavior/native AI execution");
     }
     public static int Main()
     {
