@@ -64,6 +64,20 @@ private request caches while the new NPC ZDO did not contain the equivalent
 selection. Valheim's setter no-op contract then skipped writing the matching
 selection, so the visible attachment was never built.
 
+## 2026-10-21 startup evidence after installing 0.3.65
+
+0.3.65 loaded successfully, but the world still contained the single failed
+Hair9 actor left by the preceding run. Before a clean new two-person `lwparty`
+transaction was logged, that saved actor again reported:
+
+`FAIL human initialization: 10-second initialization deadline: native hair hash 0 != 1043840427 for Hair9`
+
+The user had to use `killall` to remove the survivor. This is not evidence that
+a clean 0.3.65 two-person creation failed, because no new `lwparty` spawn was
+present in the log before this event. It is live evidence that 0.3.65 did not
+automatically repair the saved broken actor. Recovery of a prior failed actor
+must therefore be classified **failed**, not unknown or successful.
+
 ## What 0.3.65 changed
 
 0.3.65:
@@ -116,7 +130,7 @@ unchanged.
 | 0.3.65 two-person transaction | production-method managed harness | Offline-tested only |
 | Combat/follow/torch/stow/wet/door modules | unchanged-method audit | Preserved structurally, not live-proven in 0.3.65 |
 | Runtime `AddComponent` staging | no Unity run | Unknown; lifecycle ordering must be observed |
-| Existing failed 0.3.64 actor recovery | no 0.3.65 Unity run | Unknown |
+| Existing failed 0.3.64 actor recovery | 0.3.65 startup log on 2026-10-21 | Failed: saved Hair9 actor repeated the same initialization deadline and required `killall` |
 | Remote/multiplayer ownership | source concern | Unknown and potentially incomplete: remote appearance readiness and behavior installation need independent review |
 | Failure rollback of the full two-actor transaction | managed tests cover no duplication and partial refusal | Review whether all second-actor allocation failures should roll back both actors atomically |
 | Xbox/crossplay | no real Xbox client proof | Unknown; do not claim compatibility |
