@@ -28,6 +28,9 @@ if($allText -notmatch 'CopySerializedHumanState\(player, human\)' -or
    $allText -notmatch 'GetAllZDOsWithPrefabIterative'){
     throw 'The rebuild is missing its native-copy, native-combat, or global-cleanup boundary.'
 }
+if($allText -match 'Items\([^\)]*"HelmetIron"'){
+    throw 'The visible-identity acceptance loadout cannot contain a hair-hiding iron helmet.'
+}
 
 $nativeBuild=Join-Path $ReferenceRoot 'independent-core\build'
 $runtimeCore=Join-Path $ReferenceRoot 'runtime\BepInEx\core'
@@ -41,7 +44,7 @@ foreach($reference in $referencePaths){if(-not (Test-Path -LiteralPath $referenc
 $references=@($referencePaths | ForEach-Object {"/reference:$_"})
 $dll=Join-Path $build 'LivingWorld.HumanNpc.dll'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:library "/out:$dll" $references $sources
-if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.4.0 compilation failed.'}
+if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.4.1 compilation failed.'}
 
 $testExe=Join-Path $build 'FoundationContractTests.exe'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:exe "/out:$testExe" `
@@ -51,7 +54,7 @@ if($LASTEXITCODE -ne 0){throw 'Foundation contract test compilation failed.'}
 if($LASTEXITCODE -ne 0){throw 'Foundation contract tests failed.'}
 
 $manifest=[ordered]@{
-    Version='0.4.0'
+    Version='0.4.1'
     Status='PASS'
     Dll=$dll
     Sha256=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
@@ -61,11 +64,12 @@ $manifest=[ordered]@{
         'No RRRCore or Harmony combat dependency',
         'Native MonsterAI retains target, facing, pursuit and attack ownership',
         'lwparty globally removes legacy/current ZDO records before exactly two spawns',
-        'Hair is mandatory; every male receives a native beard; females receive none'
+        'Hair is mandatory; every male receives a native beard; females receive none',
+        'Acceptance loadouts contain no helmet that can suppress visible facial hair'
     )
     LiveUnity='NOT RUN'
     Installed=$false
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
-Write-Output "HumanNpc 0.4.0 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
+Write-Output "HumanNpc 0.4.1 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
 Write-Output 'Live Unity appearance, party replacement, follow, stow and combat remain to be tested.'

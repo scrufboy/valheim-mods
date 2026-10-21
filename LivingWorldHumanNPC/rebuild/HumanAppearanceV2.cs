@@ -121,9 +121,17 @@ namespace LivingWorld.HumanNpcV2
             GameObject hairObject = HairObject.GetValue(visuals) as GameObject;
             GameObject beardObject = BeardObject.GetValue(visuals) as GameObject;
             if (currentHair != expectedHair || hairObject == null || hairObject.GetComponentsInChildren<Renderer>(true).Length == 0)
-            { reason = "waiting for visible " + HairName; return false; }
+            {
+                reason = "waiting for visible " + HairName + " (selected=" + expectedHair +
+                    ", rendered=" + currentHair + ", object=" + (hairObject == null ? "missing" : "present") + ")";
+                return false;
+            }
             if (currentBeard != expectedBeard)
-            { reason = "waiting for beard selection " + (BeardName.Length == 0 ? "none" : BeardName); return false; }
+            {
+                reason = "waiting for beard selection " + (BeardName.Length == 0 ? "none" : BeardName) +
+                    " (selected=" + expectedBeard + ", rendered=" + currentBeard + ")";
+                return false;
+            }
             if (Female && beardObject != null)
             { reason = "female actor retained facial hair"; return false; }
             if (!Female && (BeardName.Length == 0 || beardObject == null || beardObject.GetComponentsInChildren<Renderer>(true).Length == 0))
