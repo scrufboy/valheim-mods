@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using UnityEngine;
 
 namespace LivingWorld.HumanNpcV2
@@ -7,6 +8,12 @@ namespace LivingWorld.HumanNpcV2
     {
         const float DecisionInterval = .1f;
         const int CombatClearScans = 50;
+        const float CombatLeaderRadius = 20f;
+        static readonly BindingFlags Native = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        static readonly FieldInfo VisibleLeft = typeof(Humanoid).GetField("m_leftItem", Native);
+        static readonly FieldInfo VisibleRight = typeof(Humanoid).GetField("m_rightItem", Native);
+        static readonly MethodInfo ClearNativeTarget = typeof(MonsterAI).GetMethod("SetTarget", Native, null,
+            new[] { typeof(Character) }, null);
 
         ZNetView view;
         MonsterAI ai;
@@ -34,6 +41,7 @@ namespace LivingWorld.HumanNpcV2
         public float LeaderSpeed { get; private set; }
         public float FormationHeading { get { return traversal == null ? 0f : traversal.FormationHeading; } }
         public float FormationTargetDistance { get { return traversal == null ? -1f : traversal.FormationTargetDistance; } }
+        public int CombatBoundaryReleases { get; private set; }
 
         void Awake()
         {
@@ -44,6 +52,8 @@ namespace LivingWorld.HumanNpcV2
             companion = GetComponent<HumanCompanionV2>();
             traversal = GetComponent<HumanTraversalModule>();
             equipment = GetComponent<HumanEquipmentModule>();
+            if (VisibleLeft == null || VisibleRight == null || ClearNativeTarget == null)
+                throw new MissingMemberException("Valheim's native hand or combat-target boundary changed.");
             machine = new HumanBehaviorStateMachine(CombatClearScans);
             Status = "AwaitingAppearance";
         }
@@ -85,15 +95,27 @@ namespace LivingWorld.HumanNpcV2
             Player leader;
             bool hasLeader = companion.TryResolveLeader(out leader);
             Character target = ai.GetTargetCreature();
+            if (target != null && hasLeader &&
+                Vector3.Distance(target.transform.position, leader.transform.position) > CombatLeaderRadius)
+            {
+                // This is the sole outer party boundary. It does not choose a
+                // target, steer, face, attack, or replace MonsterAI combat.
+                // The fixed native spawn-point chase limit cannot follow a
+                // travelling party, so retire only a target that has left the
+                // leader-centred combat envelope.
+                ClearNativeTarget.Invoke(ai, new object[] { null });
+                CombatBoundaryReleases++;
+                target = null;
+            }
             bool committedThreat = target != null;
             bool nativeAlert = ai.IsAlerted();
             Vector3 velocity = hasLeader ? leader.GetVelocity() : Vector3.zero;
             float planarSpeed = new Vector2(velocity.x, velocity.z).magnitude;
             float leaderDistance = hasLeader ? Vector3.Distance(transform.position, leader.transform.position) : -1f;
             float formationDistance = hasLeader ? traversal.GetFormationDistance(leader) : -1f;
-            ItemDrop.ItemData leaderWeapon = hasLeader ? leader.GetCurrentWeapon() : null;
-            bool leaderArmed = leaderWeapon != null && leaderWeapon.IsWeapon() &&
-                leaderWeapon.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Torch;
+            bool leaderArmed = hasLeader &&
+                (IsVisibleWeapon(VisibleRight.GetValue(leader) as ItemDrop.ItemData) ||
+                    IsVisibleWeapon(VisibleLeft.GetValue(leader) as ItemDrop.ItemData));
             NativeAlert = nativeAlert;
             CommittedThreat = committedThreat;
             LeaderArmed = leaderArmed;
@@ -128,6 +150,15 @@ namespace LivingWorld.HumanNpcV2
             else if (hasLeader)
                 detail += "; leaderDistance=" + leaderDistance.ToString("0.0") + "; slot=" + traversal.FormationSlot;
             Status = detail;
+        }
+
+        static bool IsVisibleWeapon(ItemDrop.ItemData item)
+        {
+            // GetCurrentWeapon falls back to Valheim's invisible unarmed/fists
+            // attack when both hands are stowed. Readiness is presentation
+            // evidence, so only a real item currently visible in a hand counts.
+            return item != null && item.m_dropPrefab != null && item.IsWeapon() &&
+                item.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Torch;
         }
     }
 }

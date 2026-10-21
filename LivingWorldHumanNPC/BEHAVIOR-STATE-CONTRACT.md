@@ -93,19 +93,27 @@ Formation is a set of available leases around the player, not permanent archer/c
 - A small player turn while settled does not immediately force repositioning. Repositioning requires meaningful travel, obstruction, unsafe spacing, or a threat-facing need.
 - Native pathfinding owns terrain, inclines, obstacles, and doors.
 
-The 0.5.1 kernel supplies six available rear/flank leases, assigns the nearest
+The 0.5.2 kernel supplies six available rear/flank leases, assigns the nearest
 unclaimed lease, releases it for combat, and permits either companion to claim
 any available position after regroup. The formation frame follows actual leader
 travel and remains fixed while the leader is stationary, so camera/body turning
 does not send the party running around a rotating set of destinations. Native
 `MonsterAI.Follow` is the sole calm traversal and pathfinding writer; the Living
 World layer supplies a leased destination and bounded pace but does not issue a
-second movement command.
+second movement command. While the leader is moving, the invisible destination
+is led forward by the native three-metre Follow arrival radius. The actor then
+settles at the lease instead of repeatedly stopping three metres behind it.
 
 During combat the formation lease is released, but native AI retains the leader
-as its tamed follow tether. A native alert without a creature target means
-readiness, not committed combat. These rules keep targetless alert actors near
-the party and prevent catch-up from stowing weapons while readiness is active.
+as its follow tether. An explicit twenty-metre, leader-centred outer boundary
+retires a target that has left the travelling party; inside it, native
+`MonsterAI` remains the only combat decision-maker. The actor is not falsely
+marked tame, because Valheim's tame lifecycle requires a complete `Tameable`
+component and otherwise emits integration warnings. A native alert without a
+creature target means readiness, not committed combat. Readiness from the leader
+requires a real visible weapon in a hand; Valheim's invisible unarmed fallback
+does not count. These rules keep targetless alert actors near the party and
+prevent catch-up from stowing weapons while readiness is active.
 
 ## Settled companion behavior
 
@@ -155,7 +163,7 @@ Hunt is not ordinary combat awareness and must not leak into Guard.
 - Birds require a separate huntable-target adapter: Valheim birds are `RandomFlyingBird` objects, not `Character`/`MonsterAI` combatants. They must never be inserted into the normal hostile-character authorization path merely to make archery target them.
 - Fish and any later non-`Character` quarry require the same explicit adapter boundary rather than special cases scattered through combat code.
 
-This section defines a future interface only. It is not implemented by the 0.5.1 test build.
+This section defines a future interface only. It is not implemented by the 0.5.2 test build.
 
 ## Future controller command wheel
 
@@ -168,7 +176,7 @@ Companion commands must be fully usable from a controller without a mouse cursor
 - The wheel writes one explicit command into the existing state model. It does not run combat logic, duplicate decisions, or become another behavior loop.
 - Keyboard bindings and console commands remain equivalent paths for testing and accessibility.
 
-The input chord and final wedge layout must be selected only after checking the live Valheim, mod, and controller bindings for conflicts. This section is design authority, not a claim that the wheel exists in 0.5.1.
+The input chord and final wedge layout must be selected only after checking the live Valheim, mod, and controller bindings for conflicts. This section is design authority, not a claim that the wheel exists in 0.5.2.
 
 ## Non-regression rule
 

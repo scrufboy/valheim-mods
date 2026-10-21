@@ -21,7 +21,6 @@ namespace LivingWorld.HumanNpcV2
         ZNetView view;
         Player leader;
         long leaderId;
-        bool tamedApplied;
 
         void Awake()
         {
@@ -36,7 +35,6 @@ namespace LivingWorld.HumanNpcV2
             leader = player;
             view.GetZDO().Set(LeaderKey, leaderId);
             view.GetZDO().Set(GenerationKey, generation);
-            ApplyCompanionTaming();
         }
 
         internal bool TryResolveLeader(out Player resolved)
@@ -50,17 +48,7 @@ namespace LivingWorld.HumanNpcV2
             if (leader == null || leader.IsDead() || leader.GetPlayerID() != leaderId)
                 leader = leaderId == 0L ? null : Player.GetPlayer(leaderId);
             resolved = leader;
-            if (resolved != null) ApplyCompanionTaming();
             return resolved != null;
-        }
-
-        void ApplyCompanionTaming()
-        {
-            if (tamedApplied || view == null || !view.IsValid() || !view.IsOwner()) return;
-            Humanoid human = GetComponent<Humanoid>();
-            if (human == null) throw new InvalidOperationException("The companion's native Humanoid is missing.");
-            human.SetTamed(true);
-            tamedApplied = true;
         }
     }
 }

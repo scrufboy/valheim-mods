@@ -10,6 +10,7 @@ namespace LivingWorld.HumanNpcV2
         const float HeadingMovementThreshold = .75f;
         const float FormationTurnDegreesPerSecond = 120f;
         const float NativeFollowArrivalDistance = 3f;
+        const float MovingAnchorLead = 3.25f;
 
         ZNetView view;
         MonsterAI ai;
@@ -33,7 +34,11 @@ namespace LivingWorld.HumanNpcV2
         }
         public float FormationTargetDistance
         {
-            get { return anchor == null ? -1f : Vector3.Distance(transform.position, anchor.transform.position); }
+            get
+            {
+                return leader == null || slot < 0 ? -1f :
+                    Vector3.Distance(transform.position, FormationLeasesV2.Position(leader, slot, formationForward));
+            }
         }
 
         void Awake()
@@ -109,11 +114,13 @@ namespace LivingWorld.HumanNpcV2
                 UpdateFormationFrame(leader);
                 EnsureFormation(leader);
                 Vector3 destination = FormationLeasesV2.Position(leader, slot, formationForward);
-                anchor.transform.position = destination;
+                Vector3 followAnchor = FollowAnchorPosition(leader, destination);
+                anchor.transform.position = followAnchor;
                 anchor.transform.rotation = Quaternion.LookRotation(formationForward, Vector3.up);
                 if (ai.GetFollowTarget() != anchor) ai.SetFollowTarget(anchor);
 
-                float followDistance = Vector3.Distance(transform.position, destination);
+                float leaseDistance = Vector3.Distance(transform.position, destination);
+                float anchorDistance = Vector3.Distance(transform.position, followAnchor);
                 float leaderDistance = Vector3.Distance(transform.position, leader.transform.position);
                 bool run = state == HumanBehaviorState.TraversalSprint || state == HumanBehaviorState.CatchUp ||
                     ((state == HumanBehaviorState.CombatReadiness || state == HumanBehaviorState.Regroup) &&
@@ -122,9 +129,11 @@ namespace LivingWorld.HumanNpcV2
 
                 // Native Follow remains the only movement/path writer. This only
                 // selects its pace after it has supplied the movement direction.
-                human.SetRun(run && followDistance > NativeFollowArrivalDistance + .15f);
+                human.SetRun(run && anchorDistance > NativeFollowArrivalDistance + .15f);
                 Status = "slot=" + slot + "; native " + (run ? "run" : "trot") +
-                    "; distance=" + followDistance.ToString("0.0") + "; heading=" + FormationHeading.ToString("0");
+                    "; leaseDistance=" + leaseDistance.ToString("0.0") +
+                    "; anchorDistance=" + anchorDistance.ToString("0.0") +
+                    "; heading=" + FormationHeading.ToString("0");
             }
             catch (Exception error)
             {
@@ -168,9 +177,23 @@ namespace LivingWorld.HumanNpcV2
                 anchor = new GameObject("LWC traversal anchor");
                 anchor.hideFlags = HideFlags.HideAndDontSave;
             }
-            anchor.transform.position = FormationLeasesV2.Position(nextLeader, slot, formationForward);
+            Vector3 destination = FormationLeasesV2.Position(nextLeader, slot, formationForward);
+            anchor.transform.position = FollowAnchorPosition(nextLeader, destination);
             anchor.transform.rotation = Quaternion.LookRotation(formationForward, Vector3.up);
             if (ai != null && ai.GetFollowTarget() != anchor) ai.SetFollowTarget(anchor);
+        }
+
+        Vector3 FollowAnchorPosition(Player nextLeader, Vector3 destination)
+        {
+            Vector3 velocity = nextLeader.GetVelocity();
+            velocity.y = 0f;
+            if (velocity.magnitude < HeadingMovementThreshold) return destination;
+
+            // MonsterAI.Follow deliberately stops inside a three-metre radius.
+            // Lead the invisible destination by that native radius while the
+            // leader is travelling, so the actor's native arrival point is the
+            // leased formation position instead of three metres behind it.
+            return destination + formationForward * MovingAnchorLead;
         }
 
         void ApplyPace(bool run, bool catchUp)

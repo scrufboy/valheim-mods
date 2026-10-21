@@ -17,8 +17,8 @@ namespace LivingWorld.TelemetryV2
     public sealed class TelemetryV2 : BaseUnityPlugin
     {
         public const string Guid = "local.livingworld.telemetry";
-        public const string Version = "0.5.0";
-        const int Schema = 5;
+        public const string Version = "0.5.1";
+        const int Schema = 6;
         const float SampleSeconds = .5f;
         const long MaxBytes = 64L * 1024L * 1024L;
         const int MaxRecords = 200000;
@@ -51,7 +51,7 @@ namespace LivingWorld.TelemetryV2
         {
             if (Left == null || Right == null || HiddenLeft == null || HiddenRight == null)
                 throw new MissingMemberException("Valheim's native hand-item observation fields changed.");
-            Logger.LogInfo("Read-only 0.5.1 movement-ownership telemetry armed; no gameplay methods are patched.");
+            Logger.LogInfo("Read-only 0.5.2 state-boundary telemetry armed; no gameplay methods are patched.");
         }
 
         void Update()
@@ -157,7 +157,8 @@ namespace LivingWorld.TelemetryV2
                     "speed", new Vector2(velocity.x, velocity.z).magnitude,
                     "forwardX", forward.x, "forwardZ", forward.z,
                     "running", player.IsRunning(), "crouched", player.IsCrouching(),
-                    "weapon", Item(player.GetCurrentWeapon()), "wet", Wet(player));
+                    "right", Item(Right, player), "left", Item(Left, player),
+                    "currentWeapon", Item(player.GetCurrentWeapon()), "wet", Wet(player));
                 EmitChanged("player.environment", "Observation", Id(player), "wet=" + Wet(player),
                     "wet", Wet(player), "health", player.GetHealth(), "x", player.transform.position.x,
                     "y", player.transform.position.y, "z", player.transform.position.z);
@@ -193,6 +194,7 @@ namespace LivingWorld.TelemetryV2
                 behavior == null ? "behavior-missing" : behavior.Status,
                 behavior == null ? "traversal-missing" : behavior.TraversalStatus,
                 behavior == null ? "equipment-missing" : behavior.EquipmentStatus,
+                behavior == null ? "boundary-missing" : behavior.CombatBoundaryReleases.ToString(CultureInfo.InvariantCulture),
                 ai == null ? "ai-missing" : ai.IsAlerted().ToString(), targetId,
                 left, right, hiddenLeft, hiddenRight, Wet(actor).ToString()
             });
@@ -219,6 +221,7 @@ namespace LivingWorld.TelemetryV2
                 "leaderArmed", behavior != null && behavior.LeaderArmed,
                 "controllerLeaderDistance", behavior == null ? -1f : behavior.LeaderDistance,
                 "controllerLeaderSpeed", behavior == null ? -1f : behavior.LeaderSpeed,
+                "combatBoundaryReleases", behavior == null ? -1 : behavior.CombatBoundaryReleases,
                 "alerted", ai != null && ai.IsAlerted(), "target", targetId,
                 "followTarget", follow == null ? "" : follow.name,
                 "tamed", actor.IsTamed(),

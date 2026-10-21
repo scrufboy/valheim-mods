@@ -50,3 +50,25 @@ alert, target, readiness, and tamed-tether evidence.
 Live Unity verification is still required. The next acceptance run is deliberately
 not a raid: stationary turning, straight traversal, sprint/catch-up, posture
 changes, and one natural hostile encounter must pass before raid balance resumes.
+
+## 2026-10-21 live result
+
+The 18:28 run was a partial pass, not an acceptance pass. It produced 5,002
+undropped schema-5 records across 610 seconds plus synchronized video commentary.
+
+- Stationary formation stability passed: 98-99% of settled samples stayed below
+  one metre per second, with no return of the severe orbiting regression.
+- Native combat acquired real targets, used the archer's bow, remained much more
+  tightly bounded than the prior 135-metre failure, and both companions survived.
+- Calm/readiness failed because `GetCurrentWeapon()` returned Valheim's invisible
+  unarmed attack while the player's visible hands were empty. This held both
+  actors in readiness for roughly 215 seconds, leaving weapons drawn and
+  suppressing calm activity exactly as the user's commentary reported.
+- Follow still showed a smaller stop/start cadence because native Follow stops
+  inside three metres of the destination while the destination itself was the
+  intended formation lease.
+- `SetTamed(true)` produced repeated native warnings because these human actors
+  correctly have `MonsterAI` but deliberately do not implement the complete pet,
+  feeding, and interaction lifecycle supplied by `Tameable`.
+
+These measured corrections are implemented in `REBUILD-0.5.2.md`.
