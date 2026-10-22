@@ -19,6 +19,7 @@ namespace LivingWorld.HumanNpcV2
 
         Humanoid human;
         MonsterAI ai;
+        VisEquipment visuals;
         EquipmentPosture desired;
         float nextFaultLog;
 
@@ -28,8 +29,10 @@ namespace LivingWorld.HumanNpcV2
         {
             human = GetComponent<Humanoid>();
             ai = GetComponent<MonsterAI>();
+            visuals = GetComponent<VisEquipment>();
             if (Left == null || Right == null || HiddenLeft == null || HiddenRight == null || ShowHands == null)
                 throw new MissingMemberException("Valheim's native hand-item stow contract changed.");
+            if (visuals == null) throw new MissingComponentException("The native human has no VisEquipment adapter.");
             Status = "neutral";
         }
 
@@ -63,13 +66,20 @@ namespace LivingWorld.HumanNpcV2
 
                 if (effective == EquipmentPosture.Stowed)
                 {
-                    if (left != null || right != null) human.HideHandItems(false, true);
-                    Status = "stowed last pair=" + ItemName(hiddenLeft ?? left) + "/" + ItemName(hiddenRight ?? right);
+                    if (left != null || right != null)
+                    {
+                        human.HideHandItems(false, true);
+                        hiddenLeft = HiddenLeft.GetValue(human) as ItemDrop.ItemData;
+                        hiddenRight = HiddenRight.GetValue(human) as ItemDrop.ItemData;
+                    }
+                    SyncBackVisuals(hiddenLeft, hiddenRight);
+                    Status = "stowed on back=" + ItemName(hiddenLeft) + "/" + ItemName(hiddenRight);
                 }
                 else
                 {
                     if (left == null && right == null && (hiddenLeft != null || hiddenRight != null))
                         ShowHands.Invoke(human, new object[] { false, true });
+                    SyncBackVisuals(null, null);
                     Status = "drawn/native selection";
                 }
             }
@@ -82,6 +92,24 @@ namespace LivingWorld.HumanNpcV2
                     HumanNpcPlugin.WarnStatic(name + " equipment posture retained: " + error.Message);
                 }
             }
+        }
+
+        void SyncBackVisuals(ItemDrop.ItemData left, ItemDrop.ItemData right)
+        {
+            // Humanoid.SetupVisEquipment intentionally updates hidden/back
+            // slots only when Character.IsPlayer() is true. These actors are
+            // native Player clones with the Player component removed, so the
+            // native hide/show transaction preserves the correct item data and
+            // animation but requires this presentation-only synchronization.
+            visuals.SetLeftBackItem(ItemHash(left), left == null ? 0 : left.m_variant,
+                left == null ? 0 : left.m_quality);
+            visuals.SetRightBackItem(ItemHash(right), right == null ? 0 : right.m_quality);
+        }
+
+        static int ItemHash(ItemDrop.ItemData item)
+        {
+            return item == null || item.m_dropPrefab == null ? 0 :
+                item.m_dropPrefab.name.GetStableHashCode();
         }
 
         static string ItemName(ItemDrop.ItemData item)
