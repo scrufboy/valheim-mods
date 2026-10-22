@@ -17,7 +17,7 @@ namespace LivingWorld.TelemetryV2
     public sealed class TelemetryV2 : BaseUnityPlugin
     {
         public const string Guid = "local.livingworld.telemetry";
-        public const string Version = "0.6.1";
+        public const string Version = "0.6.2";
         const int Schema = 7;
         const float SampleSeconds = .5f;
         const long MaxBytes = 64L * 1024L * 1024L;
@@ -51,7 +51,7 @@ namespace LivingWorld.TelemetryV2
         {
             if (Left == null || Right == null || HiddenLeft == null || HiddenRight == null)
                 throw new MissingMemberException("Valheim's native hand-item observation fields changed.");
-            Logger.LogInfo("Read-only 0.6.1 back-stow telemetry armed; no gameplay methods are patched.");
+            Logger.LogInfo("Read-only 0.6.2 encounter-release telemetry armed; no gameplay methods are patched.");
         }
 
         void Update()

@@ -12,8 +12,12 @@ namespace LivingWorld.HumanNpcV2
         static readonly BindingFlags Native = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         static readonly FieldInfo VisibleLeft = typeof(Humanoid).GetField("m_leftItem", Native);
         static readonly FieldInfo VisibleRight = typeof(Humanoid).GetField("m_rightItem", Native);
-        static readonly MethodInfo ClearNativeTarget = typeof(MonsterAI).GetMethod("SetTarget", Native, null,
-            new[] { typeof(Character) }, null);
+        static readonly FieldInfo NativeCreatureTarget = typeof(MonsterAI).GetField("m_targetCreature", Native);
+        static readonly FieldInfo NativeStaticTarget = typeof(MonsterAI).GetField("m_targetStatic", Native);
+        static readonly FieldInfo NativeAttackTimer = typeof(MonsterAI).GetField("m_timeSinceAttacking", Native);
+        static readonly FieldInfo NativeTargetTimer = typeof(MonsterAI).GetField("m_updateTargetTimer", Native);
+        static readonly MethodInfo SetNativeAlert = typeof(MonsterAI).GetMethod("SetAlerted", Native, null,
+            new[] { typeof(bool) }, null);
 
         ZNetView view;
         MonsterAI ai;
@@ -57,8 +61,10 @@ namespace LivingWorld.HumanNpcV2
             traversal = GetComponent<HumanTraversalModule>();
             equipment = GetComponent<HumanEquipmentModule>();
             settledGuard = GetComponent<HumanSettledGuardModule>();
-            if (VisibleLeft == null || VisibleRight == null || ClearNativeTarget == null)
-                throw new MissingMemberException("Valheim's native hand or combat-target boundary changed.");
+            if (VisibleLeft == null || VisibleRight == null || NativeCreatureTarget == null ||
+                NativeStaticTarget == null || NativeAttackTimer == null || NativeTargetTimer == null ||
+                SetNativeAlert == null)
+                throw new MissingMemberException("Valheim's native hand or encounter-release boundary changed.");
             machine = new HumanBehaviorStateMachine(CombatClearScans);
             Status = "AwaitingAppearance";
         }
@@ -108,7 +114,7 @@ namespace LivingWorld.HumanNpcV2
                 // The fixed native spawn-point chase limit cannot follow a
                 // travelling party, so retire only a target that has left the
                 // leader-centred combat envelope.
-                ClearNativeTarget.Invoke(ai, new object[] { null });
+                ReleaseNativeEncounter(ai);
                 CombatBoundaryReleases++;
                 target = null;
             }
@@ -156,6 +162,19 @@ namespace LivingWorld.HumanNpcV2
             else if (hasLeader)
                 detail += "; leaderDistance=" + leaderDistance.ToString("0.0") + "; slot=" + traversal.FormationSlot;
             Status = detail;
+        }
+
+        static void ReleaseNativeEncounter(MonsterAI nativeAi)
+        {
+            // MonsterAI.SetTarget(null) is deliberately a no-op in Valheim.
+            // Use the complete transaction from MonsterAI.UpdateTarget's own
+            // abandon branch so an out-of-bound target cannot survive and be
+            // cleared again every controller tick.
+            SetNativeAlert.Invoke(nativeAi, new object[] { false });
+            NativeCreatureTarget.SetValue(nativeAi, null);
+            NativeStaticTarget.SetValue(nativeAi, null);
+            NativeAttackTimer.SetValue(nativeAi, 0f);
+            NativeTargetTimer.SetValue(nativeAi, 5f);
         }
 
         static bool IsVisibleWeapon(ItemDrop.ItemData item)

@@ -58,6 +58,11 @@ if($controllerText -match 'leader\.GetCurrentWeapon\(\)' -or
    $controllerText -notmatch 'CombatLeaderRadius'){
     throw 'Readiness must use visible hand items and combat must retain its leader-centred outer boundary.'
 }
+if($controllerText -match 'GetMethod\("SetTarget"' -or $controllerText -notmatch 'ReleaseNativeEncounter' -or
+   $controllerText -notmatch 'm_targetCreature' -or $controllerText -notmatch 'm_targetStatic' -or
+   $controllerText -notmatch 'm_updateTargetTimer' -or $controllerText -notmatch 'SetAlerted'){
+    throw 'The combat boundary must use Valheim''s complete native encounter-release transaction; SetTarget(null) is a no-op.'
+}
 if($traversalText -notmatch 'MovingAnchorLead' -or $traversalText -notmatch 'FollowAnchorPosition'){
     throw 'Native follow arrival-radius compensation is missing.'
 }
@@ -86,7 +91,7 @@ foreach($reference in $referencePaths){if(-not (Test-Path -LiteralPath $referenc
 $references=@($referencePaths | ForEach-Object {"/reference:$_"})
 $dll=Join-Path $build 'LivingWorld.HumanNpc.dll'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:library "/out:$dll" $references $sources
-if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.6.1 compilation failed.'}
+if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.6.2 compilation failed.'}
 
 $testExe=Join-Path $build 'FoundationContractTests.exe'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:exe "/out:$testExe" `
@@ -97,7 +102,7 @@ if($LASTEXITCODE -ne 0){throw 'Foundation contract test compilation failed.'}
 if($LASTEXITCODE -ne 0){throw 'Foundation contract tests failed.'}
 
 $manifest=[ordered]@{
-    Version='0.6.1'
+    Version='0.6.2'
     Status='PASS'
     Dll=$dll
     Sha256=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
@@ -111,6 +116,7 @@ $manifest=[ordered]@{
         'Formation orientation follows actual travel and remains fixed while the leader is stationary',
         'Native alert without a creature target selects readiness rather than committed combat',
         'Native combat releases the formation lease while retaining a leader follow tether inside an explicit moving combat boundary',
+        'Out-of-bound native encounters use Valheim''s complete abandon transaction because MonsterAI.SetTarget(null) cannot clear a target',
         'Previously saved 0.5.1 actors migrate only the obsolete tame bit to false',
         'Settled guard is an IdleGuard-only module with temporary opposing coverage leases and completed field-of-view scans',
         'Settled guard requests a destination from the sole traversal writer and cannot target, attack, equip, or issue movement',
@@ -126,5 +132,5 @@ $manifest=[ordered]@{
     Installed=$false
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
-Write-Output "HumanNpc 0.6.1 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
+Write-Output "HumanNpc 0.6.2 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
 Write-Output 'Live Unity identity preservation, pace matching, visible stow/draw, and native-combat handoff remain to be tested.'
