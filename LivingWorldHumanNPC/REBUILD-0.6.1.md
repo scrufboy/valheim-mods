@@ -15,3 +15,7 @@ Valheim's current `Humanoid.SetupVisEquipment` updates hidden/back item renderer
 `HumanEquipmentModule` remains the sole equipment-posture owner. After a successful native stow, it now synchronizes the exact hidden left/right item references to `VisEquipment.SetLeftBackItem` and `SetRightBackItem`. When the native pair is redrawn, it clears only those back presentation slots. No weapon is selected, replaced, or hardcoded by this correction.
 
 The build gate now fails if either explicit back-slot call is removed.
+
+## Live acceptance
+
+Live Unity testing on 2026-10-22 confirmed that the stow behavior is visible and accurate. The native equip/unequip animation completes, the exact last-used equipment remains visibly attached to the companion's back while stowed, and this milestone is accepted for preservation in subsequent behavior work.
