@@ -21,3 +21,13 @@ Valheim's `SetLeftItem` and `SetRightItem` methods return early when the local s
 - no item is selected, replaced, removed from inventory, or hardcoded.
 
 Telemetry schema 8 independently records all four persistent visual hashes and whether they match the four logical Humanoid slots.
+
+## Installation
+
+Installed into the `LWC Human Lab v1` profile after the completed 0.6.2 raid on 2026-10-22.
+
+- Human NPC SHA-256: `6C5C754A5B46FAA426C4A53485B11504D2B754FC57C4A75073A96D759529903B`
+- Telemetry SHA-256: `739003946004D798C62D108382ADDDF2B4485380741F0A1993EE517C27A9CDAE`
+- Recoverable pre-install backup: `BepInEx/LivingWorldBackups/Rebuild/20261022-201113-pre-0.6.3`
+
+This installation changes presentation evidence only. It does not claim to correct the combat-cohesion and survival failure measured in the 0.6.2 raid.
