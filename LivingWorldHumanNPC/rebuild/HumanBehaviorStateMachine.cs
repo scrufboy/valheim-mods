@@ -13,6 +13,7 @@ namespace LivingWorld.HumanNpcV2
         CombatReadiness,
         NativeCombat,
         CombatClear,
+        CombatRegroup,
         Regroup
     }
 
@@ -26,6 +27,7 @@ namespace LivingWorld.HumanNpcV2
         internal bool LeaderArmed;
         internal bool NativeAlert;
         internal bool CommittedThreat;
+        internal bool CombatRegroup;
         internal float LeaderDistance;
         internal float FormationDistance;
     }
@@ -55,6 +57,13 @@ namespace LivingWorld.HumanNpcV2
             if (!signal.AppearanceReady)
             {
                 State = HumanBehaviorState.AwaitingAppearance;
+                return State;
+            }
+
+            if (signal.CombatRegroup)
+            {
+                combat.Reset();
+                State = HumanBehaviorState.CombatRegroup;
                 return State;
             }
 
@@ -92,6 +101,13 @@ namespace LivingWorld.HumanNpcV2
             if (!signal.LeaderAvailable)
             {
                 State = HumanBehaviorState.AwaitingLeader;
+                return State;
+            }
+
+
+            if (State == HumanBehaviorState.CombatRegroup)
+            {
+                State = HumanBehaviorState.Regroup;
                 return State;
             }
 

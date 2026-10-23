@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
@@ -8,7 +9,14 @@ namespace LivingWorld.HumanNpcV2
     {
         const float DecisionInterval = .1f;
         const int CombatClearScans = 50;
-        const float CombatLeaderRadius = 20f;
+        const int CohesionOutsideScans = 10;
+        const float CohesionOuterLeaderDistance = 16f;
+        const float CohesionOuterPartyDistance = 18f;
+        const float CohesionPairLeaderFloor = 8f;
+        const float CohesionInnerLeaderDistance = 8f;
+        const float CohesionInnerPartyDistance = 12f;
+        static readonly HashSet<HumanBehaviorController> ActiveControllers =
+            new HashSet<HumanBehaviorController>();
         static readonly BindingFlags Native = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         static readonly FieldInfo VisibleLeft = typeof(Humanoid).GetField("m_leftItem", Native);
         static readonly FieldInfo VisibleRight = typeof(Humanoid).GetField("m_rightItem", Native);
@@ -28,6 +36,8 @@ namespace LivingWorld.HumanNpcV2
         HumanEquipmentModule equipment;
         HumanSettledGuardModule settledGuard;
         HumanBehaviorStateMachine machine;
+        CombatCohesionLatch cohesion;
+        Character preparedTarget;
         float nextDecision;
         float nextFaultLog;
         int consecutiveFaults;
@@ -47,6 +57,10 @@ namespace LivingWorld.HumanNpcV2
         public float FormationHeading { get { return traversal == null ? 0f : traversal.FormationHeading; } }
         public float FormationTargetDistance { get { return traversal == null ? -1f : traversal.FormationTargetDistance; } }
         public int CombatBoundaryReleases { get; private set; }
+        public int CombatBoundarySuppressions { get; private set; }
+        public bool CombatRegroupActive { get { return cohesion != null && cohesion.Returning; } }
+        public int CombatBoundaryOutsideScans { get { return cohesion == null ? 0 : cohesion.OutsideScans; } }
+        public float NearestCompanionDistance { get; private set; }
         public string SettledGuardStatus { get { return settledGuard == null ? "missing" : settledGuard.Status; } }
         public int GuardSector { get { return settledGuard == null ? -1 : settledGuard.Sector; } }
         public string GuardPhase { get { return settledGuard == null ? "missing" : settledGuard.Phase; } }
@@ -66,7 +80,25 @@ namespace LivingWorld.HumanNpcV2
                 SetNativeAlert == null)
                 throw new MissingMemberException("Valheim's native hand or encounter-release boundary changed.");
             machine = new HumanBehaviorStateMachine(CombatClearScans);
+            cohesion = new CombatCohesionLatch(CohesionOutsideScans, CohesionOuterLeaderDistance,
+                CohesionOuterPartyDistance, CohesionPairLeaderFloor, CohesionInnerLeaderDistance,
+                CohesionInnerPartyDistance);
             Status = "AwaitingAppearance";
+        }
+
+        void OnEnable()
+        {
+            ActiveControllers.Add(this);
+        }
+
+        void OnDisable()
+        {
+            ActiveControllers.Remove(this);
+        }
+
+        void OnDestroy()
+        {
+            ActiveControllers.Remove(this);
         }
 
         void Update()
@@ -106,24 +138,29 @@ namespace LivingWorld.HumanNpcV2
             Player leader;
             bool hasLeader = companion.TryResolveLeader(out leader);
             Character target = ai.GetTargetCreature();
-            if (target != null && hasLeader &&
-                Vector3.Distance(target.transform.position, leader.transform.position) > CombatLeaderRadius)
-            {
-                // This is the sole outer party boundary. It does not choose a
-                // target, steer, face, attack, or replace MonsterAI combat.
-                // The fixed native spawn-point chase limit cannot follow a
-                // travelling party, so retire only a target that has left the
-                // leader-centred combat envelope.
-                ReleaseNativeEncounter(ai);
-                CombatBoundaryReleases++;
-                target = null;
-            }
-            bool committedThreat = target != null;
-            bool nativeAlert = ai.IsAlerted();
             Vector3 velocity = hasLeader ? leader.GetVelocity() : Vector3.zero;
             float planarSpeed = new Vector2(velocity.x, velocity.z).magnitude;
             float leaderDistance = hasLeader ? Vector3.Distance(transform.position, leader.transform.position) : -1f;
             float formationDistance = hasLeader ? traversal.GetFormationDistance(leader) : -1f;
+            float nearestCompanion = hasLeader ? FindNearestCompanionDistance(leader) : -1f;
+            NearestCompanionDistance = nearestCompanion;
+            bool combatRegroup = hasLeader ? cohesion.Observe(target != null, leaderDistance, nearestCompanion) :
+                cohesion.Retain();
+            if (combatRegroup && target != null)
+            {
+                // A sustained actor separation starts one latched return. The
+                // enemy's range from the leader is deliberately irrelevant:
+                // an archer may shoot a distant target while remaining with the
+                // party. During the latch, native reacquisition is suppressed
+                // until this actor reaches the inner cohesion area.
+                ReleaseNativeEncounter(ai);
+                if (cohesion.JustEntered) CombatBoundaryReleases++;
+                else CombatBoundarySuppressions++;
+                target = null;
+                preparedTarget = null;
+            }
+            bool committedThreat = target != null;
+            bool nativeAlert = ai.IsAlerted();
             bool leaderArmed = hasLeader &&
                 (IsVisibleWeapon(VisibleRight.GetValue(leader) as ItemDrop.ItemData) ||
                     IsVisibleWeapon(VisibleLeft.GetValue(leader) as ItemDrop.ItemData));
@@ -143,9 +180,22 @@ namespace LivingWorld.HumanNpcV2
                 LeaderArmed = leaderArmed,
                 NativeAlert = nativeAlert,
                 CommittedThreat = committedThreat,
+                CombatRegroup = combatRegroup,
                 LeaderDistance = leaderDistance,
                 FormationDistance = formationDistance
             });
+
+            if (state == HumanBehaviorState.NativeCombat && target != null && preparedTarget != target)
+            {
+                // Run the game's own distance/attack-data weapon selector once
+                // at target handoff. Living World does not select a bow, sword,
+                // shield, attack, aim, or facing; subsequent choices remain in
+                // MonsterAI's native update loop.
+                human.EquipBestWeapon(target, null, null, null);
+                preparedTarget = target;
+            }
+            else if (state != HumanBehaviorState.NativeCombat && state != HumanBehaviorState.CombatClear)
+                preparedTarget = null;
 
             traversal.Configure(state, leader);
             equipment.Configure(state);
@@ -156,12 +206,30 @@ namespace LivingWorld.HumanNpcV2
                 detail += target == null ? "; alerted" : "; target=" + target.GetHoverName();
             else if (state == HumanBehaviorState.CombatClear)
                 detail += "; clear=" + machine.ClearScans + "/" + machine.RequiredClearScans;
+            else if (state == HumanBehaviorState.CombatRegroup)
+                detail += "; cohesion return; leaderDistance=" + leaderDistance.ToString("0.0") +
+                    "; partyDistance=" + nearestCompanion.ToString("0.0");
             else if (state == HumanBehaviorState.CombatReadiness)
                 detail += "; reason=" + (nativeAlert ? "native alert" : "leader armed") +
                     "; leaderDistance=" + leaderDistance.ToString("0.0") + "; slot=" + traversal.FormationSlot;
             else if (hasLeader)
                 detail += "; leaderDistance=" + leaderDistance.ToString("0.0") + "; slot=" + traversal.FormationSlot;
             Status = detail;
+        }
+
+        float FindNearestCompanionDistance(Player leader)
+        {
+            float nearest = Single.PositiveInfinity;
+            long leaderId = leader.GetPlayerID();
+            foreach (HumanBehaviorController other in ActiveControllers)
+            {
+                if (other == null || other == this || !other.isActiveAndEnabled || other.companion == null) continue;
+                Player otherLeader;
+                if (!other.companion.TryResolveLeader(out otherLeader) || otherLeader == null ||
+                    otherLeader.GetPlayerID() != leaderId) continue;
+                nearest = Mathf.Min(nearest, Vector3.Distance(transform.position, other.transform.position));
+            }
+            return Single.IsPositiveInfinity(nearest) ? -1f : nearest;
         }
 
         static void ReleaseNativeEncounter(MonsterAI nativeAi)

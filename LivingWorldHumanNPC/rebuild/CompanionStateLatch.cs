@@ -37,5 +37,11 @@ namespace LivingWorld.HumanNpcV2
             // Deliberately empty. A transient failed tick is not evidence for a
             // state change, so neither Active nor ClearScans may move.
         }
+
+        internal void Reset()
+        {
+            Active = false;
+            ClearScans = 0;
+        }
     }
 }

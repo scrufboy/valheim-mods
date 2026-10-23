@@ -7,6 +7,10 @@ namespace LivingWorld.HumanNpcV2
 {
     internal static class NativeHumanFactoryV2
     {
+        static readonly BindingFlags Native = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        static readonly FieldInfo TargetIntervalNear = typeof(MonsterAI).GetField("m_updateTargetIntervalNear", Native);
+        static readonly FieldInfo TargetIntervalFar = typeof(MonsterAI).GetField("m_updateTargetIntervalFar", Native);
+
         internal static GameObject Create(string prefabId, GameObject playerPrefab, GameObject[] defaultItems, string role)
         {
             if (String.IsNullOrEmpty(prefabId)) throw new ArgumentException("Prefab identity is required.", "prefabId");
@@ -128,6 +132,8 @@ namespace LivingWorld.HumanNpcV2
 
         static void ConfigureAi(MonsterAI ai)
         {
+            if (TargetIntervalNear == null || TargetIntervalFar == null)
+                throw new MissingMemberException("Valheim's native target-scan interval contract changed.");
             ai.m_pathAgentType = Pathfinding.AgentType.Humanoid;
             ai.m_viewRange = 30f;
             ai.m_viewAngle = 90f;
@@ -165,6 +171,11 @@ namespace LivingWorld.HumanNpcV2
             ai.m_circleTargetDistance = 8f;
             ai.m_sleeping = false;
             ai.m_noiseWakeup = false;
+            // Retain Valheim's native FindEnemy/UpdateTarget implementation but
+            // run its scheduled observations at companion combat tempo. This
+            // changes no target rule and adds no Living World scan loop.
+            TargetIntervalNear.SetValue(ai, .5f);
+            TargetIntervalFar.SetValue(ai, 2f);
         }
 
         static void Remove<T>(GameObject root) where T : Component

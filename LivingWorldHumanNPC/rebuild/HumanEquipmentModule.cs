@@ -7,7 +7,7 @@ namespace LivingWorld.HumanNpcV2
     [DefaultExecutionOrder(1100)]
     public sealed class HumanEquipmentModule : MonoBehaviour
     {
-        enum EquipmentPosture { Neutral, Stowed, Drawn }
+        enum EquipmentPosture { Neutral, Stowed, Drawn, NativeOwned }
 
         static readonly BindingFlags Native = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         static readonly FieldInfo Left = typeof(Humanoid).GetField("m_leftItem", Native);
@@ -52,7 +52,9 @@ namespace LivingWorld.HumanNpcV2
         internal void Configure(HumanBehaviorState state)
         {
             if (state == HumanBehaviorState.NativeCombat || state == HumanBehaviorState.CombatClear ||
-                state == HumanBehaviorState.CombatReadiness)
+                state == HumanBehaviorState.CombatRegroup)
+                desired = EquipmentPosture.NativeOwned;
+            else if (state == HumanBehaviorState.CombatReadiness)
                 desired = EquipmentPosture.Drawn;
             else if (state == HumanBehaviorState.IdleGuard || state == HumanBehaviorState.Traversal ||
                 state == HumanBehaviorState.TraversalSprint || state == HumanBehaviorState.CatchUp ||
@@ -70,8 +72,10 @@ namespace LivingWorld.HumanNpcV2
                 // A native target can be acquired between bounded controller
                 // decisions. Never let the previous calm posture stow a weapon
                 // after native combat has already claimed the actor.
-                EquipmentPosture effective = ai != null && (ai.GetTargetCreature() != null || ai.IsAlerted()) ?
-                    EquipmentPosture.Drawn : desired;
+                EquipmentPosture effective = ai != null && ai.GetTargetCreature() != null ?
+                    EquipmentPosture.NativeOwned :
+                    ai != null && ai.IsAlerted() && desired == EquipmentPosture.Stowed ?
+                        EquipmentPosture.Drawn : desired;
                 ItemDrop.ItemData left = Left.GetValue(human) as ItemDrop.ItemData;
                 ItemDrop.ItemData right = Right.GetValue(human) as ItemDrop.ItemData;
                 ItemDrop.ItemData hiddenLeft = HiddenLeft.GetValue(human) as ItemDrop.ItemData;
@@ -88,7 +92,7 @@ namespace LivingWorld.HumanNpcV2
                     SyncPresentation(null, null, hiddenLeft, hiddenRight);
                     Status = "stowed on back=" + ItemName(hiddenLeft) + "/" + ItemName(hiddenRight);
                 }
-                else
+                else if (effective == EquipmentPosture.Drawn)
                 {
                     if (left == null && right == null && (hiddenLeft != null || hiddenRight != null))
                     {
@@ -98,6 +102,16 @@ namespace LivingWorld.HumanNpcV2
                     }
                     SyncPresentation(left, right, null, null);
                     Status = "drawn visuals=" + ItemName(left) + "/" + ItemName(right);
+                }
+                else
+                {
+                    // Full combat owns the logical hand transaction. This
+                    // module observes and publishes that exact native result;
+                    // it never restores the previously stowed pair over
+                    // MonsterAI's current weapon selection.
+                    SyncPresentation(left, right, hiddenLeft, hiddenRight);
+                    Status = "native-owned hands=" + ItemName(left) + "/" + ItemName(right) +
+                        "; back=" + ItemName(hiddenLeft) + "/" + ItemName(hiddenRight);
                 }
             }
             catch (Exception error)
@@ -120,7 +134,7 @@ namespace LivingWorld.HumanNpcV2
             // native hide/show transaction preserves the correct item data but
             // requires this presentation-only synchronization. Persisted
             // VisEquipment hand records can also outlive its local cache; write
-            // the complete mutually-exclusive hand/back presentation together.
+            // the complete native hand/back presentation together.
             int leftHash = ItemHash(left);
             int leftVariant = left == null ? 0 : left.m_variant;
             int leftQuality = left == null ? 0 : left.m_quality;

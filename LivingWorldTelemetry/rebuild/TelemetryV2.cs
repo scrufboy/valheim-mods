@@ -17,8 +17,8 @@ namespace LivingWorld.TelemetryV2
     public sealed class TelemetryV2 : BaseUnityPlugin
     {
         public const string Guid = "local.livingworld.telemetry";
-        public const string Version = "0.6.3";
-        const int Schema = 8;
+        public const string Version = "0.6.4";
+        const int Schema = 9;
         const float SampleSeconds = .5f;
         const long MaxBytes = 64L * 1024L * 1024L;
         const int MaxRecords = 200000;
@@ -51,7 +51,7 @@ namespace LivingWorld.TelemetryV2
         {
             if (Left == null || Right == null || HiddenLeft == null || HiddenRight == null)
                 throw new MissingMemberException("Valheim's native hand-item observation fields changed.");
-            Logger.LogInfo("Read-only 0.6.3 equipment-presentation telemetry armed; no gameplay methods are patched.");
+            Logger.LogInfo("Read-only 0.6.4 combat-handoff telemetry armed; no gameplay methods are patched.");
         }
 
         void Update()
@@ -71,6 +71,7 @@ namespace LivingWorld.TelemetryV2
             try
             {
                 float now = Time.realtimeSinceStartup;
+                ObserveCombatEdges();
                 if (records >= MaxRecords || bytes >= MaxBytes)
                 {
                     StopSession("automatic-file-rotation");
@@ -121,6 +122,32 @@ namespace LivingWorld.TelemetryV2
             Sample(true);
             writer.Flush();
             Logger.LogInfo("Automatic read-only telemetry recording: " + outputPath);
+        }
+
+        void ObserveCombatEdges()
+        {
+            Character[] actors = Character.GetAllCharacters().Where(character => character != null &&
+                character.GetComponent<HumanCompanionV2>() != null).ToArray();
+            foreach (Character actor in actors)
+            {
+                Humanoid human = actor as Humanoid;
+                MonsterAI ai = actor.GetComponent<MonsterAI>();
+                HumanBehaviorController behavior = actor.GetComponent<HumanBehaviorController>();
+                if (human == null || ai == null) continue;
+                Character target = ai.GetTargetCreature();
+                bool attacking = human.InAttack();
+                bool drawingBow = human.IsDrawingBow();
+                bool blocking = human.IsBlocking();
+                bool staggered = human.IsStaggering();
+                string weapon = Item(human.GetCurrentWeapon());
+                string fingerprint = attacking + "|" + drawingBow + "|" + blocking + "|" + staggered + "|" +
+                    weapon + "|" + Id(target);
+                EmitChanged("combat.edge." + Id(actor), "CombatAction", Id(actor), fingerprint,
+                    "attacking", attacking, "drawingBow", drawingBow, "blocking", blocking,
+                    "staggered", staggered, "weapon", weapon, "target", Id(target),
+                    "targetDistance", target == null ? -1f : Vector3.Distance(actor.transform.position, target.transform.position),
+                    "behaviorState", behavior == null ? "missing" : behavior.State.ToString());
+            }
         }
 
         void StopSession(string reason)
@@ -204,6 +231,8 @@ namespace LivingWorld.TelemetryV2
                 behavior == null ? "equipment-missing" : behavior.EquipmentStatus,
                 behavior == null ? "guard-missing" : behavior.SettledGuardStatus,
                 behavior == null ? "boundary-missing" : behavior.CombatBoundaryReleases.ToString(CultureInfo.InvariantCulture),
+                behavior == null ? "suppression-missing" : behavior.CombatBoundarySuppressions.ToString(CultureInfo.InvariantCulture),
+                behavior == null ? "cohesion-missing" : behavior.CombatRegroupActive.ToString(),
                 ai == null ? "ai-missing" : ai.IsAlerted().ToString(), targetId,
                 left, right, hiddenLeft, hiddenRight, visualLeft.ToString(CultureInfo.InvariantCulture),
                 visualRight.ToString(CultureInfo.InvariantCulture), visualBackLeft.ToString(CultureInfo.InvariantCulture),
@@ -237,6 +266,10 @@ namespace LivingWorld.TelemetryV2
                 "controllerLeaderDistance", behavior == null ? -1f : behavior.LeaderDistance,
                 "controllerLeaderSpeed", behavior == null ? -1f : behavior.LeaderSpeed,
                 "combatBoundaryReleases", behavior == null ? -1 : behavior.CombatBoundaryReleases,
+                "combatBoundarySuppressions", behavior == null ? -1 : behavior.CombatBoundarySuppressions,
+                "combatRegroupActive", behavior != null && behavior.CombatRegroupActive,
+                "combatBoundaryOutsideScans", behavior == null ? -1 : behavior.CombatBoundaryOutsideScans,
+                "controllerNearestCompanion", behavior == null ? -1f : behavior.NearestCompanionDistance,
                 "alerted", ai != null && ai.IsAlerted(), "target", targetId,
                 "followTarget", follow == null ? "" : follow.name,
                 "tamed", actor.IsTamed(),

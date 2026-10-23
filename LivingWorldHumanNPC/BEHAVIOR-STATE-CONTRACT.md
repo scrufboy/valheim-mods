@@ -105,9 +105,12 @@ is led forward by the native three-metre Follow arrival radius. The actor then
 settles at the lease instead of repeatedly stopping three metres behind it.
 
 During combat the formation lease is released, but native AI retains the leader
-as its follow tether. An explicit twenty-metre, leader-centred outer boundary
-retires a target that has left the travelling party; inside it, native
-`MonsterAI` remains the only combat decision-maker. The actor is not falsely
+as its follow tether. Enemy distance never retires a valid ranged target while
+the actor remains with the party. A sustained actor-separation boundary uses
+distinct outer and inner thresholds and one latched armed return; native
+reacquisition is suppressed until the actor reaches the inner party area.
+Inside that boundary, native `MonsterAI` remains the only combat
+decision-maker. The actor is not falsely
 marked tame, because Valheim's tame lifecycle requires a complete `Tameable`
 component and otherwise emits integration warnings. A native alert without a
 creature target means readiness, not committed combat. Readiness from the leader

@@ -135,7 +135,8 @@ namespace LivingWorld.HumanNpcV2
                 float anchorDistance = Vector3.Distance(transform.position, followAnchor);
                 float leaderDistance = Vector3.Distance(transform.position, leader.transform.position);
                 bool run = !settled && (state == HumanBehaviorState.TraversalSprint || state == HumanBehaviorState.CatchUp ||
-                    ((state == HumanBehaviorState.CombatReadiness || state == HumanBehaviorState.Regroup) &&
+                    ((state == HumanBehaviorState.CombatReadiness || state == HumanBehaviorState.CombatRegroup ||
+                        state == HumanBehaviorState.Regroup) &&
                         (leader.IsRunning() || leaderDistance > 7f)));
                 ApplyPace(run, state == HumanBehaviorState.CatchUp || leaderDistance > 12f);
 
@@ -275,7 +276,8 @@ namespace LivingWorld.HumanNpcV2
         {
             return value == HumanBehaviorState.IdleGuard || value == HumanBehaviorState.Traversal ||
                 value == HumanBehaviorState.TraversalSprint || value == HumanBehaviorState.CatchUp ||
-                value == HumanBehaviorState.CombatReadiness || value == HumanBehaviorState.Regroup;
+                value == HumanBehaviorState.CombatReadiness || value == HumanBehaviorState.CombatRegroup ||
+                value == HumanBehaviorState.Regroup;
         }
 
         void OnDisable()

@@ -142,12 +142,45 @@ internal static class FoundationContractTests
         Check(coverage.Choose(0, 7) == 7, "new-area reset discards previous coverage history");
     }
 
+    static void CombatCohesion()
+    {
+        var cohesion = new CombatCohesionLatch(3, 16f, 18f, 8f, 8f, 12f);
+        Check(!cohesion.Observe(true, 4f, 4f),
+            "a distant enemy cannot break combat while the actor remains with the party");
+        Check(!cohesion.Observe(true, 17f, 20f) && cohesion.OutsideScans == 1,
+            "one outside sample cannot interrupt native combat");
+        Check(!cohesion.Observe(true, 17f, 20f) && cohesion.OutsideScans == 2,
+            "cohesion requires sustained separation");
+        Check(cohesion.Observe(true, 17f, 20f) && cohesion.JustEntered,
+            "sustained actor separation enters one latched combat return");
+        Check(cohesion.Observe(true, 10f, 14f) && !cohesion.JustEntered,
+            "the return latch cannot flicker inside the outer boundary");
+        Check(!cohesion.Observe(false, 7f, 10f) && cohesion.JustExited,
+            "only the inner party area releases the return latch");
+
+        var machine = new HumanBehaviorStateMachine(3);
+        HumanBehaviorSignal signal = Signal(17f, 17f);
+        signal.CommittedThreat = true;
+        Check(machine.Step(signal) == HumanBehaviorState.NativeCombat,
+            "cohesion test begins in full native combat");
+        signal.CommittedThreat = false;
+        signal.CombatRegroup = true;
+        Check(machine.Step(signal) == HumanBehaviorState.CombatRegroup,
+            "a cohesion latch owns an armed native-traversal return");
+        signal.CombatRegroup = false;
+        signal.LeaderDistance = 7f;
+        signal.FormationDistance = 5f;
+        Check(machine.Step(signal) == HumanBehaviorState.Regroup,
+            "the inner boundary hands off to ordinary formation regroup");
+    }
+
     public static int Main()
     {
         Identity();
         DurableCombatState();
         ExclusiveBehaviorStates();
         GuardCoverage();
+        CombatCohesion();
         if (failures != 0) return 1;
         Console.WriteLine("Foundation contracts PASS: identity, combat ownership, exclusive states, and coordinated guard coverage.");
         return 0;
