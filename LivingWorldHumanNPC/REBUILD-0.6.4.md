@@ -1,5 +1,15 @@
 # Living World Human NPC 0.6.4
 
+> **REJECTED — registration failure.** This build must not be used as a
+> behavioral test result. Valheim 1.0.20 declares
+> `m_updateTargetIntervalNear` and `m_updateTargetIntervalFar` as private
+> static literal constants. 0.6.4 incorrectly attempted to resolve and write
+> them as per-actor instance fields. Prefab registration therefore stopped
+> before `lwparty` could create either companion. The 2026-10-23 live log
+> recorded `registered=False`, `loadedV2=0`, and every party transaction failed
+> without retaining a partial party. This claim supersedes the static PASS
+> below: compilation and hashing did not establish runtime registration.
+
 ## Failed-run evidence
 
 The 0.6.3 `army_bonemass` run lasted 155 seconds. Gunborg disappeared about
@@ -31,10 +41,9 @@ all observed logical and persistent hand/back slots matched.
 - Every newly committed target receives one immediate call to Valheim's own
   `Humanoid.EquipBestWeapon`. Living World does not choose a bow, sword, shield,
   attack, aim, or facing.
-- Valheim's native target-search schedule is centrally calibrated from its
-  two-second near and six-second far defaults to 0.5 and 2 seconds. The native
-  `FindEnemy` and `UpdateTarget` logic remains unchanged; no parallel scan loop
-  is added.
+- ~~Valheim's native target-search schedule is centrally calibrated from its
+  two-second near and six-second far defaults to 0.5 and 2 seconds.~~ This was
+  invalid: those values are compile-time constants, not writable actor state.
 - `HumanEquipmentModule` has a native-owned posture for full combat,
   combat-clear, and combat-regroup. In those states it mirrors the exact native
   logical slots to presentation but never calls `ShowHandItems` or restores the
@@ -57,4 +66,5 @@ visible-back stowing.
 - Installed profile: `LWC Human Lab v1`
 - Recoverable pre-install backup:
   `BepInEx/LivingWorldBackups/Rebuild/20261022-233330-pre-0.6.4`
-- Live Unity raid acceptance: pending
+- Live Unity registration acceptance: **FAIL**
+- Replacement: 0.6.5

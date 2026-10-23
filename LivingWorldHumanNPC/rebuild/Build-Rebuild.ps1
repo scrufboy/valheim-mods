@@ -85,9 +85,8 @@ $factoryText=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'NativeHumanFacto
 if($factoryText -notmatch 'm_maxChaseDistance = 0f' -or $factoryText -notmatch 'm_alertRange = 20f'){
     throw 'The travelling companion must use the moving native tamed tether, not a fixed spawn-point chase limit.'
 }
-if($factoryText -notmatch 'm_updateTargetIntervalNear' -or $factoryText -notmatch 'm_updateTargetIntervalFar' -or
-   $factoryText -notmatch 'TargetIntervalNear\.SetValue\(ai, \.5f\)'){
-    throw 'The native target scan must use the centralized companion-tempo schedule.'
+if($factoryText -match 'm_updateTargetIntervalNear|m_updateTargetIntervalFar'){
+    throw 'Valheim target-scan intervals are compile-time constants and cannot be treated as runtime actor fields.'
 }
 
 $nativeBuild=Join-Path $ReferenceRoot 'independent-core\build'
@@ -99,10 +98,56 @@ $referencePaths=@(
 $referencePaths+=@('netstandard','assembly_valheim','assembly_utils','Splatform','SoftReferenceableAssets','MagicaClothV2','UnityEngine','UnityEngine.CoreModule','UnityEngine.AnimationModule','UnityEngine.TerrainPhysicsModule','UnityEngine.PhysicsModule','UnityEngine.AudioModule') |
     ForEach-Object {Join-Path $ManagedDirectory ($_+'.dll')}
 foreach($reference in $referencePaths){if(-not (Test-Path -LiteralPath $reference -PathType Leaf)){throw "Missing read-only reference: $reference"}}
+
+# Validate every private native member used through reflection against the
+# exact game assembly being compiled. This is deliberately stricter than a
+# source-string contract: a constant/static member cannot satisfy an instance
+# field dependency.
+$cecilPath=(Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..\..\Mono.Cecil.dll')).Path
+Add-Type -LiteralPath $cecilPath
+$nativeAssembly=[Mono.Cecil.AssemblyDefinition]::ReadAssembly((Join-Path $ManagedDirectory 'assembly_valheim.dll'))
+function Assert-NativeInstanceField([string]$typeName,[string]$fieldName){
+    $type=$nativeAssembly.MainModule.Types | Where-Object FullName -eq $typeName | Select-Object -First 1
+    $field=$null
+    if($null -ne $type){$field=$type.Fields | Where-Object Name -eq $fieldName | Select-Object -First 1}
+    if($null -eq $field -or $field.IsStatic -or $field.IsLiteral){
+        throw "Native compatibility failure: $typeName.$fieldName is not a writable instance field."
+    }
+}
+function Assert-NativeInstanceMethod([string]$typeName,[string]$methodName,[string[]]$parameterTypes){
+    $type=$nativeAssembly.MainModule.Types | Where-Object FullName -eq $typeName | Select-Object -First 1
+    $method=$null
+    if($null -ne $type){
+        $method=$type.Methods | Where-Object {
+            if($_.Name -ne $methodName -or $_.IsStatic -or $_.Parameters.Count -ne $parameterTypes.Count){return $false}
+            for($index=0;$index -lt $parameterTypes.Count;$index++){
+                if($_.Parameters[$index].ParameterType.FullName -ne $parameterTypes[$index]){return $false}
+            }
+            return $true
+        } | Select-Object -First 1
+    }
+    if($null -eq $method){
+        throw "Native compatibility failure: $typeName.$methodName($($parameterTypes -join ',')) is not an instance method."
+    }
+}
+foreach($fieldName in @('m_leftItem','m_rightItem','m_hiddenLeftItem','m_hiddenRightItem')){
+    Assert-NativeInstanceField 'Humanoid' $fieldName
+}
+foreach($fieldName in @('m_hairItemInstance','m_beardItemInstance','m_currentHairItemHash','m_currentBeardItemHash')){
+    Assert-NativeInstanceField 'VisEquipment' $fieldName
+}
+foreach($fieldName in @('m_targetCreature','m_targetStatic','m_timeSinceAttacking','m_updateTargetTimer')){
+    Assert-NativeInstanceField 'MonsterAI' $fieldName
+}
+Assert-NativeInstanceMethod 'Humanoid' 'ShowHandItems' @('System.Boolean','System.Boolean')
+Assert-NativeInstanceMethod 'MonsterAI' 'SetAlerted' @('System.Boolean')
+Assert-NativeInstanceMethod 'BaseAI' 'LookAt' @('UnityEngine.Vector3')
+$nativeAssembly.Dispose()
+
 $references=@($referencePaths | ForEach-Object {"/reference:$_"})
 $dll=Join-Path $build 'LivingWorld.HumanNpc.dll'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:library "/out:$dll" $references $sources
-if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.6.4 compilation failed.'}
+if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.6.5 compilation failed.'}
 
 $testExe=Join-Path $build 'FoundationContractTests.exe'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:exe "/out:$testExe" `
@@ -114,7 +159,7 @@ if($LASTEXITCODE -ne 0){throw 'Foundation contract test compilation failed.'}
 if($LASTEXITCODE -ne 0){throw 'Foundation contract tests failed.'}
 
 $manifest=[ordered]@{
-    Version='0.6.4'
+    Version='0.6.5'
     Status='PASS'
     Dll=$dll
     Sha256=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
@@ -131,7 +176,8 @@ $manifest=[ordered]@{
         'Enemy range never retires a valid ranged target while the actor remains with the party',
         'Out-of-bound pursuit enters one hysteretic latched combat return and suppresses reacquisition until the inner party area',
         'Every newly committed target receives one immediate native EquipBestWeapon handoff without a Living World weapon choice',
-        'Native FindEnemy and UpdateTarget retain ownership while their centralized companion scan intervals improve response time',
+        'Native FindEnemy and UpdateTarget retain ownership and their immutable Valheim scan constants are never reflected as actor fields',
+        'All private native fields and methods used through reflection are verified against the exact assembly_valheim.dll before compilation',
         'Previously saved 0.5.1 actors migrate only the obsolete tame bit to false',
         'Settled guard is an IdleGuard-only module with temporary opposing coverage leases and completed field-of-view scans',
         'Settled guard requests a destination from the sole traversal writer and cannot target, attack, equip, or issue movement',
@@ -149,5 +195,5 @@ $manifest=[ordered]@{
     Installed=$false
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
-Write-Output "HumanNpc 0.6.4 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
+Write-Output "HumanNpc 0.6.5 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
 Write-Output 'Live Unity identity preservation, pace matching, visible stow/draw, and native-combat handoff remain to be tested.'
