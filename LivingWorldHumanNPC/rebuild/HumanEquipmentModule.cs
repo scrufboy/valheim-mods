@@ -20,8 +20,19 @@ namespace LivingWorld.HumanNpcV2
         Humanoid human;
         MonsterAI ai;
         VisEquipment visuals;
+        ZNetView view;
         EquipmentPosture desired;
         float nextFaultLog;
+        int appliedLeft = Int32.MinValue;
+        int appliedLeftVariant = Int32.MinValue;
+        int appliedLeftQuality = Int32.MinValue;
+        int appliedRight = Int32.MinValue;
+        int appliedRightQuality = Int32.MinValue;
+        int appliedBackLeft = Int32.MinValue;
+        int appliedBackLeftVariant = Int32.MinValue;
+        int appliedBackLeftQuality = Int32.MinValue;
+        int appliedBackRight = Int32.MinValue;
+        int appliedBackRightQuality = Int32.MinValue;
 
         public string Status { get; private set; }
 
@@ -30,9 +41,11 @@ namespace LivingWorld.HumanNpcV2
             human = GetComponent<Humanoid>();
             ai = GetComponent<MonsterAI>();
             visuals = GetComponent<VisEquipment>();
+            view = GetComponent<ZNetView>();
             if (Left == null || Right == null || HiddenLeft == null || HiddenRight == null || ShowHands == null)
                 throw new MissingMemberException("Valheim's native hand-item stow contract changed.");
             if (visuals == null) throw new MissingComponentException("The native human has no VisEquipment adapter.");
+            if (view == null) throw new MissingComponentException("The native human has no ZNetView adapter.");
             Status = "neutral";
         }
 
@@ -72,15 +85,19 @@ namespace LivingWorld.HumanNpcV2
                         hiddenLeft = HiddenLeft.GetValue(human) as ItemDrop.ItemData;
                         hiddenRight = HiddenRight.GetValue(human) as ItemDrop.ItemData;
                     }
-                    SyncBackVisuals(hiddenLeft, hiddenRight);
+                    SyncPresentation(null, null, hiddenLeft, hiddenRight);
                     Status = "stowed on back=" + ItemName(hiddenLeft) + "/" + ItemName(hiddenRight);
                 }
                 else
                 {
                     if (left == null && right == null && (hiddenLeft != null || hiddenRight != null))
+                    {
                         ShowHands.Invoke(human, new object[] { false, true });
-                    SyncBackVisuals(null, null);
-                    Status = "drawn/native selection";
+                        left = Left.GetValue(human) as ItemDrop.ItemData;
+                        right = Right.GetValue(human) as ItemDrop.ItemData;
+                    }
+                    SyncPresentation(left, right, null, null);
+                    Status = "drawn visuals=" + ItemName(left) + "/" + ItemName(right);
                 }
             }
             catch (Exception error)
@@ -94,16 +111,61 @@ namespace LivingWorld.HumanNpcV2
             }
         }
 
-        void SyncBackVisuals(ItemDrop.ItemData left, ItemDrop.ItemData right)
+        void SyncPresentation(ItemDrop.ItemData left, ItemDrop.ItemData right,
+            ItemDrop.ItemData backLeft, ItemDrop.ItemData backRight)
         {
             // Humanoid.SetupVisEquipment intentionally updates hidden/back
             // slots only when Character.IsPlayer() is true. These actors are
             // native Player clones with the Player component removed, so the
-            // native hide/show transaction preserves the correct item data and
-            // animation but requires this presentation-only synchronization.
-            visuals.SetLeftBackItem(ItemHash(left), left == null ? 0 : left.m_variant,
-                left == null ? 0 : left.m_quality);
-            visuals.SetRightBackItem(ItemHash(right), right == null ? 0 : right.m_quality);
+            // native hide/show transaction preserves the correct item data but
+            // requires this presentation-only synchronization. Persisted
+            // VisEquipment hand records can also outlive its local cache; write
+            // the complete mutually-exclusive hand/back presentation together.
+            int leftHash = ItemHash(left);
+            int leftVariant = left == null ? 0 : left.m_variant;
+            int leftQuality = left == null ? 0 : left.m_quality;
+            int rightHash = ItemHash(right);
+            int rightQuality = right == null ? 0 : right.m_quality;
+            int backLeftHash = ItemHash(backLeft);
+            int backLeftVariant = backLeft == null ? 0 : backLeft.m_variant;
+            int backLeftQuality = backLeft == null ? 0 : backLeft.m_quality;
+            int backRightHash = ItemHash(backRight);
+            int backRightQuality = backRight == null ? 0 : backRight.m_quality;
+
+            if (leftHash == appliedLeft && leftVariant == appliedLeftVariant && leftQuality == appliedLeftQuality &&
+                rightHash == appliedRight && rightQuality == appliedRightQuality &&
+                backLeftHash == appliedBackLeft && backLeftVariant == appliedBackLeftVariant &&
+                backLeftQuality == appliedBackLeftQuality && backRightHash == appliedBackRight &&
+                backRightQuality == appliedBackRightQuality) return;
+
+            ZDO zdo = view.GetZDO();
+            if (zdo == null || !view.IsOwner()) return;
+            zdo.Set(ZDOVars.s_leftItem, leftHash, false);
+            zdo.Set(ZDOVars.s_leftItemVariant, leftVariant, false);
+            zdo.Set(ZDOVars.s_leftItemQuality, leftQuality, false);
+            zdo.Set(ZDOVars.s_rightItem, rightHash, false);
+            zdo.Set(ZDOVars.s_rightItemQuality, rightQuality, false);
+            zdo.Set(ZDOVars.s_leftBackItem, backLeftHash, false);
+            zdo.Set(ZDOVars.s_leftBackItemVariant, backLeftVariant, false);
+            zdo.Set(ZDOVars.s_leftBackItemQuality, backLeftQuality, false);
+            zdo.Set(ZDOVars.s_rightBackItem, backRightHash, false);
+            zdo.Set(ZDOVars.s_rightBackItemQuality, backRightQuality, false);
+
+            visuals.SetLeftItem(leftHash, leftVariant, leftQuality);
+            visuals.SetRightItem(rightHash, rightQuality);
+            visuals.SetLeftBackItem(backLeftHash, backLeftVariant, backLeftQuality);
+            visuals.SetRightBackItem(backRightHash, backRightQuality);
+
+            appliedLeft = leftHash;
+            appliedLeftVariant = leftVariant;
+            appliedLeftQuality = leftQuality;
+            appliedRight = rightHash;
+            appliedRightQuality = rightQuality;
+            appliedBackLeft = backLeftHash;
+            appliedBackLeftVariant = backLeftVariant;
+            appliedBackLeftQuality = backLeftQuality;
+            appliedBackRight = backRightHash;
+            appliedBackRightQuality = backRightQuality;
         }
 
         static int ItemHash(ItemDrop.ItemData item)

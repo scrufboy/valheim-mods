@@ -17,8 +17,8 @@ namespace LivingWorld.TelemetryV2
     public sealed class TelemetryV2 : BaseUnityPlugin
     {
         public const string Guid = "local.livingworld.telemetry";
-        public const string Version = "0.6.2";
-        const int Schema = 7;
+        public const string Version = "0.6.3";
+        const int Schema = 8;
         const float SampleSeconds = .5f;
         const long MaxBytes = 64L * 1024L * 1024L;
         const int MaxRecords = 200000;
@@ -51,7 +51,7 @@ namespace LivingWorld.TelemetryV2
         {
             if (Left == null || Right == null || HiddenLeft == null || HiddenRight == null)
                 throw new MissingMemberException("Valheim's native hand-item observation fields changed.");
-            Logger.LogInfo("Read-only 0.6.2 encounter-release telemetry armed; no gameplay methods are patched.");
+            Logger.LogInfo("Read-only 0.6.3 equipment-presentation telemetry armed; no gameplay methods are patched.");
         }
 
         void Update()
@@ -187,6 +187,14 @@ namespace LivingWorld.TelemetryV2
             string right = Item(Right, human);
             string hiddenLeft = Item(HiddenLeft, human);
             string hiddenRight = Item(HiddenRight, human);
+            ZNetView actorView = actor.GetComponent<ZNetView>();
+            ZDO actorZdo = actorView == null ? null : actorView.GetZDO();
+            int visualLeft = actorZdo == null ? 0 : actorZdo.GetInt(ZDOVars.s_leftItem, 0);
+            int visualRight = actorZdo == null ? 0 : actorZdo.GetInt(ZDOVars.s_rightItem, 0);
+            int visualBackLeft = actorZdo == null ? 0 : actorZdo.GetInt(ZDOVars.s_leftBackItem, 0);
+            int visualBackRight = actorZdo == null ? 0 : actorZdo.GetInt(ZDOVars.s_rightBackItem, 0);
+            bool visualSlotsMatch = visualLeft == ItemHash(Left, human) && visualRight == ItemHash(Right, human) &&
+                visualBackLeft == ItemHash(HiddenLeft, human) && visualBackRight == ItemHash(HiddenRight, human);
             string targetId = Id(target);
             string state = String.Join("|", new[] {
                 appearance == null ? "appearance-missing" : appearance.Status,
@@ -197,7 +205,9 @@ namespace LivingWorld.TelemetryV2
                 behavior == null ? "guard-missing" : behavior.SettledGuardStatus,
                 behavior == null ? "boundary-missing" : behavior.CombatBoundaryReleases.ToString(CultureInfo.InvariantCulture),
                 ai == null ? "ai-missing" : ai.IsAlerted().ToString(), targetId,
-                left, right, hiddenLeft, hiddenRight, Wet(actor).ToString()
+                left, right, hiddenLeft, hiddenRight, visualLeft.ToString(CultureInfo.InvariantCulture),
+                visualRight.ToString(CultureInfo.InvariantCulture), visualBackLeft.ToString(CultureInfo.InvariantCulture),
+                visualBackRight.ToString(CultureInfo.InvariantCulture), visualSlotsMatch.ToString(), Wet(actor).ToString()
             });
             EmitChanged("actor." + id, "ActorState", id, state,
                 "initial", initial, "name", human == null ? actor.name : human.m_name,
@@ -232,6 +242,9 @@ namespace LivingWorld.TelemetryV2
                 "tamed", actor.IsTamed(),
                 "health", actor.GetHealth(), "maxHealth", actor.GetMaxHealth(), "wet", Wet(actor),
                 "left", left, "right", right, "stowedLeft", hiddenLeft, "stowedRight", hiddenRight,
+                "visualLeftHash", visualLeft, "visualRightHash", visualRight,
+                "visualBackLeftHash", visualBackLeft, "visualBackRightHash", visualBackRight,
+                "visualSlotsMatch", visualSlotsMatch,
                 "weapon", human == null ? "" : Item(human.GetCurrentWeapon()));
 
             Vector3 position = actor.transform.position;
@@ -316,6 +329,13 @@ namespace LivingWorld.TelemetryV2
         static string Item(FieldInfo field, Humanoid human)
         {
             return human == null ? "" : Item(field.GetValue(human) as ItemDrop.ItemData);
+        }
+
+        static int ItemHash(FieldInfo field, Humanoid human)
+        {
+            if (field == null || human == null) return 0;
+            ItemDrop.ItemData item = field.GetValue(human) as ItemDrop.ItemData;
+            return item == null || item.m_dropPrefab == null ? 0 : item.m_dropPrefab.name.GetStableHashCode();
         }
         static string Item(ItemDrop.ItemData item)
         {

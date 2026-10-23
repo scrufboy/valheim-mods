@@ -70,9 +70,11 @@ if($guardText -match 'SetFollowTarget|MoveTo|SetMoveDir|SetRun|EquipItem|Unequip
    $guardText -notmatch 'GuardCoverageV2' -or $guardText -notmatch 'SetSettledDestination'){
     throw 'Settled guard must use coverage leases and request the sole traversal writer without controlling combat or equipment.'
 }
-if($equipmentText -notmatch 'SetLeftBackItem' -or $equipmentText -notmatch 'SetRightBackItem' -or
+if($equipmentText -notmatch 'SyncPresentation' -or $equipmentText -notmatch 'SetLeftItem' -or
+   $equipmentText -notmatch 'SetRightItem' -or $equipmentText -notmatch 'SetLeftBackItem' -or
+   $equipmentText -notmatch 'SetRightBackItem' -or $equipmentText -notmatch 'ZDOVars\.s_rightItem' -or
    $equipmentText -notmatch 'Humanoid\.SetupVisEquipment intentionally updates hidden/back'){
-    throw 'The non-Player human back-slot visual synchronization contract is missing.'
+    throw 'The non-Player human atomic hand/back visual synchronization contract is missing.'
 }
 $factoryText=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'NativeHumanFactoryV2.cs') -Raw
 if($factoryText -notmatch 'm_maxChaseDistance = 0f' -or $factoryText -notmatch 'm_alertRange = 20f'){
@@ -91,7 +93,7 @@ foreach($reference in $referencePaths){if(-not (Test-Path -LiteralPath $referenc
 $references=@($referencePaths | ForEach-Object {"/reference:$_"})
 $dll=Join-Path $build 'LivingWorld.HumanNpc.dll'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:library "/out:$dll" $references $sources
-if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.6.2 compilation failed.'}
+if($LASTEXITCODE -ne 0){throw 'Living World Human NPC 0.6.3 compilation failed.'}
 
 $testExe=Join-Path $build 'FoundationContractTests.exe'
 & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:exe "/out:$testExe" `
@@ -102,7 +104,7 @@ if($LASTEXITCODE -ne 0){throw 'Foundation contract test compilation failed.'}
 if($LASTEXITCODE -ne 0){throw 'Foundation contract tests failed.'}
 
 $manifest=[ordered]@{
-    Version='0.6.2'
+    Version='0.6.3'
     Status='PASS'
     Dll=$dll
     Sha256=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
@@ -124,6 +126,7 @@ $manifest=[ordered]@{
         'Native Follow remains the only path writer; a moving destination lead compensates its native arrival radius',
         'Equipment posture stows and redraws the native last-equipped pair without hardcoded weapon substitution',
         'Non-Player native humans explicitly synchronize their hidden pair to VisEquipment back slots and clear those slots on draw',
+        'The logical hand/back pairs are atomically reconciled to their persistent VisEquipment ZDO slots only when presentation changes',
         'lwparty is explicitly a laboratory transaction that removes stale records before exactly two spawns',
         'Hair is mandatory; every male receives a native beard; females receive none',
         'Acceptance loadouts contain no helmet that can suppress visible facial hair'
@@ -132,5 +135,5 @@ $manifest=[ordered]@{
     Installed=$false
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
-Write-Output "HumanNpc 0.6.2 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
+Write-Output "HumanNpc 0.6.3 rebuild PASS. DLL SHA256: $($manifest.Sha256)"
 Write-Output 'Live Unity identity preservation, pace matching, visible stow/draw, and native-combat handoff remain to be tested.'
