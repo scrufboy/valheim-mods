@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.3";
+        public const string Version = "1.0.4";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -38,9 +38,12 @@ namespace LivingWorld.Core
         {
             Instance = this;
             targetPriority = Config.Bind("Combat", "TargetPriority", true,
-                "Companions choose targets by threat (protect leader/partner, shooters, wounded) at native cadence.");
+                "On: rank engaged enemies (protect leader/partner, shooters, wounded). Off: nearest engaged enemy. Deer and other non-committed creatures are never fought either way.");
             shieldBlocking = Config.Bind("Combat", "ShieldBlocking", false,
                 "Experimental: companions raise shields against close melee and aimed projectiles.");
+            // One hook: companions answer native MonsterAI's own "which enemy?" question.
+            new HarmonyLib.Harmony(Guid).Patch(NativeApi.FindEnemy,
+                postfix: new HarmonyLib.HarmonyMethod(typeof(FindEnemyHook).GetMethod("Postfix")));
             PrefabManager.OnVanillaPrefabsAvailable += RegisterPrefabs;
             partyCommand = new Terminal.ConsoleCommand("lwparty",
                 "Living World: create your two companions (lwparty new = replace the current lab pair)",

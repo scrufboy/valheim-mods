@@ -33,6 +33,20 @@ namespace LivingWorld.Core
 
         public NpcBody Body { get { return body; } }
         public NpcFrame Frame { get { return frame; } }
+        public TargetSelector Targeting { get; private set; }
+
+        /// <summary>The enemy that hurt this NPC within the window, if still alive.</summary>
+        public Character RecentAttacker(float seconds)
+        {
+            if (lastAttacker == null || lastAttacker.IsDead() || Time.time - lastDamageTime > seconds) return null;
+            return lastAttacker;
+        }
+
+        public void ReportFault(string where, Exception error)
+        {
+            Faults++;
+            CorePlugin.Warn(where + " fault: " + error.Message);
+        }
         public PhaseArbiter Arbiter { get { return arbiter; } }
         public IList<NpcBehavior> Behaviors { get { return behaviors; } }
         public int DomainViolations { get; private set; }
@@ -51,6 +65,7 @@ namespace LivingWorld.Core
             if (missing.Length > 0)
                 throw new MissingMemberException("Valheim changed members Living World depends on: " + missing);
             body = new NpcBody(this, gameObject);
+            Targeting = new TargetSelector(this);
             appearance = GetComponent<NpcAppearance>();
             binding = GetComponent<NpcLeaderBinding>();
 

@@ -137,29 +137,6 @@ namespace LivingWorld.Core
             EncounterReleases++;
         }
 
-        public int TargetAssignments { get; private set; }
-
-        /// <summary>
-        /// Puts a chosen enemy in native MonsterAI's target slot and holds it for one native
-        /// re-pick cycle (2 s), exactly as MonsterAI.UpdateTarget would after FindEnemy.
-        /// Approach, circling, facing, weapon and attacks remain native.
-        /// </summary>
-        public void AssignTarget(NpcBehavior caller, Character target, float holdSeconds)
-        {
-            Require(NpcDomain.Movement, caller);
-            if (target == null) return;
-            if (!ReferenceEquals(NativeApi.TargetCreature.GetValue(Ai), target))
-            {
-                NativeApi.TargetCreature.SetValue(Ai, target);
-                NativeApi.TargetStatic.SetValue(Ai, null);
-                TargetAssignments++;
-            }
-            NativeApi.SetAlerted.Invoke(Ai, new object[] { true });
-            NativeApi.UpdateTargetTimer.SetValue(Ai, holdSeconds);
-        }
-
-        public float NativeRetargetIn { get { return (float)NativeApi.UpdateTargetTimer.GetValue(Ai); } }
-
         // ---------------- Look ----------------
 
         public void LookAt(NpcBehavior caller, Vector3 point)

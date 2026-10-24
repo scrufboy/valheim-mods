@@ -415,6 +415,10 @@ namespace LivingWorld.Core
         public float Health01;       // native GetHealthPercentage
         public float PartnerDistance;// distance to the nearest companion of ours, -1 if none
         public bool Boss;
+        public bool Alerted;         // its own native alert flag
+        public bool Wildlife;        // AnimalsVeg faction (deer and the like)
+        public bool HurtUs;          // recently damaged me or a partner
+        public bool Committed { get { return TargetsMe || TargetsLeader || TargetsPartner || HurtUs; } }
     }
 
     /// <summary>
@@ -429,6 +433,19 @@ namespace LivingWorld.Core
         public const float MaxRange = 30f;
         public const float SwitchMargin = 15f;
         public const float SelfDefenseRange = 4f;
+
+        /// <summary>
+        /// Who may be fought at all (pre-1.0 rule, restored). Anything that has picked one of us
+        /// or hurt one of us: always. During a fight already under way: any alerted hostile, but
+        /// never wildlife. While the leader sneaks: only what has already committed to us.
+        /// Otherwise nothing: companions watch, they do not start fights.
+        /// </summary>
+        public static bool Engaged(TargetCandidate c, bool encounterActive, bool leaderSneaking)
+        {
+            if (c.Committed) return true;
+            if (leaderSneaking) return false;
+            return encounterActive && c.Alerted && !c.Wildlife;
+        }
 
         public static float Score(CombatRole role, TargetCandidate c)
         {
@@ -462,8 +479,36 @@ namespace LivingWorld.Core
         /// <returns>index of the chosen candidate, or -1 to leave native choice alone.</returns>
         public static int Choose(CombatRole role, IList<TargetCandidate> candidates, int currentId, out string reason)
         {
+            return Choose(role, candidates, currentId, true, false, true, out reason);
+        }
+
+        /// <param name="ranked">false = engagement rule only, nearest engaged enemy (config switch).</param>
+        public static int Choose(CombatRole role, IList<TargetCandidate> all, int currentId,
+            bool encounterActive, bool leaderSneaking, bool ranked, out string reason)
+        {
+            reason = "nothing to fight";
+            if (all == null || all.Count == 0) return -1;
+            var candidates = new List<TargetCandidate>(all.Count);
+            var index = new List<int>(all.Count);
+            for (int i = 0; i < all.Count; i++)
+                if (Engaged(all[i], encounterActive, leaderSneaking)) { candidates.Add(all[i]); index.Add(i); }
+            if (candidates.Count == 0) return -1;
+            if (!ranked)
+            {
+                int near = -1;
+                for (int i = 0; i < candidates.Count; i++)
+                    if (candidates[i].Distance <= MaxRange && (candidates[i].CanSee || candidates[i].TargetsMe) &&
+                        (near < 0 || candidates[i].Distance < candidates[near].Distance)) near = i;
+                reason = "nearest engaged";
+                return near < 0 ? -1 : index[near];
+            }
+            int r = ChooseRanked(role, candidates, currentId, out reason);
+            return r < 0 ? -1 : index[r];
+        }
+
+        static int ChooseRanked(CombatRole role, IList<TargetCandidate> candidates, int currentId, out string reason)
+        {
             reason = "no valid candidate";
-            if (candidates == null || candidates.Count == 0) return -1;
             // Override: an archer being hit in melee cannot shoot anyone else. Closest attacker on her wins.
             if (role == CombatRole.Archer)
             {

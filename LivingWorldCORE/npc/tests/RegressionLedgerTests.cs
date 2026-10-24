@@ -54,6 +54,13 @@ static class RegressionLedgerTests
         Run("Target: no flip-flop between near-equal targets (hysteresis)", TargetHysteresis);
         Run("Target: unseen enemies are never chosen (no wallhack)", TargetNeedsSight);
         Run("Target: nothing valid leaves native choice alone", TargetNothingValid);
+        Run("0.x regression: deer are watched, never fought", DeerNeverFought);
+        Run("0.x rule: no fight starts until a creature commits to the party", NoUnprovokedFight);
+        Run("0.x rule: a creature that picks us is fought before it lands a hit", AggroIsEnough);
+        Run("0.x rule: during a fight, other alerted hostiles join the list", EncounterWidens);
+        Run("0.x rule: leader sneaking = only what already committed", SneakOnlyCommitted);
+        Run("Engagement: wildlife that hurts us is fair game", WildlifeThatHurts);
+        Run("Engagement: config off = nearest engaged, rule still applies", NearestEngagedWhenUnranked);
 
         Console.WriteLine();
         Console.WriteLine("Regression ledger: " + passed + " passed, " + failed + " failed.");
@@ -420,7 +427,7 @@ static class RegressionLedgerTests
         }
     }
 
-    static TargetCandidate Foe(int id, float dist) { return new TargetCandidate { Id = id, Distance = dist, CanSee = true, Health01 = 1f, PartnerDistance = -1f }; }
+    static TargetCandidate Foe(int id, float dist) { return new TargetCandidate { Id = id, Distance = dist, CanSee = true, Health01 = 1f, PartnerDistance = -1f, Alerted = true }; }
 
     static int Pick(CombatRole role, int current, params TargetCandidate[] c)
     {
@@ -480,5 +487,63 @@ static class RegressionLedgerTests
         var far = Foe(1, 45f); var hidden = Foe(2, 10f); hidden.CanSee = false;
         Assert(Pick(CombatRole.Archer, -1, far, hidden) == -1, "invented a target");
         Assert(Pick(CombatRole.Archer, -1) == -1, "empty list");
+    }
+
+    static int Pick2(bool encounter, bool sneak, bool ranked, params TargetCandidate[] c)
+    {
+        string reason;
+        int i = TargetPolicy.Choose(CombatRole.Archer, c, -1, encounter, sneak, ranked, out reason);
+        return i < 0 ? -1 : c[i].Id;
+    }
+
+    static void DeerNeverFought()
+    {
+        var deer = Foe(1, 12f); deer.Wildlife = true;
+        Assert(Pick2(false, false, true, deer) == -1, "fought a deer in calm");
+        Assert(Pick2(true, false, true, deer) == -1, "fought a fleeing deer during a fight");
+    }
+
+    static void NoUnprovokedFight()
+    {
+        var greydwarf = Foe(1, 15f);
+        Assert(Pick2(false, false, true, greydwarf) == -1, "started a fight with an alerted greydwarf that chose nobody");
+    }
+
+    static void AggroIsEnough()
+    {
+        var g = Foe(1, 15f); g.TargetsLeader = true;
+        Assert(Pick2(false, false, true, g) == 1, "waited to be hit");
+        var h = Foe(2, 15f); h.TargetsPartner = true; h.Alerted = false;
+        Assert(Pick2(false, false, true, h) == 2, "ignored the creature after her partner");
+    }
+
+    static void EncounterWidens()
+    {
+        var shaman = Foe(1, 20f); shaman.Ranged = true;
+        Assert(Pick2(true, false, true, shaman) == 1, "ignored an alerted shaman mid-fight");
+        shaman.Alerted = false;
+        Assert(Pick2(true, false, true, shaman) == -1, "attacked an unaware creature mid-fight");
+    }
+
+    static void SneakOnlyCommitted()
+    {
+        var boar = Foe(1, 10f);
+        Assert(Pick2(true, true, true, boar) == -1, "broke stealth on an uncommitted creature");
+        boar.TargetsMe = true;
+        Assert(Pick2(true, true, true, boar) == 1, "did not answer a creature that found us");
+    }
+
+    static void WildlifeThatHurts()
+    {
+        var w = Foe(1, 3f); w.Wildlife = true; w.HurtUs = true;
+        Assert(Pick2(false, false, true, w) == 1, "let wildlife maul us");
+    }
+
+    static void NearestEngagedWhenUnranked()
+    {
+        var deer = Foe(1, 3f); deer.Wildlife = true;
+        var a = Foe(2, 20f); a.TargetsLeader = true;
+        var b = Foe(3, 9f); b.TargetsMe = true;
+        Assert(Pick2(false, false, false, deer, a, b) == 3, "unranked mode picked wrong");
     }
 }

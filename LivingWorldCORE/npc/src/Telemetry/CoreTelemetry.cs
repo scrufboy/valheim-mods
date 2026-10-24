@@ -141,13 +141,14 @@ namespace LivingWorld.Telemetry
                         End();
                     }
                 }
-                int switches = combat == null ? 0 : combat.TargetSwitches, seenSwitches;
+                TargetSelector sel = kernel.Targeting;
+                int switches = sel == null ? 0 : sel.Switches, seenSwitches;
                 if (lastSwitches.TryGetValue(kernel, out seenSwitches) && switches > seenSwitches)
                 {
                     Character t = kernel.Body.Ai.GetTargetCreature();
                     Begin("TargetChoice"); Actor(kernel);
-                    Str("reason", combat.TargetReason);
-                    Str("target", t == null ? "" : t.GetHoverName());
+                    Str("reason", sel.Reason);
+                    Str("target", sel.LastChoiceName);
                     Num("dist", t == null ? -1f : Vector3.Distance(kernel.transform.position, t.transform.position));
                     End();
                 }
@@ -205,8 +206,9 @@ namespace LivingWorld.Telemetry
                 NativeCombatBehavior combat = Combat(kernel);
                 Str("block", combat == null || combat.Block == null ? "" : combat.Block.Reason);
                 Str("blockThreat", combat == null ? "" : combat.BlockThreat);
-                Str("targetReason", combat == null ? "" : combat.TargetReason ?? "");
-                Num("targetSwitches", combat == null ? 0 : combat.TargetSwitches);
+                Str("targetReason", kernel.Targeting == null ? "" : kernel.Targeting.Reason);
+                Num("targetSwitches", kernel.Targeting == null ? 0 : kernel.Targeting.Switches);
+                Bool("targetWildlife", s.Target != null && s.Target.GetFaction() == Character.Faction.AnimalsVeg);
                 Bool("targetRanged", s.Target != null && TargetIsRanged(s.Target));
                 Str("targetsWho", s.Target == null ? "" : TargetOf(s.Target, kernel));
                 End();

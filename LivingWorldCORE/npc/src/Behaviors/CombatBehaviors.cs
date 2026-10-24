@@ -16,12 +16,6 @@ namespace LivingWorld.Core
         readonly List<ThreatObservation> threats = new List<ThreatObservation>(8);
         readonly List<Character> threatActors = new List<Character>(8);
 
-        readonly List<TargetCandidate> candidates = new List<TargetCandidate>(12);
-        readonly List<Character> candidateActors = new List<Character>(12);
-        float nextTargetDecision;
-        public string TargetReason { get; private set; }
-        public int TargetSwitches { get; private set; }
-
         public BlockPolicy Block { get { return block; } }
         public string BlockThreat { get { return blockThreat == null ? "" : blockThreat.GetHoverName(); } }
 
@@ -52,7 +46,6 @@ namespace LivingWorld.Core
                 Body.EquipBestWeaponFor(this, s.Target);
                 prepared = s.Target;
             }
-            if (CorePlugin.TargetPriority) StepTarget(f);
             // Native choice may swap bow -> sword at any time; keep the shield paired.
             Body.PairShield(this);
             if (CorePlugin.ShieldBlocking) StepBlock(f); else if (block != null && block.Raised) Body.SetBlocking(this, false);
@@ -68,88 +61,6 @@ namespace LivingWorld.Core
             Body.SetBlocking(this, false);
             blockThreat = null;
             Status = "released: " + reason;
-        }
-
-        // Target choice at native cadence: decide when MonsterAI would re-pick (or when the
-        // current target is gone), write the choice, hold it one native cycle. Never every tick.
-        void StepTarget(NpcFrame f)
-        {
-            Character current = f.Senses.Target;
-            bool currentGone = current == null || current.IsDead();
-            if (!currentGone && f.Now < nextTargetDecision && Body.NativeRetargetIn > .15f) return;
-            nextTargetDecision = f.Now + 2f;
-            CombatRole role = RoleOf();
-            BuildCandidates(f);
-            int currentId = currentGone ? -1 : current.GetInstanceID();
-            string reason;
-            int pick = TargetPolicy.Choose(role, candidates, currentId, out reason);
-            if (pick < 0) { TargetReason = "native: " + reason; return; }
-            Character chosen = candidateActors[pick];
-            if (!ReferenceEquals(chosen, current)) TargetSwitches++;
-            TargetReason = reason;
-            Body.AssignTarget(this, chosen, 2f);
-        }
-
-        CombatRole RoleOf()
-        {
-            NpcAppearance a = Body.Root.GetComponent<NpcAppearance>();
-            return a != null && a.Role == "archer" ? CombatRole.Archer : CombatRole.Guard;
-        }
-
-        void BuildCandidates(NpcFrame f)
-        {
-            candidates.Clear();
-            candidateActors.Clear();
-            Humanoid me = Body.Human;
-            Player leader = f.Senses.Leader;
-            Vector3 position = me.transform.position;
-            var partners = new List<Character>(4);
-            if (leader != null)
-            {
-                long leaderId = leader.GetPlayerID();
-                foreach (NpcKernel k in NpcKernel.All)
-                {
-                    if (k == null || k.Body == null || k.Body.Human == me) continue;
-                    NpcLeaderBinding b = k.GetComponent<NpcLeaderBinding>();
-                    if (b != null && b.LeaderId == leaderId) partners.Add(k.Body.Human);
-                }
-            }
-            foreach (Character other in Character.GetAllCharacters())
-            {
-                if (candidates.Count == 12) break;
-                if (other == null || other == me || other.IsDead()) continue;
-                float distance = Vector3.Distance(position, other.transform.position);
-                if (distance > TargetPolicy.MaxRange || !BaseAI.IsEnemy(me, other)) continue;
-                if (!Body.Ai.CanSenseTarget(other)) continue;
-                MonsterAI monster = other.GetBaseAI() as MonsterAI;
-                Character theirTarget = monster == null ? null : monster.GetTargetCreature();
-                Humanoid humanoid = other as Humanoid;
-                ItemDrop.ItemData weapon = humanoid == null ? null : humanoid.GetCurrentWeapon();
-                float partnerDistance = -1f;
-                bool targetsPartner = false;
-                foreach (Character p in partners)
-                {
-                    if (p == null) continue;
-                    float d = Vector3.Distance(p.transform.position, other.transform.position);
-                    if (partnerDistance < 0f || d < partnerDistance) partnerDistance = d;
-                    if (ReferenceEquals(theirTarget, p)) targetsPartner = true;
-                }
-                candidates.Add(new TargetCandidate
-                {
-                    Id = other.GetInstanceID(),
-                    Distance = distance,
-                    CanSee = Body.Ai.CanSeeTarget(other),
-                    TargetsMe = ReferenceEquals(theirTarget, me),
-                    TargetsLeader = leader != null && ReferenceEquals(theirTarget, leader),
-                    TargetsPartner = targetsPartner,
-                    Ranged = weapon != null && weapon.m_shared != null && weapon.m_shared.m_attack != null &&
-                        weapon.m_shared.m_attack.m_attackType == Attack.AttackType.Projectile,
-                    Health01 = other.GetHealthPercentage(),
-                    PartnerDistance = partnerDistance,
-                    Boss = other.IsBoss()
-                });
-                candidateActors.Add(other);
-            }
         }
 
         // Shield discipline inside native combat: same owner, same tick, no extra loop.

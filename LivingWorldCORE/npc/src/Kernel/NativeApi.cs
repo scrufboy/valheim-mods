@@ -28,6 +28,7 @@ namespace LivingWorld.Core
         internal static readonly FieldInfo TargetStatic = Field(typeof(MonsterAI), "m_targetStatic");
         internal static readonly FieldInfo TimeSinceAttacking = Field(typeof(MonsterAI), "m_timeSinceAttacking");
         internal static readonly FieldInfo UpdateTargetTimer = Field(typeof(MonsterAI), "m_updateTargetTimer");
+        internal static readonly MethodInfo FindEnemy = Method(typeof(BaseAI), "FindEnemy");
         internal static readonly MethodInfo SetAlerted = Method(typeof(MonsterAI), "SetAlerted", typeof(bool));
         internal static readonly MethodInfo LookAt = Method(typeof(BaseAI), "LookAt", typeof(Vector3));
 

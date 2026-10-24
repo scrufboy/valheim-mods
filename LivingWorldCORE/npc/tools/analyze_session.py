@@ -187,6 +187,9 @@ def main(paths):
                 focus = sum(1 for r in mine if r.get("targetRanged") or r.get("targetsWho") in ("me", "leader", "partner"))
                 add("INFO", "Focus on real threats (%s)" % n,
                     "%.0f%% of combat on a shooter or an enemy attacking the party" % (100.0 * focus / len(mine)))
+            wild = [r for r in fighting if r.get("targetWildlife") and r.get("targetsWho") not in ("me", "leader", "partner")]
+            add("PASS" if not wild else "FAIL", "Wildlife watched, not fought",
+                "%d combat samples on wildlife that never committed" % len(wild))
             choices = [r for r in rows if r.get("type") == "TargetChoice"]
             if choices:
                 by = {}
