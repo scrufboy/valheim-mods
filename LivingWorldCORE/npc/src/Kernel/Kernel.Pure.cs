@@ -54,6 +54,9 @@ namespace LivingWorld.Core
         public const float CohesionInnerParty = 12f;
         // While returning, a companion may still fight anything this close that is hurting it.
         public const float LocalDefenseRadius = 6f;
+        // 1.0.5 live: companions left fights to rejoin the leader with enemies 2-6 m away.
+        // An engaged enemy (it picked or hurt one of us) this close pins the companion to the fight.
+        public const float EngagedPinRadius = 10f;
         public const float LocalDefenseMemory = 1.5f;
 
         // Regroup / catch-up.
@@ -83,7 +86,7 @@ namespace LivingWorld.Core
         public bool HasTarget;          // native creature or static target
         public bool DamagedRecently;    // within DamageMemorySeconds
         public bool AlertedHostileNear; // any alerted enemy inside the awareness radius
-        public bool LocalThreat;        // something within LocalDefenseRadius hit us very recently
+        public bool LocalThreat;        // an engaged enemy within EngagedPinRadius: stay and fight
         public float LeaderDistance;
         public float NearestPartyDistance; // < 0 when alone
         public float FormationDistance;    // distance to leased formation slot
@@ -104,7 +107,14 @@ namespace LivingWorld.Core
 
         public bool Observe(bool inCombat, float leaderDistance, float partyDistance)
         {
+            return Observe(inCombat, leaderDistance, partyDistance, false);
+        }
+
+        /// <param name="pinned">an engaged enemy is close: no return starts, and a return under way ends.</param>
+        public bool Observe(bool inCombat, float leaderDistance, float partyDistance, bool pinned)
+        {
             JustEntered = false;
+            if (pinned) { Returning = false; outsideTicks = 0; return false; }
             if (Returning)
             {
                 bool partyInside = partyDistance < 0f || partyDistance <= Tuning.CohesionInnerParty;
@@ -156,7 +166,7 @@ namespace LivingWorld.Core
 
             bool threat = s.HasTarget || s.DamagedRecently;
             bool returning = cohesion.Observe(inEncounter || threat, s.HasLeader ? s.LeaderDistance : 0f,
-                s.NearestPartyDistance);
+                s.NearestPartyDistance, s.LocalThreat);
 
             if (threat)
             {

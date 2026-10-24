@@ -312,21 +312,18 @@ namespace LivingWorld.Core
 
         bool AttackerStillDangerous() { return HostileAttacker(Tuning.HostileScanRadius); }
 
+        float nextPinCheck;
+        bool pinned;
+
+        /// <summary>An engaged enemy (same rule as target choice) within the pin radius.</summary>
         bool LocalThreat(NpcSenses s)
         {
-            if (s.SecondsSinceDamaged <= Tuning.LocalDefenseMemory && HostileAttacker(Tuning.LocalDefenseRadius)) return true;
-            // 1.0.4 deaths: a companion turned her back on a skeleton at 0.9 m to rejoin the party.
-            // Anything this close that has picked her is a fight, not something to walk away from.
-            Vector3 position = transform.position;
-            foreach (Character other in Character.GetAllCharacters())
+            if (Time.time >= nextPinCheck)
             {
-                if (other == null || other == body.Human || other.IsDead()) continue;
-                if (Vector3.Distance(position, other.transform.position) > Tuning.LocalDefenseRadius) continue;
-                MonsterAI ai = other.GetBaseAI() as MonsterAI;
-                if (ai != null && ReferenceEquals(ai.GetTargetCreature(), body.Human) && BaseAI.IsEnemy(body.Human, other))
-                    return true;
+                nextPinCheck = Time.time + .25f;
+                pinned = Targeting != null && Targeting.AnyEngagedWithin(Tuning.EngagedPinRadius);
             }
-            return false;
+            return pinned;
         }
 
         void Sense(NpcSenses s)

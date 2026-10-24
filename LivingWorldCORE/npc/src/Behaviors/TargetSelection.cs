@@ -51,6 +51,18 @@ namespace LivingWorld.Core
             return chosen;
         }
 
+        public bool AnyEngagedWithin(float radius)
+        {
+            NpcPhase phase = kernel.Arbiter.Phase;
+            bool encounter = phase == NpcPhase.Combat || phase == NpcPhase.CombatClear || phase == NpcPhase.CombatRegroup;
+            CollectPartners(kernel.Frame.Senses.Leader);
+            Build(kernel.Body.Human, kernel.Frame.Senses.Leader);
+            for (int i = 0; i < candidates.Count; i++)
+                if (candidates[i].Distance <= radius && TargetPolicy.Engaged(candidates[i], encounter, kernel.Frame.Senses.LeaderCrouching))
+                    return true;
+            return false;
+        }
+
         /// <summary>Is this target still one the rule would fight? (Drop it otherwise; do not chase it.)</summary>
         public bool StillEngaged(Character target)
         {

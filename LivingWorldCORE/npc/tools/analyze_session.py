@@ -208,6 +208,23 @@ def main(paths):
                     by[r.get("reason", "?")] = by.get(r.get("reason", "?"), 0) + 1
                 add("INFO", "Target choice reasons", ", ".join("%s %d" % kv for kv in sorted(by.items(), key=lambda kv: -kv[1])))
 
+    # 6c. Never walk away from an enemy that is engaging you (1.0.5 live failure).
+    # Judged at the moment each return starts: the return itself clears the target.
+    starts = [r for r in rows if r.get("type") == "Phase" and r.get("to") == "CombatRegroup"]
+    if not starts:
+        add("NOT EXERCISED", "No walking away from engaged enemies", "no returns to the party during combat")
+    else:
+        bad = 0
+        for e in starts:
+            before = [r for r in npc if r["npc"] == e["npc"] and r["t"] <= e["t"]]
+            if not before:
+                continue
+            r = before[-1]
+            if r.get("target") and 0 <= r.get("targetDist", -1) <= 10 and r.get("targetsWho") in ("me", "partner", "leader"):
+                bad += 1
+        add("PASS" if bad == 0 else "FAIL", "No walking away from engaged enemies",
+            "%d of %d returns started with an engaged enemy within 10 m" % (bad, len(starts)))
+
     # 6b. Shield blocking (new in 1.0.2; native AI never blocks)
     if start.get("cfgShieldBlocking") is False:
         add("NOT EXERCISED", "Shield blocks in close combat", "blocking switched off in config")

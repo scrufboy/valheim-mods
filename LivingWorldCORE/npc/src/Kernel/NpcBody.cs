@@ -133,7 +133,9 @@ namespace LivingWorld.Core
             NativeApi.TargetCreature.SetValue(Ai, null);
             NativeApi.TargetStatic.SetValue(Ai, null);
             NativeApi.TimeSinceAttacking.SetValue(Ai, 0f);
-            NativeApi.UpdateTargetTimer.SetValue(Ai, 5f);
+            // 1 s, not 5: with targets chosen by our rule, a short pause is enough, and 5 s left a
+            // companion unable to answer an enemy walking up to it (1.0.5: a 54-point hit).
+            NativeApi.UpdateTargetTimer.SetValue(Ai, 1f);
             EncounterReleases++;
         }
 

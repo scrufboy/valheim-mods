@@ -13,7 +13,7 @@ static class RegressionLedgerTests
     static int Main()
     {
         Run("0.6.3 Bonemass: distant ranged target does not trigger party regroup", RangedTargetIsNotSeparation);
-        Run("0.6.4/0.6.5: returning companion still defends itself when hit up close", ReturningActorDefendsLocally);
+        Run("0.6.4/0.6.5/1.0.5: returning companion fights what engages it, re-measures before returning", ReturningActorDefendsLocally);
         Run("0.6.5 gap: returning companion without local threat stays in regroup", ReturningWithoutThreatRegroups);
         Run("0.3.40 churn: one target gap does not end combat", SingleGapDoesNotEndCombat);
         Run("Contract: clear needs five uninterrupted quiet seconds", ClearNeedsFiveSeconds);
@@ -46,6 +46,8 @@ static class RegressionLedgerTests
         Run("Block: enemy attacking someone else is ignored", BlockIgnoresOthers);
         Run("Block: maximum hold then cooldown (no perfect turtle)", BlockHoldAndCooldown);
         Run("Block: lowered the moment the attack ends", BlockLowersWhenOver);
+        Run("1.0.5 fix: an engaged enemy close by blocks the return to the leader", PinnedNeverReturns);
+        Run("1.0.5 fix: an engaged enemy arriving ends a return under way", PinEndsReturn);
         Run("1.0.4 fix: deer are watched, never fought", DeerNeverFought);
         Run("Rule: no fight starts until a creature commits to the party", NoUnprovokedFight);
         Run("Rule: a creature that picks one of us is fought before it lands a hit", AggroIsEnough);
@@ -100,9 +102,10 @@ static class RegressionLedgerTests
         Assert(StepN(a, s, Tuning.CohesionOutsideTicks + 1) == NpcPhase.CombatRegroup, "expected CombatRegroup, got " + a.Phase);
         s.LocalThreat = true; s.DamagedRecently = true;
         Assert(StepN(a, s, 1) == NpcPhase.Combat, "returning actor under close attack must fight, got " + a.Phase);
-        Assert(a.Cohesion.Returning, "latch must stay armed during local defense");
+        Assert(!a.Cohesion.Returning, "1.0.5: an engaged enemy close by ends the return (no walking away mid-fight)");
         s.LocalThreat = false; s.DamagedRecently = false; s.HasTarget = true;
-        Assert(StepN(a, s, 1) == NpcPhase.CombatRegroup, "after local threat ends it must resume returning, got " + a.Phase);
+        Assert(StepN(a, s, 1) == NpcPhase.Combat, "1.0.5: no instant flip back to returning, got " + a.Phase);
+        Assert(StepN(a, s, Tuning.CohesionOutsideTicks) == NpcPhase.CombatRegroup, "sustained separation with nothing close must still return, got " + a.Phase);
     }
 
     static void ReturningWithoutThreatRegroups()
@@ -491,5 +494,25 @@ static class RegressionLedgerTests
     {
         var hidden = Foe(1, 12f); hidden.CanSee = false;
         Assert(Pick(true, false, -1, hidden) == -1, "picked an alerted hostile it cannot see");
+    }
+
+    static void PinnedNeverReturns()
+    {
+        var a = new PhaseArbiter();
+        var s = new PhaseInputs { AppearanceReady = true, HasLeader = true, HasTarget = true, LeaderDistance = 25f,
+            NearestPartyDistance = 3f, LocalThreat = true };
+        for (int i = 0; i < 50; i++) Assert(a.Step(s, .1f) == NpcPhase.Combat, "left a fight with an enemy on it");
+    }
+
+    static void PinEndsReturn()
+    {
+        var a = new PhaseArbiter();
+        var s = new PhaseInputs { AppearanceReady = true, HasLeader = true, HasTarget = true, LeaderDistance = 25f, NearestPartyDistance = 3f };
+        for (int i = 0; i < 20; i++) a.Step(s, .1f);
+        Assert(a.Phase == NpcPhase.CombatRegroup, "setup: should be returning");
+        s.LocalThreat = true;
+        Assert(a.Step(s, .1f) == NpcPhase.Combat, "kept walking away from an enemy that engaged it");
+        s.LocalThreat = false;
+        Assert(a.Step(s, .1f) == NpcPhase.Combat, "return resumed instantly instead of re-measuring separation");
     }
 }
