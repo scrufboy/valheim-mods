@@ -11,6 +11,7 @@ $root = $PSScriptRoot
 $csc = 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $build = Join-Path $root 'build'
 $null = New-Item -ItemType Directory -Force -Path $build
+Remove-Item -Force -ErrorAction SilentlyContinue "$build\LivingWorld.HumanNpc.dll","$build\LivingWorld.Telemetry.dll","$build\ledger.exe"
 
 $names = 'assembly_valheim','assembly_utils','assembly_guiutils','Splatform','SoftReferenceableAssets','MagicaClothV2',
          'netstandard','UnityEngine','UnityEngine.CoreModule','UnityEngine.AnimationModule','UnityEngine.PhysicsModule',

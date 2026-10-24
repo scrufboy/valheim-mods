@@ -20,12 +20,15 @@ namespace LivingWorld.Core
                 f.Phase == NpcPhase.Regroup || f.Phase == NpcPhase.AwaitingLeader;
         }
 
+        float nextQuiverCheck;
+
         public override void Tick(NpcFrame f)
         {
             NpcSenses s = f.Senses;
             bool wantTorch = torch.Step(f.Phase, s.Dark, s.NearBuiltLight, s.LeaderCrouching, s.Swimming,
                 f.SecondsSinceEncounter, f.Dt);
             f.Board.TorchWanted = wantTorch;
+            if (f.Now >= nextQuiverCheck) { nextQuiverCheck = f.Now + 5f; Body.TopUpQuiver(this); }
 
             if (f.Phase == NpcPhase.Readiness)
             {

@@ -11,6 +11,7 @@ namespace LivingWorld.Core
     public sealed class NativeCombatBehavior : NpcBehavior
     {
         Character prepared;
+        float nextEngagedCheck;
         BlockPolicy block;
         Character blockThreat;
         readonly List<ThreatObservation> threats = new List<ThreatObservation>(8);
@@ -40,6 +41,18 @@ namespace LivingWorld.Core
             // Native leader tether: does not drive locomotion while MonsterAI has a
             // target, but gives it a deterministic return instead of idle wandering.
             Body.Follow(this, s.Leader == null ? null : s.Leader.gameObject);
+            // Same rule that chose the target decides when to let it go: no chasing a fleeing
+            // creature out of range, no fighting something that has stopped being a threat.
+            if (s.Target != null && f.Now >= nextEngagedCheck)
+            {
+                nextEngagedCheck = f.Now + 1f;
+                NpcKernel k = Body.Root.GetComponent<NpcKernel>();
+                if (k != null && k.Targeting != null && !k.Targeting.StillEngaged(s.Target))
+                {
+                    Body.DropTarget(this);
+                    prepared = null;
+                }
+            }
             if (s.Target != null && s.Target != prepared)
             {
                 // Valheim's own distance/attack-data selector, once per new target.

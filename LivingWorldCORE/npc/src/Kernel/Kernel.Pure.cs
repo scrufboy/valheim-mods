@@ -288,6 +288,12 @@ namespace LivingWorld.Core
 
         /// <summary>Bows are not chosen by native combat when the target is closer than this.</summary>
         public const float RangedMinimum = 8f;
+        // AI handling for a player bow (verified against how RRRCore makes pillagers shoot:
+        // range 25, aim cone 10, no bow draw). Draw is a player-input mechanic; the AI never
+        // holds the button, so with draw on she never fires. Arrows still come from her quiver.
+        public const float RangedAiRange = 25f;
+        public const float RangedAimAngle = 10f;
+        public const int QuiverSize = 40;
 
         public static bool IsRanged(Kind kind) { return kind == Kind.Ranged; }
 
@@ -400,8 +406,6 @@ namespace LivingWorld.Core
         }
     }
 
-    public enum CombatRole { Guard, Archer }
-
     /// <summary>One enemy as the target rule sees it. Built only from native perception.</summary>
     public struct TargetCandidate
     {
@@ -418,130 +422,53 @@ namespace LivingWorld.Core
         public bool Alerted;         // its own native alert flag
         public bool Wildlife;        // AnimalsVeg faction (deer and the like)
         public bool HurtUs;          // recently damaged me or a partner
-        public bool Committed { get { return TargetsMe || TargetsLeader || TargetsPartner || HurtUs; } }
+        public bool HurtMe;          // recently damaged me
+        public bool Committed { get { return TargetsMe || TargetsLeader || TargetsPartner || HurtUs || HurtMe; } }
     }
 
     /// <summary>
-    /// Who to fight. Native MonsterAI.UpdateTarget re-picks "closest sensed enemy" every
-    /// 2 s (6 s beyond 50 m) and overwrites any earlier choice. This rule takes that same
-    /// decision at that same cadence, with priorities a skilled fighter would use, and
-    /// with hysteresis so it never flips back and forth. Native AI still does everything
-    /// after the choice: approach, circling, facing, weapon, attack timing.
+    /// Who to fight. Same behavior for every companion; the weapon follows from distance
+    /// (native EquipBestWeapon: bow 8-25 m, melee closer), never from a role.
+    ///   1. Something on me (targets me within melee reach) or that just hit me: nearest of those.
+    ///   2. Otherwise keep the current target while it is still engaged and in range.
+    ///   3. Otherwise the nearest engaged enemy.
+    /// Engaged = it has picked or hurt one of us; mid-fight also any alerted non-wildlife hostile;
+    /// while the leader sneaks only what already committed. Nothing beyond MaxRange.
     /// </summary>
     public static class TargetPolicy
     {
         public const float MaxRange = 30f;
-        public const float SwitchMargin = 15f;
         public const float SelfDefenseRange = 4f;
 
-        /// <summary>
-        /// Who may be fought at all (pre-1.0 rule, restored). Anything that has picked one of us
-        /// or hurt one of us: always. During a fight already under way: any alerted hostile, but
-        /// never wildlife. While the leader sneaks: only what has already committed to us.
-        /// Otherwise nothing: companions watch, they do not start fights.
-        /// </summary>
         public static bool Engaged(TargetCandidate c, bool encounterActive, bool leaderSneaking)
         {
+            if (c.Distance > MaxRange) return false;
             if (c.Committed) return true;
             if (leaderSneaking) return false;
-            return encounterActive && c.Alerted && !c.Wildlife;
+            return encounterActive && c.Alerted && !c.Wildlife && c.CanSee;
         }
 
-        public static float Score(CombatRole role, TargetCandidate c)
-        {
-            if (c.Distance > MaxRange) return float.NegativeInfinity;
-            bool selfDefense = c.TargetsMe && c.Distance <= SelfDefenseRange;
-            if (!c.CanSee && !selfDefense) return float.NegativeInfinity;
-            float s;
-            if (role == CombatRole.Archer)
-            {
-                s = -0.6f * c.Distance;
-                if (c.TargetsLeader) s += 40f;
-                if (c.TargetsPartner) s += 30f;
-                if (c.Ranged) s += 25f;                        // shooters and casters first
-                s += 20f * (1f - Clamp01(c.Health01));         // finish the wounded
-                if (c.Distance >= CombatHands.RangedMinimum) s += 15f;   // inside the bow band
-                if (c.Boss) s -= 10f;                          // adds before the boss
-            }
-            else
-            {
-                s = -1.2f * c.Distance;
-                if (c.TargetsPartner) s += 45f;                // peel for the archer
-                if (c.TargetsLeader) s += 35f;
-                if (c.TargetsMe) s += 20f;
-                if (c.Ranged && c.Distance > 15f) s -= 25f;    // do not chase shooters out of the party
-                s += 10f * (1f - Clamp01(c.Health01));
-                if (c.PartnerDistance >= 0f && c.PartnerDistance <= 4f) s += 15f;  // fight where the archer is
-            }
-            return s;
-        }
+        static bool OnMe(TargetCandidate c) { return c.HurtMe || (c.TargetsMe && c.Distance <= SelfDefenseRange); }
 
-        /// <returns>index of the chosen candidate, or -1 to leave native choice alone.</returns>
-        public static int Choose(CombatRole role, IList<TargetCandidate> candidates, int currentId, out string reason)
-        {
-            return Choose(role, candidates, currentId, true, false, true, out reason);
-        }
-
-        /// <param name="ranked">false = engagement rule only, nearest engaged enemy (config switch).</param>
-        public static int Choose(CombatRole role, IList<TargetCandidate> all, int currentId,
-            bool encounterActive, bool leaderSneaking, bool ranked, out string reason)
+        /// <returns>index of the choice, or -1 for "nothing to fight".</returns>
+        public static int Choose(IList<TargetCandidate> all, int currentId, bool encounterActive, bool leaderSneaking,
+            out string reason)
         {
             reason = "nothing to fight";
-            if (all == null || all.Count == 0) return -1;
-            var candidates = new List<TargetCandidate>(all.Count);
-            var index = new List<int>(all.Count);
+            if (all == null) return -1;
+            int onMe = -1, current = -1, nearest = -1;
             for (int i = 0; i < all.Count; i++)
-                if (Engaged(all[i], encounterActive, leaderSneaking)) { candidates.Add(all[i]); index.Add(i); }
-            if (candidates.Count == 0) return -1;
-            if (!ranked)
             {
-                int near = -1;
-                for (int i = 0; i < candidates.Count; i++)
-                    if (candidates[i].Distance <= MaxRange && (candidates[i].CanSee || candidates[i].TargetsMe) &&
-                        (near < 0 || candidates[i].Distance < candidates[near].Distance)) near = i;
-                reason = "nearest engaged";
-                return near < 0 ? -1 : index[near];
+                TargetCandidate c = all[i];
+                if (!Engaged(c, encounterActive, leaderSneaking)) continue;
+                if (OnMe(c) && (onMe < 0 || c.Distance < all[onMe].Distance)) onMe = i;
+                if (c.Id == currentId) current = i;
+                if (nearest < 0 || c.Distance < all[nearest].Distance) nearest = i;
             }
-            int r = ChooseRanked(role, candidates, currentId, out reason);
-            return r < 0 ? -1 : index[r];
+            if (onMe >= 0) { reason = "on me"; return onMe; }
+            if (current >= 0) { reason = "keep current"; return current; }
+            if (nearest >= 0) { reason = "nearest engaged"; return nearest; }
+            return -1;
         }
-
-        static int ChooseRanked(CombatRole role, IList<TargetCandidate> candidates, int currentId, out string reason)
-        {
-            reason = "no valid candidate";
-            // Override: an archer being hit in melee cannot shoot anyone else. Closest attacker on her wins.
-            if (role == CombatRole.Archer)
-            {
-                int onMe = -1;
-                for (int i = 0; i < candidates.Count; i++)
-                {
-                    TargetCandidate c = candidates[i];
-                    if (c.TargetsMe && c.Distance <= SelfDefenseRange &&
-                        (onMe < 0 || c.Distance < candidates[onMe].Distance)) onMe = i;
-                }
-                if (onMe >= 0) { reason = "self-defense"; return onMe; }
-            }
-            int best = -1, current = -1;
-            float bestScore = float.NegativeInfinity, currentScore = float.NegativeInfinity;
-            for (int i = 0; i < candidates.Count; i++)
-            {
-                float s = Score(role, candidates[i]);
-                if (candidates[i].Id == currentId) { current = i; currentScore = s; }
-                if (s > bestScore) { bestScore = s; best = i; }
-            }
-            if (best < 0 || float.IsNegativeInfinity(bestScore)) return -1;
-            if (current >= 0 && !float.IsNegativeInfinity(currentScore) && bestScore < currentScore + SwitchMargin)
-            {
-                reason = "keep current";
-                return current;
-            }
-            TargetCandidate b = candidates[best];
-            reason = b.TargetsMe && b.Distance <= SelfDefenseRange ? "self-defense" :
-                b.TargetsPartner ? "protect partner" : b.TargetsLeader ? "protect leader" :
-                b.Ranged ? "shooter/caster" : b.Health01 < .35f ? "finish wounded" : "nearest threat";
-            return best;
-        }
-
-        static float Clamp01(float v) { return v < 0f ? 0f : v > 1f ? 1f : v; }
     }
 }

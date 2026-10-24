@@ -7,6 +7,8 @@ cd "$(dirname "$0")"
 REFS="${REFS:-/home/claude/refs}"
 OUT="${OUT:-$PWD/dist}"
 mkdir -p "$OUT" build
+# Never let a stale DLL from an earlier build pass a failed compile.
+rm -f build/LivingWorld.HumanNpc.dll build/LivingWorld.Telemetry.dll build/ledger.exe
 
 refs=""
 for d in assembly_valheim assembly_utils assembly_guiutils Splatform SoftReferenceableAssets MagicaClothV2 netstandard \
@@ -28,14 +30,14 @@ python3 -I tools/native_gate.py "$REFS/assembly_valheim.dll" src/Kernel/NativeAp
 
 echo "== 3/6 Compile core (C# 5, matches the Windows .NET Framework compiler)"
 $CSC -out:build/LivingWorld.HumanNpc.dll $(find src -name '*.cs' ! -path 'src/Telemetry/*' | sort) 2>&1 | grep -E "error|succeeded" || true
-test -f build/LivingWorld.HumanNpc.dll
+test -f build/LivingWorld.HumanNpc.dll || { echo "CORE COMPILE FAILED"; exit 1; }
 
 echo "== 4/6 Ownership gate (no native writes outside NpcBody)"
 python3 tools/ownership_gate.py build/LivingWorld.HumanNpc.dll
 
 echo "== 5/6 Compile telemetry recorder"
 $CSC -r:build/LivingWorld.HumanNpc.dll -out:build/LivingWorld.Telemetry.dll src/Telemetry/CoreTelemetry.cs 2>&1 | grep -E "error|succeeded" || true
-test -f build/LivingWorld.Telemetry.dll
+test -f build/LivingWorld.Telemetry.dll || { echo "TELEMETRY COMPILE FAILED"; exit 1; }
 
 echo "== 6/6 Analyzer self-test"
 python3 tools/analyzer_selftest.py

@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.4";
+        public const string Version = "1.0.5";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -30,15 +30,12 @@ namespace LivingWorld.Core
         public static bool Registered { get { return Instance != null && Instance.registered; } }
 
         // Feature switches so one change can be live-tested at a time (BepInEx config file).
-        static BepInEx.Configuration.ConfigEntry<bool> targetPriority, shieldBlocking;
-        public static bool TargetPriority { get { return targetPriority == null || targetPriority.Value; } }
+        static BepInEx.Configuration.ConfigEntry<bool> shieldBlocking;
         public static bool ShieldBlocking { get { return shieldBlocking != null && shieldBlocking.Value; } }
 
         void Awake()
         {
             Instance = this;
-            targetPriority = Config.Bind("Combat", "TargetPriority", true,
-                "On: rank engaged enemies (protect leader/partner, shooters, wounded). Off: nearest engaged enemy. Deer and other non-committed creatures are never fought either way.");
             shieldBlocking = Config.Bind("Combat", "ShieldBlocking", false,
                 "Experimental: companions raise shields against close melee and aimed projectiles.");
             // One hook: companions answer native MonsterAI's own "which enemy?" question.
@@ -62,8 +59,9 @@ namespace LivingWorld.Core
             {
                 GameObject player = RequirePrefab("Player", false);
                 // No helmet: it hides native hair (0.4.0 lesson).
-                GameObject[] guardItems = Items("ArmorIronChest", "ArmorIronLegs", "CapeDeerHide", "SwordIron", "ShieldBanded");
-                GameObject[] archerItems = Items("ArmorIronChest", "ArmorIronLegs", "CapeDeerHide", "BowFineWood", "ArrowFire", "SwordIron", "ShieldBanded");
+                // Same kit, same behavior: the weapon follows from distance, not from a role.
+                GameObject[] guardItems = Items("ArmorIronChest", "ArmorIronLegs", "CapeDeerHide", "BowFineWood", "ArrowWood", "SwordIron", "ShieldBanded");
+                GameObject[] archerItems = Items("ArmorIronChest", "ArmorIronLegs", "CapeDeerHide", "BowFineWood", "ArrowWood", "SwordIron", "ShieldBanded");
                 PrefabManager.Instance.AddPrefab(new CustomPrefab(NpcFactory.Create(GuardPrefab, player, guardItems, "guard"), false));
                 PrefabManager.Instance.AddPrefab(new CustomPrefab(NpcFactory.Create(ArcherPrefab, player, archerItems, "archer"), false));
                 registered = true;

@@ -39,19 +39,30 @@ namespace LivingWorld.Core
             Character current = body.Ai.GetTargetCreature();
             int currentId = current == null || current.IsDead() ? -1 : current.GetInstanceID();
             string reason;
-            int pick = TargetPolicy.Choose(RoleOf(), candidates, currentId, encounter, s.LeaderCrouching,
-                CorePlugin.TargetPriority, out reason);
+            int pick = TargetPolicy.Choose(candidates, currentId, encounter, s.LeaderCrouching, out reason);
             Reason = reason;
             if (pick < 0) return null;
             Character chosen = actors[pick];
-            if (!ReferenceEquals(chosen, current)) { Switches++; LastChoiceName = chosen.GetHoverName(); }
+            if (!ReferenceEquals(chosen, current))
+            {
+                if (currentId >= 0) Switches++;   // live target -> different target; a fresh pick is not a switch
+                LastChoiceName = chosen.GetHoverName();
+            }
             return chosen;
         }
 
-        CombatRole RoleOf()
+        /// <summary>Is this target still one the rule would fight? (Drop it otherwise; do not chase it.)</summary>
+        public bool StillEngaged(Character target)
         {
-            NpcAppearance a = kernel.GetComponent<NpcAppearance>();
-            return a != null && a.Role == "archer" ? CombatRole.Archer : CombatRole.Guard;
+            if (target == null || target.IsDead()) return false;
+            NpcPhase phase = kernel.Arbiter.Phase;
+            bool encounter = phase == NpcPhase.Combat || phase == NpcPhase.CombatClear || phase == NpcPhase.CombatRegroup;
+            CollectPartners(kernel.Frame.Senses.Leader);
+            Build(kernel.Body.Human, kernel.Frame.Senses.Leader);
+            int id = target.GetInstanceID();
+            for (int i = 0; i < candidates.Count; i++)
+                if (candidates[i].Id == id) return TargetPolicy.Engaged(candidates[i], encounter, kernel.Frame.Senses.LeaderCrouching);
+            return false;   // out of range or no longer sensed
         }
 
         void CollectPartners(Player leader)
@@ -85,7 +96,7 @@ namespace LivingWorld.Core
                 if (!kernel.Body.Ai.CanSenseTarget(other)) continue;
                 MonsterAI monster = theirAi as MonsterAI;
                 Character theirTarget = monster == null ? null : monster.GetTargetCreature();
-                bool targetsPartner = false, hurtUs = ReferenceEquals(other, hurtMe);
+                bool targetsPartner = false, hurtUs = false;
                 float partnerDistance = -1f;
                 foreach (NpcKernel p in partners)
                 {
@@ -113,7 +124,8 @@ namespace LivingWorld.Core
                     Boss = other.IsBoss(),
                     Alerted = theirAi != null && theirAi.IsAlerted(),
                     Wildlife = other.GetFaction() == Character.Faction.AnimalsVeg,
-                    HurtUs = hurtUs
+                    HurtUs = hurtUs,
+                    HurtMe = ReferenceEquals(other, hurtMe)
                 });
                 actors.Add(other);
             }

@@ -84,10 +84,11 @@ namespace LivingWorld.Telemetry
             lastBlock.Clear();
             lastSwitches.Clear();
             active = true;
-            if (!subscribed) { NpcKernel.Removed += OnRemoved; subscribed = true; }
+            if (!subscribed) { NpcKernel.Removed += OnRemoved; NpcKernel.Damaged += OnDamaged; subscribed = true; }
             Begin("RunStart");
             Str("core", CorePlugin.Version); Num("schema", Schema); Str("world", ZNet.instance.GetWorldName());
             Str("player", Player.m_localPlayer.GetPlayerName()); Bool("registered", CorePlugin.Registered);
+            Bool("cfgShieldBlocking", CorePlugin.ShieldBlocking);
             End();
             Logger.LogInfo("Recording read-only telemetry: " + path);
         }
@@ -243,12 +244,25 @@ namespace LivingWorld.Telemetry
             return null;
         }
 
+        void OnDamaged(NpcKernel kernel, float damage, Character attacker)
+        {
+            if (!active || writer == null || kernel == null || kernel.Body == null) return;
+            Begin("Damage"); Actor(kernel);
+            Num("amount", damage); Num("hp", kernel.Body.Human.GetHealth());
+            Str("attacker", attacker == null ? "" : attacker.GetHoverName());
+            Num("dist", attacker == null ? -1f : Vector3.Distance(kernel.transform.position, attacker.transform.position));
+            Str("phase", kernel.Frame.Phase.ToString());
+            Bool("blocking", kernel.Body.Human.IsBlocking());
+            End();
+        }
+
         void OnRemoved(NpcKernel kernel, string reason)
         {
             if (!active || writer == null || kernel == null) return;
             Character c = kernel.GetComponent<Character>();
             Begin("Removed"); Actor(kernel); Str("reason", reason); Str("phase", kernel.Frame.Phase.ToString());
-            Num("hp", c == null ? 0f : c.GetHealth()); Str("lastAttacker", kernel.LastAttackerName ?? "");
+            Num("hp", reason == "death" ? kernel.LastHealth : c == null ? 0f : c.GetHealth());
+            Str("lastAttacker", kernel.LastAttackerName ?? "");
             End();
             writer.Flush();
         }
@@ -307,7 +321,7 @@ namespace LivingWorld.Telemetry
 
         void OnDestroy()
         {
-            if (subscribed) NpcKernel.Removed -= OnRemoved;
+            if (subscribed) { NpcKernel.Removed -= OnRemoved; NpcKernel.Damaged -= OnDamaged; }
             if (active) Stop("shutdown");
         }
     }

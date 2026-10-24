@@ -58,6 +58,8 @@ namespace LivingWorld.Core
 
         /// <summary>Raised once when a companion leaves the world: "death" or "unloaded/destroyed".</summary>
         public static event Action<NpcKernel, string> Removed;
+        public static event Action<NpcKernel, float, Character> Damaged;
+        public float LastHealth { get; private set; }
 
         void Awake()
         {
@@ -126,6 +128,13 @@ namespace LivingWorld.Core
         void OnDamaged(float damage, Character attacker)
         {
             lastDamageTime = Time.time;
+            if (body.Human != null) LastHealth = body.Human.GetHealth();
+            Action<NpcKernel, float, Character> damaged = Damaged;
+            if (damaged != null)
+            {
+                try { damaged(this, damage, attacker); }
+                catch (Exception error) { CorePlugin.Warn("damage observer failed: " + error.Message); }
+            }
             if (attacker != null)
             {
                 lastAttacker = attacker;
@@ -305,7 +314,19 @@ namespace LivingWorld.Core
 
         bool LocalThreat(NpcSenses s)
         {
-            return s.SecondsSinceDamaged <= Tuning.LocalDefenseMemory && HostileAttacker(Tuning.LocalDefenseRadius);
+            if (s.SecondsSinceDamaged <= Tuning.LocalDefenseMemory && HostileAttacker(Tuning.LocalDefenseRadius)) return true;
+            // 1.0.4 deaths: a companion turned her back on a skeleton at 0.9 m to rejoin the party.
+            // Anything this close that has picked her is a fight, not something to walk away from.
+            Vector3 position = transform.position;
+            foreach (Character other in Character.GetAllCharacters())
+            {
+                if (other == null || other == body.Human || other.IsDead()) continue;
+                if (Vector3.Distance(position, other.transform.position) > Tuning.LocalDefenseRadius) continue;
+                MonsterAI ai = other.GetBaseAI() as MonsterAI;
+                if (ai != null && ReferenceEquals(ai.GetTargetCreature(), body.Human) && BaseAI.IsEnemy(body.Human, other))
+                    return true;
+            }
+            return false;
         }
 
         void Sense(NpcSenses s)

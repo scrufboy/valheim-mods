@@ -137,6 +137,17 @@ namespace LivingWorld.Core
             EncounterReleases++;
         }
 
+        /// <summary>Let go of a target that is no longer worth fighting; native re-picks at once.</summary>
+        public void DropTarget(NpcBehavior caller)
+        {
+            Require(NpcDomain.Movement, caller);
+            NativeApi.TargetCreature.SetValue(Ai, null);
+            NativeApi.UpdateTargetTimer.SetValue(Ai, 0f);
+            TargetDrops++;
+        }
+
+        public int TargetDrops { get; private set; }
+
         // ---------------- Look ----------------
 
         public void LookAt(NpcBehavior caller, Vector3 point)
@@ -290,12 +301,58 @@ namespace LivingWorld.Core
             foreach (ItemDrop.ItemData item in inventory.GetAllItems())
             {
                 if (item == null || item.m_shared == null || !CombatHands.IsRanged(TypeOf(item))) continue;
-                if (item.m_shared.m_aiAttackRangeMin >= CombatHands.RangedMinimum) continue;
-                item.m_shared = (ItemDrop.ItemData.SharedData)NativeApi.CloneObject.Invoke(item.m_shared, null);
-                item.m_shared.m_aiAttackRangeMin = CombatHands.RangedMinimum;
+                ItemDrop.ItemData.SharedData s = item.m_shared;
+                if (s.m_aiAttackRangeMin >= CombatHands.RangedMinimum && s.m_aiAttackRange >= CombatHands.RangedAiRange &&
+                    s.m_attack != null && !s.m_attack.m_bowDraw) continue;
+                // Actor-local copy: the shared prefab data (and the player's own bows) stay untouched.
+                s = (ItemDrop.ItemData.SharedData)NativeApi.CloneObject.Invoke(s, null);
+                if (s.m_attack != null)
+                {
+                    s.m_attack = s.m_attack.Clone();
+                    s.m_attack.m_bowDraw = false;
+                    s.m_attack.m_drawDurationMin = 0f;
+                }
+                s.m_aiAttackRange = CombatHands.RangedAiRange;
+                s.m_aiAttackRangeMin = CombatHands.RangedMinimum;
+                s.m_aiAttackMaxAngle = CombatHands.RangedAimAngle;
+                item.m_shared = s;
                 tuned++;
             }
             return tuned;
+        }
+
+        /// <summary>
+        /// Keeps a bow-carrier's quiver at QuiverSize arrows of the type she already uses (wood if none).
+        /// Called outside combat only; stand-in for resupply until camps/towns provide it.
+        /// </summary>
+        public int TopUpQuiver(NpcBehavior caller)
+        {
+            Require(NpcDomain.Hands, caller);
+            Inventory inventory = Human.GetInventory();
+            if (inventory == null) return 0;
+            bool hasBow = false;
+            int count = 0;
+            foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+            {
+                if (item == null || item.m_shared == null) continue;
+                if (CombatHands.IsRanged(TypeOf(item))) hasBow = true;
+                if (item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Ammo)
+                {
+                    count += item.m_stack;
+                }
+            }
+            if (!hasBow || count >= CombatHands.QuiverSize) return 0;
+            GameObject prefab = ObjectDB.instance == null ? null : ObjectDB.instance.GetItemPrefab("ArrowWood");  // resupply is always basic arrows: skill, not gear
+            if (prefab == null) return 0;
+            int added = 0;
+            while (count < CombatHands.QuiverSize)
+            {
+                int want = CombatHands.QuiverSize - count;
+                if (!inventory.AddItem(prefab, want)) break;
+                count += want;
+                added += want;
+            }
+            return added;
         }
 
         public bool ShieldInHand

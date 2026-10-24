@@ -161,6 +161,18 @@ def main(paths):
             close = sum(1 for x in d if x < 4) / len(d)
             add("PASS" if close <= .15 else "FAIL", "Bow used at range",
                 "median %.1f m, %.0f%% of bow samples under 4 m" % (d[len(d) // 2], close * 100))
+        # Proof the archer actually shoots (1.0.0-1.0.4 never drew: bow-in-hand distance proved nothing)
+        archers = {r["npc"] for r in combat if "Bow" in r.get("handL", "")}
+        for n in sorted(archers):
+            bow_samples = [r for r in combat if r["npc"] == n and "Bow" in r.get("handL", "")]
+            if not bow_samples:
+                add("NOT EXERCISED", "Bow actually fires (%s)" % n, "never held the bow in combat")
+                continue
+            a = [r.get("ammo", 0) for r in npc if r["npc"] == n]
+            spent = sum(max(0, x - y) for x, y in zip(a, a[1:]))
+            shots_anim = sum(1 for r in bow_samples if r.get("attacking"))
+            add("PASS" if spent > 0 else "FAIL", "Bow actually fires (%s)" % n,
+                "%d arrows spent, attacking in %d of %d bow-in-hand combat samples" % (spent, shots_anim, len(bow_samples)))
         if any("ammo" in r for r in npc):
             for n in sorted(owners | {r["npc"] for r in bow}):
                 a = [r["ammo"] for r in npc if r["npc"] == n and "ammo" in r]
@@ -175,14 +187,13 @@ def main(paths):
         else:
             for n in sorted({r["npc"] for r in fighting}):
                 mine = [r for r in fighting if r["npc"] == n]
-                role = next((r.get("role") for r in npc if r["npc"] == n and r.get("role")), "?")
                 ts = sorted(r["t"] for r in mine)
                 gaps = [b - a for a, b in zip(ts, ts[1:]) if b - a < 5]
                 minutes = max(sum(gaps) / 60.0, 1 / 60.0)
                 sw = [r["targetSwitches"] for r in npc if r["npc"] == n and "targetSwitches" in r]
                 switches = (max(sw) - min(sw)) if sw else 0
                 rate = switches / minutes
-                add("PASS" if rate <= 8 else "FAIL", "Target switches calm (%s, %s)" % (n, role),
+                add("PASS" if rate <= 8 else "FAIL", "Target switches calm (%s)" % n,
                     "%d rule switches in %.1f combat-min = %.1f/min" % (switches, minutes, rate))
                 focus = sum(1 for r in mine if r.get("targetRanged") or r.get("targetsWho") in ("me", "leader", "partner"))
                 add("INFO", "Focus on real threats (%s)" % n,
@@ -198,7 +209,9 @@ def main(paths):
                 add("INFO", "Target choice reasons", ", ".join("%s %d" % kv for kv in sorted(by.items(), key=lambda kv: -kv[1])))
 
     # 6b. Shield blocking (new in 1.0.2; native AI never blocks)
-    if any("blockRaises" in r for r in npc):
+    if start.get("cfgShieldBlocking") is False:
+        add("NOT EXERCISED", "Shield blocks in close combat", "blocking switched off in config")
+    elif any("blockRaises" in r for r in npc):
         raises = [r for r in rows if r.get("type") == "BlockRaise"]
         shield_melee = [r for r in combat if r.get("shieldInHand")] if combat else []
         if not shield_melee:
@@ -215,6 +228,13 @@ def main(paths):
     # 7. Survival / disappearance (Removed events from 1.0.1; fall back to sample gaps)
     removed = [r for r in rows if r.get("type") == "Removed"]
     deaths = [r for r in removed if r.get("reason") == "death"]
+    damage = [r for r in rows if r.get("type") == "Damage"]
+    for r in deaths:
+        last = [d for d in damage if d["npc"] == r["npc"] and r["t"] - 20 <= d["t"] <= r["t"]]
+        if last:
+            add("INFO", "Last 20 s of hits on " + r["npc"], "; ".join("t%.0f %s %.0f@%.1fm%s" % (
+                d["t"], d.get("attacker") or "?", d.get("amount", 0), d.get("dist", -1), " BLOCKED" if d.get("blocking") else "")
+                for d in last[-8:]))
     for r in removed:
         add("FAIL" if r.get("reason") == "death" else "INFO", "Removed: " + r["npc"],
             "%s at t=%.0f in %s, hp %.0f, last hit by %s" % (r.get("reason"), r["t"], r.get("phase"), r.get("hp", 0),

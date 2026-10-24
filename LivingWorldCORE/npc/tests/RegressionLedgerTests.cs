@@ -46,21 +46,15 @@ static class RegressionLedgerTests
         Run("Block: enemy attacking someone else is ignored", BlockIgnoresOthers);
         Run("Block: maximum hold then cooldown (no perfect turtle)", BlockHoldAndCooldown);
         Run("Block: lowered the moment the attack ends", BlockLowersWhenOver);
-        Run("Target: archer shoots the enemy attacking the leader, not the nearest", ArcherProtectsLeader);
-        Run("Target: archer prefers an enemy shooter over a closer brute", ArcherPrefersShooters);
-        Run("Target: archer defends herself when something is on her", ArcherSelfDefense);
-        Run("Target: guard peels the enemy off the archer", GuardPeelsForArcher);
-        Run("Target: guard does not chase a distant shooter out of the party", GuardDoesNotChaseShooter);
-        Run("Target: no flip-flop between near-equal targets (hysteresis)", TargetHysteresis);
-        Run("Target: unseen enemies are never chosen (no wallhack)", TargetNeedsSight);
-        Run("Target: nothing valid leaves native choice alone", TargetNothingValid);
-        Run("0.x regression: deer are watched, never fought", DeerNeverFought);
-        Run("0.x rule: no fight starts until a creature commits to the party", NoUnprovokedFight);
-        Run("0.x rule: a creature that picks us is fought before it lands a hit", AggroIsEnough);
-        Run("0.x rule: during a fight, other alerted hostiles join the list", EncounterWidens);
-        Run("0.x rule: leader sneaking = only what already committed", SneakOnlyCommitted);
-        Run("Engagement: wildlife that hurts us is fair game", WildlifeThatHurts);
-        Run("Engagement: config off = nearest engaged, rule still applies", NearestEngagedWhenUnranked);
+        Run("1.0.4 fix: deer are watched, never fought", DeerNeverFought);
+        Run("Rule: no fight starts until a creature commits to the party", NoUnprovokedFight);
+        Run("Rule: a creature that picks one of us is fought before it lands a hit", AggroIsEnough);
+        Run("Rule: during a fight, other alerted hostiles in sight join the list", EncounterWidens);
+        Run("Rule: leader sneaking = only what already committed", SneakOnlyCommitted);
+        Run("1.0.4 fix: what is hitting me beats a nearer creature hitting someone else", OnMeFirst);
+        Run("1.0.4 fix: keep the current target; no hopping between near-equal enemies", KeepCurrent);
+        Run("1.0.4 fix: a fleeing creature beyond 30 m is dropped, not chased", BeyondRangeDropped);
+        Run("Rule: unseen alerted hostiles are not picked mid-fight (no wallhack)", NoWallhack);
 
         Console.WriteLine();
         Console.WriteLine("Regression ledger: " + passed + " passed, " + failed + " failed.");
@@ -429,121 +423,73 @@ static class RegressionLedgerTests
 
     static TargetCandidate Foe(int id, float dist) { return new TargetCandidate { Id = id, Distance = dist, CanSee = true, Health01 = 1f, PartnerDistance = -1f, Alerted = true }; }
 
-    static int Pick(CombatRole role, int current, params TargetCandidate[] c)
+    static int Pick(bool encounter, bool sneak, int current, params TargetCandidate[] c)
     {
         string reason;
-        int i = TargetPolicy.Choose(role, c, current, out reason);
-        return i < 0 ? -1 : c[i].Id;
-    }
-
-    static void ArcherProtectsLeader()
-    {
-        var near = Foe(1, 9f); var onLeader = Foe(2, 20f); onLeader.TargetsLeader = true;
-        Assert(Pick(CombatRole.Archer, -1, near, onLeader) == 2, "archer ignored the leader's attacker");
-    }
-
-    static void ArcherPrefersShooters()
-    {
-        var brute = Foe(1, 10f); var shooter = Foe(2, 22f); shooter.Ranged = true;
-        Assert(Pick(CombatRole.Archer, -1, brute, shooter) == 2, "archer ignored the enemy archer");
-    }
-
-    static void ArcherSelfDefense()
-    {
-        var onMe = Foe(1, 2f); onMe.TargetsMe = true; onMe.CanSee = false;
-        var shooter = Foe(2, 20f); shooter.Ranged = true; shooter.TargetsLeader = true;
-        Assert(Pick(CombatRole.Archer, -1, onMe, shooter) == 1, "archer ignored the enemy on top of her");
-    }
-
-    static void GuardPeelsForArcher()
-    {
-        var near = Foe(1, 4f); var onArcher = Foe(2, 9f); onArcher.TargetsPartner = true; onArcher.PartnerDistance = 1.5f;
-        Assert(Pick(CombatRole.Guard, -1, near, onArcher) == 2, "guard did not peel for the archer");
-    }
-
-    static void GuardDoesNotChaseShooter()
-    {
-        var shooter = Foe(1, 24f); shooter.Ranged = true; var brute = Foe(2, 8f);
-        Assert(Pick(CombatRole.Guard, -1, shooter, brute) == 2, "guard ran off after a distant shooter");
-    }
-
-    static void TargetHysteresis()
-    {
-        var a = Foe(1, 10f); var b = Foe(2, 8f);
-        Assert(Pick(CombatRole.Guard, 1, a, b) == 1, "switched for a 2 m difference");
-        var c = Foe(3, 9f); c.TargetsPartner = true;
-        Assert(Pick(CombatRole.Guard, 1, a, c) == 3, "kept the old target despite a clear reason to switch");
-    }
-
-    static void TargetNeedsSight()
-    {
-        var hidden = Foe(1, 12f); hidden.CanSee = false; hidden.TargetsLeader = true;
-        var seen = Foe(2, 25f);
-        Assert(Pick(CombatRole.Archer, -1, hidden, seen) == 2, "chose an enemy it cannot see");
-    }
-
-    static void TargetNothingValid()
-    {
-        var far = Foe(1, 45f); var hidden = Foe(2, 10f); hidden.CanSee = false;
-        Assert(Pick(CombatRole.Archer, -1, far, hidden) == -1, "invented a target");
-        Assert(Pick(CombatRole.Archer, -1) == -1, "empty list");
-    }
-
-    static int Pick2(bool encounter, bool sneak, bool ranked, params TargetCandidate[] c)
-    {
-        string reason;
-        int i = TargetPolicy.Choose(CombatRole.Archer, c, -1, encounter, sneak, ranked, out reason);
+        int i = TargetPolicy.Choose(c, current, encounter, sneak, out reason);
         return i < 0 ? -1 : c[i].Id;
     }
 
     static void DeerNeverFought()
     {
         var deer = Foe(1, 12f); deer.Wildlife = true;
-        Assert(Pick2(false, false, true, deer) == -1, "fought a deer in calm");
-        Assert(Pick2(true, false, true, deer) == -1, "fought a fleeing deer during a fight");
+        Assert(Pick(false, false, -1, deer) == -1, "fought a deer in calm");
+        Assert(Pick(true, false, -1, deer) == -1, "fought a fleeing deer during a fight");
     }
 
     static void NoUnprovokedFight()
     {
-        var greydwarf = Foe(1, 15f);
-        Assert(Pick2(false, false, true, greydwarf) == -1, "started a fight with an alerted greydwarf that chose nobody");
+        Assert(Pick(false, false, -1, Foe(1, 15f)) == -1, "started a fight with a creature that chose nobody");
     }
 
     static void AggroIsEnough()
     {
-        var g = Foe(1, 15f); g.TargetsLeader = true;
-        Assert(Pick2(false, false, true, g) == 1, "waited to be hit");
-        var h = Foe(2, 15f); h.TargetsPartner = true; h.Alerted = false;
-        Assert(Pick2(false, false, true, h) == 2, "ignored the creature after her partner");
+        var g = Foe(1, 15f); g.TargetsLeader = true; g.Alerted = false;
+        Assert(Pick(false, false, -1, g) == 1, "waited for the leader to be hit");
+        var h = Foe(2, 15f); h.TargetsPartner = true;
+        Assert(Pick(false, false, -1, h) == 2, "ignored the creature after the partner");
     }
 
     static void EncounterWidens()
     {
-        var shaman = Foe(1, 20f); shaman.Ranged = true;
-        Assert(Pick2(true, false, true, shaman) == 1, "ignored an alerted shaman mid-fight");
+        var shaman = Foe(1, 20f);
+        Assert(Pick(true, false, -1, shaman) == 1, "ignored an alerted shaman mid-fight");
         shaman.Alerted = false;
-        Assert(Pick2(true, false, true, shaman) == -1, "attacked an unaware creature mid-fight");
+        Assert(Pick(true, false, -1, shaman) == -1, "attacked an unaware creature mid-fight");
     }
 
     static void SneakOnlyCommitted()
     {
         var boar = Foe(1, 10f);
-        Assert(Pick2(true, true, true, boar) == -1, "broke stealth on an uncommitted creature");
+        Assert(Pick(true, true, -1, boar) == -1, "broke stealth on an uncommitted creature");
         boar.TargetsMe = true;
-        Assert(Pick2(true, true, true, boar) == 1, "did not answer a creature that found us");
+        Assert(Pick(true, true, -1, boar) == 1, "did not answer a creature that found us");
     }
 
-    static void WildlifeThatHurts()
+    static void OnMeFirst()
     {
-        var w = Foe(1, 3f); w.Wildlife = true; w.HurtUs = true;
-        Assert(Pick2(false, false, true, w) == 1, "let wildlife maul us");
+        var hitter = Foe(1, 3f); hitter.HurtMe = true;
+        var other = Foe(2, 2f); other.TargetsLeader = true;
+        Assert(Pick(true, false, 2, hitter, other) == 1, "ran off from the creature hitting it");
     }
 
-    static void NearestEngagedWhenUnranked()
+    static void KeepCurrent()
     {
-        var deer = Foe(1, 3f); deer.Wildlife = true;
-        var a = Foe(2, 20f); a.TargetsLeader = true;
-        var b = Foe(3, 9f); b.TargetsMe = true;
-        Assert(Pick2(false, false, false, deer, a, b) == 3, "unranked mode picked wrong");
+        var a = Foe(1, 10f); a.TargetsLeader = true;
+        var b = Foe(2, 6f); b.TargetsLeader = true;
+        Assert(Pick(true, false, 1, a, b) == 1, "hopped to a nearer target");
+        Assert(Pick(true, false, -1, a, b) == 2, "fresh pick was not the nearest");
+    }
+
+    static void BeyondRangeDropped()
+    {
+        var neck = Foe(1, 35f); neck.TargetsMe = true;
+        Assert(Pick(true, false, 1, neck) == -1, "kept a target beyond 30 m");
+    }
+
+    static void NoWallhack()
+    {
+        var hidden = Foe(1, 12f); hidden.CanSee = false;
+        Assert(Pick(true, false, -1, hidden) == -1, "picked an alerted hostile it cannot see");
     }
 }
