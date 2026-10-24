@@ -3,7 +3,6 @@
 // The build refuses to package if any of these fail.
 using System;
 using System.Collections.Generic;
-using System.Collections.Generic;
 using LivingWorld.Core;
 
 static class RegressionLedgerTests
@@ -47,6 +46,14 @@ static class RegressionLedgerTests
         Run("Block: enemy attacking someone else is ignored", BlockIgnoresOthers);
         Run("Block: maximum hold then cooldown (no perfect turtle)", BlockHoldAndCooldown);
         Run("Block: lowered the moment the attack ends", BlockLowersWhenOver);
+        Run("Target: archer shoots the enemy attacking the leader, not the nearest", ArcherProtectsLeader);
+        Run("Target: archer prefers an enemy shooter over a closer brute", ArcherPrefersShooters);
+        Run("Target: archer defends herself when something is on her", ArcherSelfDefense);
+        Run("Target: guard peels the enemy off the archer", GuardPeelsForArcher);
+        Run("Target: guard does not chase a distant shooter out of the party", GuardDoesNotChaseShooter);
+        Run("Target: no flip-flop between near-equal targets (hysteresis)", TargetHysteresis);
+        Run("Target: unseen enemies are never chosen (no wallhack)", TargetNeedsSight);
+        Run("Target: nothing valid leaves native choice alone", TargetNothingValid);
 
         Console.WriteLine();
         Console.WriteLine("Regression ledger: " + passed + " passed, " + failed + " failed.");
@@ -411,5 +418,67 @@ static class RegressionLedgerTests
             int n;
             Assert(r.Hair.StartsWith("Hair") && int.TryParse(r.Hair.Substring(4), out n) && n >= 1 && n <= 34, "bad hair " + r.Hair);
         }
+    }
+
+    static TargetCandidate Foe(int id, float dist) { return new TargetCandidate { Id = id, Distance = dist, CanSee = true, Health01 = 1f, PartnerDistance = -1f }; }
+
+    static int Pick(CombatRole role, int current, params TargetCandidate[] c)
+    {
+        string reason;
+        int i = TargetPolicy.Choose(role, c, current, out reason);
+        return i < 0 ? -1 : c[i].Id;
+    }
+
+    static void ArcherProtectsLeader()
+    {
+        var near = Foe(1, 9f); var onLeader = Foe(2, 20f); onLeader.TargetsLeader = true;
+        Assert(Pick(CombatRole.Archer, -1, near, onLeader) == 2, "archer ignored the leader's attacker");
+    }
+
+    static void ArcherPrefersShooters()
+    {
+        var brute = Foe(1, 10f); var shooter = Foe(2, 22f); shooter.Ranged = true;
+        Assert(Pick(CombatRole.Archer, -1, brute, shooter) == 2, "archer ignored the enemy archer");
+    }
+
+    static void ArcherSelfDefense()
+    {
+        var onMe = Foe(1, 2f); onMe.TargetsMe = true; onMe.CanSee = false;
+        var shooter = Foe(2, 20f); shooter.Ranged = true; shooter.TargetsLeader = true;
+        Assert(Pick(CombatRole.Archer, -1, onMe, shooter) == 1, "archer ignored the enemy on top of her");
+    }
+
+    static void GuardPeelsForArcher()
+    {
+        var near = Foe(1, 4f); var onArcher = Foe(2, 9f); onArcher.TargetsPartner = true; onArcher.PartnerDistance = 1.5f;
+        Assert(Pick(CombatRole.Guard, -1, near, onArcher) == 2, "guard did not peel for the archer");
+    }
+
+    static void GuardDoesNotChaseShooter()
+    {
+        var shooter = Foe(1, 24f); shooter.Ranged = true; var brute = Foe(2, 8f);
+        Assert(Pick(CombatRole.Guard, -1, shooter, brute) == 2, "guard ran off after a distant shooter");
+    }
+
+    static void TargetHysteresis()
+    {
+        var a = Foe(1, 10f); var b = Foe(2, 8f);
+        Assert(Pick(CombatRole.Guard, 1, a, b) == 1, "switched for a 2 m difference");
+        var c = Foe(3, 9f); c.TargetsPartner = true;
+        Assert(Pick(CombatRole.Guard, 1, a, c) == 3, "kept the old target despite a clear reason to switch");
+    }
+
+    static void TargetNeedsSight()
+    {
+        var hidden = Foe(1, 12f); hidden.CanSee = false; hidden.TargetsLeader = true;
+        var seen = Foe(2, 25f);
+        Assert(Pick(CombatRole.Archer, -1, hidden, seen) == 2, "chose an enemy it cannot see");
+    }
+
+    static void TargetNothingValid()
+    {
+        var far = Foe(1, 45f); var hidden = Foe(2, 10f); hidden.CanSee = false;
+        Assert(Pick(CombatRole.Archer, -1, far, hidden) == -1, "invented a target");
+        Assert(Pick(CombatRole.Archer, -1) == -1, "empty list");
     }
 }

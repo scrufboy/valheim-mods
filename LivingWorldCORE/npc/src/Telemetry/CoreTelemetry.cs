@@ -20,7 +20,7 @@ namespace LivingWorld.Telemetry
     {
         public const string Guid = "local.livingworld.telemetry";
         public const string Version = CorePlugin.Version;
-        const int Schema = 10; // 1.0.1 adds fields only; schema-10 readers still parse it
+        const int Schema = 11; // 1.0.1 adds fields only; schema-10 readers still parse it
         const float SampleSeconds = .5f;
         const long MaxBytes = 64L * 1024L * 1024L;
 
@@ -82,6 +82,7 @@ namespace LivingWorld.Telemetry
             lastViolations.Clear();
             lastTorch.Clear();
             lastBlock.Clear();
+            lastSwitches.Clear();
             active = true;
             if (!subscribed) { NpcKernel.Removed += OnRemoved; subscribed = true; }
             Begin("RunStart");
@@ -140,6 +141,17 @@ namespace LivingWorld.Telemetry
                         End();
                     }
                 }
+                int switches = combat == null ? 0 : combat.TargetSwitches, seenSwitches;
+                if (lastSwitches.TryGetValue(kernel, out seenSwitches) && switches > seenSwitches)
+                {
+                    Character t = kernel.Body.Ai.GetTargetCreature();
+                    Begin("TargetChoice"); Actor(kernel);
+                    Str("reason", combat.TargetReason);
+                    Str("target", t == null ? "" : t.GetHoverName());
+                    Num("dist", t == null ? -1f : Vector3.Distance(kernel.transform.position, t.transform.position));
+                    End();
+                }
+                lastSwitches[kernel] = switches;
                 bool torch = kernel.Body != null && kernel.Body.TorchInHand;
                 bool wasTorch;
                 if (!lastTorch.TryGetValue(kernel, out wasTorch) || wasTorch != torch)
@@ -193,12 +205,35 @@ namespace LivingWorld.Telemetry
                 NativeCombatBehavior combat = Combat(kernel);
                 Str("block", combat == null || combat.Block == null ? "" : combat.Block.Reason);
                 Str("blockThreat", combat == null ? "" : combat.BlockThreat);
+                Str("targetReason", combat == null ? "" : combat.TargetReason ?? "");
+                Num("targetSwitches", combat == null ? 0 : combat.TargetSwitches);
+                Bool("targetRanged", s.Target != null && TargetIsRanged(s.Target));
+                Str("targetsWho", s.Target == null ? "" : TargetOf(s.Target, kernel));
                 End();
             }
         }
 
+        static bool TargetIsRanged(Character c)
+        {
+            Humanoid h = c as Humanoid;
+            ItemDrop.ItemData w = h == null ? null : h.GetCurrentWeapon();
+            return w != null && w.m_shared != null && w.m_shared.m_attack != null &&
+                w.m_shared.m_attack.m_attackType == Attack.AttackType.Projectile;
+        }
+
+        static string TargetOf(Character enemy, NpcKernel kernel)
+        {
+            MonsterAI m = enemy.GetBaseAI() as MonsterAI;
+            Character t = m == null ? null : m.GetTargetCreature();
+            if (t == null) return "none";
+            if (ReferenceEquals(t, kernel.Body.Human)) return "me";
+            if (t is Player) return "leader";
+            return t.GetComponent<NpcKernel>() != null ? "partner" : "other";
+        }
+
         bool subscribed;
         readonly Dictionary<NpcKernel, bool> lastBlock = new Dictionary<NpcKernel, bool>();
+        readonly Dictionary<NpcKernel, int> lastSwitches = new Dictionary<NpcKernel, int>();
 
         static NativeCombatBehavior Combat(NpcKernel kernel)
         {
@@ -220,6 +255,8 @@ namespace LivingWorld.Telemetry
         {
             Character c = kernel.GetComponent<Character>();
             Str("npc", c == null ? kernel.name : c.m_name);
+            NpcAppearance a = kernel.GetComponent<NpcAppearance>();
+            Str("role", a == null ? "" : a.Role);
         }
 
         void Begin(string type)

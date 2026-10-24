@@ -41,8 +41,8 @@ def main(paths):
     def add(status, name, detail):
         results.append((status, name, detail))
 
-    if start.get("schema") != 10:
-        print("Not a Living World C.O.R.E. schema-10 session (core %s)." % start.get("core"))
+    if start.get("schema") not in (10, 11):
+        print("Not a Living World C.O.R.E. schema-10/11 session (core %s)." % start.get("core"))
         return 2
     names = sorted({r["npc"] for r in npc})
     duration = max((r["t"] for r in rows), default=0)
@@ -166,6 +166,33 @@ def main(paths):
                 a = [r["ammo"] for r in npc if r["npc"] == n and "ammo" in r]
                 if a and max(a) > 0:
                     add("INFO", "Arrows used by " + n, "%d at start, %d at end" % (a[0], a[-1]))
+
+    # 6a. Target choice (1.0.3+: schema 11)
+    if any("targetSwitches" in r for r in npc):
+        fighting = [r for r in combat if r.get("phase") == "Combat" and r.get("target")]
+        if not fighting:
+            add("NOT EXERCISED", "Target choice", "no combat with a target")
+        else:
+            for n in sorted({r["npc"] for r in fighting}):
+                mine = [r for r in fighting if r["npc"] == n]
+                role = next((r.get("role") for r in npc if r["npc"] == n and r.get("role")), "?")
+                ts = sorted(r["t"] for r in mine)
+                gaps = [b - a for a, b in zip(ts, ts[1:]) if b - a < 5]
+                minutes = max(sum(gaps) / 60.0, 1 / 60.0)
+                sw = [r["targetSwitches"] for r in npc if r["npc"] == n and "targetSwitches" in r]
+                switches = (max(sw) - min(sw)) if sw else 0
+                rate = switches / minutes
+                add("PASS" if rate <= 8 else "FAIL", "Target switches calm (%s, %s)" % (n, role),
+                    "%d rule switches in %.1f combat-min = %.1f/min" % (switches, minutes, rate))
+                focus = sum(1 for r in mine if r.get("targetRanged") or r.get("targetsWho") in ("me", "leader", "partner"))
+                add("INFO", "Focus on real threats (%s)" % n,
+                    "%.0f%% of combat on a shooter or an enemy attacking the party" % (100.0 * focus / len(mine)))
+            choices = [r for r in rows if r.get("type") == "TargetChoice"]
+            if choices:
+                by = {}
+                for r in choices:
+                    by[r.get("reason", "?")] = by.get(r.get("reason", "?"), 0) + 1
+                add("INFO", "Target choice reasons", ", ".join("%s %d" % kv for kv in sorted(by.items(), key=lambda kv: -kv[1])))
 
     # 6b. Shield blocking (new in 1.0.2; native AI never blocks)
     if any("blockRaises" in r for r in npc):

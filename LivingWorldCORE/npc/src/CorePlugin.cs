@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.2";
+        public const string Version = "1.0.3";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -29,9 +29,18 @@ namespace LivingWorld.Core
 
         public static bool Registered { get { return Instance != null && Instance.registered; } }
 
+        // Feature switches so one change can be live-tested at a time (BepInEx config file).
+        static BepInEx.Configuration.ConfigEntry<bool> targetPriority, shieldBlocking;
+        public static bool TargetPriority { get { return targetPriority == null || targetPriority.Value; } }
+        public static bool ShieldBlocking { get { return shieldBlocking != null && shieldBlocking.Value; } }
+
         void Awake()
         {
             Instance = this;
+            targetPriority = Config.Bind("Combat", "TargetPriority", true,
+                "Companions choose targets by threat (protect leader/partner, shooters, wounded) at native cadence.");
+            shieldBlocking = Config.Bind("Combat", "ShieldBlocking", false,
+                "Experimental: companions raise shields against close melee and aimed projectiles.");
             PrefabManager.OnVanillaPrefabsAvailable += RegisterPrefabs;
             partyCommand = new Terminal.ConsoleCommand("lwparty",
                 "Living World: create your two companions (lwparty new = replace the current lab pair)",

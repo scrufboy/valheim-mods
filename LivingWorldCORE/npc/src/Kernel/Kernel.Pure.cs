@@ -399,4 +399,104 @@ namespace LivingWorld.Core
             Reason = why;
         }
     }
+
+    public enum CombatRole { Guard, Archer }
+
+    /// <summary>One enemy as the target rule sees it. Built only from native perception.</summary>
+    public struct TargetCandidate
+    {
+        public int Id;               // stable per actor within a fight
+        public float Distance;
+        public bool CanSee;          // native BaseAI.CanSeeTarget
+        public bool TargetsMe;
+        public bool TargetsLeader;
+        public bool TargetsPartner;  // another companion of the same leader
+        public bool Ranged;          // shoots or throws (bow, rock, spit, fireball)
+        public float Health01;       // native GetHealthPercentage
+        public float PartnerDistance;// distance to the nearest companion of ours, -1 if none
+        public bool Boss;
+    }
+
+    /// <summary>
+    /// Who to fight. Native MonsterAI.UpdateTarget re-picks "closest sensed enemy" every
+    /// 2 s (6 s beyond 50 m) and overwrites any earlier choice. This rule takes that same
+    /// decision at that same cadence, with priorities a skilled fighter would use, and
+    /// with hysteresis so it never flips back and forth. Native AI still does everything
+    /// after the choice: approach, circling, facing, weapon, attack timing.
+    /// </summary>
+    public static class TargetPolicy
+    {
+        public const float MaxRange = 30f;
+        public const float SwitchMargin = 15f;
+        public const float SelfDefenseRange = 4f;
+
+        public static float Score(CombatRole role, TargetCandidate c)
+        {
+            if (c.Distance > MaxRange) return float.NegativeInfinity;
+            bool selfDefense = c.TargetsMe && c.Distance <= SelfDefenseRange;
+            if (!c.CanSee && !selfDefense) return float.NegativeInfinity;
+            float s;
+            if (role == CombatRole.Archer)
+            {
+                s = -0.6f * c.Distance;
+                if (c.TargetsLeader) s += 40f;
+                if (c.TargetsPartner) s += 30f;
+                if (c.Ranged) s += 25f;                        // shooters and casters first
+                s += 20f * (1f - Clamp01(c.Health01));         // finish the wounded
+                if (c.Distance >= CombatHands.RangedMinimum) s += 15f;   // inside the bow band
+                if (c.Boss) s -= 10f;                          // adds before the boss
+            }
+            else
+            {
+                s = -1.2f * c.Distance;
+                if (c.TargetsPartner) s += 45f;                // peel for the archer
+                if (c.TargetsLeader) s += 35f;
+                if (c.TargetsMe) s += 20f;
+                if (c.Ranged && c.Distance > 15f) s -= 25f;    // do not chase shooters out of the party
+                s += 10f * (1f - Clamp01(c.Health01));
+                if (c.PartnerDistance >= 0f && c.PartnerDistance <= 4f) s += 15f;  // fight where the archer is
+            }
+            return s;
+        }
+
+        /// <returns>index of the chosen candidate, or -1 to leave native choice alone.</returns>
+        public static int Choose(CombatRole role, IList<TargetCandidate> candidates, int currentId, out string reason)
+        {
+            reason = "no valid candidate";
+            if (candidates == null || candidates.Count == 0) return -1;
+            // Override: an archer being hit in melee cannot shoot anyone else. Closest attacker on her wins.
+            if (role == CombatRole.Archer)
+            {
+                int onMe = -1;
+                for (int i = 0; i < candidates.Count; i++)
+                {
+                    TargetCandidate c = candidates[i];
+                    if (c.TargetsMe && c.Distance <= SelfDefenseRange &&
+                        (onMe < 0 || c.Distance < candidates[onMe].Distance)) onMe = i;
+                }
+                if (onMe >= 0) { reason = "self-defense"; return onMe; }
+            }
+            int best = -1, current = -1;
+            float bestScore = float.NegativeInfinity, currentScore = float.NegativeInfinity;
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                float s = Score(role, candidates[i]);
+                if (candidates[i].Id == currentId) { current = i; currentScore = s; }
+                if (s > bestScore) { bestScore = s; best = i; }
+            }
+            if (best < 0 || float.IsNegativeInfinity(bestScore)) return -1;
+            if (current >= 0 && !float.IsNegativeInfinity(currentScore) && bestScore < currentScore + SwitchMargin)
+            {
+                reason = "keep current";
+                return current;
+            }
+            TargetCandidate b = candidates[best];
+            reason = b.TargetsMe && b.Distance <= SelfDefenseRange ? "self-defense" :
+                b.TargetsPartner ? "protect partner" : b.TargetsLeader ? "protect leader" :
+                b.Ranged ? "shooter/caster" : b.Health01 < .35f ? "finish wounded" : "nearest threat";
+            return best;
+        }
+
+        static float Clamp01(float v) { return v < 0f ? 0f : v > 1f ? 1f : v; }
+    }
 }
