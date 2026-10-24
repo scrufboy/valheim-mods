@@ -23,6 +23,7 @@ namespace LivingWorld.Core
         {
             prepared = null;
             Body.RestorePace(this);
+            Body.TuneRangedWeapons(this);
         }
 
         public override void Tick(NpcFrame f)
@@ -37,6 +38,8 @@ namespace LivingWorld.Core
                 Body.EquipBestWeaponFor(this, s.Target);
                 prepared = s.Target;
             }
+            // Native choice may swap bow -> sword at any time; keep the shield paired.
+            Body.PairShield(this);
             Body.PublishObserved(this);
             Status = f.Phase == NpcPhase.CombatClear
                 ? "verifying clear " + f.Senses.SecondsSinceDamaged.ToString("0.0") + "s since hit"

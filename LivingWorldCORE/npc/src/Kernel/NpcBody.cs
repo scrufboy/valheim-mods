@@ -173,6 +173,7 @@ namespace LivingWorld.Core
             Require(NpcDomain.Hands, caller);
             DouseTorchCore();
             if (LeftItem != null || RightItem != null) Human.HideHandItems(false, true);
+            RestoreShieldToBack();
             Publish(null, null, BackLeft, BackRight);
         }
 
@@ -255,6 +256,94 @@ namespace LivingWorld.Core
             Require(NpcDomain.Hands, caller);
             DouseTorchCore();
             Human.EquipBestWeapon(target, null, null, null);
+        }
+
+        /// <summary>
+        /// Keeps a one-handed weapon paired with the actor's shield during combat.
+        /// Native EquipItem wipes the back slots and native weapon choice never re-equips
+        /// a shield, so after the first weapon swap a guard fought sword-only for the rest
+        /// of the 2026-10-23 session. Never interrupts an attack, block or bow draw.
+        /// </summary>
+        public bool PairShield(NpcBehavior caller)
+        {
+            Require(NpcDomain.Hands, caller);
+            if (Human.InAttack() || Human.IsDrawingBow() || Human.IsBlocking()) return false;
+            ItemDrop.ItemData right = RightItem, left = LeftItem;
+            if (!CombatHands.ShouldPairShield(TypeOf(right), left != null)) return false;
+            ItemDrop.ItemData shield = FindShield();
+            if (shield == null) return false;
+            return Human.EquipItem(shield, false);
+        }
+
+        /// <summary>
+        /// Gives this actor's own bow copies a minimum engagement range. Native
+        /// Humanoid.EquipBestWeapon skips any weapon whose m_aiAttackRangeMin exceeds the
+        /// target distance (verified in IL), so up close the game itself picks the sword.
+        /// The global bow definition is untouched.
+        /// </summary>
+        public int TuneRangedWeapons(NpcBehavior caller)
+        {
+            Require(NpcDomain.Hands, caller);
+            Inventory inventory = Human.GetInventory();
+            if (inventory == null) return 0;
+            int tuned = 0;
+            foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+            {
+                if (item == null || item.m_shared == null || !CombatHands.IsRanged(TypeOf(item))) continue;
+                if (item.m_shared.m_aiAttackRangeMin >= CombatHands.RangedMinimum) continue;
+                item.m_shared = (ItemDrop.ItemData.SharedData)NativeApi.CloneObject.Invoke(item.m_shared, null);
+                item.m_shared.m_aiAttackRangeMin = CombatHands.RangedMinimum;
+                tuned++;
+            }
+            return tuned;
+        }
+
+        public int AmmoCount
+        {
+            get
+            {
+                Inventory inventory = Human.GetInventory();
+                if (inventory == null) return 0;
+                int count = 0;
+                foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+                    if (item != null && item.m_shared != null && item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Ammo)
+                        count += item.m_stack;
+                return count;
+            }
+        }
+
+        ItemDrop.ItemData FindShield()
+        {
+            Inventory inventory = Human.GetInventory();
+            if (inventory == null) return null;
+            foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+                if (item != null && item.m_shared != null && item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield)
+                    return item;
+            return null;
+        }
+
+        // Saved actors that already lost the shield from their back get it back on the next stow.
+        void RestoreShieldToBack()
+        {
+            if (BackLeft != null || LeftItem != null || RightItem != null) return;
+            if (!CombatHands.ShouldPairShield(TypeOf(BackRight), false)) return;
+            ItemDrop.ItemData shield = FindShield();
+            if (shield != null && !shield.m_equipped) NativeApi.HiddenLeftItem.SetValue(Human, shield);
+        }
+
+        static CombatHands.Kind TypeOf(ItemDrop.ItemData item)
+        {
+            if (item == null || item.m_shared == null) return CombatHands.Kind.None;
+            switch (item.m_shared.m_itemType)
+            {
+                case ItemDrop.ItemData.ItemType.OneHandedWeapon: return CombatHands.Kind.OneHanded;
+                case ItemDrop.ItemData.ItemType.Shield: return CombatHands.Kind.Shield;
+                case ItemDrop.ItemData.ItemType.Bow: return CombatHands.Kind.Ranged;
+                case ItemDrop.ItemData.ItemType.Torch: return CombatHands.Kind.Torch;
+                case ItemDrop.ItemData.ItemType.TwoHandedWeapon:
+                case ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft: return CombatHands.Kind.TwoHanded;
+                default: return CombatHands.Kind.Other;
+            }
         }
 
         /// <summary>Publish whatever native combat currently holds without changing it.</summary>

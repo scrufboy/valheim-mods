@@ -279,4 +279,21 @@ namespace LivingWorld.Core
             return previouslyNear ? nearestDistance <= Tuning.BuiltLightExit : nearestDistance <= Tuning.BuiltLightEnter;
         }
     }
+
+    /// <summary>Pure combat-hand rules (no Unity), so they are ledger-tested.</summary>
+    public static class CombatHands
+    {
+        public enum Kind { None, OneHanded, Shield, Ranged, TwoHanded, Torch, Other }
+
+        /// <summary>Bows are not chosen by native combat when the target is closer than this.</summary>
+        public const float RangedMinimum = 8f;
+
+        public static bool IsRanged(Kind kind) { return kind == Kind.Ranged; }
+
+        /// <summary>A shield belongs beside a one-handed weapon whose off hand is free.</summary>
+        public static bool ShouldPairShield(Kind right, bool leftOccupied)
+        {
+            return right == Kind.OneHanded && !leftOccupied;
+        }
+    }
 }

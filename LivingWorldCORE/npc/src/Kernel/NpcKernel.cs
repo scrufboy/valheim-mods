@@ -39,6 +39,11 @@ namespace LivingWorld.Core
         public int Faults { get; private set; }
         public int PhaseChanges { get; private set; }
         public string LastViolation { get; private set; }
+        public bool Died { get; private set; }
+        public string LastAttackerName { get; private set; }
+
+        /// <summary>Raised once when a companion leaves the world: "death" or "unloaded/destroyed".</summary>
+        public static event Action<NpcKernel, string> Removed;
 
         void Awake()
         {
@@ -65,7 +70,16 @@ namespace LivingWorld.Core
             claims = new NpcDomain[behaviors.Count];
             for (int i = 0; i < behaviors.Count; i++) claims[i] = behaviors[i].Claims;
 
-            if (body.Human != null) body.Human.m_onDamaged += OnDamaged;
+            if (body.Human != null)
+            {
+                body.Human.m_onDamaged += OnDamaged;
+                body.Human.m_onDeath += OnDeath;
+            }
+        }
+
+        void OnDeath()
+        {
+            Died = true;
         }
 
         void Add(NpcBehavior behavior)
@@ -80,13 +94,28 @@ namespace LivingWorld.Core
         {
             ReleaseEverything("destroyed");
             Live.Remove(this);
-            if (body != null && body.Human != null) body.Human.m_onDamaged -= OnDamaged;
+            bool dead = Died || (body != null && body.Human != null && body.Human.IsDead());
+            Action<NpcKernel, string> removed = Removed;
+            if (removed != null)
+            {
+                try { removed(this, dead ? "death" : "unloaded/destroyed"); }
+                catch (Exception error) { CorePlugin.Warn("removal observer failed: " + error.Message); }
+            }
+            if (body != null && body.Human != null)
+            {
+                body.Human.m_onDamaged -= OnDamaged;
+                body.Human.m_onDeath -= OnDeath;
+            }
         }
 
         void OnDamaged(float damage, Character attacker)
         {
             lastDamageTime = Time.time;
-            if (attacker != null) lastAttacker = attacker;
+            if (attacker != null)
+            {
+                lastAttacker = attacker;
+                LastAttackerName = attacker.GetHoverName();
+            }
         }
 
         internal bool Holds(NpcBehavior behavior, NpcDomain domain)

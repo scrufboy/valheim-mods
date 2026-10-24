@@ -35,6 +35,9 @@ static class RegressionLedgerTests
         Run("0.6.0: guard never picks a sector a teammate holds", GuardAvoidsTeammate);
         Run("0.3.59/0.4.1: every male gets a beard, no female does", BeardsByModel);
         Run("0.3.59: every companion gets a real head-hair style", HairAlwaysChosen);
+        Run("1.0.0 live run: shield pairs with a one-handed weapon", ShieldPairsWithOneHanded);
+        Run("1.0.0 live run: no shield beside bow, two-hander or occupied off hand", ShieldNeverWrongPair);
+        Run("1.0.0 live run: bows have a minimum native engagement range", BowMinimumRange);
 
         Console.WriteLine();
         Console.WriteLine("Regression ledger: " + passed + " passed, " + failed + " failed.");
@@ -299,6 +302,26 @@ static class RegressionLedgerTests
             NpcIdentityRecord r = NpcIdentityRecord.Create(rng, 34, 22);
             Assert(r.Female ? r.Beard.Length == 0 : r.Beard.StartsWith("Beard"), "bad beard for " + r.Name);
         }
+    }
+
+    static void ShieldPairsWithOneHanded()
+    {
+        Assert(CombatHands.ShouldPairShield(CombatHands.Kind.OneHanded, false), "sword with free off hand must take the shield");
+    }
+
+    static void ShieldNeverWrongPair()
+    {
+        Assert(!CombatHands.ShouldPairShield(CombatHands.Kind.OneHanded, true), "off hand already used");
+        Assert(!CombatHands.ShouldPairShield(CombatHands.Kind.Ranged, false), "bow takes both hands");
+        Assert(!CombatHands.ShouldPairShield(CombatHands.Kind.TwoHanded, false), "two-hander");
+        Assert(!CombatHands.ShouldPairShield(CombatHands.Kind.Torch, false), "torch is not a weapon");
+        Assert(!CombatHands.ShouldPairShield(CombatHands.Kind.None, false), "empty hands");
+    }
+
+    static void BowMinimumRange()
+    {
+        Assert(CombatHands.IsRanged(CombatHands.Kind.Ranged) && !CombatHands.IsRanged(CombatHands.Kind.OneHanded), "ranged classification");
+        Assert(CombatHands.RangedMinimum >= 6f && CombatHands.RangedMinimum <= 12f, "bow minimum outside the sane 6-12 m band");
     }
 
     static void HairAlwaysChosen()

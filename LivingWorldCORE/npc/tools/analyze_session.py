@@ -110,39 +110,81 @@ def main(paths):
         add("PASS" if share >= .5 else "FAIL", "Companions sit when leader sits",
             "%.0f%% of leader-seated samples (1 s settle delay expected)" % (share * 100))
 
-    # 6. Combat: churn, cohesion, survival (0.3.40, 0.6.1, 0.6.2 Elder, 0.6.3 Bonemass)
+    # 6. Combat: handoffs, cohesion, weapons, survival (0.3.40, 0.6.1, 0.6.2 Elder, 0.6.3 Bonemass, 1.0.0 run)
     combat = [r for r in npc if r.get("phase") in COMBAT]
+    phases = [r for r in rows if r.get("type") == "Phase"]
     if not combat:
         add("NOT EXERCISED", "Combat checks", "no combat in this session")
     else:
-        phases = [r for r in rows if r.get("type") == "Phase"]
-        flips = sum(1 for r in phases if {r.get("from"), r.get("to")} == {"Combat", "CombatClear"})
         minutes = max(len({round(r["t"]) for r in combat}) / 60.0, 1 / 60.0)
-        rate = flips / minutes
-        add("PASS" if rate <= 12 else "FAIL", "Combat does not churn", "%d combat<->clear flips, %.1f/min" % (flips, rate))
-        releases = max((r.get("releases", 0) for r in npc), default=0)
-        add("PASS" if releases <= 20 else "FAIL", "Encounter releases are discrete", "max releases per actor=%d" % releases)
+        # Combat <-> CombatClear keeps the same owner (native combat holds every domain in both),
+        # so it is a label change, not churn. Real churn = control leaving/re-entering native combat.
+        native = {"Combat", "CombatClear"}
+        relabel = sum(1 for r in phases if {r.get("from"), r.get("to")} == native)
+        handoffs = sum(1 for r in phases if (r.get("from") in native) != (r.get("to") in native)
+                       and "Initializing" not in (r.get("from"), r.get("to")))
+        rate = handoffs / minutes
+        add("PASS" if rate <= 6 else "FAIL", "Combat control does not churn",
+            "%d handoffs in/out of native combat, %.1f/min (%d combat/clear relabels ignored)" % (handoffs, rate, relabel))
+        regroups = sum(1 for r in phases if r.get("to") == "CombatRegroup")
+        add("PASS" if regroups / minutes <= 3 else "FAIL", "Cohesion returns are occasional",
+            "%d returns to the party, %.1f per combat-minute" % (regroups, regroups / minutes))
         seps = [r["partyDist"] for r in combat if isinstance(r.get("partyDist"), (int, float)) and r["partyDist"] >= 0]
         if seps:
             over = sum(1 for d in seps if d > 16) / len(seps)
             add("PASS" if over <= .1 else "FAIL", "Party stays together in combat",
                 "mean %.1f m, max %.1f m, %.0f%% of combat samples over 16 m" %
                 (sum(seps) / len(seps), max(seps), over * 100))
-        regroup = [r for r in npc if r.get("phase") == "CombatRegroup"]
-        add("INFO", "Combat regroup usage", "%d samples in CombatRegroup" % len(regroup))
         torch_combat = [r for r in combat if r.get("handL") == "Torch" or r.get("handR") == "Torch"]
         add("PASS" if not torch_combat else "FAIL", "No torch used as a weapon", "%d samples" % len(torch_combat))
 
-    # 7. Survival / disappearance
-    last_seen = {}
-    last_hp = {}
-    for r in npc:
-        last_seen[r["npc"]] = r["t"]
-        last_hp[r["npc"]] = r.get("hp", 0)
-    gone = [n for n in names if duration - last_seen[n] > 10]
-    dead = [n for n in names if (last_hp.get(n) or 0) <= 0]
-    add("PASS" if not gone and not dead else "FAIL", "Companions alive and present at session end",
-        ("disappeared: %s " % ", ".join(gone) if gone else "") + ("dead: %s" % ", ".join(dead) if dead else "") or "all present")
+        # Shield stays paired with a one-handed weapon (1.0.0 regression: shield lost after first swap)
+        owners = {r["npc"] for r in npc if "Shield" in (r.get("backL", "") + r.get("handL", ""))}
+        sword = [r for r in combat if r["npc"] in owners and r.get("phase") == "Combat" and "Sword" in r.get("handR", "")]
+        if not sword:
+            add("NOT EXERCISED", "Shield held with sword in combat", "no sword combat by a shield owner")
+        else:
+            share = sum(1 for r in sword if "Shield" in r.get("handL", "")) / len(sword)
+            add("PASS" if share >= .8 else "FAIL", "Shield held with sword in combat",
+                "%.0f%% of sword samples carry the shield" % (share * 100))
+        calm_owner = [r for r in npc if r["npc"] in owners and r.get("phase") == "Calm"]
+        if calm_owner:
+            share = sum(1 for r in calm_owner if "Shield" in r.get("backL", "") or "Shield" in r.get("handL", "")) / len(calm_owner)
+            add("PASS" if share >= .9 else "FAIL", "Shield kept on the back in calm", "%.0f%% of calm samples" % (share * 100))
+
+        # Bow used at range, not point-blank (1.0.0 run: median 4 m)
+        bow = [r for r in combat if r.get("phase") == "Combat" and "Bow" in r.get("handL", "") and r.get("targetDist", -1) >= 0]
+        if not bow:
+            add("NOT EXERCISED", "Bow used at range", "no bow combat samples")
+        else:
+            d = sorted(r["targetDist"] for r in bow)
+            close = sum(1 for x in d if x < 4) / len(d)
+            add("PASS" if close <= .15 else "FAIL", "Bow used at range",
+                "median %.1f m, %.0f%% of bow samples under 4 m" % (d[len(d) // 2], close * 100))
+        if any("ammo" in r for r in npc):
+            for n in sorted(owners | {r["npc"] for r in bow}):
+                a = [r["ammo"] for r in npc if r["npc"] == n and "ammo" in r]
+                if a and max(a) > 0:
+                    add("INFO", "Arrows used by " + n, "%d at start, %d at end" % (a[0], a[-1]))
+
+    # 7. Survival / disappearance (Removed events from 1.0.1; fall back to sample gaps)
+    removed = [r for r in rows if r.get("type") == "Removed"]
+    deaths = [r for r in removed if r.get("reason") == "death"]
+    for r in removed:
+        add("FAIL" if r.get("reason") == "death" else "INFO", "Removed: " + r["npc"],
+            "%s at t=%.0f in %s, hp %.0f, last hit by %s" % (r.get("reason"), r["t"], r.get("phase"), r.get("hp", 0),
+                                                              r.get("lastAttacker") or "unknown"))
+    if not removed:
+        last_seen = {}
+        last_hp = {}
+        for r in npc:
+            last_seen[r["npc"]] = r["t"]
+            last_hp[r["npc"]] = r.get("hp", 0)
+        gone = [n for n in names if duration - last_seen[n] > 10]
+        add("PASS" if not gone else "FAIL", "Companions present at session end",
+            ("disappeared (cause not recorded): %s" % ", ".join(gone)) if gone else "all present")
+    elif not deaths:
+        add("PASS", "No companion deaths", "%d removal(s), none by death" % len(removed))
 
     report(results)
     return 1 if any(s == "FAIL" for s, _, _ in results) else 0

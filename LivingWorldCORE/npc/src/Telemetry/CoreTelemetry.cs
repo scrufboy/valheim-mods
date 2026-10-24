@@ -20,7 +20,7 @@ namespace LivingWorld.Telemetry
     {
         public const string Guid = "local.livingworld.telemetry";
         public const string Version = CorePlugin.Version;
-        const int Schema = 10;
+        const int Schema = 10; // 1.0.1 adds fields only; schema-10 readers still parse it
         const float SampleSeconds = .5f;
         const long MaxBytes = 64L * 1024L * 1024L;
 
@@ -47,7 +47,7 @@ namespace LivingWorld.Telemetry
             if (fault) return;
             try
             {
-                if (!active) { Start(); return; }
+                if (!active) { BeginSession(); return; }
                 ObserveEdges();
                 float now = Time.realtimeSinceStartup;
                 if (now >= nextSample) { nextSample = now + SampleSeconds; Sample(); }
@@ -64,7 +64,8 @@ namespace LivingWorld.Telemetry
             }
         }
 
-        void Start()
+        // Not named Start: Unity calls a MonoBehaviour's Start() in the main menu (1.0.0 bug).
+        void BeginSession()
         {
             string directory = Path.Combine(Paths.BepInExRootPath, "LivingWorldTelemetry");
             Directory.CreateDirectory(directory);
@@ -81,6 +82,7 @@ namespace LivingWorld.Telemetry
             lastViolations.Clear();
             lastTorch.Clear();
             active = true;
+            if (!subscribed) { NpcKernel.Removed += OnRemoved; subscribed = true; }
             Begin("RunStart");
             Str("core", CorePlugin.Version); Num("schema", Schema); Str("world", ZNet.instance.GetWorldName());
             Str("player", Player.m_localPlayer.GetPlayerName()); Bool("registered", CorePlugin.Registered);
@@ -168,8 +170,22 @@ namespace LivingWorld.Telemetry
                 Num("slot", kernel.Frame.Board.FormationSlot); Num("leaseDist", kernel.Frame.Board.FormationDistance);
                 Num("releases", body.EncounterReleases); Num("violations", kernel.DomainViolations); Num("faults", kernel.Faults);
                 Num("clearQuiet", kernel.Arbiter.QuietSeconds);
+                Bool("attacking", body.Human.InAttack()); Bool("drawingBow", body.Human.IsDrawingBow());
+                Bool("blocking", body.Human.IsBlocking()); Num("ammo", body.AmmoCount);
                 End();
             }
+        }
+
+        bool subscribed;
+
+        void OnRemoved(NpcKernel kernel, string reason)
+        {
+            if (!active || writer == null || kernel == null) return;
+            Character c = kernel.GetComponent<Character>();
+            Begin("Removed"); Actor(kernel); Str("reason", reason); Str("phase", kernel.Frame.Phase.ToString());
+            Num("hp", c == null ? 0f : c.GetHealth()); Str("lastAttacker", kernel.LastAttackerName ?? "");
+            End();
+            writer.Flush();
         }
 
         void Actor(NpcKernel kernel)
@@ -222,6 +238,10 @@ namespace LivingWorld.Telemetry
             return sb.ToString();
         }
 
-        void OnDestroy() { if (active) Stop("shutdown"); }
+        void OnDestroy()
+        {
+            if (subscribed) NpcKernel.Removed -= OnRemoved;
+            if (active) Stop("shutdown");
+        }
     }
 }
