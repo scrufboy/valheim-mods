@@ -298,6 +298,32 @@ namespace LivingWorld.Core
             return tuned;
         }
 
+        public bool ShieldInHand
+        {
+            get
+            {
+                ItemDrop.ItemData left = LeftItem;
+                return left != null && left.m_shared != null && left.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield;
+            }
+        }
+
+        public int BlockRaises { get; private set; }
+
+        /// <summary>Raise or lower the shield. Native code does the rest (animation, sync, parry, stamina, stagger).</summary>
+        public void SetBlocking(NpcBehavior caller, bool raise)
+        {
+            Require(NpcDomain.Hands, caller);
+            bool current = (bool)NativeApi.Blocking.GetValue(Human);
+            if (current == raise) return;
+            NativeApi.Blocking.SetValue(Human, raise);
+            if (raise) BlockRaises++;
+        }
+
+        internal void LowerBlockUnchecked()
+        {
+            if (Human != null && NativeApi.Blocking != null && IsOwner) NativeApi.Blocking.SetValue(Human, false);
+        }
+
         public int AmmoCount
         {
             get
@@ -358,6 +384,7 @@ namespace LivingWorld.Core
         {
             if (!IsOwner) return;
             DouseTorchCore();
+            LowerBlockUnchecked();
             if (crouching) { crouching = false; Anim.SetBool("crouching", false); }
             if (sitting) { sitting = false; Anim.SetBool("emote_sit", false); Anim.SetTrigger("emote_stop"); }
             RestorePaceUnchecked();

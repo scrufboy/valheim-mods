@@ -81,6 +81,7 @@ namespace LivingWorld.Telemetry
             lastPhase.Clear();
             lastViolations.Clear();
             lastTorch.Clear();
+            lastBlock.Clear();
             active = true;
             if (!subscribed) { NpcKernel.Removed += OnRemoved; subscribed = true; }
             Begin("RunStart");
@@ -122,6 +123,22 @@ namespace LivingWorld.Telemetry
                     lastViolations[kernel] = kernel.DomainViolations;
                     Begin("DomainViolation"); Actor(kernel); Num("count", kernel.DomainViolations);
                     Str("last", kernel.LastViolation); End();
+                }
+                NativeCombatBehavior combat = Combat(kernel);
+                bool blockUp = combat != null && combat.Block != null && combat.Block.Raised;
+                bool wasUp;
+                bool known = lastBlock.TryGetValue(kernel, out wasUp);
+                if (!known || wasUp != blockUp)
+                {
+                    lastBlock[kernel] = blockUp;
+                    if (known || blockUp)
+                    {
+                        Begin(blockUp ? "BlockRaise" : "BlockLower"); Actor(kernel);
+                        Str("reason", combat == null || combat.Block == null ? "" : combat.Block.Reason);
+                        Str("threat", combat == null ? "" : combat.BlockThreat);
+                        Num("hp", kernel.Body.Human.GetHealth());
+                        End();
+                    }
                 }
                 bool torch = kernel.Body != null && kernel.Body.TorchInHand;
                 bool wasTorch;
@@ -172,11 +189,22 @@ namespace LivingWorld.Telemetry
                 Num("clearQuiet", kernel.Arbiter.QuietSeconds);
                 Bool("attacking", body.Human.InAttack()); Bool("drawingBow", body.Human.IsDrawingBow());
                 Bool("blocking", body.Human.IsBlocking()); Num("ammo", body.AmmoCount);
+                Bool("shieldInHand", body.ShieldInHand); Num("blockRaises", body.BlockRaises);
+                NativeCombatBehavior combat = Combat(kernel);
+                Str("block", combat == null || combat.Block == null ? "" : combat.Block.Reason);
+                Str("blockThreat", combat == null ? "" : combat.BlockThreat);
                 End();
             }
         }
 
         bool subscribed;
+        readonly Dictionary<NpcKernel, bool> lastBlock = new Dictionary<NpcKernel, bool>();
+
+        static NativeCombatBehavior Combat(NpcKernel kernel)
+        {
+            foreach (NpcBehavior b in kernel.Behaviors) { NativeCombatBehavior c = b as NativeCombatBehavior; if (c != null) return c; }
+            return null;
+        }
 
         void OnRemoved(NpcKernel kernel, string reason)
         {

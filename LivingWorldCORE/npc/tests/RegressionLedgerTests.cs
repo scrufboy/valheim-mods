@@ -3,6 +3,7 @@
 // The build refuses to package if any of these fail.
 using System;
 using System.Collections.Generic;
+using System.Collections.Generic;
 using LivingWorld.Core;
 
 static class RegressionLedgerTests
@@ -38,6 +39,14 @@ static class RegressionLedgerTests
         Run("1.0.0 live run: shield pairs with a one-handed weapon", ShieldPairsWithOneHanded);
         Run("1.0.0 live run: no shield beside bow, two-hander or occupied off hand", ShieldNeverWrongPair);
         Run("1.0.0 live run: bows have a minimum native engagement range", BowMinimumRange);
+        Run("Block: native AI never blocks, so we raise after a human reaction delay", BlockAfterReaction);
+        Run("Block: no shield in hand, no block", BlockNeedsShield);
+        Run("Block: never while attacking, drawing or staggered", BlockNeverWhileBusy);
+        Run("Block: melee only in close quarters and in front", BlockMeleeCloseAndFront);
+        Run("Block: projectile only when aimed at this NPC", BlockProjectileTargeted);
+        Run("Block: enemy attacking someone else is ignored", BlockIgnoresOthers);
+        Run("Block: maximum hold then cooldown (no perfect turtle)", BlockHoldAndCooldown);
+        Run("Block: lowered the moment the attack ends", BlockLowersWhenOver);
 
         Console.WriteLine();
         Console.WriteLine("Regression ledger: " + passed + " passed, " + failed + " failed.");
@@ -322,6 +331,75 @@ static class RegressionLedgerTests
     {
         Assert(CombatHands.IsRanged(CombatHands.Kind.Ranged) && !CombatHands.IsRanged(CombatHands.Kind.OneHanded), "ranged classification");
         Assert(CombatHands.RangedMinimum >= 6f && CombatHands.RangedMinimum <= 12f, "bow minimum outside the sane 6-12 m band");
+    }
+
+    static List<ThreatObservation> One(float d, bool attacking, bool me, bool ranged, bool front)
+    {
+        return new List<ThreatObservation> { new ThreatObservation { Distance = d, Attacking = attacking, TargetsMe = me, Ranged = ranged, InFront = front } };
+    }
+
+    static bool Run(BlockPolicy b, float from, float to, bool shield, bool busy, List<ThreatObservation> t)
+    {
+        bool r = false;
+        for (float now = from; now <= to + 1e-4f; now += .1f) r = b.Step(now, shield, busy, t);
+        return r;
+    }
+
+    static void BlockAfterReaction()
+    {
+        var b = new BlockPolicy(.2f);
+        var t = One(2f, true, true, false, true);
+        Assert(!b.Step(0f, true, false, t), "raised with zero reaction time");
+        Assert(Run(b, .1f, .3f, true, false, t), "not raised after reaction delay");
+    }
+
+    static void BlockNeedsShield()
+    {
+        var b = new BlockPolicy(.12f);
+        Assert(!Run(b, 0f, 1f, false, false, One(2f, true, true, false, true)), "blocked without a shield");
+    }
+
+    static void BlockNeverWhileBusy()
+    {
+        var b = new BlockPolicy(.12f);
+        Assert(!Run(b, 0f, 1f, true, true, One(2f, true, true, false, true)), "blocked during own attack");
+    }
+
+    static void BlockMeleeCloseAndFront()
+    {
+        Assert(!Run(new BlockPolicy(.12f), 0f, 1f, true, false, One(6f, true, true, false, true)), "melee block at 6 m");
+        Assert(!Run(new BlockPolicy(.12f), 0f, 1f, true, false, One(2f, true, true, false, false)), "melee block facing away");
+        Assert(Run(new BlockPolicy(.12f), 0f, .5f, true, false, One(3f, true, true, false, true)), "no block at 3 m in front");
+    }
+
+    static void BlockProjectileTargeted()
+    {
+        Assert(Run(new BlockPolicy(.12f), 0f, .5f, true, false, One(20f, true, true, true, false)), "no block vs aimed arrow at 20 m");
+        Assert(!Run(new BlockPolicy(.12f), 0f, 1f, true, false, One(40f, true, true, true, true)), "block vs arrow beyond 30 m");
+    }
+
+    static void BlockIgnoresOthers()
+    {
+        Assert(!Run(new BlockPolicy(.12f), 0f, 1f, true, false, One(2f, true, false, false, true)), "blocked an attack aimed at someone else");
+    }
+
+    static void BlockHoldAndCooldown()
+    {
+        var b = new BlockPolicy(.12f);
+        var t = One(2f, true, true, false, true);
+        Run(b, 0f, .3f, true, false, t);
+        Assert(b.Raised, "not raised");
+        Run(b, .4f, 1.3f, true, false, t);
+        Assert(!b.Raised, "held past the maximum");
+        Assert(!b.Step(1.4f, true, false, t), "re-raised inside the cooldown");
+        Assert(Run(b, 1.5f, 2.2f, true, false, t), "never re-raised after cooldown");
+    }
+
+    static void BlockLowersWhenOver()
+    {
+        var b = new BlockPolicy(.12f);
+        Run(b, 0f, .3f, true, false, One(2f, true, true, false, true));
+        Assert(!b.Step(.4f, true, false, One(2f, false, true, false, true)), "stayed up after the attack ended");
     }
 
     static void HairAlwaysChosen()

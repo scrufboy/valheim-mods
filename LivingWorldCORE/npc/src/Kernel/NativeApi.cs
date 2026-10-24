@@ -31,6 +31,10 @@ namespace LivingWorld.Core
         internal static readonly MethodInfo SetAlerted = Method(typeof(MonsterAI), "SetAlerted", typeof(bool));
         internal static readonly MethodInfo LookAt = Method(typeof(BaseAI), "LookAt", typeof(Vector3));
 
+        // Blocking. Only Player.SetControls ever sets this (verified in IL), which is why NPCs
+        // never block. Humanoid.UpdateBlock/IsBlocking/BlockAttack handle everything after it.
+        internal static readonly FieldInfo Blocking = Field(typeof(Character), "m_blocking");
+
         // Visual identity.
         internal static readonly FieldInfo HairInstance = Field(typeof(VisEquipment), "m_hairItemInstance");
         internal static readonly FieldInfo BeardInstance = Field(typeof(VisEquipment), "m_beardItemInstance");

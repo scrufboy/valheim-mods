@@ -4,6 +4,7 @@
 // "what is this NPC doing right now" lives here so it can be tested offline
 // and so no gameplay module can quietly reinterpret it.
 using System;
+using System.Collections.Generic;
 
 namespace LivingWorld.Core
 {
@@ -294,6 +295,108 @@ namespace LivingWorld.Core
         public static bool ShouldPairShield(Kind right, bool leftOccupied)
         {
             return right == Kind.OneHanded && !leftOccupied;
+        }
+    }
+
+    /// <summary>One enemy as the block rule sees it this tick.</summary>
+    public struct ThreatObservation
+    {
+        public float Distance;
+        public bool Attacking;   // enemy is in an attack right now
+        public bool TargetsMe;   // enemy AI's current target is this NPC
+        public bool Ranged;      // projectile attack (bow, thrown rock, spit)
+        public bool InFront;     // within the front arc this NPC can block
+    }
+
+    /// <summary>
+    /// When to raise and lower a shield. Native Valheim only raises a block from player
+    /// input (Player.SetControls); everything after the raise — animation, network sync,
+    /// parry window, stamina math, stagger — is native. NPCs have no stamina limit, so this
+    /// rule supplies the human limits: a reaction delay, a maximum hold, and a cooldown.
+    /// Close quarters for melee; arrows and thrown rocks only when aimed at this NPC.
+    /// </summary>
+    public sealed class BlockPolicy
+    {
+        public const float MeleeRadius = 3.5f;
+        public const float RangedRadius = 30f;
+        public const float MaxHold = .9f;
+        public const float Cooldown = .5f;
+
+        readonly float reaction;
+        float threatSince = -1f;
+        float raisedAt = -1f;
+        float loweredAt = float.NegativeInfinity;
+
+        public bool Raised { get; private set; }
+        public string Reason { get; private set; }
+        public int Raises { get; private set; }
+        public bool AgainstRanged { get; private set; }
+
+        /// <param name="reactionSeconds">Per-person reaction time, 0.12 - 0.30 s.</param>
+        public BlockPolicy(float reactionSeconds)
+        {
+            reaction = Math.Max(.12f, Math.Min(.30f, reactionSeconds));
+            Reason = "idle";
+        }
+
+        public float Reaction { get { return reaction; } }
+
+        public static float ReactionFor(int stableSeed)
+        {
+            return .12f + ((stableSeed & 0x7fffffff) % 19) * .01f;   // .12 - .30 s
+        }
+
+        public bool Step(float now, bool holdsShield, bool selfBusy, IList<ThreatObservation> threats)
+        {
+            int index;
+            bool incoming = Incoming(threats, out index);
+            if (!holdsShield || selfBusy)
+            {
+                Lower(now, !holdsShield ? "no shield in hand" : "own attack/draw/stagger");
+                threatSince = -1f;
+                return Raised;
+            }
+            if (Raised)
+            {
+                if (!incoming) { Lower(now, "threat over"); threatSince = -1f; }
+                else if (now - raisedAt >= MaxHold) { Lower(now, "max hold"); threatSince = -1f; }
+                else Reason = AgainstRanged ? "holding vs projectile" : "holding vs melee";
+                return Raised;
+            }
+            if (!incoming) { threatSince = -1f; Reason = "no incoming attack"; return false; }
+            if (threatSince < 0f) threatSince = now;
+            if (now - loweredAt < Cooldown) { Reason = "cooldown"; return false; }
+            if (now - threatSince < reaction) { Reason = "reacting"; return false; }
+            Raised = true;
+            raisedAt = now;
+            Raises++;
+            AgainstRanged = threats[index].Ranged;
+            Reason = AgainstRanged ? "raised vs projectile" : "raised vs melee";
+            return true;
+        }
+
+        static bool Incoming(IList<ThreatObservation> threats, out int index)
+        {
+            index = -1;
+            if (threats == null) return false;
+            float best = float.PositiveInfinity;
+            for (int i = 0; i < threats.Count; i++)
+            {
+                ThreatObservation t = threats[i];
+                if (!t.Attacking || !t.TargetsMe) continue;
+                bool inRange = t.Ranged ? t.Distance <= RangedRadius : (t.Distance <= MeleeRadius && t.InFront);
+                if (!inRange || t.Distance >= best) continue;
+                best = t.Distance;
+                index = i;
+            }
+            return index >= 0;
+        }
+
+        void Lower(float now, string why)
+        {
+            if (Raised) loweredAt = now;
+            Raised = false;
+            Reason = why;
         }
     }
 }

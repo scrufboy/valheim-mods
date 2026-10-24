@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LivingWorld.Core
@@ -10,6 +11,13 @@ namespace LivingWorld.Core
     public sealed class NativeCombatBehavior : NpcBehavior
     {
         Character prepared;
+        BlockPolicy block;
+        Character blockThreat;
+        readonly List<ThreatObservation> threats = new List<ThreatObservation>(8);
+        readonly List<Character> threatActors = new List<Character>(8);
+
+        public BlockPolicy Block { get { return block; } }
+        public string BlockThreat { get { return blockThreat == null ? "" : blockThreat.GetHoverName(); } }
 
         public override string Name { get { return "combat"; } }
         public override NpcDomain Claims { get { return NpcDomain.All; } }
@@ -40,6 +48,7 @@ namespace LivingWorld.Core
             }
             // Native choice may swap bow -> sword at any time; keep the shield paired.
             Body.PairShield(this);
+            StepBlock(f);
             Body.PublishObserved(this);
             Status = f.Phase == NpcPhase.CombatClear
                 ? "verifying clear " + f.Senses.SecondsSinceDamaged.ToString("0.0") + "s since hit"
@@ -49,7 +58,69 @@ namespace LivingWorld.Core
         public override void Exit(NpcFrame f, string reason)
         {
             prepared = null;
+            Body.SetBlocking(this, false);
+            blockThreat = null;
             Status = "released: " + reason;
+        }
+
+        // Shield discipline inside native combat: same owner, same tick, no extra loop.
+        void StepBlock(NpcFrame f)
+        {
+            if (block == null) block = new BlockPolicy(BlockPolicy.ReactionFor(Body.Root.name.GetStableHashCode() ^ Body.Root.GetInstanceID()));
+            Humanoid me = Body.Human;
+            bool busy = me.InAttack() || me.IsDrawingBow() || me.IsStaggering();
+            ObserveThreats();
+            bool raise = block.Step(f.Now, Body.ShieldInHand, busy, threats);
+            if (raise)
+            {
+                int best = -1;
+                float d = float.PositiveInfinity;
+                for (int i = 0; i < threats.Count; i++)
+                    if (threats[i].Attacking && threats[i].TargetsMe && threats[i].Distance < d) { d = threats[i].Distance; best = i; }
+                blockThreat = best >= 0 ? threatActors[best] : blockThreat;
+            }
+            else blockThreat = null;
+            Body.SetBlocking(this, raise);
+        }
+
+        // Turn to face the projectile shooter while the shield is up (native block needs a frontal hit).
+        public override void LateFrame(NpcFrame f)
+        {
+            if (block != null && block.Raised && block.AgainstRanged && blockThreat != null)
+                Body.LookAt(this, blockThreat.GetCenterPoint());
+        }
+
+        void ObserveThreats()
+        {
+            threats.Clear();
+            threatActors.Clear();
+            Humanoid me = Body.Human;
+            Vector3 position = me.transform.position;
+            Vector3 forward = me.transform.forward;
+            foreach (Character other in Character.GetAllCharacters())
+            {
+                if (threats.Count == 8) break;
+                if (other == null || other == me || other.IsDead()) continue;
+                Vector3 offset = other.transform.position - position;
+                float distance = offset.magnitude;
+                if (distance > BlockPolicy.RangedRadius || !BaseAI.IsEnemy(me, other)) continue;
+                BaseAI ai = other.GetBaseAI();
+                MonsterAI monster = ai as MonsterAI;
+                Humanoid humanoid = other as Humanoid;
+                ItemDrop.ItemData weapon = humanoid == null ? null : humanoid.GetCurrentWeapon();
+                bool ranged = weapon != null && weapon.m_shared != null && weapon.m_shared.m_attack != null &&
+                    weapon.m_shared.m_attack.m_attackType == Attack.AttackType.Projectile;
+                offset.y = 0f;
+                threats.Add(new ThreatObservation
+                {
+                    Distance = distance,
+                    Attacking = other.InAttack() || (humanoid != null && humanoid.IsDrawingBow()),
+                    TargetsMe = monster != null && monster.GetTargetCreature() == me,
+                    Ranged = ranged,
+                    InFront = offset.sqrMagnitude < .01f || Vector3.Angle(forward, offset) <= 70f
+                });
+                threatActors.Add(other);
+            }
         }
     }
 

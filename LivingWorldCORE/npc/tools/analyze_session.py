@@ -167,6 +167,21 @@ def main(paths):
                 if a and max(a) > 0:
                     add("INFO", "Arrows used by " + n, "%d at start, %d at end" % (a[0], a[-1]))
 
+    # 6b. Shield blocking (new in 1.0.2; native AI never blocks)
+    if any("blockRaises" in r for r in npc):
+        raises = [r for r in rows if r.get("type") == "BlockRaise"]
+        shield_melee = [r for r in combat if r.get("shieldInHand")] if combat else []
+        if not shield_melee:
+            add("NOT EXERCISED", "Shield blocks in close combat", "no combat with a shield in hand")
+        else:
+            vs_proj = sum(1 for r in raises if "projectile" in r.get("reason", ""))
+            add("PASS" if raises else "FAIL", "Shield blocks in close combat",
+                "%d raises (%d vs projectiles) over %d shield-in-hand combat samples" % (len(raises), vs_proj, len(shield_melee)))
+            up = [r for r in combat if r.get("blocking")]
+            share = len(up) / max(1, len(shield_melee))
+            add("PASS" if share <= .45 else "FAIL", "No turtling (shield not up most of the fight)",
+                "shield up in %.0f%% of shield-in-hand combat samples" % (share * 100))
+
     # 7. Survival / disappearance (Removed events from 1.0.1; fall back to sample gaps)
     removed = [r for r in rows if r.get("type") == "Removed"]
     deaths = [r for r in removed if r.get("reason") == "death"]
