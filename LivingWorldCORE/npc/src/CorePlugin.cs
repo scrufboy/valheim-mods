@@ -98,6 +98,8 @@ namespace LivingWorld.Core
                 PrefabManager.Instance.AddPrefab(new CustomPrefab(NpcFactory.Create(ArcherPrefab, player, archerItems, "archer"), false));
                 registered = true;
                 Report("Registered guard and archer native humans.");
+                try { CombatDataReport.Write(Report); }
+                catch (Exception e) { Report("DATA report failed: " + e.Message); }
             }
             catch (Exception error)
             {
