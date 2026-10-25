@@ -8,57 +8,36 @@ namespace Scrufboy.LivingWorld.Tooler
     internal static class LivingWorldToolerModules
     {
         internal static ToolerPage[] Create(
-            Action overview,
-            Action lifecycle,
-            Action community,
-            Action combat,
-            Action party,
+            Action companions,
             Action raids,
             Action player,
-            Action itemsAndSpawn,
+            Action spawn,
             Action world,
-            Action siteSurvey,
-            Action terrain,
-            Action mapAndAdmin,
-            Action danger,
-            Action console)
+            Action build,
+            Action admin)
         {
             return new[]
             {
-                new ToolerPage("Overview", ToolerDuty.Overview, overview),
-                new ToolerPage("Lifecycle", ToolerDuty.NpcLifecycle, lifecycle),
-                new ToolerPage("Community", ToolerDuty.CompanionCommunity, community),
-                new ToolerPage("Combat", ToolerDuty.CompanionCombat, combat),
-                new ToolerPage("Party", ToolerDuty.PartyControl, party),
+                new ToolerPage("Companions", ToolerDuty.Companions, companions),
                 new ToolerPage("Raids", ToolerDuty.RaidTesting, raids),
                 new ToolerPage("Player", ToolerDuty.PlayerTesting, player),
-                new ToolerPage("Items / Spawn", ToolerDuty.CatalogAndSpawn, itemsAndSpawn),
+                new ToolerPage("Spawn", ToolerDuty.CatalogAndSpawn, spawn),
                 new ToolerPage("World", ToolerDuty.WorldControl, world),
-                new ToolerPage("Site Survey", ToolerDuty.SiteSurvey, siteSurvey),
-                new ToolerPage("Terrain", ToolerDuty.TerrainControl, terrain),
-                new ToolerPage("Map / Admin", ToolerDuty.MapAndAdministration, mapAndAdmin),
-                new ToolerPage("Danger", ToolerDuty.ConfirmedDestructiveActions, danger),
-                new ToolerPage("Console", ToolerDuty.CommandBridge, console)
+                new ToolerPage("Build", ToolerDuty.BuildAndTerrain, build),
+                new ToolerPage("Admin", ToolerDuty.Administration, admin)
             };
         }
     }
 
     internal enum ToolerDuty
     {
-        Overview,
-        NpcLifecycle,
-        CompanionCommunity,
-        CompanionCombat,
-        PartyControl,
+        Companions,
         RaidTesting,
         PlayerTesting,
         CatalogAndSpawn,
         WorldControl,
-        SiteSurvey,
-        TerrainControl,
-        MapAndAdministration,
-        ConfirmedDestructiveActions,
-        CommandBridge
+        BuildAndTerrain,
+        Administration
     }
 
     internal sealed class ToolerPage

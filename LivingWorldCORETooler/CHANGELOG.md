@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.6.0
+
+- Living World pages reorganized from 14 to 7: Companions, Raids, Player, Spawn, World, Build, Admin.
+- Every control appears exactly once (lwparty had been on six pages); destructive actions stay on their own page behind the two-click confirmation; the separate Danger page is gone.
+- Removed about twenty buttons that called the retired 0.x `lwtest` commands; added the 1.0 companion commands: lwparty new/clean, lwstatus, lwheal, lwsummon, lwgoto.
+- Site Survey moved onto the Build page with terrain tools; Console moved onto Admin.
+- The four original Tooler pages and the Tooler core file are unchanged.
+
 ## 2.5.0
 
 - Added an isolated, controller-usable Site Survey module without removing or replacing any existing Tooler page.
