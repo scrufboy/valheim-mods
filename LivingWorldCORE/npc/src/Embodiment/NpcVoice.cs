@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Jotunn.Entities;
 using Jotunn.Managers;
 using UnityEngine;
 
@@ -29,7 +30,14 @@ namespace LivingWorld.Core
                 string name = "LWC_" + source.Replace("goblin_", "");
                 GameObject clone = PrefabManager.Instance.GetPrefab(name);
                 if (clone == null && PrefabManager.Instance.GetPrefab(source) != null)
+                {
                     clone = PrefabManager.Instance.CreateClonedPrefab(name, source);
+                    // 1.0.22: the Fuling sfx carry a ZNetView, so every line is a networked object with a
+                    // saved record. Unregistered, the game could not resolve "LWC_sfx_alerted" on reload
+                    // ("Missing prefab hash 1098461344") and the respawn flooded ZNetScene errors.
+                    if (clone != null && clone.GetComponent<ZNetView>() != null)
+                        PrefabManager.Instance.AddPrefab(new CustomPrefab(clone, false));
+                }
                 if (clone == null) { missing.Add(source); continue; }
                 ZSFX sfx = clone.GetComponent<ZSFX>();
                 if (sfx != null) { sfx.m_minPitch = MinPitch; sfx.m_maxPitch = MaxPitch; }
@@ -95,7 +103,16 @@ namespace LivingWorld.Core
             GameObject[] active;
             if (!Speaking.TryGetValue(body.GetInstanceID(), out active) || active == null) return false;
             bool cut = false;
-            foreach (GameObject go in active) if (go != null) { cut = true; UnityEngine.Object.Destroy(go); }
+            foreach (GameObject go in active)
+            {
+                if (go == null) continue;
+                cut = true;
+                // A networked line must leave through ZNetScene, or the scene keeps a dead entry and
+                // throws every frame it sweeps (1.0.17-1.0.21 respawn error floods).
+                ZNetView view = go.GetComponent<ZNetView>();
+                if (view != null && view.IsValid()) { if (view.IsOwner()) ZNetScene.instance.Destroy(go); }
+                else UnityEngine.Object.Destroy(go);
+            }
             Speaking.Remove(body.GetInstanceID());
             return cut;
         }
