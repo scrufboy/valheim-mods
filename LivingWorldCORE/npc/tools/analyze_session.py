@@ -302,7 +302,7 @@ def main(paths):
         kinds = defaultdict(int)
         for r in voice:
             kinds[r.get("line", "?")] += 1
-        add("PASS" if per <= 6 else "FAIL", "Voice is mostly silent",
+        add("PASS" if per <= 10 else "FAIL", "Voice is mostly silent",
             "%d lines, %.1f per combat-minute (%s)" % (len(voice), per, ", ".join("%s %d" % kv for kv in sorted(kinds.items())) or "none"))
 
     # 6i. Damage dealt (1.0.14): arrows and swings that land

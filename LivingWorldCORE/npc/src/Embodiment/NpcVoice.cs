@@ -89,12 +89,15 @@ namespace LivingWorld.Core
         }
 
         /// <summary>Being hit cuts off whatever this companion was shouting.</summary>
-        static void Silence(Character body)
+        /// <returns>true if a line was actually still playing and got cut off.</returns>
+        static bool Silence(Character body)
         {
             GameObject[] active;
-            if (!Speaking.TryGetValue(body.GetInstanceID(), out active) || active == null) return;
-            foreach (GameObject go in active) if (go != null) UnityEngine.Object.Destroy(go);
+            if (!Speaking.TryGetValue(body.GetInstanceID(), out active) || active == null) return false;
+            bool cut = false;
+            foreach (GameObject go in active) if (go != null) { cut = true; UnityEngine.Object.Destroy(go); }
             Speaking.Remove(body.GetInstanceID());
+            return cut;
         }
 
         internal static void OnNewTarget(NpcKernel kernel, Character enemy)
@@ -106,9 +109,12 @@ namespace LivingWorld.Core
         internal static void OnHurt(NpcKernel kernel, float damage)
         {
             Character body = kernel.Body.Human;
-            Silence(body);
-            if (!Policy.Hurt(Time.time, body.GetInstanceID(), damage, body.GetMaxHealth())) return;
+            bool interrupted = Silence(body);
+            VoicePolicy.HurtLine line = Policy.Hurt(Time.time, body.GetInstanceID(), damage, body.GetMaxHealth(),
+                interrupted, (float)Dice.NextDouble());
+            if (line == VoicePolicy.HurtLine.None) return;
             Say(kernel, "hit");
+            if (line != VoicePolicy.HurtLine.Devastated) return;
             NpcKernel partner = NearestPartner(kernel, 25f);
             if (partner != null) Pending[partner] = new KeyValuePair<float, string>(Time.time + VoicePolicy.PartnerReactDelay, "alerted");
         }

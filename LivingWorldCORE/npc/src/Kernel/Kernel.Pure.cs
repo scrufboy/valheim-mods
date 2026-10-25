@@ -581,6 +581,8 @@ namespace LivingWorld.Core
     {
         public const float NewEnemyChance = .7f, PartyCooldown = 4f, HeardMemory = 180f;
         public const float HurtFraction = .15f, HurtCooldown = 4f, PartnerReactDelay = .6f;
+        public const float GruntChance = .35f, GruntCooldown = 2.5f;          // tanking is audible, not every hit
+        public const float InterruptedChance = .8f, InterruptedCooldown = 1.5f; // hit mid-gloat: cut off, usually answers
         public const float MightyFraction = .25f, MightyChance = .35f, MightyCooldown = 10f;
 
         readonly System.Collections.Generic.Dictionary<int, float> heard = new System.Collections.Generic.Dictionary<int, float>();
@@ -598,13 +600,29 @@ namespace LivingWorld.Core
             return true;
         }
 
-        public bool Hurt(float now, int companionId, float damage, float maxHealth)
+        public enum HurtLine { None, Grunt, Devastated }
+
+        /// <param name="interrupted">the companion was speaking when hit (the line is cut off regardless).</param>
+        public HurtLine Hurt(float now, int companionId, float damage, float maxHealth, bool interrupted, float roll)
         {
-            if (maxHealth <= 0f || damage < HurtFraction * maxHealth) return false;
             float last;
-            if (lastHurt.TryGetValue(companionId, out last) && now - last < HurtCooldown) return false;
+            bool known = lastHurt.TryGetValue(companionId, out last);
+            float since = known ? now - last : float.PositiveInfinity;
+            if (maxHealth > 0f && damage >= HurtFraction * maxHealth)
+            {
+                if (since < HurtCooldown) return HurtLine.None;
+                lastHurt[companionId] = now;
+                return HurtLine.Devastated;
+            }
+            if (interrupted)
+            {
+                if (since < InterruptedCooldown || roll >= InterruptedChance) return HurtLine.None;
+                lastHurt[companionId] = now;
+                return HurtLine.Grunt;
+            }
+            if (since < GruntCooldown || roll >= GruntChance) return HurtLine.None;
             lastHurt[companionId] = now;
-            return true;
+            return HurtLine.Grunt;
         }
 
         public bool Mighty(float now, float damage, float targetMaxHealth, bool killed, float roll)

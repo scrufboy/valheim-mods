@@ -48,7 +48,8 @@ static class RegressionLedgerTests
         Run("Block: lowered the moment the attack ends", BlockLowersWhenOver);
         Run("Voice: one call-out per new enemy per party, never for one already seen", VoiceNewEnemyOnce);
         Run("Voice: party cooldown stops a chorus", VoicePartyCooldown);
-        Run("Voice: ordinary hits are silent; devastating hits call out, with a cooldown", VoiceHurt);
+        Run("Voice: devastating hits always cry out (cooldown); ordinary hits only sometimes", VoiceHurt);
+        Run("Voice: hit while gloating is cut off and usually answers", VoiceInterrupted);
         Run("Voice: mighty blows and kills taunt only rarely", VoiceMighty);
         Run("1.0.11 Moder: a flying target always gets the bow, even close", FlyingGetsBow);
         Run("Weapon: ground target far = bow, close = melee", GroundByDistance);
@@ -642,10 +643,20 @@ static class RegressionLedgerTests
     static void VoiceHurt()
     {
         var v = new VoicePolicy();
-        Assert(!v.Hurt(0f, 1, 20f, 250f), "cried out at an ordinary hit");
-        Assert(v.Hurt(0f, 1, 45f, 250f), "silent at a devastating hit");
-        Assert(!v.Hurt(1f, 1, 60f, 250f), "no cooldown on pain cries");
-        Assert(v.Hurt(1f, 2, 60f, 250f), "one companion's cooldown silenced the other");
+        Assert(v.Hurt(0f, 1, 45f, 250f, false, .99f) == VoicePolicy.HurtLine.Devastated, "silent at a devastating hit");
+        Assert(v.Hurt(1f, 1, 60f, 250f, false, .0f) == VoicePolicy.HurtLine.None, "no cooldown on pain cries");
+        Assert(v.Hurt(1f, 2, 60f, 250f, false, .99f) == VoicePolicy.HurtLine.Devastated, "one companion's cooldown silenced the other");
+        var w = new VoicePolicy();
+        Assert(w.Hurt(0f, 1, 20f, 250f, false, .9f) == VoicePolicy.HurtLine.None, "grunted at every ordinary hit");
+        Assert(w.Hurt(0f, 1, 20f, 250f, false, .1f) == VoicePolicy.HurtLine.Grunt, "never grunts at ordinary hits");
+        Assert(w.Hurt(1f, 1, 20f, 250f, false, .1f) == VoicePolicy.HurtLine.None, "grunts with no cooldown");
+    }
+
+    static void VoiceInterrupted()
+    {
+        var v = new VoicePolicy();
+        Assert(v.Hurt(0f, 1, 20f, 250f, true, .5f) == VoicePolicy.HurtLine.Grunt, "gloat cut off with no answer at 50% roll");
+        Assert(v.Hurt(.5f, 1, 20f, 250f, true, .1f) == VoicePolicy.HurtLine.None, "answers stack with no cooldown");
     }
 
     static void VoiceMighty()
