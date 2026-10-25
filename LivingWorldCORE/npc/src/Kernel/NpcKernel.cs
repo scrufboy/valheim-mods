@@ -237,6 +237,8 @@ namespace LivingWorld.Core
             frame.FallBackFrom = nearestEngagedPosition;
             if (phase != lastPhase)
             {
+                try { NpcVoice.OnPhaseChange(body.Human, lastPhase, phase); }
+                catch (Exception error) { CorePlugin.Warn("voice cue: " + error.Message); }
                 PhaseChanges++;
                 lastPhase = phase;
             }

@@ -29,6 +29,7 @@ ALLOWED = {
     "LivingWorld.Core.NpcAppearance": "identity setup before behavior starts",
     "LivingWorld.Core.NpcLeaderBinding": "one-time legacy tame migration",
     "LivingWorld.Core.NpcWetStatus": "native status replay (holds no behavior domain)",
+    "LivingWorld.Core.NpcVoice": "vanilla voice effects (presentation; holds no behavior domain)",
 }
 
 

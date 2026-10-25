@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.12";
+        public const string Version = "1.0.13";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -71,6 +71,9 @@ namespace LivingWorld.Core
             if (registered) return;
             try
             {
+                NpcVoice.Build();
+                Report(NpcVoice.Missing.Length == 0 ? "Companion voice: vanilla Fuling sounds, pitch 0.8-0.9." :
+                    "Companion voice missing sources: " + NpcVoice.Missing);
                 GameObject player = RequirePrefab("Player", false);
                 // No helmet: it hides native hair (0.4.0 lesson).
                 // Same kit, same behavior: the weapon follows from distance, not from a role.

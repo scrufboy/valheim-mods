@@ -40,7 +40,9 @@ namespace LivingWorld.Core
                 ConfigureCharacter(human, defaultItems);
                 ConfigureNetwork(root);
                 ConfigureVisuals(root);
-                ConfigureAi(root.AddComponent<MonsterAI>());
+                MonsterAI ai = root.AddComponent<MonsterAI>();
+                ConfigureAi(ai);
+                NpcVoice.Configure(human, ai);
 
                 NpcAppearance identity = root.AddComponent<NpcAppearance>();
                 identity.Role = role;
