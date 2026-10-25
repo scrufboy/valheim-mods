@@ -573,6 +573,37 @@ namespace LivingWorld.Core
     }
 
     /// <summary>
+    /// Vanilla gear tiers a companion can wear (lab: lwparty plains / lwgear). Same pieces a player
+    /// would craft at that point; no helmet (it hides native hair, 0.4.0 lesson). Non-player
+    /// inventories are not saved by Valheim (Humanoid.Start re-gives prefab items on every load),
+    /// so the chosen kit is recorded on the companion and re-applied when it loads.
+    /// </summary>
+    public static class CompanionKits
+    {
+        public const string Iron = "iron", Plains = "plains";
+        public const int MaxQuality = 4;
+
+        public static string[] Items(string kit)
+        {
+            switch ((kit ?? "").ToLowerInvariant())
+            {
+                case Iron: return new[] { "ArmorIronChest", "ArmorIronLegs", "CapeDeerHide", "BowFineWood", "ArrowWood", "SwordIron", "ShieldBanded" };
+                case Plains: return new[] { "ArmorPaddedCuirass", "ArmorPaddedGreaves", "CapeLinen", "BowDraugrFang", "ArrowNeedle", "SwordBlackmetal", "ShieldBlackmetal" };
+                default: return null;
+            }
+        }
+
+        /// <summary>The arrow a kit's quiver is resupplied with (wood when no kit is recorded).</summary>
+        public static string Arrow(string kit)
+        {
+            string[] items = Items(kit);
+            return items == null ? "ArrowWood" : items[4];
+        }
+
+        public static int ClampQuality(int quality) { return quality < 1 ? 1 : quality > MaxQuality ? MaxQuality : quality; }
+    }
+
+    /// <summary>
     /// Chained melee (1.0.17). Valheim continues a combo only when the next swing starts inside the
     /// current swing's chain window (anim event "chain") - the player does it by pressing attack
     /// mid-swing. Native AI never does (Humanoid.HaveQueuedChain = false; MonsterAI waits out its

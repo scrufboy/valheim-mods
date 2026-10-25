@@ -304,7 +304,8 @@ def main(paths):
         kinds = defaultdict(int)
         for r in voice:
             kinds[r.get("line", "?")] += 1
-        add("PASS" if per <= 10 else "FAIL", "Voice is mostly silent",
+        # 1.0.17: Brian approved the live level (14.3/combat-min with a Fuling horde); report, do not grade.
+        add("INFO", "Voice rate",
             "%d lines, %.1f per combat-minute (%s)" % (len(voice), per, ", ".join("%s %d" % kv for kv in sorted(kinds.items())) or "none"))
 
     # 6i. Damage dealt (1.0.14): arrows and swings that land
@@ -338,6 +339,24 @@ def main(paths):
                     100.0 * follow / len(melee)))
             add("PASS" if not far else "FAIL", "Follow-ups only within reach",
                 "%d of %d follow-ups started with the target over 3 m away" % (len(far), len(chains)))
+
+    # 6k. Gear tier (1.0.18 lab kits): what each companion wore and what the same enemies did to it
+    if any("kit" in r for r in npc):
+        kit_of = {}
+        for r in npc:
+            kit_of[r["npc"]] = "%s q%d" % (r.get("kit", "iron"), int(r.get("kitQ", 1)))
+        dmg = [r for r in rows if r.get("type") == "Damage" and r.get("attackerPrefab")]
+        tiers = sorted(set(kit_of.values()))
+        for tier in tiers:
+            mine = [r for r in dmg if kit_of.get(r["npc"]) == tier]
+            armor = sorted(r.get("armor", 0) for r in mine)
+            per = defaultdict(list)
+            for r in mine:
+                per[r["attackerPrefab"]].append(r.get("amount", 0))
+            parts = ["%s %.0f (n=%d)" % (k, sorted(v)[len(v) // 2], len(v)) for k, v in sorted(per.items(), key=lambda kv: -len(kv[1]))[:5]]
+            dead = sum(1 for r in rows if r.get("type") == "Removed" and r.get("reason") == "death" and kit_of.get(r.get("npc")) == tier)
+            add("INFO", "Gear " + tier, "armor %s; median hit taken: %s; deaths %d" % (
+                armor[len(armor) // 2] if armor else "?", ", ".join(parts) or "no hits", dead))
 
     # 6b. Shield blocking (new in 1.0.2; native AI never blocks)
     if start.get("cfgShieldBlocking") is False:

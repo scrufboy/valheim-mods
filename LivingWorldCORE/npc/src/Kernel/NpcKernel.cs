@@ -173,6 +173,7 @@ namespace LivingWorld.Core
                 return;
             }
             wasOwner = true;
+            if (appearance != null && appearance.Ready) body.ReapplyKitOnce();
             if (Time.time < nextDecision) return;
             float dt = nextDecision <= 0f ? Tuning.DecisionInterval : Tuning.DecisionInterval + (Time.time - nextDecision);
             nextDecision = Time.time + Tuning.DecisionInterval;

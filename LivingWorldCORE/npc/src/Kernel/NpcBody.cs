@@ -173,6 +173,79 @@ namespace LivingWorld.Core
             return true;
         }
 
+        // ---------------- Gear kits (lab: lwparty plains / lwgear; no behavior domain; owner only) ----------------
+
+        public const string KitKey = "lw_kit", KitQualityKey = "lw_kit_quality";
+        bool kitChecked;
+
+        /// <summary>The recorded kit ("" = prefab default, iron).</summary>
+        public string Kit { get { ZDO z = View == null || !View.IsValid() ? null : View.GetZDO(); return z == null ? "" : z.GetString(KitKey, ""); } }
+        public int KitQuality { get { ZDO z = View == null || !View.IsValid() ? null : View.GetZDO(); return z == null ? 1 : z.GetInt(KitQualityKey, 1); } }
+
+        /// <summary>
+        /// Replace everything carried with a vanilla kit at a quality, armor worn, weapons on the back, and
+        /// record it so it survives reloads. Returns "" or the reason it was refused.
+        /// </summary>
+        internal string Outfit(string kit, int quality)
+        {
+            if (!IsOwner || Human == null || Human.IsDead()) return "not loaded here";
+            if (Human.InAttack()) return "mid-attack";
+            string[] names = CompanionKits.Items(kit);
+            if (names == null) return "unknown kit '" + kit + "' (iron, plains)";
+            if (ObjectDB.instance == null) return "item database not ready";
+            quality = CompanionKits.ClampQuality(quality);
+            var prefabs = new GameObject[names.Length];
+            for (int i = 0; i < names.Length; i++)
+            {
+                prefabs[i] = ObjectDB.instance.GetItemPrefab(names[i]);
+                if (prefabs[i] == null || prefabs[i].GetComponent<ItemDrop>() == null) return "missing vanilla item " + names[i];
+            }
+            Inventory inventory = Human.GetInventory();
+            if (inventory == null) return "no inventory";
+            LowerBlockUnchecked();
+            Human.UnequipAllItems();
+            NativeApi.HiddenLeftItem.SetValue(Human, null);
+            NativeApi.HiddenRightItem.SetValue(Human, null);
+            torch = null;
+            inventory.RemoveAll();
+            ItemDrop.ItemData sword = null, shield = null;
+            foreach (GameObject prefab in prefabs)
+            {
+                ItemDrop.ItemData item = prefab.GetComponent<ItemDrop>().m_itemData.Clone();
+                item.m_dropPrefab = prefab;
+                bool ammo = item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Ammo;
+                item.m_quality = ammo ? 1 : Mathf.Min(quality, Mathf.Max(1, item.m_shared.m_maxQuality));
+                item.m_durability = item.GetMaxDurability();
+                item.m_stack = ammo ? CombatHands.QuiverSize : 1;
+                if (!inventory.AddItem(item)) return "inventory refused " + prefab.name;
+                if (ammo) continue;
+                if (!item.IsWeapon() && item.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Shield) Human.EquipItem(item, false);
+                else if (item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Shield) shield = item;
+                else if (!CombatHands.IsRanged(TypeOf(item))) sword = item;
+            }
+            // Weapons start on the back, as a fresh companion's do after its first stow.
+            if (sword != null) Human.EquipItem(sword, false);
+            if (shield != null) Human.EquipItem(shield, false);
+            if (LeftItem != null || RightItem != null) Human.HideHandItems(false, true);
+            Publish(null, null, BackLeft, BackRight);
+            ZDO zdo = View.GetZDO();
+            zdo.Set(KitKey, kit.ToLowerInvariant());
+            zdo.Set(KitQualityKey, quality);
+            kitChecked = true;
+            return "";
+        }
+
+        /// <summary>Once per load: re-apply a recorded non-default kit (Valheim re-gives prefab items on load).</summary>
+        internal void ReapplyKitOnce()
+        {
+            if (kitChecked || !IsOwner) return;
+            kitChecked = true;
+            string kit = Kit;
+            if (kit.Length == 0 || kit == CompanionKits.Iron) return;
+            string refused = Outfit(kit, KitQuality);
+            if (refused.Length > 0) { kitChecked = false; CorePlugin.Warn(Human.GetHoverName() + " kit " + kit + " not re-applied: " + refused); }
+        }
+
         // ---------------- Look ----------------
 
         public void LookAt(NpcBehavior caller, Vector3 point)
@@ -405,7 +478,8 @@ namespace LivingWorld.Core
                 }
             }
             if (!hasBow || count >= CombatHands.QuiverSize) return 0;
-            GameObject prefab = ObjectDB.instance == null ? null : ObjectDB.instance.GetItemPrefab("ArrowWood");  // resupply is always basic arrows: skill, not gear
+            // Resupply the kit's own arrow (wood for the default kit); stand-in for camps/towns.
+            GameObject prefab = ObjectDB.instance == null ? null : ObjectDB.instance.GetItemPrefab(CompanionKits.Arrow(Kit));
             if (prefab == null) return 0;
             int added = 0;
             while (count < CombatHands.QuiverSize)

@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.17";
+        public const string Version = "1.0.18";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -25,7 +25,7 @@ namespace LivingWorld.Core
         internal static CorePlugin Instance;
         bool registered;
         bool partyBusy;
-        Terminal.ConsoleCommand partyCommand, statusCommand, healCommand, summonCommand, gotoCommand;
+        Terminal.ConsoleCommand partyCommand, statusCommand, healCommand, summonCommand, gotoCommand, gearCommand;
 
         public static bool Registered { get { return Instance != null && Instance.registered; } }
 
@@ -72,10 +72,12 @@ namespace LivingWorld.Core
                 new Terminal.ConsoleEvent(args => OnHeal()));
             summonCommand = new Terminal.ConsoleCommand("lwsummon", "Living World: bring your companions to you",
                 new Terminal.ConsoleEvent(args => OnSummon()));
+            gearCommand = new Terminal.ConsoleCommand("lwgear", "Living World: re-outfit your companions (lwgear iron|plains [quality 1-4])",
+                new Terminal.ConsoleEvent(OnGear));
             gotoCommand = new Terminal.ConsoleCommand("lwgoto", "Living World: teleport yourself to your nearest companion",
                 new Terminal.ConsoleEvent(args => OnGoto()));
             string missing = NativeApi.MissingMembers();
-            Report(Version + " loaded. Commands: lwparty, lwparty new, lwparty clean, lwstatus, lwheal, lwsummon, lwgoto." +
+            Report(Version + " loaded. Commands: lwparty, lwparty new, lwparty plains [q], lwparty clean, lwgear iron|plains [q], lwstatus, lwheal, lwsummon, lwgoto." +
                 (missing.Length == 0 ? "" : " NATIVE API MISSING: " + missing));
         }
 
@@ -120,7 +122,16 @@ namespace LivingWorld.Core
         {
             if (partyBusy) { Report("lwparty is already running."); return; }
             if (args.Length > 1 && args[1].Equals("clean", StringComparison.OrdinalIgnoreCase)) { StartCoroutine(RunClean()); return; }
-            bool replace = args.Length > 1 && args[1].Equals("new", StringComparison.OrdinalIgnoreCase);
+            // lwparty plains [quality 1-4]: a fresh pair in vanilla Plains gear (replaces the current pair).
+            string kit = null;
+            int quality = 1;
+            if (args.Length > 1 && CompanionKits.Items(args[1]) != null)
+            {
+                kit = args[1].ToLowerInvariant();
+                if (args.Length > 2) int.TryParse(args[2], out quality);
+                quality = CompanionKits.ClampQuality(quality);
+            }
+            bool replace = kit != null || (args.Length > 1 && args[1].Equals("new", StringComparison.OrdinalIgnoreCase));
             if (!replace && Player.m_localPlayer != null)
             {
                 long me = Player.m_localPlayer.GetPlayerID();
@@ -132,15 +143,15 @@ namespace LivingWorld.Core
                     return;
                 }
             }
-            StartCoroutine(RunParty(replace));
+            StartCoroutine(RunParty(replace, kit, quality));
         }
 
-        IEnumerator RunParty(bool replace)
+        IEnumerator RunParty(bool replace, string kit, int quality)
         {
             partyBusy = true;
             var created = new List<GameObject>();
             Exception failure = null;
-            IEnumerator transaction = PartyTransaction(created, replace);
+            IEnumerator transaction = PartyTransaction(created, replace, kit, quality);
             while (true)
             {
                 object yielded = null;
@@ -169,7 +180,7 @@ namespace LivingWorld.Core
             partyBusy = false;
         }
 
-        IEnumerator PartyTransaction(List<GameObject> created, bool replace)
+        IEnumerator PartyTransaction(List<GameObject> created, bool replace, string kit, int quality)
         {
             RequireWorld();
             if (!registered) throw new InvalidOperationException("Companion prefabs are not registered (see startup log).");
@@ -202,7 +213,17 @@ namespace LivingWorld.Core
                 if (!appearance.Ready) throw new InvalidOperationException(appearance.Status);
             }
             foreach (GameObject actor in created) actor.GetComponent<NpcLeaderBinding>().Bind(leader, generation);
-            Report("PARTY READY: two companions bound to you" + (replace ? "; replaced " + removed + " old record(s)." : "."));
+            string gear = "";
+            if (kit != null)
+            {
+                foreach (GameObject actor in created)
+                {
+                    string refused = actor.GetComponent<NpcKernel>().Body.Outfit(kit, quality);
+                    if (refused.Length > 0) throw new InvalidOperationException("outfitting failed: " + refused);
+                }
+                gear = " Gear: " + kit + " q" + quality + ".";
+            }
+            Report("PARTY READY: two companions bound to you" + (replace ? "; replaced " + removed + " old record(s)." : ".") + gear);
         }
 
         static void Spawn(string prefabId, Vector3 position, Quaternion rotation, List<GameObject> created)
@@ -245,6 +266,27 @@ namespace LivingWorld.Core
                 if (b != null && b.LeaderId == me) mine.Add(k);
             }
             return mine;
+        }
+
+        /// <summary>lwgear iron|plains [quality 1-4]: re-outfit the loaded companions (not mid-fight).</summary>
+        void OnGear(Terminal.ConsoleEventArgs args)
+        {
+            if (args.Length < 2 || CompanionKits.Items(args[1]) == null) { Report("Usage: lwgear iron|plains [quality 1-4]"); return; }
+            int quality = 1;
+            if (args.Length > 2) int.TryParse(args[2], out quality);
+            quality = CompanionKits.ClampQuality(quality);
+            int done = 0;
+            var refusals = new List<string>();
+            foreach (NpcKernel k in MyCompanions())
+            {
+                NpcPhase phase = k.Frame.Phase;
+                if (phase == NpcPhase.Combat || phase == NpcPhase.CombatClear || phase == NpcPhase.CombatRegroup)
+                { refusals.Add(k.Body.Human.GetHoverName() + ": in combat"); continue; }
+                string refused = k.Body.Outfit(args[1], quality);
+                if (refused.Length == 0) done++; else refusals.Add(k.Body.Human.GetHoverName() + ": " + refused);
+            }
+            Report("GEAR: " + done + " companion(s) now in " + args[1].ToLowerInvariant() + " q" + quality + "." +
+                (refusals.Count > 0 ? " Refused: " + String.Join("; ", refusals.ToArray()) : ""));
         }
 
         void OnHeal()

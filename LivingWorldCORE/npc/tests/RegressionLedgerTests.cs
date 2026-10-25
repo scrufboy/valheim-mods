@@ -12,6 +12,7 @@ static class RegressionLedgerTests
 
     static int Main()
     {
+        Run("1.0.18 lab: gear kits are complete and resupply their own arrow", KitsAreCompleteAndResupplyTheirOwnArrow);
         Run("1.0.17: melee chains only while the next swing can land", ChainContinuesOnlyWhenTheSwingCanLand);
         Run("0.6.3 Bonemass: distant ranged target does not trigger party regroup", RangedTargetIsNotSeparation);
         Run("0.6.4/0.6.5/1.0.5: returning companion fights what engages it, re-measures before returning", ReturningActorDefendsLocally);
@@ -684,5 +685,20 @@ static class RegressionLedgerTests
         Assert(!C(true, true, true, false, true, 4f, 10f), "chained at a target out of reach");
         Assert(!C(true, true, true, false, true, 1.5f, 80f), "chained at a target behind it");
         Assert(ChainPolicy.Continue(true, true, true, false, true, 1f, 2f, 40f, 0f), "weapon with no AI angle never gets the default angle");
+    }
+
+    static void KitsAreCompleteAndResupplyTheirOwnArrow()
+    {
+        foreach (string kit in new[] { CompanionKits.Iron, CompanionKits.Plains })
+        {
+            string[] items = CompanionKits.Items(kit);
+            Assert(items != null && items.Length == 7, kit + " kit is not armor, legs, cape, bow, arrows, sword, shield");
+            Assert(items[4].StartsWith("Arrow"), kit + " kit slot 5 is not arrows");
+            Assert(CompanionKits.Arrow(kit) == items[4], kit + " quiver resupplies a different arrow");
+        }
+        Assert(CompanionKits.Items("PLAINS") != null, "kit names are case sensitive");
+        Assert(CompanionKits.Items("mistlands") == null, "unknown kit accepted");
+        Assert(CompanionKits.Arrow("") == "ArrowWood", "no kit does not resupply wood arrows");
+        Assert(CompanionKits.ClampQuality(9) == 4 && CompanionKits.ClampQuality(0) == 1, "quality outside 1-4 accepted");
     }
 }
