@@ -608,13 +608,15 @@ namespace LivingWorld.Core
     /// (Character.HaveStamina = true, UseStamina = no-op). Numbers verified from the installed
     /// Player prefab / IL: base 50, regen 6/s rising to 12/s when empty (Player.UpdateStats:
     /// regen * (1 + (1 - s/max) * timeMult)), 1 s delay after any use, none while attacking,
-    /// dodging or encumbered, x0.8 while blocking; run drain 8/s scaled by the equipment movement
-    /// modifier (Player.CheckRun); attacks pay Attack.GetAttackStamina (natively, once HaveStamina
-    /// and UseStamina are real). Food allowance stands in for the meals a player would eat.
+    /// dodging or encumbered, x0.8 while blocking; attacks, blocks and jumps pay their native cost.
+    /// No run drain (1.0.20): native MonsterAI runs for ALL combat movement, which a player does not;
+    /// with the Player's 8/s drain the pool sat under 15 in 81% of combat (1.0.19 live). Running is
+    /// the AI's locomotion, not a player's choice, so it is not charged.
+    /// Food allowance stands in for the meals a player would eat.
     /// </summary>
     public static class StaminaRules
     {
-        public const float Base = 50f, Regen = 6f, RegenTimeMultiplier = 1f, RegenDelay = 1f, RunDrain = 8f;
+        public const float Base = 50f, Regen = 6f, RegenTimeMultiplier = 1f, RegenDelay = 1f;
         public const float BlockingRegenFactor = .8f;
 
         public static float RegenPerSecond(float stamina, float max, bool attacking, bool blocking)
@@ -623,12 +625,6 @@ namespace LivingWorld.Core
             float fill = Mathf01(stamina / max);
             float rate = Regen + (1f - fill) * Regen * RegenTimeMultiplier;
             return blocking ? rate * BlockingRegenFactor : rate;
-        }
-
-        /// <summary>movementModifier is the summed equipment value (negative = heavier gear drains more).</summary>
-        public static float RunDrainPerSecond(float movementModifier)
-        {
-            return RunDrain - RunDrain * movementModifier;
         }
 
         static float Mathf01(float v) { return v < 0f ? 0f : v > 1f ? 1f : v; }
@@ -689,10 +685,17 @@ namespace LivingWorld.Core
         public const float ReachSlack = .5f;     // metres past the weapon's own AI reach
         public const float DefaultAngle = 45f;   // when a weapon declares no AI attack angle
 
+        /// <summary>
+        /// 1.0.20: never start a follow-up the game will refuse. Humanoid.StartAttack stops the swing in
+        /// progress BEFORE Attack.Start checks stamina (verified in IL), so a refused start cuts the
+        /// current swing off mid-animation (the 1.0.19 "stutter at the end of the thrust").
+        /// </summary>
+        public static bool Affordable(float stamina, float cost) { return cost <= 0f || stamina > cost + .1f; }
+
         public static bool Continue(bool allowed, bool windowOpen, bool melee, bool secondary,
-            bool targetAlive, float edgeDistance, float reach, float angle, float maxAngle)
+            bool targetAlive, float edgeDistance, float reach, float angle, float maxAngle, float stamina, float cost)
         {
-            if (!allowed || !windowOpen || !melee || secondary || !targetAlive) return false;
+            if (!allowed || !windowOpen || !melee || secondary || !targetAlive || !Affordable(stamina, cost)) return false;
             if (edgeDistance > reach + ReachSlack) return false;
             return angle <= (maxAngle > 0f ? maxAngle : DefaultAngle);
         }

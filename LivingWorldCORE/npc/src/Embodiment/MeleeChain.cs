@@ -47,8 +47,8 @@ namespace LivingWorld.Core
     /// <summary>
     /// Stamina parity: Valheim's base Character has infinite stamina (HaveStamina = true,
     /// UseStamina = no-op; only Player overrides them). For a companion on its owner, these hooks
-    /// answer from NpcBody's pool instead, so native attacks, blocks and jumps pay their real cost,
-    /// and running drains it and stops when it is empty (Player.CheckRun's rule).
+    /// answer from NpcBody's pool instead, so native attacks, blocks and jumps pay their real cost.
+    /// Running is not charged (1.0.20; see StaminaRules).
     /// Every other character is untouched.
     /// </summary>
     public static class StaminaParity
@@ -73,14 +73,6 @@ namespace LivingWorld.Core
         {
             NpcBody body = NpcBody.Of(__instance);
             if (body != null) __result = body.MaxStamina;
-        }
-
-        public static void RunPostfix(Humanoid __instance, float dt, ref bool __result)
-        {
-            if (!__result || __instance is Player) return;
-            NpcBody body = NpcBody.Of(__instance);
-            if (body == null || !body.IsOwner) return;
-            __result = body.RunAllowed(dt);
         }
     }
 }

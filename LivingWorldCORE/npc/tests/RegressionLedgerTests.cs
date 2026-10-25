@@ -15,6 +15,7 @@ static class RegressionLedgerTests
         Run("1.0.19: heavy attack only when it pays, never into a converging crowd", HeavyOnlyWhenItPays);
         Run("1.0.19: companion stamina follows the Player rules", StaminaFollowsPlayerRules);
         Run("1.0.18 lab: gear kits are complete and resupply their own arrow", KitsAreCompleteAndResupplyTheirOwnArrow);
+        Run("1.0.20 live 1.0.19: no follow-up the game will refuse for stamina", ChainContinuesOnlyWhenTheSwingCanLand);
         Run("1.0.17: melee chains only while the next swing can land", ChainContinuesOnlyWhenTheSwingCanLand);
         Run("0.6.3 Bonemass: distant ranged target does not trigger party regroup", RangedTargetIsNotSeparation);
         Run("0.6.4/0.6.5/1.0.5: returning companion fights what engages it, re-measures before returning", ReturningActorDefendsLocally);
@@ -674,7 +675,7 @@ static class RegressionLedgerTests
     }
 
     static bool C(bool allowed, bool window, bool melee, bool secondary, bool alive, float d, float angle)
-    { return ChainPolicy.Continue(allowed, window, melee, secondary, alive, d, 2.2f, angle, 30f); }
+    { return ChainPolicy.Continue(allowed, window, melee, secondary, alive, d, 2.2f, angle, 30f, 100f, 14f); }
 
     static void ChainContinuesOnlyWhenTheSwingCanLand()
     {
@@ -686,7 +687,9 @@ static class RegressionLedgerTests
         Assert(!C(true, true, true, false, false, 1.5f, 10f), "swung again at a dead target");
         Assert(!C(true, true, true, false, true, 4f, 10f), "chained at a target out of reach");
         Assert(!C(true, true, true, false, true, 1.5f, 80f), "chained at a target behind it");
-        Assert(ChainPolicy.Continue(true, true, true, false, true, 1f, 2f, 40f, 0f), "weapon with no AI angle never gets the default angle");
+        Assert(ChainPolicy.Continue(true, true, true, false, true, 1f, 2f, 40f, 0f, 100f, 14f), "weapon with no AI angle never gets the default angle");
+        Assert(!ChainPolicy.Continue(true, true, true, false, true, 1f, 2f, 10f, 30f, 10f, 14f), "follow-up started without the stamina to pay for it (cancels the current swing)");
+        Assert(!ChainPolicy.Affordable(14.05f, 14f) && ChainPolicy.Affordable(14.2f, 14f), "affordability is not the game's cost + 0.1 rule");
     }
 
     static void KitsAreCompleteAndResupplyTheirOwnArrow()
@@ -731,6 +734,5 @@ static class RegressionLedgerTests
         Assert(System.Math.Abs(StaminaRules.RegenPerSecond(0f, 150f, false, false) - 12f) < .01f, "empty-pool regen is not 12/s");
         Assert(StaminaRules.RegenPerSecond(0f, 150f, true, false) == 0f, "regenerates while attacking");
         Assert(System.Math.Abs(StaminaRules.RegenPerSecond(150f, 150f, false, true) - 4.8f) < .01f, "blocking regen not x0.8");
-        Assert(System.Math.Abs(StaminaRules.RunDrainPerSecond(-.15f) - 9.2f) < .01f, "heavy gear does not raise run drain");
     }
 }

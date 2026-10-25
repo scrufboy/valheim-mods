@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.19";
+        public const string Version = "1.0.20";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -66,7 +66,6 @@ namespace LivingWorld.Core
             harmony.Patch(NativeApi.HaveStamina, prefix: new HarmonyLib.HarmonyMethod(typeof(StaminaParity).GetMethod("HavePrefix")));
             harmony.Patch(NativeApi.UseStamina, prefix: new HarmonyLib.HarmonyMethod(typeof(StaminaParity).GetMethod("UsePrefix")));
             harmony.Patch(NativeApi.GetMaxStamina, postfix: new HarmonyLib.HarmonyMethod(typeof(StaminaParity).GetMethod("MaxPostfix")));
-            harmony.Patch(NativeApi.HumanoidCheckRun, postfix: new HarmonyLib.HarmonyMethod(typeof(StaminaParity).GetMethod("RunPostfix")));
             Report(ArmorParity.ArmorGatesPatched == 1 ? "Companion armor applies to damage (Player rule)." :
                 "WARNING: companion armor gate not patched.");
             Report("Companion damage parity: stagger x2 " + (ArmorParity.StaggerGatesPatched == 1 ? "off" : "NOT PATCHED") +

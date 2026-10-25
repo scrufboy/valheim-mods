@@ -58,11 +58,10 @@ namespace LivingWorld.Core
         internal static readonly MethodInfo HaveQueuedChain = Method(typeof(Humanoid), "HaveQueuedChain");
         internal static readonly MethodInfo UpdateAttack = Method(typeof(Humanoid), "UpdateAttack", typeof(float));
 
-        // Stamina parity (1.0.19): the four members Player overrides and a companion must too.
+        // Stamina parity (1.0.19): the three members Player overrides and a companion must too.
         internal static readonly MethodInfo HaveStamina = Method(typeof(Character), "HaveStamina", typeof(float));
         internal static readonly MethodInfo UseStamina = Method(typeof(Character), "UseStamina", typeof(float));
         internal static readonly MethodInfo GetMaxStamina = Method(typeof(Character), "GetMaxStamina");
-        internal static readonly MethodInfo HumanoidCheckRun = Method(typeof(Humanoid), "CheckRun", typeof(Vector3), typeof(float));
 
         // Visual identity.
         internal static readonly FieldInfo HairInstance = Field(typeof(VisEquipment), "m_hairItemInstance");

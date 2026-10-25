@@ -617,7 +617,7 @@ namespace LivingWorld.Core
                 bool comboJustEnded = !inAttack && lastSwingWasComboEnd && Time.time - lastSwingEnded <= HeavyPolicy.FinisherWindow;
                 HeavyPolicy.Why why = HeavyPolicy.Choose(shape, Stamina, cost, true, edge, heavy.m_attackRange, facing,
                     target.IsStaggering(), inArea, closing, comboJustEnded, heavy.m_damageMultiplier, heavy.m_staggerMultiplier);
-                if (why != HeavyPolicy.Why.None && Start(target, true))
+                if (why != HeavyPolicy.Why.None && ChainPolicy.Affordable(Stamina, cost) && Start(target, true))
                 {
                     Heavies++;
                     lastSwingWasComboEnd = false;
@@ -632,7 +632,8 @@ namespace LivingWorld.Core
 
             if (!window) return 0;
             float reach = weapon.m_shared.m_aiAttackRange;
-            if (!ChainPolicy.Continue(true, true, true, CurrentAttackIsSecondary, true, edge, reach, facing, weapon.m_shared.m_aiAttackMaxAngle))
+            if (!ChainPolicy.Continue(true, true, true, CurrentAttackIsSecondary, true, edge, reach, facing,
+                    weapon.m_shared.m_aiAttackMaxAngle, Stamina, weapon.m_shared.m_attack.m_attackStamina))
                 return 0;
             if (!Start(target, false)) return 0;
             Chains++;
@@ -673,7 +674,6 @@ namespace LivingWorld.Core
         float stamina = -1f, maxStamina, regenTimer;
         public float Stamina { get { EnsureStamina(); return stamina; } }
         public float MaxStamina { get { EnsureStamina(); return maxStamina; } }
-        public float StaminaSpentRun { get; private set; }
         public int Exhaustions { get; private set; }
 
         void EnsureStamina()
@@ -693,17 +693,6 @@ namespace LivingWorld.Core
             stamina = Mathf.Max(0f, stamina - amount * Game.m_staminaRate);
             regenTimer = StaminaRules.RegenDelay;
             if (had && stamina <= 0f) Exhaustions++;
-        }
-
-        /// <summary>Player.CheckRun's rule: running costs stamina, and an empty pool means walking.</summary>
-        internal bool RunAllowed(float dt)
-        {
-            EnsureStamina();
-            if (stamina <= 0f) return false;
-            float drain = StaminaRules.RunDrainPerSecond(Human.GetEquipmentMovementModifier()) * dt * Game.m_moveStaminaRate;
-            SpendStamina(drain);
-            StaminaSpentRun += drain;
-            return stamina > 0f;
         }
 
         /// <summary>Player.UpdateStats regen, once per frame on the owner.</summary>

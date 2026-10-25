@@ -223,7 +223,7 @@ namespace LivingWorld.Telemetry
                 Num("clearQuiet", kernel.Arbiter.QuietSeconds);
                 Bool("attacking", body.Human.InAttack()); Bool("drawingBow", body.Human.IsDrawingBow());
                 Bool("blocking", body.Human.IsBlocking()); Num("ammo", body.AmmoCount);
-                Bool("shieldInHand", body.ShieldInHand); Num("blockRaises", body.BlockRaises); Num("chains", body.Chains); Num("heavies", body.Heavies); Num("stamina", body.Stamina); Num("maxStamina", body.MaxStamina); Num("exhaustions", body.Exhaustions); Num("runStamina", body.StaminaSpentRun); Str("kit", body.Kit.Length == 0 ? "iron" : body.Kit); Num("kitQ", body.KitQuality);
+                Bool("shieldInHand", body.ShieldInHand); Num("blockRaises", body.BlockRaises); Num("chains", body.Chains); Num("heavies", body.Heavies); Num("stamina", body.Stamina); Num("maxStamina", body.MaxStamina); Num("exhaustions", body.Exhaustions); Str("kit", body.Kit.Length == 0 ? "iron" : body.Kit); Num("kitQ", body.KitQuality);
                 NativeCombatBehavior combat = Combat(kernel);
                 Str("block", combat == null || combat.Block == null ? "" : combat.Block.Reason);
                 Str("blockThreat", combat == null ? "" : combat.BlockThreat);
