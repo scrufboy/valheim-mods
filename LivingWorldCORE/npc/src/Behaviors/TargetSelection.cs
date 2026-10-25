@@ -28,6 +28,7 @@ namespace LivingWorld.Core
         public Character Choose()
         {
             Decisions++;
+            if (kernel.Frame.FallingBack) { Reason = "falling back"; return null; }
             NpcBody body = kernel.Body;
             Humanoid me = body.Human;
             NpcSenses s = kernel.Frame.Senses;
@@ -49,6 +50,24 @@ namespace LivingWorld.Core
                 LastChoiceName = chosen.GetHoverName();
             }
             return chosen;
+        }
+
+        /// <summary>Nearest engaged enemy (same rule as target choice), or null.</summary>
+        public Character NearestEngaged(out float distance)
+        {
+            distance = float.PositiveInfinity;
+            NpcPhase phase = kernel.Arbiter.Phase;
+            bool encounter = phase == NpcPhase.Combat || phase == NpcPhase.CombatClear || phase == NpcPhase.CombatRegroup;
+            CollectPartners(kernel.Frame.Senses.Leader);
+            Build(kernel.Body.Human, kernel.Frame.Senses.Leader);
+            Character best = null;
+            for (int i = 0; i < candidates.Count; i++)
+                if (candidates[i].Distance < distance && TargetPolicy.Engaged(candidates[i], encounter, kernel.Frame.Senses.LeaderCrouching))
+                {
+                    distance = candidates[i].Distance;
+                    best = actors[i];
+                }
+            return best;
         }
 
         public bool AnyEngagedWithin(float radius)

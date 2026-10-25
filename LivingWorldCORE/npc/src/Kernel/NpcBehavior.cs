@@ -15,6 +15,8 @@ namespace LivingWorld.Core
         public float Now;
         public float Dt;
         public float SecondsSinceEncounter = float.PositiveInfinity;
+        public bool FallingBack;
+        public Vector3 FallBackFrom;      // position of the nearest engaged enemy when last sensed
     }
 
     public sealed class NpcSenses

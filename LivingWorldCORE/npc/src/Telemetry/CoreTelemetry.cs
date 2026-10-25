@@ -83,6 +83,7 @@ namespace LivingWorld.Telemetry
             lastTorch.Clear();
             lastBlock.Clear();
             lastSwitches.Clear();
+            lastFallBack.Clear();
             active = true;
             if (!subscribed) { NpcKernel.Removed += OnRemoved; NpcKernel.Damaged += OnDamaged; subscribed = true; }
             Begin("RunStart");
@@ -142,6 +143,16 @@ namespace LivingWorld.Telemetry
                         End();
                     }
                 }
+                bool fb = kernel.FallBack.Active, wasFb;
+                if (lastFallBack.TryGetValue(kernel, out wasFb) && wasFb != fb)
+                {
+                    Begin(fb ? "FallBackStart" : "FallBackEnd"); Actor(kernel);
+                    Str("outcome", fb ? "" : kernel.FallBack.LastOutcome);
+                    Num("count", kernel.FallBack.Count);
+                    Num("hp", kernel.Body.Human.GetHealth());
+                    End();
+                }
+                lastFallBack[kernel] = fb;
                 TargetSelector sel = kernel.Targeting;
                 int switches = sel == null ? 0 : sel.Switches, seenSwitches;
                 if (lastSwitches.TryGetValue(kernel, out seenSwitches) && switches > seenSwitches)
@@ -209,6 +220,7 @@ namespace LivingWorld.Telemetry
                 Str("blockThreat", combat == null ? "" : combat.BlockThreat);
                 Str("targetReason", kernel.Targeting == null ? "" : kernel.Targeting.Reason);
                 Num("targetSwitches", kernel.Targeting == null ? 0 : kernel.Targeting.Switches);
+                Bool("fallBack", kernel.FallBack.Active); Str("fallBackReason", kernel.FallBack.Reason);
                 Bool("targetWildlife", s.Target != null && s.Target.GetFaction() == Character.Faction.AnimalsVeg);
                 Bool("targetRanged", s.Target != null && TargetIsRanged(s.Target));
                 Str("targetsWho", s.Target == null ? "" : TargetOf(s.Target, kernel));
@@ -237,6 +249,7 @@ namespace LivingWorld.Telemetry
         bool subscribed;
         readonly Dictionary<NpcKernel, bool> lastBlock = new Dictionary<NpcKernel, bool>();
         readonly Dictionary<NpcKernel, int> lastSwitches = new Dictionary<NpcKernel, int>();
+        readonly Dictionary<NpcKernel, bool> lastFallBack = new Dictionary<NpcKernel, bool>();
 
         static NativeCombatBehavior Combat(NpcKernel kernel)
         {

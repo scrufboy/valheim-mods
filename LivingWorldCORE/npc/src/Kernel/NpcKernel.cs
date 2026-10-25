@@ -72,6 +72,7 @@ namespace LivingWorld.Core
             binding = GetComponent<NpcLeaderBinding>();
 
             // Priority order. Earlier entries win contested domains.
+            Add(new FallBackBehavior());
             Add(new NativeCombatBehavior());
             Add(new CombatRegroupBehavior());
             Add(new StealthBehavior());
@@ -231,6 +232,9 @@ namespace LivingWorld.Core
             }, dt);
             frame.Phase = phase;
             frame.SecondsSinceEncounter = arbiter.SecondsSinceEncounter;
+            bool fighting = phase == NpcPhase.Combat || phase == NpcPhase.CombatClear;
+            frame.FallingBack = fallBack.Step(Time.time, fighting, body.Human.GetHealthPercentage(), nearestEngagedDistance);
+            frame.FallBackFrom = nearestEngagedPosition;
             if (phase != lastPhase)
             {
                 PhaseChanges++;
@@ -313,17 +317,26 @@ namespace LivingWorld.Core
         bool AttackerStillDangerous() { return HostileAttacker(Tuning.HostileScanRadius); }
 
         float nextPinCheck;
-        bool pinned;
+        float nearestEngagedDistance = float.PositiveInfinity;
+        Vector3 nearestEngagedPosition;
+        readonly FallBackPolicy fallBack = new FallBackPolicy();
+        public FallBackPolicy FallBack { get { return fallBack; } }
+
+        void ScanEngaged()
+        {
+            if (Time.time < nextPinCheck) return;
+            nextPinCheck = Time.time + .25f;
+            float d = float.PositiveInfinity;
+            Character c = Targeting == null ? null : Targeting.NearestEngaged(out d);
+            nearestEngagedDistance = c == null ? float.PositiveInfinity : d;
+            if (c != null) nearestEngagedPosition = c.transform.position;
+        }
 
         /// <summary>An engaged enemy (same rule as target choice) within the pin radius.</summary>
         bool LocalThreat(NpcSenses s)
         {
-            if (Time.time >= nextPinCheck)
-            {
-                nextPinCheck = Time.time + .25f;
-                pinned = Targeting != null && Targeting.AnyEngagedWithin(Tuning.EngagedPinRadius);
-            }
-            return pinned;
+            ScanEngaged();
+            return nearestEngagedDistance <= Tuning.EngagedPinRadius;
         }
 
         void Sense(NpcSenses s)

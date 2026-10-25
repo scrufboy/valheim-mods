@@ -46,6 +46,14 @@ static class RegressionLedgerTests
         Run("Block: enemy attacking someone else is ignored", BlockIgnoresOthers);
         Run("Block: maximum hold then cooldown (no perfect turtle)", BlockHoldAndCooldown);
         Run("Block: lowered the moment the attack ends", BlockLowersWhenOver);
+        Run("1.0.6 deaths: badly hurt with an enemy close = fall back", FallBackStarts);
+        Run("Fall-back: not while healthy, not with nothing close", FallBackNeedsBoth);
+        Run("Fall-back ends: clear to bow range", FallBackEndsClear);
+        Run("Fall-back ends: caught = stand and fight", FallBackEndsCaught);
+        Run("Fall-back ends: time cap = stand and fight (no endless retreat)", FallBackEndsTime);
+        Run("Fall-back ends: healed", FallBackEndsHealed);
+        Run("Fall-back: cooldown, then at most 3 per fight, then last stand", FallBackLimits);
+        Run("Fall-back: resets when the fight ends", FallBackResets);
         Run("1.0.5 fix: an engaged enemy close by blocks the return to the leader", PinnedNeverReturns);
         Run("1.0.5 fix: an engaged enemy arriving ends a return under way", PinEndsReturn);
         Run("1.0.4 fix: deer are watched, never fought", DeerNeverFought);
@@ -514,5 +522,68 @@ static class RegressionLedgerTests
         Assert(a.Step(s, .1f) == NpcPhase.Combat, "kept walking away from an enemy that engaged it");
         s.LocalThreat = false;
         Assert(a.Step(s, .1f) == NpcPhase.Combat, "return resumed instantly instead of re-measuring separation");
+    }
+
+    static void FallBackStarts()
+    {
+        var p = new FallBackPolicy();
+        Assert(p.Step(0f, true, .20f, 2f), "badly hurt with an enemy at 2 m did not fall back");
+    }
+
+    static void FallBackNeedsBoth()
+    {
+        var p = new FallBackPolicy();
+        Assert(!p.Step(0f, true, .80f, 2f), "fell back while healthy");
+        Assert(!p.Step(0f, true, .20f, 9f), "fell back with nothing close");
+        Assert(!p.Step(0f, false, .20f, 2f), "fell back outside a fight");
+    }
+
+    static void FallBackEndsClear()
+    {
+        var p = new FallBackPolicy(); p.Step(0f, true, .2f, 2f);
+        Assert(!p.Step(2f, true, .22f, 10.5f) && p.LastOutcome.StartsWith("clear"), "did not stop at bow range: " + p.LastOutcome);
+    }
+
+    static void FallBackEndsCaught()
+    {
+        var p = new FallBackPolicy(); p.Step(0f, true, .2f, 2f);
+        Assert(p.Step(.5f, true, .2f, 2f), "caught inside the grace second ended it (enemy starts adjacent)");
+        Assert(!p.Step(1.5f, true, .2f, 2f) && p.LastOutcome.StartsWith("caught"), "kept running while caught: " + p.LastOutcome);
+    }
+
+    static void FallBackEndsTime()
+    {
+        var p = new FallBackPolicy(); p.Step(0f, true, .2f, 2f);
+        Assert(p.Step(5.9f, true, .2f, 5f), "ended early");
+        Assert(!p.Step(6.0f, true, .2f, 5f) && p.LastOutcome.StartsWith("time"), "retreat had no time cap: " + p.LastOutcome);
+    }
+
+    static void FallBackEndsHealed()
+    {
+        var p = new FallBackPolicy(); p.Step(0f, true, .2f, 2f);
+        Assert(!p.Step(3f, true, .61f, 4f) && p.LastOutcome == "recovered", "did not return when healed");
+    }
+
+    static void FallBackLimits()
+    {
+        var p = new FallBackPolicy();
+        float t = 0f;
+        for (int i = 0; i < 3; i++)
+        {
+            Assert(p.Step(t, true, .2f, 2f), "fall-back " + (i + 1) + " refused");
+            t += 6f; p.Step(t, true, .2f, 5f);             // time cap
+            Assert(!p.Step(t + 1f, true, .2f, 2f), "no cooldown after fall-back " + (i + 1));
+            t += 5.5f;
+        }
+        Assert(!p.Step(t, true, .2f, 2f) && p.LastStand, "a 4th fall-back in one fight");
+    }
+
+    static void FallBackResets()
+    {
+        var p = new FallBackPolicy();
+        float t = 0f;
+        for (int i = 0; i < 3; i++) { p.Step(t, true, .2f, 2f); t += 6f; p.Step(t, true, .2f, 5f); t += 5.5f; }
+        p.Step(t, false, .2f, 99f);
+        Assert(p.Step(t + 6f, true, .2f, 2f), "last stand carried over into the next fight");
     }
 }

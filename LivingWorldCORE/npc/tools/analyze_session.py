@@ -225,6 +225,30 @@ def main(paths):
         add("PASS" if bad == 0 else "FAIL", "No walking away from engaged enemies",
             "%d of %d returns started with an engaged enemy within 10 m" % (bad, len(starts)))
 
+    # 6d. Fall back when badly hurt, and always come to a decision (1.0.7)
+    fb_start = [r for r in rows if r.get("type") == "FallBackStart"]
+    fb_end = [r for r in rows if r.get("type") == "FallBackEnd"]
+    if any("fallBack" in r for r in npc):
+        low = [r for r in combat if r.get("hp", 999) <= 0.35 * 250]
+        if not fb_start and not low:
+            add("NOT EXERCISED", "Falls back when badly hurt", "nobody fell below 35% in a fight")
+        else:
+            add("PASS" if fb_start else "FAIL", "Falls back when badly hurt",
+                "%d fall-backs; %d combat samples at or below 35%% health" % (len(fb_start), len(low)))
+            long_ = []
+            for s in fb_start:
+                e = next((x for x in fb_end if x["npc"] == s["npc"] and x["t"] >= s["t"]), None)
+                if e is None or e["t"] - s["t"] > 6.6:
+                    long_.append(s)
+            over = [s for s in fb_start if s.get("count", 0) > 3]
+            add("PASS" if not long_ and not over else "FAIL", "Every fall-back ends in a decision",
+                "%d over 6 s or unfinished, %d beyond 3 per fight" % (len(long_), len(over)))
+            outcomes = {}
+            for e in fb_end:
+                k = e.get("outcome", "?").split(":")[0]
+                outcomes[k] = outcomes.get(k, 0) + 1
+            add("INFO", "Fall-back outcomes", ", ".join("%s %d" % kv for kv in sorted(outcomes.items())) or "none")
+
     # 6b. Shield blocking (new in 1.0.2; native AI never blocks)
     if start.get("cfgShieldBlocking") is False:
         add("NOT EXERCISED", "Shield blocks in close combat", "blocking switched off in config")

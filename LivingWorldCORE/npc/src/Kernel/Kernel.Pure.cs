@@ -481,4 +481,69 @@ namespace LivingWorld.Core
             return -1;
         }
     }
+
+    /// <summary>
+    /// Fall back when badly hurt, and always come to a decision. A fall-back starts only when
+    /// hurt AND an engaged enemy is close; it ends on the first of: clear to bow range, caught,
+    /// time cap, healed. Then a cooldown; after MaxPerEncounter it is a last stand.
+    /// </summary>
+    public sealed class FallBackPolicy
+    {
+        public const float EnterHealth = .35f;
+        public const float RecoveredHealth = .60f;
+        public const float ThreatRadius = 6f;
+        public const float ClearDistance = 10f;      // bow range starts at CombatHands.RangedMinimum (8)
+        public const float CaughtDistance = 2.5f;
+        public const float CaughtGrace = 1f;         // seconds before "caught" can end it (the enemy starts adjacent)
+        public const float MaxSeconds = 6f;
+        public const float Cooldown = 5f;
+        public const int MaxPerEncounter = 3;
+
+        float startedAt, endedAt = float.NegativeInfinity;
+        public bool Active { get; private set; }
+        public int Count { get; private set; }
+        public string Reason { get; private set; }
+        public string LastOutcome { get; private set; }
+        public bool LastStand { get { return Count >= MaxPerEncounter; } }
+
+        public FallBackPolicy() { Reason = ""; LastOutcome = ""; }
+
+        /// <param name="nearestEngaged">distance to the nearest engaged enemy, +inf if none.</param>
+        public bool Step(float now, bool inEncounter, float health01, float nearestEngaged)
+        {
+            if (!inEncounter)
+            {
+                if (Active) End(now, "fight over");
+                Count = 0;
+                Reason = "";
+                return false;
+            }
+            if (Active)
+            {
+                float held = now - startedAt;
+                if (health01 >= RecoveredHealth) End(now, "recovered");
+                else if (nearestEngaged >= ClearDistance) End(now, "clear: fight from range");
+                else if (held >= CaughtGrace && nearestEngaged <= CaughtDistance) End(now, "caught: stand and fight");
+                else if (held >= MaxSeconds) End(now, "time: stand and fight");
+                else Reason = "falling back " + held.ToString("0.0") + "s";
+                return Active;
+            }
+            if (health01 > EnterHealth || nearestEngaged > ThreatRadius) { Reason = ""; return false; }
+            if (LastStand) { Reason = "last stand"; return false; }
+            if (now - endedAt < Cooldown) { Reason = "cooldown"; return false; }
+            Active = true;
+            startedAt = now;
+            Count++;
+            Reason = "falling back";
+            return true;
+        }
+
+        void End(float now, string outcome)
+        {
+            Active = false;
+            endedAt = now;
+            LastOutcome = outcome;
+            Reason = outcome;
+        }
+    }
 }
