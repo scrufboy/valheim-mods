@@ -15,6 +15,7 @@ namespace Scrufboy.LivingWorld.Tooler
             PlayerTools,
             ItemsAndSpawn,
             WorldTools,
+            SiteSurveyPanel.DisplayGUI,
             TerrainTools,
             MapAndAdmin,
             Danger,
@@ -39,6 +40,11 @@ namespace Scrufboy.LivingWorld.Tooler
         private static GUIStyle buttonStyle;
         private static GUIStyle statusStyle;
         private static GUIStyle warningStyle;
+
+        internal static void SetStatus(string text)
+        {
+            lastAction = text ?? String.Empty;
+        }
 
         public static void DisplayGUI()
         {

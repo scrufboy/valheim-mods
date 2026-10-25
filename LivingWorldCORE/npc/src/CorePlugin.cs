@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.15";
+        public const string Version = "1.0.16";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -25,7 +25,7 @@ namespace LivingWorld.Core
         internal static CorePlugin Instance;
         bool registered;
         bool partyBusy;
-        Terminal.ConsoleCommand partyCommand, statusCommand;
+        Terminal.ConsoleCommand partyCommand, statusCommand, healCommand, summonCommand, gotoCommand;
 
         public static bool Registered { get { return Instance != null && Instance.registered; } }
 
@@ -63,8 +63,14 @@ namespace LivingWorld.Core
                 new Terminal.ConsoleEvent(OnParty));
             statusCommand = new Terminal.ConsoleCommand("lwstatus", "Living World: show each companion's phase and owners",
                 new Terminal.ConsoleEvent(OnStatus));
+            healCommand = new Terminal.ConsoleCommand("lwheal", "Living World: heal your companions and clear their status effects",
+                new Terminal.ConsoleEvent(args => OnHeal()));
+            summonCommand = new Terminal.ConsoleCommand("lwsummon", "Living World: bring your companions to you",
+                new Terminal.ConsoleEvent(args => OnSummon()));
+            gotoCommand = new Terminal.ConsoleCommand("lwgoto", "Living World: teleport yourself to your nearest companion",
+                new Terminal.ConsoleEvent(args => OnGoto()));
             string missing = NativeApi.MissingMembers();
-            Report(Version + " loaded. Commands: lwparty, lwparty new, lwstatus." +
+            Report(Version + " loaded. Commands: lwparty, lwparty new, lwparty clean, lwstatus, lwheal, lwsummon, lwgoto." +
                 (missing.Length == 0 ? "" : " NATIVE API MISSING: " + missing));
         }
 
@@ -108,6 +114,7 @@ namespace LivingWorld.Core
         void OnParty(Terminal.ConsoleEventArgs args)
         {
             if (partyBusy) { Report("lwparty is already running."); return; }
+            if (args.Length > 1 && args[1].Equals("clean", StringComparison.OrdinalIgnoreCase)) { StartCoroutine(RunClean()); return; }
             bool replace = args.Length > 1 && args[1].Equals("new", StringComparison.OrdinalIgnoreCase);
             if (!replace && Player.m_localPlayer != null)
             {
@@ -203,6 +210,70 @@ namespace LivingWorld.Core
             if (view == null || !view.IsValid() || !view.IsOwner())
                 throw new InvalidOperationException("New companion did not receive local network ownership.");
             NpcFactory.Validate(actor);
+        }
+
+        /// <summary>lwparty clean: remove every companion record in the world, loaded or not.</summary>
+        IEnumerator RunClean()
+        {
+            if (partyBusy) { Report("lwparty is already running."); yield break; }
+            partyBusy = true;
+            int removed = 0;
+            foreach (string prefab in new[] { LegacyPrefab, GuardPrefab, ArcherPrefab })
+            {
+                int count = 0;
+                yield return StartCoroutine(RemovePrefabRecords(prefab, value => count = value));
+                removed += count;
+            }
+            partyBusy = false;
+            Report("CLEAN: removed " + removed + " companion record(s) everywhere in this world.");
+        }
+
+        static List<NpcKernel> MyCompanions()
+        {
+            var mine = new List<NpcKernel>();
+            if (Player.m_localPlayer == null) return mine;
+            long me = Player.m_localPlayer.GetPlayerID();
+            foreach (NpcKernel k in NpcKernel.All)
+            {
+                if (k == null || k.Body == null) continue;
+                NpcLeaderBinding b = k.GetComponent<NpcLeaderBinding>();
+                if (b != null && b.LeaderId == me) mine.Add(k);
+            }
+            return mine;
+        }
+
+        void OnHeal()
+        {
+            int healed = MyCompanions().Count(k => k.Body.HealFull());
+            Report("HEAL: " + healed + " companion(s) restored to full health, status effects cleared.");
+        }
+
+        void OnSummon()
+        {
+            Player me = Player.m_localPlayer;
+            if (me == null) { Report("Not in a world."); return; }
+            List<NpcKernel> mine = MyCompanions();
+            int placed = 0;
+            for (int i = 0; i < mine.Count; i++)
+            {
+                Vector3 offset = Quaternion.Euler(0f, 150f + 60f * i, 0f) * me.transform.forward * 2.5f;
+                Vector3 point = me.transform.position + offset;
+                float height;
+                if (ZoneSystem.instance.GetGroundHeight(point, out height)) point.y = height + .1f;
+                if (mine[i].Body.PlaceAt(point, me.transform.rotation)) placed++;
+            }
+            Report("SUMMON: " + placed + " of " + mine.Count + " loaded companion(s) brought to you. (Companions in unloaded areas are not reachable; use lwgoto.)");
+        }
+
+        void OnGoto()
+        {
+            Player me = Player.m_localPlayer;
+            if (me == null) { Report("Not in a world."); return; }
+            NpcKernel nearest = MyCompanions().OrderBy(k => Vector3.Distance(k.transform.position, me.transform.position)).FirstOrDefault();
+            if (nearest == null) { Report("No loaded companion to go to."); return; }
+            Vector3 target = nearest.transform.position - nearest.transform.forward * 2f;
+            me.TeleportTo(target, nearest.transform.rotation, false);
+            Report("GOTO: teleporting to " + nearest.Body.Human.GetHoverName() + ".");
         }
 
         IEnumerator RemovePrefabRecords(string prefabName, Action<int> completed)

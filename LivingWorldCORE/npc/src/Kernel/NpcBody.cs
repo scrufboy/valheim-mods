@@ -150,6 +150,29 @@ namespace LivingWorld.Core
 
         public int TargetDrops { get; private set; }
 
+        // ---------------- Lab commands (no behavior domain; owner only) ----------------
+
+        /// <summary>lwheal: full health and no lingering status effects (cold, poison, burning...).</summary>
+        internal bool HealFull()
+        {
+            if (!IsOwner || Human == null || Human.IsDead()) return false;
+            SEMan seman = Human.GetSEMan();
+            if (seman != null) seman.RemoveAllStatusEffects(true);
+            Human.Heal(Human.GetMaxHealth() - Human.GetHealth(), true);
+            return true;
+        }
+
+        /// <summary>lwsummon: place the companion at a point (native transform sync carries it to peers).</summary>
+        internal bool PlaceAt(Vector3 point, Quaternion facing)
+        {
+            if (!IsOwner || Human == null || Human.IsDead()) return false;
+            Rigidbody rb = Human.GetComponent<Rigidbody>();
+            if (rb != null) { rb.velocity = Vector3.zero; rb.position = point; }
+            Human.transform.position = point;
+            Human.transform.rotation = facing;
+            return true;
+        }
+
         // ---------------- Look ----------------
 
         public void LookAt(NpcBehavior caller, Vector3 point)

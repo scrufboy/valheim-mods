@@ -33,6 +33,7 @@ $requiredLivingWorldPages = @(
     '"Player"',
     '"Items / Spawn"',
     '"World"',
+    '"Site Survey"',
     '"Terrain"',
     '"Map / Admin"',
     '"Danger"',

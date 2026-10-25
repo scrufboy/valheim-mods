@@ -2,6 +2,8 @@
 
 Maintained and packaged for Living World C.O.R.E. by **Brian / scrufboy**.
 
+Version 2.5.0 adds a separate **Site Survey** module. Walk and record four corners, calculate from live altered terrain, preview the computed settlement/arena campus, and export a concise report plus machine-readable JSON. Controller bindings are shown directly on the page. Terrain application remains locked and is not included in this build.
+
 This is the Living World C.O.R.E. Tooler: one Living World plugin identity,
 Living World branding, the familiar proven interface/colors/control layout,
 the complete player, catalog, entity, terrain, ESP, and utility feature set,
