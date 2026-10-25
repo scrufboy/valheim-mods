@@ -78,9 +78,11 @@ def main(paths):
     by_npc = defaultdict(list)
     for r in rows:
         if r.get("type") == "Torch":
-            by_npc[r["npc"]].append(r["t"])
-    for times in by_npc.values():
-        flicker += sum(1 for a, b in zip(times, times[1:]) if b - a < 3.0)
+            by_npc[r["npc"]].append(r)
+    for ev in by_npc.values():
+        # A torch going out because a fight started is correct, not a flicker; only calm toggles count.
+        flicker += sum(1 for a, b in zip(ev, ev[1:])
+                       if b["t"] - a["t"] < 3.0 and b.get("phase") in ("Calm", "Regroup"))
     add("PASS" if flicker == 0 else "FAIL", "Torch does not flicker", "%d toggles under 3 s" % flicker)
 
     # 4. Weapons never lost from the back while calm (torch/stow regression family)

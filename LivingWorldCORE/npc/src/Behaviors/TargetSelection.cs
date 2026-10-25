@@ -20,6 +20,8 @@ namespace LivingWorld.Core
 
         public string Reason { get; private set; }
         public int Switches { get; private set; }
+        public int Picks { get; private set; }          // every new target, including the first after a kill
+        public int LastChoiceId { get; private set; }
         public int Decisions { get; private set; }
         public string LastChoiceName { get; private set; }
 
@@ -47,7 +49,9 @@ namespace LivingWorld.Core
             if (!ReferenceEquals(chosen, current))
             {
                 if (currentId >= 0) Switches++;   // live target -> different target; a fresh pick is not a switch
+                Picks++;
                 LastChoiceName = chosen.GetHoverName();
+                LastChoiceId = chosen.GetInstanceID();
             }
             return chosen;
         }

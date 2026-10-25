@@ -154,14 +154,18 @@ namespace LivingWorld.Telemetry
                 }
                 lastFallBack[kernel] = fb;
                 TargetSelector sel = kernel.Targeting;
-                int switches = sel == null ? 0 : sel.Switches, seenSwitches;
+                int switches = sel == null ? 0 : sel.Picks, seenSwitches;
                 if (lastSwitches.TryGetValue(kernel, out seenSwitches) && switches > seenSwitches)
                 {
                     Character t = kernel.Body.Ai.GetTargetCreature();
                     Begin("TargetChoice"); Actor(kernel);
                     Str("reason", sel.Reason);
                     Str("target", sel.LastChoiceName);
+                    Num("targetId", sel.LastChoiceId);
+                    Str("targetPrefab", t == null ? "" : global::Utils.GetPrefabName(t.gameObject));
+                    Num("targetLevel", t == null ? 0 : t.GetLevel());
                     Num("dist", t == null ? -1f : Vector3.Distance(kernel.transform.position, t.transform.position));
+                    Num("switches", sel.Switches);
                     End();
                 }
                 lastSwitches[kernel] = switches;
@@ -224,6 +228,8 @@ namespace LivingWorld.Telemetry
                 Bool("targetWildlife", s.Target != null && s.Target.GetFaction() == Character.Faction.AnimalsVeg);
                 Bool("targetRanged", s.Target != null && TargetIsRanged(s.Target));
                 Str("targetsWho", s.Target == null ? "" : TargetOf(s.Target, kernel));
+                Num("targetId", s.Target == null ? 0 : s.Target.GetInstanceID());
+                Num("targetPicks", kernel.Targeting == null ? 0 : kernel.Targeting.Picks);
                 End();
             }
         }
@@ -264,6 +270,12 @@ namespace LivingWorld.Telemetry
             Num("amount", damage); Num("hp", kernel.Body.Human.GetHealth());
             Str("attacker", attacker == null ? "" : attacker.GetHoverName());
             Str("attackerPrefab", attacker == null ? "" : global::Utils.GetPrefabName(attacker.gameObject));
+            Num("attackerId", attacker == null ? 0 : attacker.GetInstanceID());
+            Num("attackerLevel", attacker == null ? 0 : attacker.GetLevel());
+            Humanoid ah = attacker as Humanoid;
+            ItemDrop.ItemData aw = ah == null ? null : ah.GetCurrentWeapon();
+            Str("attackerWeapon", aw == null || aw.m_dropPrefab == null ? (aw == null ? "" : aw.m_shared.m_name) : aw.m_dropPrefab.name);
+            Num("armor", kernel.Body.Human.GetBodyArmor());
             Num("dist", attacker == null ? -1f : Vector3.Distance(kernel.transform.position, attacker.transform.position));
             Str("phase", kernel.Frame.Phase.ToString());
             Bool("blocking", kernel.Body.Human.IsBlocking());
