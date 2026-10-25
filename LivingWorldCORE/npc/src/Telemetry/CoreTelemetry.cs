@@ -88,13 +88,13 @@ namespace LivingWorld.Telemetry
             if (!subscribed)
             {
                 NpcKernel.Removed += OnRemoved; NpcKernel.Damaged += OnDamaged;
-                NpcVoice.Spoke += OnSpoke; StrikeHook.Landed += OnStrike; MeleeChainHook.Chained += OnChain;
+                NpcVoice.Spoke += OnSpoke; StrikeHook.Landed += OnStrike; MeleeChainHook.Chained += OnChain; MeleeChainHook.Heavy += OnHeavy;
                 subscribed = true;
             }
             Begin("RunStart");
             Str("core", CorePlugin.Version); Num("schema", Schema); Str("world", ZNet.instance.GetWorldName());
             Str("player", Player.m_localPlayer.GetPlayerName()); Bool("registered", CorePlugin.Registered);
-            Bool("cfgShieldBlocking", CorePlugin.ShieldBlocking);
+            Bool("cfgShieldBlocking", CorePlugin.ShieldBlocking); Num("cfgFoodStamina", CorePlugin.FoodStamina);
             End();
             Logger.LogInfo("Recording read-only telemetry: " + path);
         }
@@ -223,7 +223,7 @@ namespace LivingWorld.Telemetry
                 Num("clearQuiet", kernel.Arbiter.QuietSeconds);
                 Bool("attacking", body.Human.InAttack()); Bool("drawingBow", body.Human.IsDrawingBow());
                 Bool("blocking", body.Human.IsBlocking()); Num("ammo", body.AmmoCount);
-                Bool("shieldInHand", body.ShieldInHand); Num("blockRaises", body.BlockRaises); Num("chains", body.Chains); Str("kit", body.Kit.Length == 0 ? "iron" : body.Kit); Num("kitQ", body.KitQuality);
+                Bool("shieldInHand", body.ShieldInHand); Num("blockRaises", body.BlockRaises); Num("chains", body.Chains); Num("heavies", body.Heavies); Num("stamina", body.Stamina); Num("maxStamina", body.MaxStamina); Num("exhaustions", body.Exhaustions); Num("runStamina", body.StaminaSpentRun); Str("kit", body.Kit.Length == 0 ? "iron" : body.Kit); Num("kitQ", body.KitQuality);
                 NativeCombatBehavior combat = Combat(kernel);
                 Str("block", combat == null || combat.Block == null ? "" : combat.Block.Reason);
                 Str("blockThreat", combat == null ? "" : combat.BlockThreat);
@@ -306,7 +306,8 @@ namespace LivingWorld.Telemetry
             ItemDrop.ItemData w = k.Body.Human.GetCurrentWeapon();
             Str("weapon", w == null || w.m_dropPrefab == null ? "" : w.m_dropPrefab.name);
             Num("dist", Vector3.Distance(attacker.transform.position, target.transform.position));
-            Num("chainLevel", k.Body.CurrentChainLevel);
+            Num("chainLevel", k.Body.CurrentChainLevel); Bool("heavy", k.Body.CurrentAttackIsSecondary);
+            Bool("targetStaggered", target.IsStaggering());
             End();
         }
 
@@ -318,6 +319,21 @@ namespace LivingWorld.Telemetry
             Str("weapon", w == null || w.m_dropPrefab == null ? "" : w.m_dropPrefab.name);
             Character t = kernel.Body.Ai.GetTargetCreature();
             Str("targetPrefab", t == null ? "" : global::Utils.GetPrefabName(t.gameObject));
+            End();
+        }
+
+        void OnHeavy(NpcKernel kernel)
+        {
+            if (!active || writer == null || kernel == null) return;
+            NpcBody b = kernel.Body;
+            Begin("Heavy"); Actor(kernel); Str("why", b.LastHeavyReason ?? ""); Num("cost", b.LastHeavyCost);
+            Num("stamina", b.Stamina); Num("closing", b.LastHeavyClosing); Num("inArea", b.LastHeavyInArea);
+            Num("edge", b.LastChainDistance);
+            ItemDrop.ItemData w = b.Human.GetCurrentWeapon();
+            Str("weapon", w == null || w.m_dropPrefab == null ? "" : w.m_dropPrefab.name);
+            Character t = b.Ai.GetTargetCreature();
+            Str("targetPrefab", t == null ? "" : global::Utils.GetPrefabName(t.gameObject));
+            Bool("targetStaggered", t != null && t.IsStaggering());
             End();
         }
 
@@ -389,7 +405,7 @@ namespace LivingWorld.Telemetry
             if (subscribed)
             {
                 NpcKernel.Removed -= OnRemoved; NpcKernel.Damaged -= OnDamaged;
-                NpcVoice.Spoke -= OnSpoke; StrikeHook.Landed -= OnStrike; MeleeChainHook.Chained -= OnChain;
+                NpcVoice.Spoke -= OnSpoke; StrikeHook.Landed -= OnStrike; MeleeChainHook.Chained -= OnChain; MeleeChainHook.Heavy -= OnHeavy;
             }
             if (active) Stop("shutdown");
         }

@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.18";
+        public const string Version = "1.0.19";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -31,11 +31,15 @@ namespace LivingWorld.Core
 
         // Feature switches so one change can be live-tested at a time (BepInEx config file).
         static BepInEx.Configuration.ConfigEntry<bool> shieldBlocking;
+        static BepInEx.Configuration.ConfigEntry<float> foodStamina;
+        public static float FoodStamina { get { return foodStamina == null ? 100f : Mathf.Max(0f, foodStamina.Value); } }
         public static bool ShieldBlocking { get { return shieldBlocking != null && shieldBlocking.Value; } }
 
         void Awake()
         {
             Instance = this;
+            foodStamina = Config.Bind("Combat", "CompanionFoodStamina", 100f,
+                "Stamina a companion gets from food on top of the Player base 50 (stands in for three meals).");
             shieldBlocking = Config.Bind("Combat", "ShieldBlocking", false,
                 "Experimental: companions raise shields against close melee and aimed projectiles.");
             // One hook: companions answer native MonsterAI's own "which enemy?" question.
@@ -58,6 +62,11 @@ namespace LivingWorld.Core
                 postfix: new HarmonyLib.HarmonyMethod(typeof(MeleeChainHook).GetMethod("QueuedPostfix")));
             harmony.Patch(NativeApi.UpdateAttack,
                 postfix: new HarmonyLib.HarmonyMethod(typeof(MeleeChainHook).GetMethod("UpdatePostfix")));
+            // Stamina parity: a companion's pool, regen and run drain follow the Player's rules.
+            harmony.Patch(NativeApi.HaveStamina, prefix: new HarmonyLib.HarmonyMethod(typeof(StaminaParity).GetMethod("HavePrefix")));
+            harmony.Patch(NativeApi.UseStamina, prefix: new HarmonyLib.HarmonyMethod(typeof(StaminaParity).GetMethod("UsePrefix")));
+            harmony.Patch(NativeApi.GetMaxStamina, postfix: new HarmonyLib.HarmonyMethod(typeof(StaminaParity).GetMethod("MaxPostfix")));
+            harmony.Patch(NativeApi.HumanoidCheckRun, postfix: new HarmonyLib.HarmonyMethod(typeof(StaminaParity).GetMethod("RunPostfix")));
             Report(ArmorParity.ArmorGatesPatched == 1 ? "Companion armor applies to damage (Player rule)." :
                 "WARNING: companion armor gate not patched.");
             Report("Companion damage parity: stagger x2 " + (ArmorParity.StaggerGatesPatched == 1 ? "off" : "NOT PATCHED") +

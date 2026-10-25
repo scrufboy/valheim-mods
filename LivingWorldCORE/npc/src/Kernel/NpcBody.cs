@@ -30,6 +30,18 @@ namespace LivingWorld.Core
         public bool Crouching { get { return crouching; } }
         public bool Sitting { get { return sitting; } }
 
+        static readonly System.Collections.Generic.Dictionary<Character, NpcBody> ByCharacter =
+            new System.Collections.Generic.Dictionary<Character, NpcBody>();
+
+        /// <summary>The companion body for a native character, or null (all other characters are untouched).</summary>
+        internal static NpcBody Of(Character c)
+        {
+            NpcBody body;
+            return c != null && ByCharacter.TryGetValue(c, out body) ? body : null;
+        }
+
+        internal void Unregister() { if (Human != null) ByCharacter.Remove(Human); }
+
         internal NpcBody(NpcKernel kernel, GameObject root)
         {
             this.kernel = kernel;
@@ -41,6 +53,7 @@ namespace LivingWorld.Core
             Anim = root.GetComponent<ZSyncAnimation>();
             if (Human != null)
             {
+                ByCharacter[Human] = this;
                 baseSpeed = Human.m_speed;
                 baseWalkSpeed = Human.m_walkSpeed;
                 baseRunSpeed = Human.m_runSpeed;
@@ -513,13 +526,21 @@ namespace LivingWorld.Core
             if (raise) BlockRaises++;
         }
 
-        // ---------------- Chained melee (1.0.17) ----------------
+        // ---------------- Melee follow-ups: combo chain (1.0.17) and heavy attack (1.0.19) ----------------
 
         NpcBehavior chainOwner;
         [ThreadStatic] static Humanoid chainGate;   // the one actor whose HaveQueuedChain answers yes, for one call
         public int Chains { get; private set; }
+        public int Heavies { get; private set; }
         public int LastChainLevel { get; private set; }
         public float LastChainDistance { get; private set; }
+        public string LastHeavyReason { get; private set; }
+        public float LastHeavyCost { get; private set; }
+        public int LastHeavyClosing { get; private set; }
+        public int LastHeavyInArea { get; private set; }
+        bool wasInAttack, lastSwingWasComboEnd;
+        float lastSwingEnded = float.NegativeInfinity;
+
         /// <summary>Combo position of the swing in progress (0 = first hit), or -1.</summary>
         public int CurrentChainLevel
         {
@@ -530,7 +551,12 @@ namespace LivingWorld.Core
             }
         }
 
-        /// <summary>The behavior holding the hands lets combos continue (or stops them). Released on domain loss.</summary>
+        public bool CurrentAttackIsSecondary
+        {
+            get { return Human != null && (bool)NativeApi.CurrentAttackIsSecondary.GetValue(Human); }
+        }
+
+        /// <summary>The behavior holding the hands lets follow-ups happen (or stops them). Released on domain loss.</summary>
         public void AllowChains(NpcBehavior caller, bool allow)
         {
             Require(NpcDomain.Hands, caller);
@@ -540,47 +566,158 @@ namespace LivingWorld.Core
         internal static bool ChainQueued(Humanoid human) { return human != null && ReferenceEquals(chainGate, human); }
 
         /// <summary>
-        /// Called every physics step from Humanoid.UpdateAttack. If the current swing's native chain
-        /// window is open and the rule says the next hit can land, start it exactly as a player's
-        /// queued attack would. Returns the new chain level, or -1.
+        /// Every physics step from Humanoid.UpdateAttack. Mid-swing in the native chain window: a heavy
+        /// if HeavyPolicy says so, else the next combo hit while it can land. Between swings: a heavy
+        /// if HeavyPolicy says so (staggered target, crowd for an area heavy, finisher right after a
+        /// combo's last hit). Returns 1 = combo hit started, 2 = heavy started, 0 = nothing.
         /// </summary>
-        internal int TryChain()
+        internal int TryFollowUp()
         {
-            if (chainOwner == null || Human == null || !Human.InAttack()) return -1;
-            if (!IsOwner || !kernel.Holds(chainOwner, NpcDomain.Hands)) { chainOwner = null; return -1; }
+            if (Human == null) return 0;
+            bool inAttack = Human.InAttack();
             Attack current = NativeApi.CurrentAttack.GetValue(Human) as Attack;
-            if (current == null) return -1;
-            bool window = (bool)NativeApi.CanStartChainAttack.Invoke(current, null);
-            if (!window) return -1;
+            if (inAttack && current != null)
+            {
+                int level = (int)NativeApi.AttackChainLevel.GetValue(current);
+                int levels = (int)NativeApi.AttackChainLevels.GetValue(current);
+                lastSwingWasComboEnd = !CurrentAttackIsSecondary && levels > 1 && level >= levels - 1;
+            }
+            else if (wasInAttack) lastSwingEnded = Time.time;
+            wasInAttack = inAttack;
+
+            if (chainOwner == null) return 0;
+            if (!IsOwner || !kernel.Holds(chainOwner, NpcDomain.Hands)) { chainOwner = null; return 0; }
             ItemDrop.ItemData weapon = Human.GetCurrentWeapon();
-            bool melee = weapon != null && weapon.m_shared != null && weapon.m_shared.m_attack != null &&
-                weapon.m_shared.m_attack.m_attackType != Attack.AttackType.Projectile &&
+            if (weapon == null || weapon.m_shared == null || weapon.m_shared.m_attack == null) return 0;
+            bool melee = weapon.m_shared.m_attack.m_attackType != Attack.AttackType.Projectile &&
                 weapon.m_shared.m_skillType != Skills.SkillType.Bows;
-            bool secondary = (bool)NativeApi.CurrentAttackIsSecondary.GetValue(Human);
+            if (!melee) return 0;
             Character target = Ai.GetTargetCreature();
             bool alive = target != null && !target.IsDead();
-            float edge = float.PositiveInfinity, angle = 180f;
-            if (alive)
+            if (!alive) return 0;
+
+            bool window = inAttack && current != null && (bool)NativeApi.CanStartChainAttack.Invoke(current, null);
+            if (inAttack && !window) return 0;
+
+            Vector3 offset = target.transform.position - Human.transform.position;
+            float edge = Mathf.Max(0f, offset.magnitude - target.GetRadius());
+            offset.y = 0f;
+            float facing = offset.sqrMagnitude < .01f ? 0f : Vector3.Angle(Human.transform.forward, offset);
+
+            // Heavy first: it is only ever chosen when it beats the alternative.
+            Attack heavy = weapon.m_shared.m_secondaryAttack;
+            bool hasHeavy = heavy != null && !String.IsNullOrEmpty(heavy.m_attackAnimation);
+            HeavyPolicy.Shape shape = HeavyPolicy.ShapeOf(hasHeavy, hasHeavy && heavy.m_attackType == Attack.AttackType.Projectile,
+                hasHeavy ? heavy.m_attackAngle : 0f, hasHeavy && heavy.m_attackType == Attack.AttackType.Area);
+            if (shape != HeavyPolicy.Shape.None)
             {
-                Vector3 offset = target.transform.position - Human.transform.position;
-                edge = Mathf.Max(0f, offset.magnitude - target.GetRadius());
-                offset.y = 0f;
-                angle = offset.sqrMagnitude < .01f ? 0f : Vector3.Angle(Human.transform.forward, offset);
+                float cost = HeavyCost(heavy, weapon);
+                int inArea, closing;
+                CountEnemies(target, heavy.m_attackRange + HeavyPolicy.ReachSlack, out inArea, out closing);
+                bool comboJustEnded = !inAttack && lastSwingWasComboEnd && Time.time - lastSwingEnded <= HeavyPolicy.FinisherWindow;
+                HeavyPolicy.Why why = HeavyPolicy.Choose(shape, Stamina, cost, true, edge, heavy.m_attackRange, facing,
+                    target.IsStaggering(), inArea, closing, comboJustEnded, heavy.m_damageMultiplier, heavy.m_staggerMultiplier);
+                if (why != HeavyPolicy.Why.None && Start(target, true))
+                {
+                    Heavies++;
+                    lastSwingWasComboEnd = false;
+                    LastHeavyReason = why.ToString();
+                    LastHeavyCost = cost;
+                    LastHeavyClosing = closing;
+                    LastHeavyInArea = inArea;
+                    LastChainDistance = edge;
+                    return 2;
+                }
             }
-            float reach = melee ? weapon.m_shared.m_aiAttackRange : 0f;
-            float maxAngle = melee ? weapon.m_shared.m_aiAttackMaxAngle : 0f;
-            if (!ChainPolicy.Continue(true, true, melee, secondary, alive, edge, reach, angle, maxAngle)) return -1;
-            bool started;
-            chainGate = Human;
-            try { started = Human.StartAttack(target, false); }
-            finally { chainGate = null; }
-            if (!started) return -1;
-            Attack next = NativeApi.CurrentAttack.GetValue(Human) as Attack;
-            int level = next == null ? -1 : (int)NativeApi.AttackChainLevel.GetValue(next);
+
+            if (!window) return 0;
+            float reach = weapon.m_shared.m_aiAttackRange;
+            if (!ChainPolicy.Continue(true, true, true, CurrentAttackIsSecondary, true, edge, reach, facing, weapon.m_shared.m_aiAttackMaxAngle))
+                return 0;
+            if (!Start(target, false)) return 0;
             Chains++;
-            LastChainLevel = level;
+            LastChainLevel = CurrentChainLevel;
             LastChainDistance = edge;
-            return level;
+            return 1;
+        }
+
+        bool Start(Character target, bool secondary)
+        {
+            chainGate = Human;
+            try { return Human.StartAttack(target, secondary); }
+            finally { chainGate = null; }
+        }
+
+        float HeavyCost(Attack heavy, ItemDrop.ItemData weapon)
+        {
+            // Attack.GetAttackStamina for a non-Player: equipment modifiers apply only to Player (isinst in IL)
+            // and the skill factor is 0, so the cost is the attack's own number (status effects aside).
+            return heavy.m_attackStamina;
+        }
+
+        void CountEnemies(Character target, float areaRadius, out int inArea, out int closing)
+        {
+            inArea = 0; closing = 0;
+            Vector3 me = Human.transform.position;
+            foreach (Character other in Character.GetAllCharacters())
+            {
+                if (other == null || other == Human || other.IsDead() || !BaseAI.IsEnemy(Human, other)) continue;
+                float d = Vector3.Distance(other.transform.position, me) - other.GetRadius();
+                if (d <= areaRadius) inArea++;
+                if (other != target && d <= HeavyPolicy.ConvergeRadius) closing++;
+            }
+        }
+
+        // ---------------- Stamina (1.0.19): the Player's rules for a companion ----------------
+
+        float stamina = -1f, maxStamina, regenTimer;
+        public float Stamina { get { EnsureStamina(); return stamina; } }
+        public float MaxStamina { get { EnsureStamina(); return maxStamina; } }
+        public float StaminaSpentRun { get; private set; }
+        public int Exhaustions { get; private set; }
+
+        void EnsureStamina()
+        {
+            if (stamina >= 0f) return;
+            maxStamina = StaminaRules.Base + CorePlugin.FoodStamina;
+            stamina = maxStamina;
+        }
+
+        internal bool HaveStaminaFor(float amount) { EnsureStamina(); return stamina > amount; }
+
+        internal void SpendStamina(float amount)
+        {
+            if (amount <= 0f || float.IsNaN(amount)) return;
+            EnsureStamina();
+            bool had = stamina > 0f;
+            stamina = Mathf.Max(0f, stamina - amount * Game.m_staminaRate);
+            regenTimer = StaminaRules.RegenDelay;
+            if (had && stamina <= 0f) Exhaustions++;
+        }
+
+        /// <summary>Player.CheckRun's rule: running costs stamina, and an empty pool means walking.</summary>
+        internal bool RunAllowed(float dt)
+        {
+            EnsureStamina();
+            if (stamina <= 0f) return false;
+            float drain = StaminaRules.RunDrainPerSecond(Human.GetEquipmentMovementModifier()) * dt * Game.m_moveStaminaRate;
+            SpendStamina(drain);
+            StaminaSpentRun += drain;
+            return stamina > 0f;
+        }
+
+        /// <summary>Player.UpdateStats regen, once per frame on the owner.</summary>
+        internal void TickStamina(float dt)
+        {
+            EnsureStamina();
+            maxStamina = StaminaRules.Base + CorePlugin.FoodStamina;
+            regenTimer -= dt;
+            if (stamina >= maxStamina) { stamina = maxStamina; return; }
+            if (regenTimer > 0f || Human.InDodge() || Human.IsEncumbered()) return;
+            float rate = StaminaRules.RegenPerSecond(stamina, maxStamina, Human.InAttack(), Human.IsBlocking());
+            float mod = 1f;
+            Human.GetSEMan().ModifyStaminaRegen(ref mod);
+            stamina = Mathf.Min(maxStamina, stamina + rate * mod * dt * Game.m_staminaRegenRate);
         }
 
         internal void LowerBlockUnchecked()

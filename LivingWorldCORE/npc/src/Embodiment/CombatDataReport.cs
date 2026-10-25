@@ -25,6 +25,22 @@ namespace LivingWorld.Core
             "ArmorPaddedCuirass", "ArmorPaddedGreaves", "HelmetPadded", "CapeDeerHide", "CapeWolf", "CapeLinen", "CapeLox"
         };
 
+        static readonly string[] Foods =
+        {
+            "QueensJam", "Sausages", "TurnipStew", "ShocklateSmoothie", "BlackSoup", "SerpentStew", "WolfMeatSkewer",
+            "OnionSoup", "Eyescream", "LoxPie", "FishWraps", "BloodPudding", "Bread", "MeadStaminaMinor", "MeadStaminaMedium"
+        };
+
+        static string Food(string name)
+        {
+            GameObject prefab = PrefabManager.Instance.GetPrefab(name);
+            ItemDrop drop = prefab == null ? null : prefab.GetComponent<ItemDrop>();
+            if (drop == null) return "DATA food " + name + ": MISSING";
+            ItemDrop.ItemData.SharedData s = drop.m_itemData.m_shared;
+            return "DATA food " + name + ": health " + s.m_food + " stamina " + s.m_foodStamina + " regen " + s.m_foodRegen +
+                " burn " + s.m_foodBurnTime + " type " + s.m_itemType;
+        }
+
         internal static void Write(Action<string> log)
         {
             GameObject player = PrefabManager.Instance.GetPrefab("Player");
@@ -35,6 +51,7 @@ namespace LivingWorld.Core
                     p.m_dodgeStaminaUsage, p.m_jumpStaminaUsage, p.m_blockStaminaDrain, p.m_perfectBlockStaminaDrain));
             foreach (string name in Weapons) log(Describe(name, true));
             foreach (string name in Armor) log(Describe(name, false));
+            foreach (string name in Foods) log(Food(name));
         }
 
         static string Describe(string name, bool weapon)

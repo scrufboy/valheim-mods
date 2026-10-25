@@ -604,6 +604,79 @@ namespace LivingWorld.Core
     }
 
     /// <summary>
+    /// Stamina the Player's way (1.0.19). Valheim gives every non-Player infinite stamina
+    /// (Character.HaveStamina = true, UseStamina = no-op). Numbers verified from the installed
+    /// Player prefab / IL: base 50, regen 6/s rising to 12/s when empty (Player.UpdateStats:
+    /// regen * (1 + (1 - s/max) * timeMult)), 1 s delay after any use, none while attacking,
+    /// dodging or encumbered, x0.8 while blocking; run drain 8/s scaled by the equipment movement
+    /// modifier (Player.CheckRun); attacks pay Attack.GetAttackStamina (natively, once HaveStamina
+    /// and UseStamina are real). Food allowance stands in for the meals a player would eat.
+    /// </summary>
+    public static class StaminaRules
+    {
+        public const float Base = 50f, Regen = 6f, RegenTimeMultiplier = 1f, RegenDelay = 1f, RunDrain = 8f;
+        public const float BlockingRegenFactor = .8f;
+
+        public static float RegenPerSecond(float stamina, float max, bool attacking, bool blocking)
+        {
+            if (attacking || max <= 0f) return 0f;
+            float fill = Mathf01(stamina / max);
+            float rate = Regen + (1f - fill) * Regen * RegenTimeMultiplier;
+            return blocking ? rate * BlockingRegenFactor : rate;
+        }
+
+        /// <summary>movementModifier is the summed equipment value (negative = heavier gear drains more).</summary>
+        public static float RunDrainPerSecond(float movementModifier)
+        {
+            return RunDrain - RunDrain * movementModifier;
+        }
+
+        static float Mathf01(float v) { return v < 0f ? 0f : v > 1f ? 1f : v; }
+    }
+
+    /// <summary>
+    /// Heavy (secondary) attack choice (1.0.19), one rule for every melee weapon, driven by that
+    /// weapon's own secondary-attack data. A single-target heavy (sword stab, axe, mace, knife) is
+    /// a commitment: never with two or more other enemies closing in. An area heavy (atgeir spin)
+    /// is the answer to a crowd. Staggered targets take x2 from everyone (verified), so any heavy
+    /// on a staggered target is the best stamina value there is. Always keep a reserve to escape.
+    /// </summary>
+    public static class HeavyPolicy
+    {
+        public enum Shape { None, Single, Area }
+        public enum Why { None, Staggered, Crowd, Finisher }
+        public const float Reserve = 20f;          // stamina kept back for a fall-back sprint
+        public const float ConvergeRadius = 4f;    // other enemies this close are "closing in"
+        public const float ReachSlack = .5f;
+        public const float SingleFacing = 20f;     // a narrow heavy must be lined up
+        public const float FinisherWindow = .6f;   // seconds after a combo's last hit
+
+        public static Shape ShapeOf(bool hasSecondary, bool projectile, float attackAngle, bool areaType)
+        {
+            if (!hasSecondary || projectile) return Shape.None;
+            return areaType || attackAngle >= 180f ? Shape.Area : Shape.Single;
+        }
+
+        public static Why Choose(Shape shape, float stamina, float cost, bool targetAlive, float edge, float range,
+            float facing, bool targetStaggered, int enemiesInArea, int othersClosing, bool comboJustEnded,
+            float damageMultiplier, float staggerMultiplier)
+        {
+            if (shape == Shape.None || !targetAlive) return Why.None;
+            if (stamina - cost < Reserve) return Why.None;
+            bool inReach = edge <= range + ReachSlack;
+            if (shape == Shape.Area)
+            {
+                if (enemiesInArea >= 2) return Why.Crowd;
+                return targetStaggered && inReach ? Why.Staggered : Why.None;
+            }
+            if (!inReach || facing > SingleFacing || othersClosing >= 2) return Why.None;
+            if (targetStaggered) return Why.Staggered;
+            if (comboJustEnded && (damageMultiplier >= 2f || staggerMultiplier >= 3f)) return Why.Finisher;
+            return Why.None;
+        }
+    }
+
+    /// <summary>
     /// Chained melee (1.0.17). Valheim continues a combo only when the next swing starts inside the
     /// current swing's chain window (anim event "chain") - the player does it by pressing attack
     /// mid-swing. Native AI never does (Humanoid.HaveQueuedChain = false; MonsterAI waits out its

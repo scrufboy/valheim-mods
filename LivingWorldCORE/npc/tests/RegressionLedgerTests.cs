@@ -12,6 +12,8 @@ static class RegressionLedgerTests
 
     static int Main()
     {
+        Run("1.0.19: heavy attack only when it pays, never into a converging crowd", HeavyOnlyWhenItPays);
+        Run("1.0.19: companion stamina follows the Player rules", StaminaFollowsPlayerRules);
         Run("1.0.18 lab: gear kits are complete and resupply their own arrow", KitsAreCompleteAndResupplyTheirOwnArrow);
         Run("1.0.17: melee chains only while the next swing can land", ChainContinuesOnlyWhenTheSwingCanLand);
         Run("0.6.3 Bonemass: distant ranged target does not trigger party regroup", RangedTargetIsNotSeparation);
@@ -700,5 +702,35 @@ static class RegressionLedgerTests
         Assert(CompanionKits.Items("mistlands") == null, "unknown kit accepted");
         Assert(CompanionKits.Arrow("") == "ArrowWood", "no kit does not resupply wood arrows");
         Assert(CompanionKits.ClampQuality(9) == 4 && CompanionKits.ClampQuality(0) == 1, "quality outside 1-4 accepted");
+    }
+
+    static HeavyPolicy.Why H(HeavyPolicy.Shape shape, float stamina, float edge, float facing, bool staggered, int inArea, int closing, bool comboEnd)
+    { return HeavyPolicy.Choose(shape, stamina, 28f, true, edge, 2.7f, facing, staggered, inArea, closing, comboEnd, 3f, 1f); }
+
+    static void HeavyOnlyWhenItPays()
+    {
+        var S = HeavyPolicy.Shape.Single; var A = HeavyPolicy.Shape.Area;
+        Assert(H(S, 100f, 1.5f, 5f, true, 1, 0, false) == HeavyPolicy.Why.Staggered, "no heavy on a staggered target in reach");
+        Assert(H(S, 100f, 1.5f, 5f, true, 1, 2, false) == HeavyPolicy.Why.None, "single heavy committed with two enemies closing in");
+        Assert(H(S, 40f, 1.5f, 5f, true, 1, 0, false) == HeavyPolicy.Why.None, "heavy spent the escape reserve");
+        Assert(H(S, 100f, 4f, 5f, true, 1, 0, false) == HeavyPolicy.Why.None, "heavy out of reach");
+        Assert(H(S, 100f, 1.5f, 45f, true, 1, 0, false) == HeavyPolicy.Why.None, "narrow heavy not lined up");
+        Assert(H(S, 100f, 1.5f, 5f, false, 1, 0, true) == HeavyPolicy.Why.Finisher, "no finisher after a combo");
+        Assert(H(S, 100f, 1.5f, 5f, false, 1, 0, false) == HeavyPolicy.Why.None, "heavy on an ordinary swing");
+        Assert(H(A, 100f, 1.5f, 90f, false, 3, 3, false) == HeavyPolicy.Why.Crowd, "area heavy refused a crowd");
+        Assert(H(A, 100f, 1.5f, 90f, false, 1, 0, true) == HeavyPolicy.Why.None, "area heavy on one ordinary target");
+        Assert(HeavyPolicy.Choose(HeavyPolicy.Shape.None, 100f, 0f, true, 1f, 2f, 0f, true, 3, 0, true, 3f, 1f) == HeavyPolicy.Why.None, "weapon without a heavy used one");
+        Assert(HeavyPolicy.ShapeOf(true, true, 90f, false) == HeavyPolicy.Shape.None, "spear throw treated as a melee heavy");
+        Assert(HeavyPolicy.ShapeOf(true, false, 360f, false) == HeavyPolicy.Shape.Area, "atgeir spin not an area heavy");
+        Assert(HeavyPolicy.ShapeOf(true, false, 10f, false) == HeavyPolicy.Shape.Single, "sword stab not single-target");
+    }
+
+    static void StaminaFollowsPlayerRules()
+    {
+        Assert(System.Math.Abs(StaminaRules.RegenPerSecond(150f, 150f, false, false) - 6f) < .01f, "full-pool regen is not 6/s");
+        Assert(System.Math.Abs(StaminaRules.RegenPerSecond(0f, 150f, false, false) - 12f) < .01f, "empty-pool regen is not 12/s");
+        Assert(StaminaRules.RegenPerSecond(0f, 150f, true, false) == 0f, "regenerates while attacking");
+        Assert(System.Math.Abs(StaminaRules.RegenPerSecond(150f, 150f, false, true) - 4.8f) < .01f, "blocking regen not x0.8");
+        Assert(System.Math.Abs(StaminaRules.RunDrainPerSecond(-.15f) - 9.2f) < .01f, "heavy gear does not raise run drain");
     }
 }

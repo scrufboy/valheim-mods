@@ -358,6 +358,43 @@ def main(paths):
             add("INFO", "Gear " + tier, "armor %s; median hit taken: %s; deaths %d" % (
                 armor[len(armor) // 2] if armor else "?", ", ".join(parts) or "no hits", dead))
 
+    # 6l. Stamina (1.0.19): a real pool, spent and recovered on the Player's rules
+    if any("maxStamina" in r for r in npc):
+        fighting = [r for r in npc if r.get("phase") in COMBAT]
+        if not fighting:
+            add("NOT EXERCISED", "Stamina is spent in combat", "no combat samples")
+        else:
+            full = sum(1 for r in fighting if r.get("stamina", 0) >= r.get("maxStamina", 1) - .5)
+            low = sum(1 for r in fighting if r.get("stamina", 0) < 15)
+            mx = max(r.get("maxStamina", 0) for r in fighting)
+            ex = {}
+            for r in npc:
+                ex[r["npc"]] = max(ex.get(r["npc"], 0), int(r.get("exhaustions", 0)))
+            add("PASS" if full < len(fighting) else "FAIL", "Stamina is spent in combat",
+                "max %.0f; full in %.0f%% of combat samples, under 15 in %.0f%%; emptied %d time(s)" % (
+                    mx, 100.0 * full / len(fighting), 100.0 * low / len(fighting), sum(ex.values())))
+
+    # 6m. Heavy attacks (1.0.19): only when they pay, never single-target into a converging crowd
+    if any("heavies" in r for r in npc):
+        heavy = [r for r in rows if r.get("type") == "Heavy"]
+        melee_hits = [r for r in strikes if "Bow" not in r.get("weapon", "")]
+        if not heavy and len(melee_hits) < 10:
+            add("NOT EXERCISED", "Heavy attacks", "%d melee hits landed" % len(melee_hits))
+        else:
+            why = defaultdict(int)
+            for r in heavy:
+                why[r.get("why", "?")] += 1
+            hh = [r for r in melee_hits if r.get("heavy")]
+            add("PASS" if heavy else "FAIL", "Heavy attacks",
+                "%d started (%s); %d heavy hits landed, median %.0f damage vs %.0f for other melee hits" % (
+                    len(heavy), ", ".join("%s %d" % kv for kv in sorted(why.items())) or "none", len(hh),
+                    sorted(r.get("amount", 0) for r in hh)[len(hh) // 2] if hh else 0,
+                    sorted(r.get("amount", 0) for r in melee_hits if not r.get("heavy"))[len([r for r in melee_hits if not r.get("heavy")]) // 2] if len(melee_hits) > len(hh) else 0))
+            bad = [r for r in heavy if r.get("why") != "Crowd" and r.get("closing", 0) >= 2]
+            low = [r for r in heavy if r.get("stamina", 0) < 0]
+            add("PASS" if not bad else "FAIL", "No single-target heavy into a converging crowd",
+                "%d of %d heavies started with 2+ other enemies within 4 m" % (len(bad), len(heavy)))
+
     # 6b. Shield blocking (new in 1.0.2; native AI never blocks)
     if start.get("cfgShieldBlocking") is False:
         add("NOT EXERCISED", "Shield blocks in close combat", "blocking switched off in config")

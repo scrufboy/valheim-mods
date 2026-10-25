@@ -112,6 +112,7 @@ namespace LivingWorld.Core
         {
             ReleaseEverything("destroyed");
             Live.Remove(this);
+            if (body != null) body.Unregister();
             bool dead = Died || (body != null && body.Human != null && body.Human.IsDead());
             Action<NpcKernel, string> removed = Removed;
             if (removed != null)
@@ -174,6 +175,7 @@ namespace LivingWorld.Core
             }
             wasOwner = true;
             if (appearance != null && appearance.Ready) body.ReapplyKitOnce();
+            body.TickStamina(Time.deltaTime);
             if (Time.time < nextDecision) return;
             float dt = nextDecision <= 0f ? Tuning.DecisionInterval : Tuning.DecisionInterval + (Time.time - nextDecision);
             nextDecision = Time.time + Tuning.DecisionInterval;
