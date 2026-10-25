@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.9";
+        public const string Version = "1.0.10";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -47,6 +47,10 @@ namespace LivingWorld.Core
                 postfix: new HarmonyLib.HarmonyMethod(typeof(ArmorParity).GetMethod("BodyArmorPostfix")));
             harmony.Patch(NativeApi.ApplyArmorDamageMods,
                 postfix: new HarmonyLib.HarmonyMethod(typeof(ArmorParity).GetMethod("ArmorModsPostfix")));
+            harmony.Patch(NativeApi.RpcDamage,
+                transpiler: new HarmonyLib.HarmonyMethod(typeof(ArmorParity).GetMethod("RpcDamageTranspiler")));
+            Report(ArmorParity.ArmorGatesPatched == 1 ? "Companion armor applies to damage (Player rule)." :
+                "WARNING: companion armor gate not patched.");
             PrefabManager.OnVanillaPrefabsAvailable += RegisterPrefabs;
             partyCommand = new Terminal.ConsoleCommand("lwparty",
                 "Living World: create your two companions (lwparty new = replace the current lab pair)",

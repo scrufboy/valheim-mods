@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
+using HarmonyLib;
 using UnityEngine;
 
 namespace LivingWorld.Core
@@ -16,6 +19,41 @@ namespace LivingWorld.Core
         static readonly FieldInfo[] Slots = { NativeApi.ChestItem, NativeApi.LegItem, NativeApi.HelmetItem, NativeApi.ShoulderItem };
 
         static bool IsCompanion(Character c) { return c != null && !(c is Player) && c.GetComponent<NpcKernel>() != null; }
+
+        /// <summary>Replaces the single IsPlayer() gate in front of armor in Character.RPC_Damage.</summary>
+        public static bool CountsArmor(Character c) { return c.IsPlayer() || IsCompanion(c); }
+
+        public static int ArmorGatesPatched { get; private set; }
+
+        /// <summary>
+        /// Character.RPC_Damage (1.0.20): resistances, then `if (IsPlayer()) { ApplyArmor(GetBodyArmor());
+        /// DamageArmorDurability(hit); }`. 1.0.9 live: companions read armor 29 but a Draugr axe still
+        /// did 45.5 (should be ~18) because that gate skipped them. Swap exactly that one call -- the
+        /// IsPlayer immediately followed by GetBodyArmor -- for CountsArmor. Anything else unchanged;
+        /// if the shape is not found exactly once, the method is left untouched and the log says so.
+        /// </summary>
+        public static IEnumerable<CodeInstruction> RpcDamageTranspiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var code = new List<CodeInstruction>(instructions);
+            MethodInfo isPlayer = AccessTools.Method(typeof(Character), "IsPlayer");
+            MethodInfo counts = AccessTools.Method(typeof(ArmorParity), "CountsArmor");
+            var hits = new List<int>();
+            for (int i = 0; i < code.Count; i++)
+            {
+                if (!code[i].Calls(isPlayer)) continue;
+                for (int j = i + 1; j <= i + 4 && j < code.Count; j++)
+                    if (code[j].Calls(NativeApi.GetBodyArmor)) { hits.Add(i); break; }
+            }
+            if (hits.Count != 1)
+            {
+                CorePlugin.Warn("armor gate not found exactly once in Character.RPC_Damage (" + hits.Count + "); companion armor will not reduce damage");
+                return code;
+            }
+            code[hits[0]].opcode = OpCodes.Call;
+            code[hits[0]].operand = counts;
+            ArmorGatesPatched = 1;
+            return code;
+        }
 
         public static void BodyArmorPostfix(Character __instance, ref float __result)
         {

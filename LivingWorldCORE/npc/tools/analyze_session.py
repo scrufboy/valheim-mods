@@ -263,6 +263,12 @@ def main(paths):
     hits = [r for r in rows if r.get("type") == "Damage" and "armor" in r]
     if hits:
         zero = sum(1 for r in hits if r.get("armor", 0) <= 0)
+        # Armor must change the damage, not just the number (1.0.9: armor 29, Draugr axe still 45.5).
+        axe = [r["amount"] for r in hits if r.get("attackerWeapon") == "draugr_axe" and r.get("armor", 0) >= 20]
+        if axe:
+            med = sorted(axe)[len(axe) // 2]
+            add("PASS" if med < 35 else "FAIL", "Armor reduces damage (Draugr axe, ~45 raw)",
+                "median %.1f over %d hits at armor >= 20" % (med, len(axe)))
         add("PASS" if zero == 0 else "FAIL", "Worn armor counts against hits",
             "%d of %d hits taken with armor 0; typical armor %.0f" % (zero, len(hits), sorted(r["armor"] for r in hits)[len(hits) // 2]))
 

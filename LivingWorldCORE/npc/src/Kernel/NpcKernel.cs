@@ -245,7 +245,7 @@ namespace LivingWorld.Core
             {
                 bool want = false;
                 try { want = behaviors[i].Wants(frame); }
-                catch (Exception error) { Faults++; behaviors[i].Status = "wants fault: " + error.Message; }
+                catch (Exception error) { Faults++; behaviors[i].Status = "wants fault: " + error.Message; CorePlugin.Warn(behaviors[i].Name + " wants fault: " + error); }
                 wants[i] = want;
             }
             DomainScheduler.Resolve(wants, claims, granted);
@@ -262,13 +262,13 @@ namespace LivingWorld.Core
                 if (!granted[i] || wasGranted[i]) continue;
                 Grant(i);
                 try { behaviors[i].Enter(frame); }
-                catch (Exception error) { Faults++; behaviors[i].Status = "enter fault: " + error.Message; }
+                catch (Exception error) { Faults++; behaviors[i].Status = "enter fault: " + error.Message; CorePlugin.Warn(behaviors[i].Name + " enter fault: " + error); }
             }
             for (int i = 0; i < behaviors.Count; i++)
             {
                 if (!granted[i]) continue;
                 try { behaviors[i].Tick(frame); }
-                catch (Exception error) { Faults++; behaviors[i].Status = "tick fault: " + error.Message; }
+                catch (Exception error) { Faults++; behaviors[i].Status = "tick fault: " + error.Message; CorePlugin.Warn(behaviors[i].Name + " tick fault: " + error); }
             }
         }
 
@@ -282,7 +282,7 @@ namespace LivingWorld.Core
         void RunExit(int i, string reason)
         {
             try { behaviors[i].Exit(frame, reason); }
-            catch (Exception error) { Faults++; behaviors[i].Status = "exit fault: " + error.Message; }
+            catch (Exception error) { Faults++; behaviors[i].Status = "exit fault: " + error.Message; CorePlugin.Warn(behaviors[i].Name + " exit fault: " + error); }
             foreach (NpcDomain domain in Domains(claims[i]))
             {
                 NpcBehavior owner;
