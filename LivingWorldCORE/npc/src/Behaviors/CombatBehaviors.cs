@@ -11,7 +11,7 @@ namespace LivingWorld.Core
     public sealed class NativeCombatBehavior : NpcBehavior
     {
         Character prepared;
-        float nextEngagedCheck;
+        float nextEngagedCheck, nextRepick;
         BlockPolicy block;
         Character blockThreat;
         readonly List<ThreatObservation> threats = new List<ThreatObservation>(8);
@@ -51,6 +51,18 @@ namespace LivingWorld.Core
                 {
                     Body.DropTarget(this);
                     prepared = null;
+                }
+            }
+            // No dead time between targets: after a kill (or anything that empties the slot) the game
+            // waits up to 2 s for its next re-pick. With an engaged enemy near, ask for it now.
+            // 1.0.7 live: 13% of fighting time targetless with enemies near, 7 of 50 hits taken then.
+            if ((s.Target == null || s.Target.IsDead()) && !s.HasStaticTarget && f.Now >= nextRepick)
+            {
+                NpcKernel k = Body.Root.GetComponent<NpcKernel>();
+                if (k != null && k.NearestEngagedDistance <= TargetPolicy.MaxRange)
+                {
+                    Body.DropTarget(this);
+                    nextRepick = f.Now + .5f;
                 }
             }
             if (s.Target != null && s.Target != prepared)

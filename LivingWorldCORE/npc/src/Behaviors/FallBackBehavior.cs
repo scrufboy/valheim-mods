@@ -55,6 +55,8 @@ namespace LivingWorld.Core
             {
                 if (anchor != null && Body.Ai != null && Body.Ai.GetFollowTarget() == anchor) Body.Follow(this, null);
                 Body.RestorePace(this);
+                // The fall-back ends in a decision: fight now, not after the game's next re-pick.
+                Body.DropTarget(this);
             }
             finally
             {

@@ -321,6 +321,7 @@ namespace LivingWorld.Core
         Vector3 nearestEngagedPosition;
         readonly FallBackPolicy fallBack = new FallBackPolicy();
         public FallBackPolicy FallBack { get { return fallBack; } }
+        public float NearestEngagedDistance { get { return nearestEngagedDistance; } }
 
         void ScanEngaged()
         {

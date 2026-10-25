@@ -263,6 +263,7 @@ namespace LivingWorld.Telemetry
             Begin("Damage"); Actor(kernel);
             Num("amount", damage); Num("hp", kernel.Body.Human.GetHealth());
             Str("attacker", attacker == null ? "" : attacker.GetHoverName());
+            Str("attackerPrefab", attacker == null ? "" : global::Utils.GetPrefabName(attacker.gameObject));
             Num("dist", attacker == null ? -1f : Vector3.Distance(kernel.transform.position, attacker.transform.position));
             Str("phase", kernel.Frame.Phase.ToString());
             Bool("blocking", kernel.Body.Human.IsBlocking());

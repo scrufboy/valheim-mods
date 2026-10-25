@@ -237,7 +237,7 @@ def main(paths):
                 "%d fall-backs; %d combat samples at or below 35%% health" % (len(fb_start), len(low)))
             long_ = []
             for s in fb_start:
-                e = next((x for x in fb_end if x["npc"] == s["npc"] and x["t"] >= s["t"]), None)
+                e = next((x for x in fb_end + [q for q in rows if q.get("type") == "Removed"] if x["npc"] == s["npc"] and x["t"] >= s["t"]), None)
                 if e is None or e["t"] - s["t"] > 6.6:
                     long_.append(s)
             over = [s for s in fb_start if s.get("count", 0) > 3]
@@ -248,6 +248,14 @@ def main(paths):
                 k = e.get("outcome", "?").split(":")[0]
                 outcomes[k] = outcomes.get(k, 0) + 1
             add("INFO", "Fall-back outcomes", ", ".join("%s %d" % kv for kv in sorted(outcomes.items())) or "none")
+
+    # 6e. No dead time between targets (1.0.8)
+    fight = [r for r in npc if r.get("phase") in ("Combat", "CombatClear") and not r.get("fallBack")]
+    if fight:
+        gaps = [r for r in fight if not r.get("target") and r.get("hostile")]
+        share = len(gaps) / len(fight)
+        add("PASS" if share <= .05 else "FAIL", "No dead time between targets",
+            "%.0f%% of fighting samples had no target with a hostile near (1.0.6/1.0.7: 13%%)" % (share * 100))
 
     # 6b. Shield blocking (new in 1.0.2; native AI never blocks)
     if start.get("cfgShieldBlocking") is False:
