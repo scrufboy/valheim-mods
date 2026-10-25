@@ -85,7 +85,12 @@ namespace LivingWorld.Telemetry
             lastSwitches.Clear();
             lastFallBack.Clear();
             active = true;
-            if (!subscribed) { NpcKernel.Removed += OnRemoved; NpcKernel.Damaged += OnDamaged; subscribed = true; }
+            if (!subscribed)
+            {
+                NpcKernel.Removed += OnRemoved; NpcKernel.Damaged += OnDamaged;
+                NpcVoice.Spoke += OnSpoke; StrikeHook.Landed += OnStrike;
+                subscribed = true;
+            }
             Begin("RunStart");
             Str("core", CorePlugin.Version); Num("schema", Schema); Str("world", ZNet.instance.GetWorldName());
             Str("player", Player.m_localPlayer.GetPlayerName()); Bool("registered", CorePlugin.Registered);
@@ -284,6 +289,26 @@ namespace LivingWorld.Telemetry
             End();
         }
 
+        void OnSpoke(NpcKernel kernel, string line)
+        {
+            if (!active || writer == null || kernel == null) return;
+            Begin("Voice"); Actor(kernel); Str("line", line); Str("phase", kernel.Frame.Phase.ToString()); End();
+        }
+
+        void OnStrike(Character attacker, Character target, float damage, bool killed)
+        {
+            if (!active || writer == null || attacker == null || target == null) return;
+            NpcKernel k = attacker.GetComponent<NpcKernel>();
+            if (k == null) return;
+            Begin("Strike"); Actor(k);
+            Str("target", target.GetHoverName()); Str("targetPrefab", global::Utils.GetPrefabName(target.gameObject));
+            Num("targetId", target.GetInstanceID()); Num("amount", damage); Bool("killed", killed);
+            ItemDrop.ItemData w = k.Body.Human.GetCurrentWeapon();
+            Str("weapon", w == null || w.m_dropPrefab == null ? "" : w.m_dropPrefab.name);
+            Num("dist", Vector3.Distance(attacker.transform.position, target.transform.position));
+            End();
+        }
+
         void OnRemoved(NpcKernel kernel, string reason)
         {
             if (!active || writer == null || kernel == null) return;
@@ -349,7 +374,11 @@ namespace LivingWorld.Telemetry
 
         void OnDestroy()
         {
-            if (subscribed) { NpcKernel.Removed -= OnRemoved; NpcKernel.Damaged -= OnDamaged; }
+            if (subscribed)
+            {
+                NpcKernel.Removed -= OnRemoved; NpcKernel.Damaged -= OnDamaged;
+                NpcVoice.Spoke -= OnSpoke; StrikeHook.Landed -= OnStrike;
+            }
             if (active) Stop("shutdown");
         }
     }

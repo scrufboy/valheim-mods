@@ -294,6 +294,30 @@ def main(paths):
         add("PASS" if share <= .10 else "FAIL", "Bow in hand for flying or distant targets",
             "%.0f%% of %d samples held melee (1.0.11 Moder: 44%%)" % (share * 100, len(ranged_need)))
 
+    # 6h. Voice: mostly silent (1.0.14)
+    voice = [r for r in rows if r.get("type") == "Voice"]
+    fight_min = max(len([r for r in npc if r.get("phase") in COMBAT]) / max(1, len(names)) * 0.5 / 60.0, 1 / 60.0)
+    if any(r.get("type") == "Voice" for r in rows) or any("fallBack" in r for r in npc):
+        per = len(voice) / fight_min
+        kinds = defaultdict(int)
+        for r in voice:
+            kinds[r.get("line", "?")] += 1
+        add("PASS" if per <= 6 else "FAIL", "Voice is mostly silent",
+            "%d lines, %.1f per combat-minute (%s)" % (len(voice), per, ", ".join("%s %d" % kv for kv in sorted(kinds.items())) or "none"))
+
+    # 6i. Damage dealt (1.0.14): arrows and swings that land
+    strikes = [r for r in rows if r.get("type") == "Strike"]
+    if strikes:
+        for n in sorted({r["npc"] for r in strikes}):
+            mine = [r for r in strikes if r["npc"] == n]
+            bow = [r for r in mine if "Bow" in r.get("weapon", "")]
+            a = [r.get("ammo", 0) for r in npc if r["npc"] == n]
+            spent = sum(max(0, x - y) for x, y in zip(a, a[1:]))
+            add("INFO", "Damage dealt by " + n,
+                "%d hits landed (%d by bow; %d arrows spent -> %s), %.0f damage, %d kills" % (
+                    len(mine), len(bow), spent, ("%.0f%% arrow hit rate" % (100.0 * len(bow) / spent)) if spent else "n/a",
+                    sum(r.get("amount", 0) for r in mine), sum(1 for r in mine if r.get("killed"))))
+
     # 6b. Shield blocking (new in 1.0.2; native AI never blocks)
     if start.get("cfgShieldBlocking") is False:
         add("NOT EXERCISED", "Shield blocks in close combat", "blocking switched off in config")

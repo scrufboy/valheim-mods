@@ -129,6 +129,7 @@ namespace LivingWorld.Core
         void OnDamaged(float damage, Character attacker)
         {
             lastDamageTime = Time.time;
+            try { NpcVoice.OnHurt(this, damage); } catch (Exception error) { CorePlugin.Warn("voice hurt: " + error.Message); }
             if (body.Human != null) LastHealth = body.Human.GetHealth();
             Action<NpcKernel, float, Character> damaged = Damaged;
             if (damaged != null)
@@ -231,14 +232,13 @@ namespace LivingWorld.Core
                 FormationDistance = frame.Board.FormationDistance
             }, dt);
             frame.Phase = phase;
+            NpcVoice.Tick(this);
             frame.SecondsSinceEncounter = arbiter.SecondsSinceEncounter;
             bool fighting = phase == NpcPhase.Combat || phase == NpcPhase.CombatClear;
             frame.FallingBack = fallBack.Step(Time.time, fighting, body.Human.GetHealthPercentage(), nearestEngagedDistance);
             frame.FallBackFrom = nearestEngagedPosition;
             if (phase != lastPhase)
             {
-                try { NpcVoice.OnPhaseChange(body.Human, lastPhase, phase); }
-                catch (Exception error) { CorePlugin.Warn("voice cue: " + error.Message); }
                 PhaseChanges++;
                 lastPhase = phase;
             }

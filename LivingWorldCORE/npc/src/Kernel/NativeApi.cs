@@ -37,6 +37,7 @@ namespace LivingWorld.Core
         internal static readonly MethodInfo GetBodyArmor = typeof(Character).GetMethod("GetBodyArmor", Instance, null, Type.EmptyTypes, null);
         internal static readonly MethodInfo ApplyArmorDamageMods = typeof(Character).GetMethod("ApplyArmorDamageMods", Instance);
         internal static readonly MethodInfo EquipBestWeapon = typeof(Humanoid).GetMethod("EquipBestWeapon", Instance);
+        internal static readonly MethodInfo ApplyDamage = typeof(Character).GetMethod("ApplyDamage", Instance);
         internal static readonly MethodInfo RpcDamage = Method(typeof(Character), "RPC_Damage", typeof(long), typeof(HitData));
         internal static readonly MethodInfo SetAlerted = Method(typeof(MonsterAI), "SetAlerted", typeof(bool));
         internal static readonly MethodInfo LookAt = Method(typeof(BaseAI), "LookAt", typeof(Vector3));

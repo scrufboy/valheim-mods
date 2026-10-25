@@ -50,6 +50,7 @@ namespace LivingWorld.Core
             {
                 if (currentId >= 0) Switches++;   // live target -> different target; a fresh pick is not a switch
                 Picks++;
+                try { NpcVoice.OnNewTarget(kernel, chosen); } catch (System.Exception e) { CorePlugin.Warn("voice target: " + e.Message); }
                 LastChoiceName = chosen.GetHoverName();
                 LastChoiceId = chosen.GetInstanceID();
             }

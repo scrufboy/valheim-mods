@@ -46,6 +46,10 @@ static class RegressionLedgerTests
         Run("Block: enemy attacking someone else is ignored", BlockIgnoresOthers);
         Run("Block: maximum hold then cooldown (no perfect turtle)", BlockHoldAndCooldown);
         Run("Block: lowered the moment the attack ends", BlockLowersWhenOver);
+        Run("Voice: one call-out per new enemy per party, never for one already seen", VoiceNewEnemyOnce);
+        Run("Voice: party cooldown stops a chorus", VoicePartyCooldown);
+        Run("Voice: ordinary hits are silent; devastating hits call out, with a cooldown", VoiceHurt);
+        Run("Voice: mighty blows and kills taunt only rarely", VoiceMighty);
         Run("1.0.11 Moder: a flying target always gets the bow, even close", FlyingGetsBow);
         Run("Weapon: ground target far = bow, close = melee", GroundByDistance);
         Run("Weapon: 6-10 m band keeps what is in hand (no flip-flop)", WeaponHysteresis);
@@ -615,5 +619,42 @@ static class RegressionLedgerTests
     static void NoAmmoMelee()
     {
         Assert(W(true, false, 20f, true, false) == WeaponChoice.Pick.Melee, "kept an empty bow");
+    }
+
+    static void VoiceNewEnemyOnce()
+    {
+        var v = new VoicePolicy();
+        Assert(v.NewEnemy(0f, 7, .1f), "new enemy not called out");
+        Assert(!v.NewEnemy(10f, 7, .1f), "same enemy called out twice");
+        var w = new VoicePolicy();
+        Assert(!w.NewEnemy(0f, 8, .95f), "spoke on a failed roll");
+        Assert(!w.NewEnemy(10f, 8, .1f), "silent first sighting allowed a later call-out for the same enemy");
+    }
+
+    static void VoicePartyCooldown()
+    {
+        var v = new VoicePolicy();
+        Assert(v.NewEnemy(0f, 1, .1f), "first call-out refused");
+        Assert(!v.NewEnemy(1f, 2, .1f), "two call-outs within the party cooldown");
+        Assert(v.NewEnemy(5f, 3, .1f), "call-out refused after the cooldown");
+    }
+
+    static void VoiceHurt()
+    {
+        var v = new VoicePolicy();
+        Assert(!v.Hurt(0f, 1, 20f, 250f), "cried out at an ordinary hit");
+        Assert(v.Hurt(0f, 1, 45f, 250f), "silent at a devastating hit");
+        Assert(!v.Hurt(1f, 1, 60f, 250f), "no cooldown on pain cries");
+        Assert(v.Hurt(1f, 2, 60f, 250f), "one companion's cooldown silenced the other");
+    }
+
+    static void VoiceMighty()
+    {
+        var v = new VoicePolicy();
+        Assert(!v.Mighty(0f, 10f, 100f, false, .1f), "taunted at a small hit");
+        Assert(!v.Mighty(0f, 60f, 100f, false, .9f), "taunted on a failed roll");
+        Assert(v.Mighty(0f, 60f, 100f, false, .1f), "no taunt at a mighty blow");
+        Assert(!v.Mighty(5f, 0f, 100f, true, .1f), "taunts inside the cooldown");
+        Assert(v.Mighty(11f, 0f, 100f, true, .1f), "kill after cooldown not taunted");
     }
 }

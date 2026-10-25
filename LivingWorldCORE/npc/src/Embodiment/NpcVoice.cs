@@ -45,50 +45,137 @@ namespace LivingWorld.Core
             return new EffectList { m_effectPrefabs = new[] { new EffectList.EffectData { m_prefab = clip, m_enabled = true, m_attach = true } } };
         }
 
-        /// <summary>Factory-time: voice the hit/death effects (vfx kept, player sfx replaced) and the idle timer.</summary>
+        /// <summary>Factory-time: death keeps the voice (native); ordinary hits are silent; no idle chatter.</summary>
         internal static void Configure(Humanoid human, MonsterAI ai)
         {
-            human.m_hitEffects = Voiced(human.m_hitEffects, "hit");
+            human.m_hitEffects = Voiced(human.m_hitEffects, null);
             human.m_deathEffects = Voiced(human.m_deathEffects, "death");
-            EffectList idle = List("idle");
-            if (idle != null)
-            {
-                ai.m_idleSound = idle;
-                ai.m_idleSoundInterval = 30f;
-                ai.m_idleSoundChance = .25f;
-            }
+            ai.m_idleSound = new EffectList();
+            ai.m_idleSoundChance = 0f;
+            ai.m_alertedEffects = new EffectList();
         }
 
         static EffectList Voiced(EffectList original, string key)
         {
-            GameObject clip;
-            if (!Clips.TryGetValue(key, out clip)) return original;
+            GameObject clip = null;
+            if (key != null && !Clips.TryGetValue(key, out clip)) return original;
             var keep = new List<EffectList.EffectData>();
             if (original != null && original.m_effectPrefabs != null)
                 foreach (EffectList.EffectData e in original.m_effectPrefabs)
                     if (e != null && e.m_prefab != null && !e.m_prefab.name.StartsWith("sfx_", StringComparison.Ordinal)) keep.Add(e);
-            keep.Add(new EffectList.EffectData { m_prefab = clip, m_enabled = true, m_attach = true });
+            if (key != null) keep.Add(new EffectList.EffectData { m_prefab = clip, m_enabled = true, m_attach = true });
             return new EffectList { m_effectPrefabs = keep.ToArray() };
         }
 
-        // ---- runtime cues (one per phase entry, rate limited per companion) ----
-        static readonly Dictionary<int, float> LastCue = new Dictionary<int, float>();
-        public static int CuesPlayed { get; private set; }
+        // ---- runtime: the rules live in VoicePolicy; this only plays and silences ----
+        static readonly VoicePolicy Policy = new VoicePolicy();
+        static readonly System.Random Dice = new System.Random();
+        static readonly Dictionary<int, GameObject[]> Speaking = new Dictionary<int, GameObject[]>();
+        static readonly Dictionary<NpcKernel, KeyValuePair<float, string>> Pending = new Dictionary<NpcKernel, KeyValuePair<float, string>>();
+        public static int Lines { get; private set; }
+        public static event Action<NpcKernel, string> Spoke;
 
-        internal static void OnPhaseChange(Character body, NpcPhase from, NpcPhase to)
+        static void Say(NpcKernel kernel, string key)
         {
-            if (body == null) return;
-            string key = to == NpcPhase.Combat && from != NpcPhase.CombatClear && from != NpcPhase.CombatRegroup ? "alerted"
-                : to == NpcPhase.Readiness && from == NpcPhase.Calm ? "idle" : null;
-            if (key == null) return;
-            int id = body.GetInstanceID();
-            float last;
-            if (LastCue.TryGetValue(id, out last) && Time.time - last < CueCooldown) return;
-            EffectList cue = List(key);
-            if (cue == null) return;
-            LastCue[id] = Time.time;
-            CuesPlayed++;
-            cue.Create(body.transform.position, body.transform.rotation, body.transform);
+            if (kernel == null || kernel.Body == null || kernel.Body.Human == null || kernel.Body.Human.IsDead()) return;
+            EffectList line = List(key);
+            if (line == null) return;
+            Character body = kernel.Body.Human;
+            Silence(body);
+            Speaking[body.GetInstanceID()] = line.Create(body.transform.position, body.transform.rotation, body.transform);
+            Lines++;
+            Action<NpcKernel, string> spoke = Spoke;
+            if (spoke != null) spoke(kernel, key);
+        }
+
+        /// <summary>Being hit cuts off whatever this companion was shouting.</summary>
+        static void Silence(Character body)
+        {
+            GameObject[] active;
+            if (!Speaking.TryGetValue(body.GetInstanceID(), out active) || active == null) return;
+            foreach (GameObject go in active) if (go != null) UnityEngine.Object.Destroy(go);
+            Speaking.Remove(body.GetInstanceID());
+        }
+
+        internal static void OnNewTarget(NpcKernel kernel, Character enemy)
+        {
+            if (enemy == null) return;
+            if (Policy.NewEnemy(Time.time, enemy.GetInstanceID(), (float)Dice.NextDouble())) Say(kernel, "alerted");
+        }
+
+        internal static void OnHurt(NpcKernel kernel, float damage)
+        {
+            Character body = kernel.Body.Human;
+            Silence(body);
+            if (!Policy.Hurt(Time.time, body.GetInstanceID(), damage, body.GetMaxHealth())) return;
+            Say(kernel, "hit");
+            NpcKernel partner = NearestPartner(kernel, 25f);
+            if (partner != null) Pending[partner] = new KeyValuePair<float, string>(Time.time + VoicePolicy.PartnerReactDelay, "alerted");
+        }
+
+        internal static void OnStrike(Character attacker, Character target, float damage, bool killed)
+        {
+            if (target == null || target.GetComponent<NpcKernel>() != null) return;
+            if (!Policy.Mighty(Time.time, damage, target.GetMaxHealth(), killed, (float)Dice.NextDouble())) return;
+            NpcKernel speaker = attacker == null ? null : attacker.GetComponent<NpcKernel>();
+            if (speaker == null) speaker = NearestCompanionTo(target.transform.position, 25f);
+            if (speaker != null) Say(speaker, "idle");   // the taunting chatter
+        }
+
+        internal static void Tick(NpcKernel kernel)
+        {
+            KeyValuePair<float, string> due;
+            if (!Pending.TryGetValue(kernel, out due) || Time.time < due.Key) return;
+            Pending.Remove(kernel);
+            Say(kernel, due.Value);
+        }
+
+        static NpcKernel NearestPartner(NpcKernel kernel, float radius)
+        {
+            NpcLeaderBinding mine = kernel.GetComponent<NpcLeaderBinding>();
+            NpcKernel best = null; float bestD = radius;
+            foreach (NpcKernel k in NpcKernel.All)
+            {
+                if (k == null || k == kernel || k.Body == null || k.Body.Human == null) continue;
+                NpcLeaderBinding b = k.GetComponent<NpcLeaderBinding>();
+                if (mine == null || b == null || b.LeaderId != mine.LeaderId) continue;
+                float d = Vector3.Distance(k.transform.position, kernel.transform.position);
+                if (d <= bestD) { bestD = d; best = k; }
+            }
+            return best;
+        }
+
+        static NpcKernel NearestCompanionTo(Vector3 point, float radius)
+        {
+            NpcKernel best = null; float bestD = radius;
+            foreach (NpcKernel k in NpcKernel.All)
+            {
+                if (k == null || k.Body == null || k.Body.Human == null || k.Body.Human.IsDead()) continue;
+                float d = Vector3.Distance(k.transform.position, point);
+                if (d <= bestD) { bestD = d; best = k; }
+            }
+            return best;
+        }
+    }
+
+    /// <summary>Harmony postfix on Character.ApplyDamage: one landed hit, after armor. Voice + telemetry.</summary>
+    public static class StrikeHook
+    {
+        public static event Action<Character, Character, float, bool> Landed;
+
+        public static void Postfix(Character __instance, HitData hit)
+        {
+            if (__instance == null || hit == null) return;
+            Character attacker = hit.GetAttacker();
+            bool byCompanion = attacker != null && attacker.GetComponent<NpcKernel>() != null;
+            bool byLeader = attacker != null && attacker == Player.m_localPlayer;
+            if (!byCompanion && !byLeader) return;
+            float damage = hit.GetTotalDamage();
+            bool killed = __instance.IsDead() || __instance.GetHealth() <= 0f;
+            try { NpcVoice.OnStrike(attacker, __instance, damage, killed); }
+            catch (Exception e) { CorePlugin.Warn("voice strike: " + e.Message); }
+            Action<Character, Character, float, bool> landed = Landed;
+            if (landed != null && byCompanion) landed(attacker, __instance, damage, killed);
         }
     }
 }

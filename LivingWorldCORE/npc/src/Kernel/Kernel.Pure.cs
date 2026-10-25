@@ -571,4 +571,48 @@ namespace LivingWorld.Core
             return distance >= CombatHands.RangedMinimum ? Pick.Bow : Pick.Melee;
         }
     }
+
+    /// <summary>
+    /// When a companion speaks. Silent by default. Speaks for: a newly showing-up enemy (once per
+    /// enemy per party, sometimes), a devastating hit on itself (and the partner reacts), a mighty
+    /// blow or kill by a companion or the leader (rarely, a taunt), and death (native).
+    /// </summary>
+    public sealed class VoicePolicy
+    {
+        public const float NewEnemyChance = .7f, PartyCooldown = 4f, HeardMemory = 180f;
+        public const float HurtFraction = .15f, HurtCooldown = 4f, PartnerReactDelay = .6f;
+        public const float MightyFraction = .25f, MightyChance = .35f, MightyCooldown = 10f;
+
+        readonly System.Collections.Generic.Dictionary<int, float> heard = new System.Collections.Generic.Dictionary<int, float>();
+        readonly System.Collections.Generic.Dictionary<int, float> lastHurt = new System.Collections.Generic.Dictionary<int, float>();
+        float lastParty = float.NegativeInfinity, lastMighty = float.NegativeInfinity;
+
+        /// <summary>A companion just took this enemy as a target. roll in [0,1).</summary>
+        public bool NewEnemy(float now, int enemyId, float roll)
+        {
+            float seen;
+            if (heard.TryGetValue(enemyId, out seen) && now - seen < HeardMemory) return false;
+            heard[enemyId] = now;                       // known to the party, spoken or not
+            if (now - lastParty < PartyCooldown || roll >= NewEnemyChance) return false;
+            lastParty = now;
+            return true;
+        }
+
+        public bool Hurt(float now, int companionId, float damage, float maxHealth)
+        {
+            if (maxHealth <= 0f || damage < HurtFraction * maxHealth) return false;
+            float last;
+            if (lastHurt.TryGetValue(companionId, out last) && now - last < HurtCooldown) return false;
+            lastHurt[companionId] = now;
+            return true;
+        }
+
+        public bool Mighty(float now, float damage, float targetMaxHealth, bool killed, float roll)
+        {
+            bool mighty = killed || (targetMaxHealth > 0f && damage >= MightyFraction * targetMaxHealth);
+            if (!mighty || now - lastMighty < MightyCooldown || roll >= MightyChance) return false;
+            lastMighty = now;
+            return true;
+        }
+    }
 }
