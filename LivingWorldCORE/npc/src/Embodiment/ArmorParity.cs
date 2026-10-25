@@ -24,6 +24,15 @@ namespace LivingWorld.Core
         public static bool CountsArmor(Character c) { return c.IsPlayer() || IsCompanion(c); }
 
         public static int ArmorGatesPatched { get; private set; }
+        public static int StaggerGatesPatched { get; private set; }
+        public static int BackstabGatesPatched { get; private set; }
+
+        /// <summary>Backstab gate: "target AI not alerted". The player has no AI and is never backstabbed.</summary>
+        public static bool AlertedForDamage(BaseAI ai)
+        {
+            if (ai.IsAlerted()) return true;
+            return ai.GetComponent<NpcKernel>() != null;
+        }
 
         /// <summary>
         /// Character.RPC_Damage (1.0.20): resistances, then `if (IsPlayer()) { ApplyArmor(GetBodyArmor());
@@ -52,6 +61,31 @@ namespace LivingWorld.Core
             code[hits[0]].opcode = OpCodes.Call;
             code[hits[0]].operand = counts;
             ArmorGatesPatched = 1;
+
+            // 1.0.10 live: killing blows of 288-618 from 45-60 hits. Same method, two more player-only
+            // rules in RPC_Damage: staggered non-players take x2, and an unalerted AI takes the weapon's
+            // backstab bonus. Companions get the Player answer at exactly those two gates.
+            MethodInfo staggering = AccessTools.Method(typeof(Character), "IsStaggering");
+            var stagger = new List<int>();
+            for (int i = 0; i < code.Count; i++)
+            {
+                if (!code[i].Calls(staggering)) continue;
+                for (int j = i + 1; j <= i + 4 && j < code.Count; j++)
+                    if (code[j].Calls(isPlayer)) { stagger.Add(j); break; }
+            }
+            if (stagger.Count == 1) { code[stagger[0]].opcode = OpCodes.Call; code[stagger[0]].operand = counts; StaggerGatesPatched = 1; }
+            else CorePlugin.Warn("stagger gate not found exactly once (" + stagger.Count + ")");
+
+            MethodInfo isAlerted = AccessTools.Method(typeof(BaseAI), "IsAlerted");
+            var alert = new List<int>();
+            for (int i = 0; i < code.Count; i++) if (code[i].Calls(isAlerted)) alert.Add(i);
+            if (alert.Count == 1)
+            {
+                code[alert[0]].opcode = OpCodes.Call;
+                code[alert[0]].operand = AccessTools.Method(typeof(ArmorParity), "AlertedForDamage");
+                BackstabGatesPatched = 1;
+            }
+            else CorePlugin.Warn("backstab gate not found exactly once (" + alert.Count + ")");
             return code;
         }
 

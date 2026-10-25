@@ -269,6 +269,19 @@ def main(paths):
             med = sorted(axe)[len(axe) // 2]
             add("PASS" if med < 35 else "FAIL", "Armor reduces damage (Draugr axe, ~45 raw)",
                 "median %.1f over %d hits at armor >= 20" % (med, len(axe)))
+        # No hidden multipliers (1.0.10: backstab/stagger turned 45-60 hits into 288-618 killing blows).
+        by_weapon = defaultdict(list)
+        for r in hits:
+            if r.get("attackerWeapon"):
+                by_weapon[r["attackerWeapon"]].append(r["amount"])
+        spikes = []
+        for w, vals in by_weapon.items():
+            if len(vals) < 3:
+                continue
+            med = sorted(vals)[len(vals) // 2]
+            spikes += ["%s %.0f (normal %.0f)" % (w, v, med) for v in vals if v > 3 * med and v > 100]
+        add("PASS" if not spikes else "FAIL", "No multiplied one-shot hits",
+            "%d spikes: %s" % (len(spikes), "; ".join(spikes[:5])) if spikes else "every hit within 3x its weapon's normal")
         add("PASS" if zero == 0 else "FAIL", "Worn armor counts against hits",
             "%d of %d hits taken with armor 0; typical armor %.0f" % (zero, len(hits), sorted(r["armor"] for r in hits)[len(hits) // 2]))
 

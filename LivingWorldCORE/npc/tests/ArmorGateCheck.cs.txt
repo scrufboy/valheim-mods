@@ -1,10 +1,8 @@
-using System; using System.Linq; using System.Reflection; using HarmonyLib; using LivingWorld.Core;
-class T { static int Main() {
+using System.Linq; using System.Reflection; using HarmonyLib; using LivingWorld.Core;
+class T2 { static int Main() {
   var m = typeof(Character).GetMethod("RPC_Damage", BindingFlags.Instance|BindingFlags.NonPublic|BindingFlags.Public, null, new[]{typeof(long), typeof(HitData)}, null);
-  var orig = PatchProcessor.GetOriginalInstructions(m);
-  var outp = ArmorParity.RpcDamageTranspiler(orig).ToList();
-  int i = outp.FindIndex(c => c.operand is MethodInfo && ((MethodInfo)c.operand).Name == "CountsArmor");
-  System.Console.WriteLine("patched=" + ArmorParity.ArmorGatesPatched + " at " + i);
-  for (int k = Math.Max(0,i-2); k < i+6 && k < outp.Count; k++) System.Console.WriteLine("  " + outp[k]);
-  System.Console.WriteLine("IsPlayer calls left: " + outp.Count(c => c.operand is MethodInfo && ((MethodInfo)c.operand).Name=="IsPlayer") + " of " + orig.Count(c => c.operand is MethodInfo && ((MethodInfo)c.operand).Name=="IsPlayer"));
-  return ArmorParity.ArmorGatesPatched == 1 ? 0 : 1; } }
+  var outp = ArmorParity.RpcDamageTranspiler(PatchProcessor.GetOriginalInstructions(m)).ToList();
+  System.Console.WriteLine("armor=" + ArmorParity.ArmorGatesPatched + " stagger=" + ArmorParity.StaggerGatesPatched + " backstab=" + ArmorParity.BackstabGatesPatched);
+  for (int k = 0; k < outp.Count; k++) { var mi = outp[k].operand as MethodInfo; if (mi != null && (mi.Name=="CountsArmor"||mi.Name=="AlertedForDamage"))
+    System.Console.WriteLine("  " + outp[k-2] + " | " + outp[k-1] + " | >> " + outp[k] + " | " + outp[k+1] + " | " + outp[k+2]); }
+  return 0; } }

@@ -281,8 +281,12 @@ namespace LivingWorld.Core
 
         void RunExit(int i, string reason)
         {
-            try { behaviors[i].Exit(frame, reason); }
-            catch (Exception error) { Faults++; behaviors[i].Status = "exit fault: " + error.Message; CorePlugin.Warn(behaviors[i].Name + " exit fault: " + error); }
+            // Not the network owner any more (died, unloaded, or the game handed control elsewhere):
+            // there is nothing of ours to tidy, and every native write would be refused.
+            if (body != null && body.IsOwner)
+                try { behaviors[i].Exit(frame, reason); }
+                catch (Exception error) { Faults++; behaviors[i].Status = "exit fault: " + error.Message; CorePlugin.Warn(behaviors[i].Name + " exit fault: " + error); }
+            else behaviors[i].Status = "released (not owner): " + reason;
             foreach (NpcDomain domain in Domains(claims[i]))
             {
                 NpcBehavior owner;
