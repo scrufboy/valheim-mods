@@ -546,4 +546,29 @@ namespace LivingWorld.Core
             Reason = outcome;
         }
     }
+
+    /// <summary>
+    /// Weapon for the current target. Replaces native Humanoid.EquipBestWeapon for companions, which
+    /// skips a weapon inside its attack interval and then picks at random: after every shot the bow
+    /// sat out and the sword came up (1.0.11 Moder: sword in hand 44% of the time with a Drake 8-25 m away).
+    /// </summary>
+    public static class WeaponChoice
+    {
+        public enum Pick { Keep, Bow, Melee }
+        public const float BowFrom = 10f;     // ground target at/after this: bow
+        public const float MeleeUnder = 6f;   // ground target closer than this: melee; between: keep
+
+        public static Pick Choose(bool hasBow, bool hasAmmo, bool hasMelee, bool holdingBow, bool holdingMelee,
+            float distance, bool targetFlying)
+        {
+            bool bowUsable = hasBow && hasAmmo;
+            if (!bowUsable) return hasMelee ? Pick.Melee : Pick.Keep;
+            if (targetFlying) return Pick.Bow;                     // a sword cannot reach it
+            if (!hasMelee) return Pick.Bow;
+            if (distance >= BowFrom) return Pick.Bow;
+            if (distance < MeleeUnder) return Pick.Melee;
+            if (holdingBow || holdingMelee) return Pick.Keep;      // hysteresis band
+            return distance >= CombatHands.RangedMinimum ? Pick.Bow : Pick.Melee;
+        }
+    }
 }

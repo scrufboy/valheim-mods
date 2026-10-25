@@ -264,6 +264,44 @@ namespace LivingWorld.Core
         }
 
         /// <summary>Native combat picks its own weapon at target handoff. We only ask it to, once.</summary>
+        public string LastWeaponPick { get; private set; }
+        public int WeaponSwaps { get; private set; }
+
+        /// <summary>
+        /// Native-context writer: runs when MonsterAI asks Humanoid.EquipBestWeapon (once a second in
+        /// combat). Answers with WeaponChoice instead of the native interval-and-random pick.
+        /// Returns false to let native choose (no target, or no weapons we recognise).
+        /// </summary>
+        internal bool EquipForNativeSelection(Character target)
+        {
+            if (target == null || !IsOwner) return false;
+            Inventory inventory = Human.GetInventory();
+            if (inventory == null) return false;
+            ItemDrop.ItemData bow = null, melee = null;
+            foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+            {
+                if (item == null || item.m_shared == null) continue;
+                CombatHands.Kind kind = TypeOf(item);
+                if (kind == CombatHands.Kind.Ranged && bow == null) bow = item;
+                else if ((kind == CombatHands.Kind.OneHanded || kind == CombatHands.Kind.TwoHanded) && melee == null) melee = item;
+            }
+            if (bow == null && melee == null) return false;
+            ItemDrop.ItemData right = RightItem, left = LeftItem;
+            bool holdingBow = bow != null && (ReferenceEquals(right, bow) || ReferenceEquals(left, bow));
+            bool holdingMelee = melee != null && ReferenceEquals(right, melee);
+            float distance = Vector3.Distance(Root.transform.position, target.transform.position);
+            WeaponChoice.Pick pick = WeaponChoice.Choose(bow != null, AmmoCount > 0, melee != null, holdingBow, holdingMelee,
+                distance, target.IsFlying());
+            LastWeaponPick = pick.ToString();
+            ItemDrop.ItemData want = pick == WeaponChoice.Pick.Bow ? bow : pick == WeaponChoice.Pick.Melee ? melee : null;
+            if (want != null && !Human.IsItemEquiped(want) && !Human.InAttack())
+            {
+                Human.EquipItem(want, true);
+                WeaponSwaps++;
+            }
+            return true;
+        }
+
         public void EquipBestWeaponFor(NpcBehavior caller, Character target)
         {
             Require(NpcDomain.Hands, caller);

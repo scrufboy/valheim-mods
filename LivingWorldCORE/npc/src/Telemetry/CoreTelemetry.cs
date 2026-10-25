@@ -229,6 +229,8 @@ namespace LivingWorld.Telemetry
                 Bool("targetRanged", s.Target != null && TargetIsRanged(s.Target));
                 Str("targetsWho", s.Target == null ? "" : TargetOf(s.Target, kernel));
                 Num("targetId", s.Target == null ? 0 : s.Target.GetInstanceID());
+                Bool("targetFlying", s.Target != null && s.Target.IsFlying());
+                Str("weaponPick", body.LastWeaponPick ?? ""); Num("weaponSwaps", body.WeaponSwaps);
                 Num("targetPicks", kernel.Targeting == null ? 0 : kernel.Targeting.Picks);
                 End();
             }

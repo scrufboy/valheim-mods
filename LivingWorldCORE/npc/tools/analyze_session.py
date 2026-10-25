@@ -285,6 +285,15 @@ def main(paths):
         add("PASS" if zero == 0 else "FAIL", "Worn armor counts against hits",
             "%d of %d hits taken with armor 0; typical armor %.0f" % (zero, len(hits), sorted(r["armor"] for r in hits)[len(hits) // 2]))
 
+    # 6g. Right weapon for the target (1.0.12): bow vs flying targets and ground targets >= 10 m
+    ranged_need = [r for r in npc if r.get("phase") == "Combat" and r.get("target") and
+                   (r.get("targetFlying") or r.get("targetDist", 0) >= 10)]
+    if ranged_need and any("weaponPick" in r for r in npc):
+        melee = sum(1 for r in ranged_need if "Bow" not in r.get("handL", ""))
+        share = melee / len(ranged_need)
+        add("PASS" if share <= .10 else "FAIL", "Bow in hand for flying or distant targets",
+            "%.0f%% of %d samples held melee (1.0.11 Moder: 44%%)" % (share * 100, len(ranged_need)))
+
     # 6b. Shield blocking (new in 1.0.2; native AI never blocks)
     if start.get("cfgShieldBlocking") is False:
         add("NOT EXERCISED", "Shield blocks in close combat", "blocking switched off in config")

@@ -167,6 +167,18 @@ namespace LivingWorld.Core
         }
     }
 
+    /// <summary>Harmony prefix on Humanoid.EquipBestWeapon, companions only.</summary>
+    public static class WeaponChoiceHook
+    {
+        public static bool Prefix(Humanoid __instance, Character targetCreature)
+        {
+            NpcKernel kernel = __instance == null ? null : __instance.GetComponent<NpcKernel>();
+            if (kernel == null || kernel.Body == null) return true;
+            try { return !kernel.Body.EquipForNativeSelection(targetCreature); }
+            catch (System.Exception e) { kernel.ReportFault("weapon choice", e); return true; }
+        }
+    }
+
     /// <summary>Harmony postfix on BaseAI.FindEnemy, companions only. Replaces the return value.</summary>
     public static class FindEnemyHook
     {

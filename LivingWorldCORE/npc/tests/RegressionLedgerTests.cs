@@ -46,6 +46,10 @@ static class RegressionLedgerTests
         Run("Block: enemy attacking someone else is ignored", BlockIgnoresOthers);
         Run("Block: maximum hold then cooldown (no perfect turtle)", BlockHoldAndCooldown);
         Run("Block: lowered the moment the attack ends", BlockLowersWhenOver);
+        Run("1.0.11 Moder: a flying target always gets the bow, even close", FlyingGetsBow);
+        Run("Weapon: ground target far = bow, close = melee", GroundByDistance);
+        Run("Weapon: 6-10 m band keeps what is in hand (no flip-flop)", WeaponHysteresis);
+        Run("Weapon: no arrows = melee", NoAmmoMelee);
         Run("1.0.6 deaths: badly hurt with an enemy close = fall back", FallBackStarts);
         Run("Fall-back: not while healthy, not with nothing close", FallBackNeedsBoth);
         Run("Fall-back ends: clear to bow range", FallBackEndsClear);
@@ -585,5 +589,31 @@ static class RegressionLedgerTests
         for (int i = 0; i < 3; i++) { p.Step(t, true, .2f, 2f); t += 6f; p.Step(t, true, .2f, 5f); t += 5.5f; }
         p.Step(t, false, .2f, 99f);
         Assert(p.Step(t + 6f, true, .2f, 2f), "last stand carried over into the next fight");
+    }
+
+    static WeaponChoice.Pick W(bool holdingBow, bool holdingMelee, float d, bool flying, bool ammo)
+    { return WeaponChoice.Choose(true, ammo, true, holdingBow, holdingMelee, d, flying); }
+
+    static void FlyingGetsBow()
+    {
+        Assert(W(false, true, 3f, true, true) == WeaponChoice.Pick.Bow, "sword against a drake at 3 m");
+        Assert(W(false, true, 15f, true, true) == WeaponChoice.Pick.Bow, "sword against a drake at 15 m");
+    }
+
+    static void GroundByDistance()
+    {
+        Assert(W(false, true, 18f, false, true) == WeaponChoice.Pick.Bow, "sword at 18 m");
+        Assert(W(true, false, 3f, false, true) == WeaponChoice.Pick.Melee, "bow at 3 m");
+    }
+
+    static void WeaponHysteresis()
+    {
+        Assert(W(true, false, 8f, false, true) == WeaponChoice.Pick.Keep, "dropped the bow at 8 m");
+        Assert(W(false, true, 8f, false, true) == WeaponChoice.Pick.Keep, "dropped the sword at 8 m");
+    }
+
+    static void NoAmmoMelee()
+    {
+        Assert(W(true, false, 20f, true, false) == WeaponChoice.Pick.Melee, "kept an empty bow");
     }
 }
