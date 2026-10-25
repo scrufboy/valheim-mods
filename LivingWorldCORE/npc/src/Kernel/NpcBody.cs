@@ -538,8 +538,6 @@ namespace LivingWorld.Core
         public float LastHeavyCost { get; private set; }
         public int LastHeavyClosing { get; private set; }
         public int LastHeavyInArea { get; private set; }
-        bool wasInAttack, lastSwingWasComboEnd;
-        float lastSwingEnded = float.NegativeInfinity;
 
         /// <summary>Combo position of the swing in progress (0 = first hit), or -1.</summary>
         public int CurrentChainLevel
@@ -566,25 +564,15 @@ namespace LivingWorld.Core
         internal static bool ChainQueued(Humanoid human) { return human != null && ReferenceEquals(chainGate, human); }
 
         /// <summary>
-        /// Every physics step from Humanoid.UpdateAttack. Mid-swing in the native chain window: a heavy
-        /// if HeavyPolicy says so, else the next combo hit while it can land. Between swings: a heavy
-        /// if HeavyPolicy says so (staggered target, crowd for an area heavy, finisher right after a
-        /// combo's last hit). Returns 1 = combo hit started, 2 = heavy started, 0 = nothing.
+        /// Every physics step from Humanoid.UpdateAttack. At an opening (target staggered, or a crowd for
+        /// an area heavy), one roll for a heavy; else, mid-swing in the native chain window, the next combo
+        /// hit while it can land. Returns 1 = combo hit started, 2 = heavy started, 0 = nothing.
         /// </summary>
         internal int TryFollowUp()
         {
             if (Human == null) return 0;
             bool inAttack = Human.InAttack();
             Attack current = NativeApi.CurrentAttack.GetValue(Human) as Attack;
-            if (inAttack && current != null)
-            {
-                int level = (int)NativeApi.AttackChainLevel.GetValue(current);
-                int levels = (int)NativeApi.AttackChainLevels.GetValue(current);
-                lastSwingWasComboEnd = !CurrentAttackIsSecondary && levels > 1 && level >= levels - 1;
-            }
-            else if (wasInAttack) lastSwingEnded = Time.time;
-            wasInAttack = inAttack;
-
             if (chainOwner == null) return 0;
             if (!IsOwner || !kernel.Holds(chainOwner, NpcDomain.Hands)) { chainOwner = null; return 0; }
             ItemDrop.ItemData weapon = Human.GetCurrentWeapon();
@@ -593,6 +581,7 @@ namespace LivingWorld.Core
                 weapon.m_shared.m_skillType != Skills.SkillType.Bows;
             if (!melee) return 0;
             Character target = Ai.GetTargetCreature();
+            ClearStaggerRoll(target);
             bool alive = target != null && !target.IsDead();
             if (!alive) return 0;
 
@@ -604,23 +593,23 @@ namespace LivingWorld.Core
             offset.y = 0f;
             float facing = offset.sqrMagnitude < .01f ? 0f : Vector3.Angle(Human.transform.forward, offset);
 
-            // Heavy first: it is only ever chosen when it beats the alternative.
+            // Heavy first, decided in the moment: one roll per opening (a stagger, or a crowd for an area heavy).
             Attack heavy = weapon.m_shared.m_secondaryAttack;
             bool hasHeavy = heavy != null && !String.IsNullOrEmpty(heavy.m_attackAnimation);
             HeavyPolicy.Shape shape = HeavyPolicy.ShapeOf(hasHeavy, hasHeavy && heavy.m_attackType == Attack.AttackType.Projectile,
                 hasHeavy ? heavy.m_attackAngle : 0f, hasHeavy && heavy.m_attackType == Attack.AttackType.Area);
             if (shape != HeavyPolicy.Shape.None)
             {
-                float cost = HeavyCost(heavy, weapon);
+                float cost = heavy.m_attackStamina;
                 int inArea, closing;
                 CountEnemies(target, heavy.m_attackRange + HeavyPolicy.ReachSlack, out inArea, out closing);
-                bool comboJustEnded = !inAttack && lastSwingWasComboEnd && Time.time - lastSwingEnded <= HeavyPolicy.FinisherWindow;
-                HeavyPolicy.Why why = HeavyPolicy.Choose(shape, Stamina, cost, true, edge, heavy.m_attackRange, facing,
-                    target.IsStaggering(), inArea, closing, comboJustEnded, heavy.m_damageMultiplier, heavy.m_staggerMultiplier);
-                if (why != HeavyPolicy.Why.None && ChainPolicy.Affordable(Stamina, cost) && Start(target, true))
+                bool staggered = target.IsStaggering();
+                HeavyPolicy.Why why = HeavyPolicy.Opening(shape, Stamina, cost, true, edge, heavy.m_attackRange, facing,
+                    staggered, inArea, closing);
+                if (why != HeavyPolicy.Why.None && RollFor(why, target, staggered) && Start(target, true))
                 {
+                    SpendStamina(cost);
                     Heavies++;
-                    lastSwingWasComboEnd = false;
                     LastHeavyReason = why.ToString();
                     LastHeavyCost = cost;
                     LastHeavyClosing = closing;
@@ -633,7 +622,7 @@ namespace LivingWorld.Core
             if (!window) return 0;
             float reach = weapon.m_shared.m_aiAttackRange;
             if (!ChainPolicy.Continue(true, true, true, CurrentAttackIsSecondary, true, edge, reach, facing,
-                    weapon.m_shared.m_aiAttackMaxAngle, Stamina, weapon.m_shared.m_attack.m_attackStamina))
+                    weapon.m_shared.m_aiAttackMaxAngle))
                 return 0;
             if (!Start(target, false)) return 0;
             Chains++;
@@ -649,11 +638,34 @@ namespace LivingWorld.Core
             finally { chainGate = null; }
         }
 
-        float HeavyCost(Attack heavy, ItemDrop.ItemData weapon)
+        // One roll per opening: a stagger of a given target, or a crowd (re-rolled every few seconds).
+        Character rolledStagger;
+        bool staggerRoll;
+        float nextCrowdRoll;
+        public int HeavyRolls { get; private set; }
+
+        bool RollFor(HeavyPolicy.Why why, Character target, bool staggered)
         {
-            // Attack.GetAttackStamina for a non-Player: equipment modifiers apply only to Player (isinst in IL)
-            // and the skill factor is 0, so the cost is the attack's own number (status effects aside).
-            return heavy.m_attackStamina;
+            if (why == HeavyPolicy.Why.Staggered)
+            {
+                if (!ReferenceEquals(rolledStagger, target))
+                {
+                    rolledStagger = target;
+                    staggerRoll = UnityEngine.Random.value < HeavyPolicy.Chance;
+                    HeavyRolls++;
+                }
+                return staggerRoll;
+            }
+            if (Time.time < nextCrowdRoll) return false;
+            nextCrowdRoll = Time.time + HeavyPolicy.CrowdReroll;
+            HeavyRolls++;
+            return UnityEngine.Random.value < HeavyPolicy.Chance;
+        }
+
+        /// <summary>Forget a stagger roll once the target recovers, so its next stagger is a new opening.</summary>
+        void ClearStaggerRoll(Character target)
+        {
+            if (rolledStagger != null && (rolledStagger.IsDead() || !rolledStagger.IsStaggering())) rolledStagger = null;
         }
 
         void CountEnemies(Character target, float areaRadius, out int inArea, out int closing)
@@ -669,9 +681,9 @@ namespace LivingWorld.Core
             }
         }
 
-        // ---------------- Stamina (1.0.19): the Player's rules for a companion ----------------
+        // ---------------- Heavy-attack stamina (1.0.21): only heavies spend it; it always refills ----------------
 
-        float stamina = -1f, maxStamina, regenTimer;
+        float stamina = -1f, maxStamina;
         public float Stamina { get { EnsureStamina(); return stamina; } }
         public float MaxStamina { get { EnsureStamina(); return maxStamina; } }
         public int Exhaustions { get; private set; }
@@ -683,30 +695,24 @@ namespace LivingWorld.Core
             stamina = maxStamina;
         }
 
-        internal bool HaveStaminaFor(float amount) { EnsureStamina(); return stamina > amount; }
-
-        internal void SpendStamina(float amount)
+        void SpendStamina(float amount)
         {
             if (amount <= 0f || float.IsNaN(amount)) return;
             EnsureStamina();
             bool had = stamina > 0f;
-            stamina = Mathf.Max(0f, stamina - amount * Game.m_staminaRate);
-            regenTimer = StaminaRules.RegenDelay;
+            stamina = Mathf.Max(0f, stamina - amount);
             if (had && stamina <= 0f) Exhaustions++;
         }
 
-        /// <summary>Player.UpdateStats regen, once per frame on the owner.</summary>
+        /// <summary>Player regen curve every frame on the owner; only status effects / environment change the rate.</summary>
         internal void TickStamina(float dt)
         {
             EnsureStamina();
             maxStamina = StaminaRules.Base + CorePlugin.FoodStamina;
-            regenTimer -= dt;
             if (stamina >= maxStamina) { stamina = maxStamina; return; }
-            if (regenTimer > 0f || Human.InDodge() || Human.IsEncumbered()) return;
-            float rate = StaminaRules.RegenPerSecond(stamina, maxStamina, Human.InAttack(), Human.IsBlocking());
             float mod = 1f;
             Human.GetSEMan().ModifyStaminaRegen(ref mod);
-            stamina = Mathf.Min(maxStamina, stamina + rate * mod * dt * Game.m_staminaRegenRate);
+            stamina = Mathf.Min(maxStamina, stamina + StaminaRules.RegenPerSecond(stamina, maxStamina) * mod * dt * Game.m_staminaRegenRate);
         }
 
         internal void LowerBlockUnchecked()

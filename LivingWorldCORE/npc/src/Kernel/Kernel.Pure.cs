@@ -604,48 +604,41 @@ namespace LivingWorld.Core
     }
 
     /// <summary>
-    /// Stamina the Player's way (1.0.19). Valheim gives every non-Player infinite stamina
-    /// (Character.HaveStamina = true, UseStamina = no-op). Numbers verified from the installed
-    /// Player prefab / IL: base 50, regen 6/s rising to 12/s when empty (Player.UpdateStats:
-    /// regen * (1 + (1 - s/max) * timeMult)), 1 s delay after any use, none while attacking,
-    /// dodging or encumbered, x0.8 while blocking; attacks, blocks and jumps pay their native cost.
-    /// No run drain (1.0.20): native MonsterAI runs for ALL combat movement, which a player does not;
-    /// with the Player's 8/s drain the pool sat under 15 in 81% of combat (1.0.19 live). Running is
-    /// the AI's locomotion, not a player's choice, so it is not charged.
-    /// Food allowance stands in for the meals a player would eat.
+    /// Heavy-attack stamina (1.0.21, Brian's rule). Swings, combos, blocks, jumps and running are free
+    /// (native non-Player rule). Only heavy attacks draw from this pool, and nothing stops it refilling:
+    /// Player regen curve (6/s full -> 12/s empty, verified from Player.UpdateStats and the Player
+    /// prefab), scaled only by status effects / environment (SEMan.ModifyStaminaRegen).
+    /// 1.0.19 live showed why: with Player costs on everything, the pool sat empty and they stopped fighting.
     /// </summary>
     public static class StaminaRules
     {
-        public const float Base = 50f, Regen = 6f, RegenTimeMultiplier = 1f, RegenDelay = 1f;
-        public const float BlockingRegenFactor = .8f;
+        public const float Base = 50f, Regen = 6f, RegenTimeMultiplier = 1f;
 
-        public static float RegenPerSecond(float stamina, float max, bool attacking, bool blocking)
+        public static float RegenPerSecond(float stamina, float max)
         {
-            if (attacking || max <= 0f) return 0f;
-            float fill = Mathf01(stamina / max);
-            float rate = Regen + (1f - fill) * Regen * RegenTimeMultiplier;
-            return blocking ? rate * BlockingRegenFactor : rate;
+            if (max <= 0f) return 0f;
+            float fill = stamina / max;
+            fill = fill < 0f ? 0f : fill > 1f ? 1f : fill;
+            return Regen + (1f - fill) * Regen * RegenTimeMultiplier;
         }
-
-        static float Mathf01(float v) { return v < 0f ? 0f : v > 1f ? 1f : v; }
     }
 
     /// <summary>
-    /// Heavy (secondary) attack choice (1.0.19), one rule for every melee weapon, driven by that
-    /// weapon's own secondary-attack data. A single-target heavy (sword stab, axe, mace, knife) is
-    /// a commitment: never with two or more other enemies closing in. An area heavy (atgeir spin)
-    /// is the answer to a crowd. Staggered targets take x2 from everyone (verified), so any heavy
-    /// on a staggered target is the best stamina value there is. Always keep a reserve to escape.
+    /// Heavy (secondary) attack, decided in the moment (1.0.21). Like a Souls special or a player
+    /// seeing an opening: when the target staggers (x2 damage from everyone, verified), roll once for
+    /// a heavy; an area heavy (atgeir spin) rolls when 2+ enemies are inside it. A single-target heavy
+    /// is never committed with 2+ other enemies closing in. The heavy must be affordable from the
+    /// heavy-only pool. One roll per opening, not per frame.
     /// </summary>
     public static class HeavyPolicy
     {
         public enum Shape { None, Single, Area }
-        public enum Why { None, Staggered, Crowd, Finisher }
-        public const float Reserve = 20f;          // stamina kept back for a fall-back sprint
+        public enum Why { None, Staggered, Crowd }
+        public const float Chance = .7f;           // per opening
         public const float ConvergeRadius = 4f;    // other enemies this close are "closing in"
         public const float ReachSlack = .5f;
         public const float SingleFacing = 20f;     // a narrow heavy must be lined up
-        public const float FinisherWindow = .6f;   // seconds after a combo's last hit
+        public const float CrowdReroll = 2f;       // seconds between crowd rolls
 
         public static Shape ShapeOf(bool hasSecondary, bool projectile, float attackAngle, bool areaType)
         {
@@ -653,22 +646,19 @@ namespace LivingWorld.Core
             return areaType || attackAngle >= 180f ? Shape.Area : Shape.Single;
         }
 
-        public static Why Choose(Shape shape, float stamina, float cost, bool targetAlive, float edge, float range,
-            float facing, bool targetStaggered, int enemiesInArea, int othersClosing, bool comboJustEnded,
-            float damageMultiplier, float staggerMultiplier)
+        /// <summary>The opening that exists right now (before the roll), or None.</summary>
+        public static Why Opening(Shape shape, float stamina, float cost, bool targetAlive, float edge, float range,
+            float facing, bool targetStaggered, int enemiesInArea, int othersClosing)
         {
-            if (shape == Shape.None || !targetAlive) return Why.None;
-            if (stamina - cost < Reserve) return Why.None;
+            if (shape == Shape.None || !targetAlive || stamina < cost) return Why.None;
             bool inReach = edge <= range + ReachSlack;
             if (shape == Shape.Area)
             {
                 if (enemiesInArea >= 2) return Why.Crowd;
                 return targetStaggered && inReach ? Why.Staggered : Why.None;
             }
-            if (!inReach || facing > SingleFacing || othersClosing >= 2) return Why.None;
-            if (targetStaggered) return Why.Staggered;
-            if (comboJustEnded && (damageMultiplier >= 2f || staggerMultiplier >= 3f)) return Why.Finisher;
-            return Why.None;
+            if (!targetStaggered || !inReach || facing > SingleFacing || othersClosing >= 2) return Why.None;
+            return Why.Staggered;
         }
     }
 
@@ -685,17 +675,10 @@ namespace LivingWorld.Core
         public const float ReachSlack = .5f;     // metres past the weapon's own AI reach
         public const float DefaultAngle = 45f;   // when a weapon declares no AI attack angle
 
-        /// <summary>
-        /// 1.0.20: never start a follow-up the game will refuse. Humanoid.StartAttack stops the swing in
-        /// progress BEFORE Attack.Start checks stamina (verified in IL), so a refused start cuts the
-        /// current swing off mid-animation (the 1.0.19 "stutter at the end of the thrust").
-        /// </summary>
-        public static bool Affordable(float stamina, float cost) { return cost <= 0f || stamina > cost + .1f; }
-
         public static bool Continue(bool allowed, bool windowOpen, bool melee, bool secondary,
-            bool targetAlive, float edgeDistance, float reach, float angle, float maxAngle, float stamina, float cost)
+            bool targetAlive, float edgeDistance, float reach, float angle, float maxAngle)
         {
-            if (!allowed || !windowOpen || !melee || secondary || !targetAlive || !Affordable(stamina, cost)) return false;
+            if (!allowed || !windowOpen || !melee || secondary || !targetAlive) return false;
             if (edgeDistance > reach + ReachSlack) return false;
             return angle <= (maxAngle > 0f ? maxAngle : DefaultAngle);
         }

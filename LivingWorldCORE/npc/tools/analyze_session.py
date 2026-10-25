@@ -358,7 +358,7 @@ def main(paths):
             add("INFO", "Gear " + tier, "armor %s; median hit taken: %s; deaths %d" % (
                 armor[len(armor) // 2] if armor else "?", ", ".join(parts) or "no hits", dead))
 
-    # 6l. Stamina (1.0.19): a real pool, spent and recovered on the Player's rules
+    # 6l. Stamina (1.0.19; heavy-only since 1.0.21)
     if any("maxStamina" in r for r in npc):
         fighting = [r for r in npc if r.get("phase") in COMBAT]
         if not fighting:
@@ -370,7 +370,8 @@ def main(paths):
             ex = {}
             for r in npc:
                 ex[r["npc"]] = max(ex.get(r["npc"], 0), int(r.get("exhaustions", 0)))
-            add("PASS" if full < len(fighting) else "FAIL", "Stamina is spent in combat",
+            # 1.0.21: heavy-only pool, always refilling -> report, do not grade.
+            add("INFO", "Heavy stamina pool",
                 "max %.0f; full in %.0f%% of combat samples, under 15 in %.0f%%; emptied %d time(s)" % (
                     mx, 100.0 * full / len(fighting), 100.0 * low / len(fighting), sum(ex.values())))
 
