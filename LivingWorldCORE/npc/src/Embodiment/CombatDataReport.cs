@@ -31,6 +31,38 @@ namespace LivingWorld.Core
             "OnionSoup", "Eyescream", "LoxPie", "FishWraps", "BloodPudding", "Bread", "MeadStaminaMinor", "MeadStaminaMedium"
         };
 
+        static readonly string[] Throws = { "BombOoze", "BombBile", "Greydwarf_throw", "GoblinShaman_attack_fireball" };
+
+        // Bombs and AI throws: the attack, its projectile, and the blast it leaves (who it can hurt).
+        static string Throw(string name)
+        {
+            GameObject prefab = PrefabManager.Instance.GetPrefab(name);
+            ItemDrop drop = prefab == null ? null : prefab.GetComponent<ItemDrop>();
+            if (drop == null) return "DATA throw " + name + ": MISSING";
+            ItemDrop.ItemData.SharedData s = drop.m_itemData.m_shared;
+            Attack a = s.m_attack;
+            var b = new StringBuilder("DATA throw " + name + ": " + s.m_itemType + " skill " + s.m_skillType + " dmg [" + Dmg(s.m_damages) +
+                "] aiRange " + s.m_aiAttackRange + " aiMin " + s.m_aiAttackRangeMin + " interval " + s.m_aiAttackInterval);
+            if (a == null) return b.Append(" no attack").ToString();
+            b.Append(" | " + a.m_attackType + " anim " + a.m_attackAnimation + " stam " + a.m_attackStamina + " vel " + a.m_projectileVel +
+                " velMin " + a.m_projectileVelMin + " acc " + a.m_projectileAccuracy + " accMin " + a.m_projectileAccuracyMin +
+                " launchAngle " + a.m_launchAngle + " ammo " + s.m_ammoType);
+            GameObject projectile = a.m_attackProjectile;
+            Projectile p = projectile == null ? null : projectile.GetComponent<Projectile>();
+            if (p == null) return b.Append(" | projectile " + (projectile == null ? "none" : projectile.name + " (no Projectile)")).ToString();
+            b.Append(" | projectile " + projectile.name + " gravity " + p.m_gravity + " aoe " + p.m_aoe + " hitFriendly " + p.m_hitFriendly +
+                " noDamageFriendly " + p.m_noDamageFriendly + " hitOwner " + p.m_hitOwner + " dmg [" + Dmg(p.m_damage) + "]");
+            GameObject spawn = p.m_spawnOnHit;
+            Aoe aoe = spawn == null ? null : spawn.GetComponent<Aoe>();
+            if (spawn != null && aoe == null) aoe = spawn.GetComponentInChildren<Aoe>();
+            if (aoe != null)
+                b.Append(" | blast " + spawn.name + " radius " + aoe.m_radius + " ttl " + aoe.m_ttl + " interval " + aoe.m_hitInterval +
+                    " dmg [" + Dmg(aoe.m_damage) + "] hitFriendly " + aoe.m_hitFriendly + " hitOwner " + aoe.m_hitOwner +
+                    " hitSame " + aoe.m_hitSame + " hitEnemy " + aoe.m_hitEnemy + " se " + (aoe.m_statusEffect ?? ""));
+            else b.Append(" | blast " + (spawn == null ? "none" : spawn.name + " (no Aoe)"));
+            return b.ToString();
+        }
+
         static string Food(string name)
         {
             GameObject prefab = PrefabManager.Instance.GetPrefab(name);
@@ -52,6 +84,7 @@ namespace LivingWorld.Core
             foreach (string name in Weapons) log(Describe(name, true));
             foreach (string name in Armor) log(Describe(name, false));
             foreach (string name in Foods) log(Food(name));
+            foreach (string name in Throws) log(Throw(name));
         }
 
         static string Describe(string name, bool weapon)
