@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.8";
+        public const string Version = "1.0.9";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -39,8 +39,14 @@ namespace LivingWorld.Core
             shieldBlocking = Config.Bind("Combat", "ShieldBlocking", false,
                 "Experimental: companions raise shields against close melee and aimed projectiles.");
             // One hook: companions answer native MonsterAI's own "which enemy?" question.
-            new HarmonyLib.Harmony(Guid).Patch(NativeApi.FindEnemy,
+            var harmony = new HarmonyLib.Harmony(Guid);
+            harmony.Patch(NativeApi.FindEnemy,
                 postfix: new HarmonyLib.HarmonyMethod(typeof(FindEnemyHook).GetMethod("Postfix")));
+            // Companions get the Player's armor rules (Valheim counts worn armor only for Player).
+            harmony.Patch(NativeApi.GetBodyArmor,
+                postfix: new HarmonyLib.HarmonyMethod(typeof(ArmorParity).GetMethod("BodyArmorPostfix")));
+            harmony.Patch(NativeApi.ApplyArmorDamageMods,
+                postfix: new HarmonyLib.HarmonyMethod(typeof(ArmorParity).GetMethod("ArmorModsPostfix")));
             PrefabManager.OnVanillaPrefabsAvailable += RegisterPrefabs;
             partyCommand = new Terminal.ConsoleCommand("lwparty",
                 "Living World: create your two companions (lwparty new = replace the current lab pair)",

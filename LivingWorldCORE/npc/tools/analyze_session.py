@@ -259,6 +259,13 @@ def main(paths):
         add("PASS" if share <= .05 else "FAIL", "No dead time between targets",
             "%.0f%% of fighting samples had no target with a hostile near (1.0.6/1.0.7: 13%%)" % (share * 100))
 
+    # 6f. Worn armor counts (1.0.9: Valheim counts armor only for Player; 1.0.0-1.0.8 companions had 0)
+    hits = [r for r in rows if r.get("type") == "Damage" and "armor" in r]
+    if hits:
+        zero = sum(1 for r in hits if r.get("armor", 0) <= 0)
+        add("PASS" if zero == 0 else "FAIL", "Worn armor counts against hits",
+            "%d of %d hits taken with armor 0; typical armor %.0f" % (zero, len(hits), sorted(r["armor"] for r in hits)[len(hits) // 2]))
+
     # 6b. Shield blocking (new in 1.0.2; native AI never blocks)
     if start.get("cfgShieldBlocking") is False:
         add("NOT EXERCISED", "Shield blocks in close combat", "blocking switched off in config")

@@ -29,6 +29,13 @@ namespace LivingWorld.Core
         internal static readonly FieldInfo TimeSinceAttacking = Field(typeof(MonsterAI), "m_timeSinceAttacking");
         internal static readonly FieldInfo UpdateTargetTimer = Field(typeof(MonsterAI), "m_updateTargetTimer");
         internal static readonly MethodInfo FindEnemy = Method(typeof(BaseAI), "FindEnemy");
+        // Worn armor (read-only) and the two armor rules Valheim implements only for Player.
+        internal static readonly FieldInfo ChestItem = Field(typeof(Humanoid), "m_chestItem");
+        internal static readonly FieldInfo LegItem = Field(typeof(Humanoid), "m_legItem");
+        internal static readonly FieldInfo HelmetItem = Field(typeof(Humanoid), "m_helmetItem");
+        internal static readonly FieldInfo ShoulderItem = Field(typeof(Humanoid), "m_shoulderItem");
+        internal static readonly MethodInfo GetBodyArmor = typeof(Character).GetMethod("GetBodyArmor", Instance, null, Type.EmptyTypes, null);
+        internal static readonly MethodInfo ApplyArmorDamageMods = typeof(Character).GetMethod("ApplyArmorDamageMods", Instance);
         internal static readonly MethodInfo SetAlerted = Method(typeof(MonsterAI), "SetAlerted", typeof(bool));
         internal static readonly MethodInfo LookAt = Method(typeof(BaseAI), "LookAt", typeof(Vector3));
 
