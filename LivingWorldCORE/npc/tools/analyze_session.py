@@ -296,7 +296,9 @@ def main(paths):
 
     # 6h. Voice: mostly silent (1.0.14)
     voice = [r for r in rows if r.get("type") == "Voice"]
-    fight_min = max(len([r for r in npc if r.get("phase") in COMBAT]) / max(1, len(names)) * 0.5 / 60.0, 1 / 60.0)
+    # Party combat time: half-second buckets in which any companion fought (1.0.17 fix: dividing by every
+    # companion ever spawned undercounted it 10x in a session with many `lwparty new` pairs).
+    fight_min = max(len({int(r["t"] * 2) for r in npc if r.get("phase") in COMBAT}) * 0.5 / 60.0, 1 / 60.0)
     if any(r.get("type") == "Voice" for r in rows) or any("fallBack" in r for r in npc):
         per = len(voice) / fight_min
         kinds = defaultdict(int)
