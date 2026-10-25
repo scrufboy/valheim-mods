@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.16";
+        public const string Version = "1.0.17";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -53,6 +53,11 @@ namespace LivingWorld.Core
                 postfix: new HarmonyLib.HarmonyMethod(typeof(StrikeHook).GetMethod("Postfix")));
             harmony.Patch(NativeApi.RpcDamage,
                 transpiler: new HarmonyLib.HarmonyMethod(typeof(ArmorParity).GetMethod("RpcDamageTranspiler")));
+            // Chained melee: companions continue a combo inside the swing's native chain window (Player rule).
+            harmony.Patch(NativeApi.HaveQueuedChain,
+                postfix: new HarmonyLib.HarmonyMethod(typeof(MeleeChainHook).GetMethod("QueuedPostfix")));
+            harmony.Patch(NativeApi.UpdateAttack,
+                postfix: new HarmonyLib.HarmonyMethod(typeof(MeleeChainHook).GetMethod("UpdatePostfix")));
             Report(ArmorParity.ArmorGatesPatched == 1 ? "Companion armor applies to damage (Player rule)." :
                 "WARNING: companion armor gate not patched.");
             Report("Companion damage parity: stagger x2 " + (ArmorParity.StaggerGatesPatched == 1 ? "off" : "NOT PATCHED") +

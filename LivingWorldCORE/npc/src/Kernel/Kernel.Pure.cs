@@ -573,6 +573,28 @@ namespace LivingWorld.Core
     }
 
     /// <summary>
+    /// Chained melee (1.0.17). Valheim continues a combo only when the next swing starts inside the
+    /// current swing's chain window (anim event "chain") - the player does it by pressing attack
+    /// mid-swing. Native AI never does (Humanoid.HaveQueuedChain = false; MonsterAI waits out its
+    /// interval, past the 0.2 s chain timeout). Rule: keep the combo going while the same target is
+    /// still in this weapon's reach and in front; otherwise let the swing finish and native AI decide.
+    /// The last hit of a chain has no next level, so native pacing resumes on its own.
+    /// </summary>
+    public static class ChainPolicy
+    {
+        public const float ReachSlack = .5f;     // metres past the weapon's own AI reach
+        public const float DefaultAngle = 45f;   // when a weapon declares no AI attack angle
+
+        public static bool Continue(bool allowed, bool windowOpen, bool melee, bool secondary,
+            bool targetAlive, float edgeDistance, float reach, float angle, float maxAngle)
+        {
+            if (!allowed || !windowOpen || !melee || secondary || !targetAlive) return false;
+            if (edgeDistance > reach + ReachSlack) return false;
+            return angle <= (maxAngle > 0f ? maxAngle : DefaultAngle);
+        }
+    }
+
+    /// <summary>
     /// When a companion speaks. Silent by default. Speaks for: a newly showing-up enemy (once per
     /// enemy per party, sometimes), a devastating hit on itself (and the partner reacts), a mighty
     /// blow or kill by a companion or the leader (rarely, a taunt), and death (native).

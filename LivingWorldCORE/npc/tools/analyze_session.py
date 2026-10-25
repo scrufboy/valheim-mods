@@ -318,6 +318,25 @@ def main(paths):
                     len(mine), len(bow), spent, ("%.0f%% arrow hit rate" % (100.0 * len(bow) / spent)) if spent else "n/a",
                     sum(r.get("amount", 0) for r in mine), sum(1 for r in mine if r.get("killed"))))
 
+    # 6j. Chained melee (1.0.17): combos continue the Player's way, only while the next hit can land
+    if any("chains" in r for r in npc):
+        chains = [r for r in rows if r.get("type") == "Chain"]
+        melee = [r for r in strikes if "Bow" not in r.get("weapon", "")]
+        if len(melee) < 10:
+            add("NOT EXERCISED", "Melee chains (1-2-3 combos)", "%d melee hits landed" % len(melee))
+        else:
+            levels = defaultdict(int)
+            for r in melee:
+                levels[int(r.get("chainLevel", -1))] += 1
+            follow = sum(v for k, v in levels.items() if k >= 1)
+            far = [r for r in chains if r.get("edge", 0) > 3.0]
+            add("PASS" if chains and follow else "FAIL", "Melee chains (1-2-3 combos)",
+                "%d follow-ups started; melee hits by combo position: %s; %.0f%% of melee hits were follow-ups" % (
+                    len(chains), ", ".join("hit %d: %d" % (k + 1, v) for k, v in sorted(levels.items()) if k >= 0) or "none",
+                    100.0 * follow / len(melee)))
+            add("PASS" if not far else "FAIL", "Follow-ups only within reach",
+                "%d of %d follow-ups started with the target over 3 m away" % (len(far), len(chains)))
+
     # 6b. Shield blocking (new in 1.0.2; native AI never blocks)
     if start.get("cfgShieldBlocking") is False:
         add("NOT EXERCISED", "Shield blocks in close combat", "blocking switched off in config")

@@ -71,6 +71,8 @@ namespace LivingWorld.Core
                 Body.EquipBestWeaponFor(this, s.Target);
                 prepared = s.Target;
             }
+            // Combos continue while this behavior holds the hands (1.0.17); FallBack taking the hands ends them.
+            Body.AllowChains(this, true);
             // Native choice may swap bow -> sword at any time; keep the shield paired.
             Body.PairShield(this);
             if (CorePlugin.ShieldBlocking) StepBlock(f); else if (block != null && block.Raised) Body.SetBlocking(this, false);

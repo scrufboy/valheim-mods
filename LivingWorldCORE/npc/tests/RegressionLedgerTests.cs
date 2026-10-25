@@ -12,6 +12,7 @@ static class RegressionLedgerTests
 
     static int Main()
     {
+        Run("1.0.17: melee chains only while the next swing can land", ChainContinuesOnlyWhenTheSwingCanLand);
         Run("0.6.3 Bonemass: distant ranged target does not trigger party regroup", RangedTargetIsNotSeparation);
         Run("0.6.4/0.6.5/1.0.5: returning companion fights what engages it, re-measures before returning", ReturningActorDefendsLocally);
         Run("0.6.5 gap: returning companion without local threat stays in regroup", ReturningWithoutThreatRegroups);
@@ -667,5 +668,21 @@ static class RegressionLedgerTests
         Assert(v.Mighty(0f, 60f, 100f, false, .1f), "no taunt at a mighty blow");
         Assert(!v.Mighty(5f, 0f, 100f, true, .1f), "taunts inside the cooldown");
         Assert(v.Mighty(11f, 0f, 100f, true, .1f), "kill after cooldown not taunted");
+    }
+
+    static bool C(bool allowed, bool window, bool melee, bool secondary, bool alive, float d, float angle)
+    { return ChainPolicy.Continue(allowed, window, melee, secondary, alive, d, 2.2f, angle, 30f); }
+
+    static void ChainContinuesOnlyWhenTheSwingCanLand()
+    {
+        Assert(C(true, true, true, false, true, 1.5f, 10f), "no follow-up with the target in reach and in front");
+        Assert(!C(true, false, true, false, true, 1.5f, 10f), "chained outside the native chain window");
+        Assert(!C(false, true, true, false, true, 1.5f, 10f), "chained while combat does not own the hands");
+        Assert(!C(true, true, false, false, true, 1.5f, 10f), "chained a bow");
+        Assert(!C(true, true, true, true, true, 1.5f, 10f), "chained off a secondary attack");
+        Assert(!C(true, true, true, false, false, 1.5f, 10f), "swung again at a dead target");
+        Assert(!C(true, true, true, false, true, 4f, 10f), "chained at a target out of reach");
+        Assert(!C(true, true, true, false, true, 1.5f, 80f), "chained at a target behind it");
+        Assert(ChainPolicy.Continue(true, true, true, false, true, 1f, 2f, 40f, 0f), "weapon with no AI angle never gets the default angle");
     }
 }

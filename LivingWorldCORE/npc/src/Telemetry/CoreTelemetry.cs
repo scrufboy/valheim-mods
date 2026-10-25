@@ -88,7 +88,7 @@ namespace LivingWorld.Telemetry
             if (!subscribed)
             {
                 NpcKernel.Removed += OnRemoved; NpcKernel.Damaged += OnDamaged;
-                NpcVoice.Spoke += OnSpoke; StrikeHook.Landed += OnStrike;
+                NpcVoice.Spoke += OnSpoke; StrikeHook.Landed += OnStrike; MeleeChainHook.Chained += OnChain;
                 subscribed = true;
             }
             Begin("RunStart");
@@ -223,7 +223,7 @@ namespace LivingWorld.Telemetry
                 Num("clearQuiet", kernel.Arbiter.QuietSeconds);
                 Bool("attacking", body.Human.InAttack()); Bool("drawingBow", body.Human.IsDrawingBow());
                 Bool("blocking", body.Human.IsBlocking()); Num("ammo", body.AmmoCount);
-                Bool("shieldInHand", body.ShieldInHand); Num("blockRaises", body.BlockRaises);
+                Bool("shieldInHand", body.ShieldInHand); Num("blockRaises", body.BlockRaises); Num("chains", body.Chains);
                 NativeCombatBehavior combat = Combat(kernel);
                 Str("block", combat == null || combat.Block == null ? "" : combat.Block.Reason);
                 Str("blockThreat", combat == null ? "" : combat.BlockThreat);
@@ -306,6 +306,18 @@ namespace LivingWorld.Telemetry
             ItemDrop.ItemData w = k.Body.Human.GetCurrentWeapon();
             Str("weapon", w == null || w.m_dropPrefab == null ? "" : w.m_dropPrefab.name);
             Num("dist", Vector3.Distance(attacker.transform.position, target.transform.position));
+            Num("chainLevel", k.Body.CurrentChainLevel);
+            End();
+        }
+
+        void OnChain(NpcKernel kernel, int level, float edge)
+        {
+            if (!active || writer == null || kernel == null) return;
+            Begin("Chain"); Actor(kernel); Num("level", level); Num("edge", edge);
+            ItemDrop.ItemData w = kernel.Body.Human.GetCurrentWeapon();
+            Str("weapon", w == null || w.m_dropPrefab == null ? "" : w.m_dropPrefab.name);
+            Character t = kernel.Body.Ai.GetTargetCreature();
+            Str("targetPrefab", t == null ? "" : global::Utils.GetPrefabName(t.gameObject));
             End();
         }
 
@@ -377,7 +389,7 @@ namespace LivingWorld.Telemetry
             if (subscribed)
             {
                 NpcKernel.Removed -= OnRemoved; NpcKernel.Damaged -= OnDamaged;
-                NpcVoice.Spoke -= OnSpoke; StrikeHook.Landed -= OnStrike;
+                NpcVoice.Spoke -= OnSpoke; StrikeHook.Landed -= OnStrike; MeleeChainHook.Chained -= OnChain;
             }
             if (active) Stop("shutdown");
         }

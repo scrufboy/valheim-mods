@@ -46,6 +46,18 @@ namespace LivingWorld.Core
         // never block. Humanoid.UpdateBlock/IsBlocking/BlockAttack handle everything after it.
         internal static readonly FieldInfo Blocking = Field(typeof(Character), "m_blocking");
 
+        // Chained melee. Player continues a combo by calling StartAttack inside the swing's chain window;
+        // Humanoid.StartAttack allows that mid-swing only if HaveQueuedChain() (false for every
+        // non-Player). Attack.Start then advances the level because the previous attack is the same
+        // animation and m_timeSinceLastAttack is 0 while InAttack (verified in IL, 1.0.20).
+        internal static readonly FieldInfo CurrentAttack = Field(typeof(Humanoid), "m_currentAttack");
+        internal static readonly FieldInfo CurrentAttackIsSecondary = Field(typeof(Humanoid), "m_currentAttackIsSecondary");
+        internal static readonly FieldInfo AttackChainLevel = Field(typeof(Attack), "m_currentAttackCainLevel");
+        internal static readonly FieldInfo AttackChainLevels = Field(typeof(Attack), "m_attackChainLevels");
+        internal static readonly MethodInfo CanStartChainAttack = Method(typeof(Attack), "CanStartChainAttack");
+        internal static readonly MethodInfo HaveQueuedChain = Method(typeof(Humanoid), "HaveQueuedChain");
+        internal static readonly MethodInfo UpdateAttack = Method(typeof(Humanoid), "UpdateAttack", typeof(float));
+
         // Visual identity.
         internal static readonly FieldInfo HairInstance = Field(typeof(VisEquipment), "m_hairItemInstance");
         internal static readonly FieldInfo BeardInstance = Field(typeof(VisEquipment), "m_beardItemInstance");

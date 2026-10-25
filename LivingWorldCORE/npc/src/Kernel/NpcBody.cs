@@ -439,6 +439,76 @@ namespace LivingWorld.Core
             if (raise) BlockRaises++;
         }
 
+        // ---------------- Chained melee (1.0.17) ----------------
+
+        NpcBehavior chainOwner;
+        [ThreadStatic] static Humanoid chainGate;   // the one actor whose HaveQueuedChain answers yes, for one call
+        public int Chains { get; private set; }
+        public int LastChainLevel { get; private set; }
+        public float LastChainDistance { get; private set; }
+        /// <summary>Combo position of the swing in progress (0 = first hit), or -1.</summary>
+        public int CurrentChainLevel
+        {
+            get
+            {
+                Attack a = Human == null ? null : NativeApi.CurrentAttack.GetValue(Human) as Attack;
+                return a == null ? -1 : (int)NativeApi.AttackChainLevel.GetValue(a);
+            }
+        }
+
+        /// <summary>The behavior holding the hands lets combos continue (or stops them). Released on domain loss.</summary>
+        public void AllowChains(NpcBehavior caller, bool allow)
+        {
+            Require(NpcDomain.Hands, caller);
+            chainOwner = allow ? caller : null;
+        }
+
+        internal static bool ChainQueued(Humanoid human) { return human != null && ReferenceEquals(chainGate, human); }
+
+        /// <summary>
+        /// Called every physics step from Humanoid.UpdateAttack. If the current swing's native chain
+        /// window is open and the rule says the next hit can land, start it exactly as a player's
+        /// queued attack would. Returns the new chain level, or -1.
+        /// </summary>
+        internal int TryChain()
+        {
+            if (chainOwner == null || Human == null || !Human.InAttack()) return -1;
+            if (!IsOwner || !kernel.Holds(chainOwner, NpcDomain.Hands)) { chainOwner = null; return -1; }
+            Attack current = NativeApi.CurrentAttack.GetValue(Human) as Attack;
+            if (current == null) return -1;
+            bool window = (bool)NativeApi.CanStartChainAttack.Invoke(current, null);
+            if (!window) return -1;
+            ItemDrop.ItemData weapon = Human.GetCurrentWeapon();
+            bool melee = weapon != null && weapon.m_shared != null && weapon.m_shared.m_attack != null &&
+                weapon.m_shared.m_attack.m_attackType != Attack.AttackType.Projectile &&
+                weapon.m_shared.m_skillType != Skills.SkillType.Bows;
+            bool secondary = (bool)NativeApi.CurrentAttackIsSecondary.GetValue(Human);
+            Character target = Ai.GetTargetCreature();
+            bool alive = target != null && !target.IsDead();
+            float edge = float.PositiveInfinity, angle = 180f;
+            if (alive)
+            {
+                Vector3 offset = target.transform.position - Human.transform.position;
+                edge = Mathf.Max(0f, offset.magnitude - target.GetRadius());
+                offset.y = 0f;
+                angle = offset.sqrMagnitude < .01f ? 0f : Vector3.Angle(Human.transform.forward, offset);
+            }
+            float reach = melee ? weapon.m_shared.m_aiAttackRange : 0f;
+            float maxAngle = melee ? weapon.m_shared.m_aiAttackMaxAngle : 0f;
+            if (!ChainPolicy.Continue(true, true, melee, secondary, alive, edge, reach, angle, maxAngle)) return -1;
+            bool started;
+            chainGate = Human;
+            try { started = Human.StartAttack(target, false); }
+            finally { chainGate = null; }
+            if (!started) return -1;
+            Attack next = NativeApi.CurrentAttack.GetValue(Human) as Attack;
+            int level = next == null ? -1 : (int)NativeApi.AttackChainLevel.GetValue(next);
+            Chains++;
+            LastChainLevel = level;
+            LastChainDistance = edge;
+            return level;
+        }
+
         internal void LowerBlockUnchecked()
         {
             if (Human != null && NativeApi.Blocking != null && IsOwner) NativeApi.Blocking.SetValue(Human, false);
