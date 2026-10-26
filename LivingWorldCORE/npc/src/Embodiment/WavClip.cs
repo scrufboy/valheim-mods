@@ -43,6 +43,9 @@ namespace LivingWorld.Core
             }
             AudioClip clip = AudioClip.Create(Path.GetFileNameWithoutExtension(path), count / channels, channels, rate, false);
             clip.SetData(samples, 0);
+            // A runtime clip is owned by nothing in a scene: the world-load asset sweep would delete it (1.0.27 live:
+            // female lines fired but played silence). Keep it alive for the whole session.
+            clip.hideFlags = HideFlags.DontUnloadUnusedAsset;
             return clip;
         }
     }

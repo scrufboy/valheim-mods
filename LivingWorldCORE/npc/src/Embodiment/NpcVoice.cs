@@ -106,6 +106,7 @@ namespace LivingWorld.Core
                 ZSFX sfx = prefab == null ? null : prefab.GetComponent<ZSFX>();
                 if (sfx == null) continue;
                 sfx.m_audioClips = clips.ToArray();
+                Loaded.AddRange(clips);   // strong references as well
                 sfx.m_minPitch = FemaleMinPitch;
                 sfx.m_maxPitch = FemaleMaxPitch;
                 Clips["f:" + line] = prefab;
@@ -115,6 +116,27 @@ namespace LivingWorld.Core
         }
 
         public const float FemaleMinPitch = .97f, FemaleMaxPitch = 1.03f;   // human voice: natural variation only
+        static readonly List<AudioClip> Loaded = new List<AudioClip>();
+        static readonly HashSet<string> Reported = new HashSet<string>();
+
+        /// <summary>A female line is usable only while its clips still exist; otherwise the male line plays (and it is logged once).</summary>
+        static bool FemaleUsable(string key)
+        {
+            GameObject prefab;
+            if (!Clips.TryGetValue("f:" + key, out prefab) || prefab == null) return false;
+            ZSFX sfx = prefab.GetComponent<ZSFX>();
+            int alive = 0;
+            if (sfx != null && sfx.m_audioClips != null)
+                foreach (AudioClip c in sfx.m_audioClips) if (c != null && c.length > 0f) alive++;
+            if (!Reported.Contains(key))
+            {
+                Reported.Add(key);
+                CorePlugin.Warn("female voice '" + key + "' first use: " + alive + " of " +
+                    (sfx == null || sfx.m_audioClips == null ? 0 : sfx.m_audioClips.Length) + " clips alive" +
+                    (alive == 0 ? " -> using the male line" : ""));
+            }
+            return alive > 0;
+        }
 
         static bool IsFemale(NpcKernel kernel)
         {
@@ -125,7 +147,7 @@ namespace LivingWorld.Core
         /// <summary>Once per load: a female companion's death cry uses the female set (the prefab is shared by both genders).</summary>
         internal static void ApplyGender(NpcKernel kernel)
         {
-            if (!IsFemale(kernel) || !Clips.ContainsKey("f:death")) return;
+            if (!IsFemale(kernel) || !FemaleUsable("death")) return;
             Humanoid human = kernel.Body == null ? null : kernel.Body.Human;
             if (human != null) human.m_deathEffects = Voiced(human.m_deathEffects, "f:death");
         }
@@ -178,7 +200,7 @@ namespace LivingWorld.Core
         static void Say(NpcKernel kernel, string key)
         {
             if (kernel == null || kernel.Body == null || kernel.Body.Human == null || kernel.Body.Human.IsDead()) return;
-            EffectList line = IsFemale(kernel) && Clips.ContainsKey("f:" + key) ? List("f:" + key) : List(key);
+            EffectList line = IsFemale(kernel) && FemaleUsable(key) ? List("f:" + key) : List(key);
             if (line == null) return;
             Character body = kernel.Body.Human;
             Silence(body);
