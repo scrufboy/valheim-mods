@@ -44,7 +44,7 @@ namespace LivingWorld.Core
                 Clips[source.Substring("sfx_goblin_".Length)] = clone;
             }
             // War cry (1.0.23): the Fuling Berserker's taunt roar (vanilla sfx_goblinbrute_taunt; its clips are
-            // human male screams), at the Berserker's own native pitch. Registered like the voice lines.
+            // human male screams), halfway between its native (beast) pitch and the rejected 1.0-1.1. Registered like the voice lines.
             GameObject cry = PrefabManager.Instance.GetPrefab(WarCryName);
             if (cry == null && PrefabManager.Instance.GetPrefab(WarCrySource) != null)
             {
@@ -54,10 +54,17 @@ namespace LivingWorld.Core
             if (cry == null) missing.Add(WarCrySource);
             else
             {
-                // 1.0.25: keep the Berserker's own pitch untouched (1.0.23 raised it to 1.0-1.1 and it sounded
-                // like a Fuling, Brian live). Its native values are only reported.
+                // 1.0.26 (Brian, live): the native Berserker roar is below human (beast-like); 1.0.23's 1.0-1.1
+                // was too high (Fuling-like). Target: a deep human shout = halfway between native and 1.0-1.1.
                 ZSFX sfx = cry.GetComponent<ZSFX>();
-                WarCryPitch = sfx == null ? "no ZSFX" : sfx.m_minPitch + "-" + sfx.m_maxPitch;
+                if (sfx == null) WarCryPitch = "no ZSFX";
+                else
+                {
+                    float nativeMin = sfx.m_minPitch, nativeMax = sfx.m_maxPitch;
+                    sfx.m_minPitch = (nativeMin + TooHighMin) * .5f;
+                    sfx.m_maxPitch = (nativeMax + TooHighMax) * .5f;
+                    WarCryPitch = "native " + nativeMin + "-" + nativeMax + " -> " + sfx.m_minPitch + "-" + sfx.m_maxPitch;
+                }
                 Clips["warcry"] = cry;
             }
             Missing = missing.Count == 0 ? "" : String.Join(", ", missing.ToArray());
@@ -65,6 +72,7 @@ namespace LivingWorld.Core
 
         const string WarCrySource = "sfx_goblinbrute_taunt", WarCryName = "LWC_sfx_warcry";
         public static string WarCryPitch { get; private set; }
+        const float TooHighMin = 1f, TooHighMax = 1.1f;   // 1.0.23 setting, rejected live as Fuling-like
 
         /// <summary>The once-per-raid war cry line (no policy roll: WarCry decides).</summary>
         internal static void SayWarCry(NpcKernel kernel) { Say(kernel, "warcry"); }
