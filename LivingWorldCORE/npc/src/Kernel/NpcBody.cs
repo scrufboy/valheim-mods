@@ -557,14 +557,14 @@ namespace LivingWorld.Core
         {
             get
             {
-                Attack a = Human == null ? null : NativeApi.CurrentAttack.GetValue(Human) as Attack;
-                return a == null ? -1 : (int)NativeApi.AttackChainLevel.GetValue(a);
+                Attack a = Human == null ? null : CurrentAttackRef(Human);
+                return a == null ? -1 : ChainLevelRef(a);
             }
         }
 
         public bool CurrentAttackIsSecondary
         {
-            get { return Human != null && (bool)NativeApi.CurrentAttackIsSecondary.GetValue(Human); }
+            get { return Human != null && CurrentSecondaryRef(Human); }
         }
 
         /// <summary>The behavior holding the hands lets follow-ups happen (or stops them). Released on domain loss.</summary>
@@ -581,42 +581,56 @@ namespace LivingWorld.Core
         /// an area heavy), one roll for a heavy; else, mid-swing in the native chain window, the next combo
         /// hit while it can land. Returns 1 = combo hit started, 2 = heavy started, 0 = nothing.
         /// </summary>
+        // Fast native access (1.0.33): typed field refs instead of per-frame reflection; Attack.CanStartChainAttack is public.
+        static readonly Func<Humanoid, Attack> CurrentAttackRef = FastField.Getter<Humanoid, Attack>(NativeApi.CurrentAttack);
+        static readonly Func<Humanoid, bool> CurrentSecondaryRef = FastField.Getter<Humanoid, bool>(NativeApi.CurrentAttackIsSecondary);
+        static readonly Func<Attack, int> ChainLevelRef = FastField.Getter<Attack, int>(NativeApi.AttackChainLevel);
+        float nextCrowdCheck;
+
+        internal NpcKernel Kernel { get { return kernel; } }
+
+        /// <summary>
+        /// Every physics step from Humanoid.UpdateAttack. Cheap native signals first (1.0.33, Brian caught the cost):
+        /// nothing at all unless the hands are ours and a live melee target exists; a single-target heavy only when the
+        /// target is staggering (one native call); an area heavy re-checks the crowd at most 4x a second; a combo hit
+        /// only inside the native chain window. The creature scan runs only when an opening already exists.
+        /// Returns 1 = combo hit started, 2 = heavy started, 0 = nothing.
+        /// </summary>
         internal int TryFollowUp()
         {
-            if (Human == null) return 0;
+            if (chainOwner == null || Human == null) return 0;
             bool inAttack = Human.InAttack();
-            Attack current = NativeApi.CurrentAttack.GetValue(Human) as Attack;
-            if (chainOwner == null) return 0;
-            if (!IsOwner || !kernel.Holds(chainOwner, NpcDomain.Hands)) { chainOwner = null; return 0; }
+            Attack current = inAttack ? CurrentAttackRef(Human) : null;
+            bool window = current != null && current.CanStartChainAttack();
+            if (inAttack && !window) return 0;                         // mid-swing outside the chain window: nothing to decide
+            Character target = Ai.GetTargetCreature();
+            if (rolledStagger != null && (rolledStagger.IsDead() || !rolledStagger.IsStaggering())) rolledStagger = null;
+            if (target == null || target.IsDead()) return 0;
             ItemDrop.ItemData weapon = Human.GetCurrentWeapon();
             if (weapon == null || weapon.m_shared == null || weapon.m_shared.m_attack == null) return 0;
-            bool melee = weapon.m_shared.m_attack.m_attackType != Attack.AttackType.Projectile &&
-                weapon.m_shared.m_skillType != Skills.SkillType.Bows;
-            if (!melee) return 0;
-            Character target = Ai.GetTargetCreature();
-            ClearStaggerRoll(target);
-            bool alive = target != null && !target.IsDead();
-            if (!alive) return 0;
+            if (weapon.m_shared.m_attack.m_attackType == Attack.AttackType.Projectile || weapon.m_shared.m_skillType == Skills.SkillType.Bows) return 0;
 
-            bool window = inAttack && current != null && (bool)NativeApi.CanStartChainAttack.Invoke(current, null);
-            if (inAttack && !window) return 0;
+            Attack heavy = weapon.m_shared.m_secondaryAttack;
+            bool hasHeavy = heavy != null && !String.IsNullOrEmpty(heavy.m_attackAnimation);
+            HeavyPolicy.Shape shape = HeavyPolicy.ShapeOf(hasHeavy, hasHeavy && heavy.m_attackType == Attack.AttackType.Projectile,
+                hasHeavy ? heavy.m_attackAngle : 0f, hasHeavy && heavy.m_attackType == Attack.AttackType.Area);
+            bool staggered = target.IsStaggering();
+            bool crowdCheck = shape == HeavyPolicy.Shape.Area && Time.time >= nextCrowdCheck;
+            bool heavyPossible = (shape == HeavyPolicy.Shape.Single && staggered) || (shape == HeavyPolicy.Shape.Area && (staggered || crowdCheck));
+            if (!heavyPossible && !window) return 0;                   // the common case: nothing native has opened up
 
+            if (!IsOwner || !kernel.Holds(chainOwner, NpcDomain.Hands)) { chainOwner = null; return 0; }
             Vector3 offset = target.transform.position - Human.transform.position;
             float edge = Mathf.Max(0f, offset.magnitude - target.GetRadius());
             offset.y = 0f;
             float facing = offset.sqrMagnitude < .01f ? 0f : Vector3.Angle(Human.transform.forward, offset);
 
-            // Heavy first, decided in the moment: one roll per opening (a stagger, or a crowd for an area heavy).
-            Attack heavy = weapon.m_shared.m_secondaryAttack;
-            bool hasHeavy = heavy != null && !String.IsNullOrEmpty(heavy.m_attackAnimation);
-            HeavyPolicy.Shape shape = HeavyPolicy.ShapeOf(hasHeavy, hasHeavy && heavy.m_attackType == Attack.AttackType.Projectile,
-                hasHeavy ? heavy.m_attackAngle : 0f, hasHeavy && heavy.m_attackType == Attack.AttackType.Area);
-            if (shape != HeavyPolicy.Shape.None)
+            if (heavyPossible && Stamina >= heavy.m_attackStamina)
             {
+                if (crowdCheck) nextCrowdCheck = Time.time + .25f;
                 float cost = heavy.m_attackStamina;
                 int inArea, closing;
                 CountEnemies(target, heavy.m_attackRange + HeavyPolicy.ReachSlack, out inArea, out closing);
-                bool staggered = target.IsStaggering();
                 HeavyPolicy.Why why = HeavyPolicy.Opening(shape, Stamina, cost, true, edge, heavy.m_attackRange, facing,
                     staggered, inArea, closing);
                 if (why != HeavyPolicy.Why.None && RollFor(why, target, staggered) && Start(target, true))
@@ -633,8 +647,7 @@ namespace LivingWorld.Core
             }
 
             if (!window) return 0;
-            float reach = weapon.m_shared.m_aiAttackRange;
-            if (!ChainPolicy.Continue(true, true, true, CurrentAttackIsSecondary, true, edge, reach, facing,
+            if (!ChainPolicy.Continue(true, true, true, CurrentSecondaryRef(Human), true, edge, weapon.m_shared.m_aiAttackRange, facing,
                     weapon.m_shared.m_aiAttackMaxAngle))
                 return 0;
             if (!Start(target, false)) return 0;
@@ -673,12 +686,6 @@ namespace LivingWorld.Core
             nextCrowdRoll = Time.time + HeavyPolicy.CrowdReroll;
             HeavyRolls++;
             return UnityEngine.Random.value < HeavyPolicy.Chance;
-        }
-
-        /// <summary>Forget a stagger roll once the target recovers, so its next stagger is a new opening.</summary>
-        void ClearStaggerRoll(Character target)
-        {
-            if (rolledStagger != null && (rolledStagger.IsDead() || !rolledStagger.IsStaggering())) rolledStagger = null;
         }
 
         void CountEnemies(Character target, float areaRadius, out int inArea, out int closing)

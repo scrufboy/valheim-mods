@@ -19,7 +19,7 @@ namespace LivingWorld.Core
             if (!__result || __instance == null || __instance is Player) return;
             NpcBody body = NpcBody.Of(__instance);
             if (body == null || !body.IsOwner) return;
-            NpcKernel kernel = body.Root.GetComponent<NpcKernel>();
+            NpcKernel kernel = body.Kernel;
             try { NpcVoice.OnSwing(kernel, secondaryAttack); }
             catch (Exception e) { if (kernel != null) kernel.ReportFault("voice swing", e); }
         }
@@ -37,7 +37,7 @@ namespace LivingWorld.Core
             if (__instance == null || __instance is Player) return;
             NpcBody body = NpcBody.Of(__instance);
             if (body == null) return;
-            NpcKernel kernel = body.Root.GetComponent<NpcKernel>();
+            NpcKernel kernel = body.Kernel;
             int started;
             try { started = body.TryFollowUp(); }
             catch (Exception e) { if (kernel != null) kernel.ReportFault("melee follow-up", e); return; }
