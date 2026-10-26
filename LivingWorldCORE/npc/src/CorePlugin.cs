@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.24";
+        public const string Version = "1.0.25";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -93,6 +93,7 @@ namespace LivingWorld.Core
                 NpcVoice.Build();
                 Report(NpcVoice.Missing.Length == 0 ? "Companion voice: vanilla Fuling sounds, pitch 0.8-0.9." :
                     "Companion voice missing sources: " + NpcVoice.Missing);
+                Report("War cry: Fuling Berserker taunt at its native pitch " + (NpcVoice.WarCryPitch ?? "?") + ".");
                 GameObject player = RequirePrefab("Player", false);
                 // No helmet: it hides native hair (0.4.0 lesson).
                 // Same kit, same behavior: the weapon follows from distance, not from a role.
