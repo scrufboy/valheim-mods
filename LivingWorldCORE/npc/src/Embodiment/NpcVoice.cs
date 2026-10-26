@@ -72,11 +72,13 @@ namespace LivingWorld.Core
             Missing = missing.Count == 0 ? "" : String.Join(", ", missing.ToArray());
         }
 
-        // ---- Female voice set (1.0.27): Brian's licensed "Ultimate Female Voice Pack" (topmademarti), loaded from
-        // voices/female/<line>/*.wav beside this DLL. Same five lines as the male set; female companions use it,
-        // male companions keep the pitched Fuling set. Missing folder or line -> that line stays male. ----
-        static readonly string[] FemaleLines = { "alerted", "hit", "death", "idle", "warcry", "exert" };
+        // ---- Female voice set: Brian's licensed "Ultimate Female Voice Pack" (topmademarti). ----
+        // 1.0.32 layout: voices/female/clips/*.wav + voices/female/lines.txt ("line: file, file, ..."), so clips are
+        // approved or rejected by editing names. (Fallback: the 1.0.27 voices/female/<line>/*.wav folders.)
+        // Same lines and the same VoicePolicy/WarCryPolicy for both genders; gender only picks the clip pool in Say.
+        static readonly string[] FemaleLines = { "alerted", "exert", "hit", "hit_heavy", "idle", "death", "warcry" };
         public static string FemaleSummary { get; private set; }
+        static readonly Dictionary<string, string> ClipLine = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         static void BuildFemale()
         {
@@ -85,22 +87,38 @@ namespace LivingWorld.Core
             if (!Directory.Exists(root)) { FemaleSummary = "none (no voices/female folder)"; return; }
             GameObject template = PrefabManager.Instance.GetPrefab("sfx_goblin_hit");
             if (template == null) { FemaleSummary = "none (template sfx missing)"; return; }
+            Dictionary<string, List<string>> plan = ReadPlan(root);
+            var byHash = new Dictionary<string, string>();
             foreach (string line in FemaleLines)
             {
-                string dir = Path.Combine(root, line);
-                if (!Directory.Exists(dir)) continue;
+                List<string> files;
+                if (!plan.TryGetValue(line, out files) || files.Count == 0) { CorePlugin.Warn("female voice: line '" + line + "' has no clips -> male line"); continue; }
                 var clips = new List<AudioClip>();
-                foreach (string file in Directory.GetFiles(dir, "*.wav"))
+                foreach (string file in files)
                 {
-                    try { clips.Add(WavClip.Load(file)); }
-                    catch (Exception e) { CorePlugin.Warn("female voice " + Path.GetFileName(file) + ": " + e.Message); }
+                    string name = Path.GetFileName(file);
+                    string other;
+                    if (ClipLine.TryGetValue(name, out other) && other != line)
+                        CorePlugin.Warn("female voice: " + name + " is in both '" + other + "' and '" + line + "'");
+                    ClipLine[name] = line;
+                    try
+                    {
+                        string hash = Hash(file);
+                        if (byHash.TryGetValue(hash, out other) && other != line + "/" + name)
+                            CorePlugin.Warn("female voice: " + line + "/" + name + " has the same audio as " + other);
+                        byHash[hash] = line + "/" + name;
+                        AudioClip clip = WavClip.Load(file);
+                        if (clip.length <= 0f || clip.samples == 0) { CorePlugin.Warn("female voice: " + name + " is empty"); continue; }
+                        clips.Add(clip);
+                    }
+                    catch (Exception e) { CorePlugin.Warn("female voice " + name + ": " + e.Message); }
                 }
-                if (clips.Count == 0) continue;
-                string name = "LWC_sfx_f_" + line;
-                GameObject prefab = PrefabManager.Instance.GetPrefab(name);
+                if (clips.Count == 0) { CorePlugin.Warn("female voice: line '" + line + "' loaded no clips -> male line"); continue; }
+                string prefabName = "LWC_sfx_f_" + line;
+                GameObject prefab = PrefabManager.Instance.GetPrefab(prefabName);
                 if (prefab == null)
                 {
-                    prefab = PrefabManager.Instance.CreateClonedPrefab(name, template);
+                    prefab = PrefabManager.Instance.CreateClonedPrefab(prefabName, template);
                     if (prefab != null && prefab.GetComponent<ZNetView>() != null) PrefabManager.Instance.AddPrefab(new CustomPrefab(prefab, false));
                 }
                 ZSFX sfx = prefab == null ? null : prefab.GetComponent<ZSFX>();
@@ -109,20 +127,59 @@ namespace LivingWorld.Core
                 Loaded.AddRange(clips);   // strong references as well
                 sfx.m_minPitch = FemaleMinPitch;
                 sfx.m_maxPitch = FemaleMaxPitch;
-                if (TemplateVolume == null) TemplateVolume = sfx.m_minVol + "-" + sfx.m_maxVol;
-                // 1.0.30 (Brian: "take it to 6 or 7"): +2 dB on top of the ~+5 dB normalization = ~+7 dB total.
-                sfx.m_minVol = Mathf.Min(1f, sfx.m_minVol * FemaleExtraGain);
-                sfx.m_maxVol = Mathf.Min(1f, sfx.m_maxVol * FemaleExtraGain);
+                if (TemplateVolume < 0f) TemplateVolume = sfx.m_maxVol;
+                // One gain stage on top of consistent normalization: CorePlugin.FemaleVoiceGain (config).
+                sfx.m_minVol = sfx.m_maxVol = Mathf.Min(1f, TemplateVolume * CorePlugin.FemaleVoiceGain);
                 Clips["f:" + line] = prefab;
                 parts.Add(line + " " + clips.Count);
             }
-            FemaleSummary = (parts.Count == 0 ? "none" : String.Join(", ", parts.ToArray())) +
-                "; clips normalized to 0.98 peak (~+5 dB) and volume x" + FemaleExtraGain + " (+4 dB) from template " + (TemplateVolume ?? "?");
+            FemaleSummary = (parts.Count == 0 ? "none" : String.Join(", ", parts.ToArray())) + "; clips normalized to 0.98 peak, volume " +
+                TemplateVolume + " x " + CorePlugin.FemaleVoiceGain + (plan.ContainsKey("#source") ? "; " + plan["#source"][0] : "");
+        }
+
+        /// <summary>lines.txt plan if present, else one folder per line.</summary>
+        static Dictionary<string, List<string>> ReadPlan(string root)
+        {
+            var plan = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+            string manifest = Path.Combine(root, "lines.txt"), clipDir = Path.Combine(root, "clips");
+            if (File.Exists(manifest))
+            {
+                foreach (string raw in File.ReadAllLines(manifest))
+                {
+                    string row = raw.Trim();
+                    int colon = row.IndexOf(':');
+                    if (row.Length == 0 || row.StartsWith("#") || colon <= 0) continue;
+                    string line = row.Substring(0, colon).Trim();
+                    var files = new List<string>();
+                    foreach (string part in row.Substring(colon + 1).Split(','))
+                    {
+                        string f = part.Trim();
+                        if (f.Length == 0) continue;
+                        string path = Path.Combine(clipDir, f);
+                        if (File.Exists(path)) files.Add(path); else CorePlugin.Warn("female voice: " + line + " lists missing file " + f);
+                    }
+                    plan[line] = files;
+                }
+                plan["#source"] = new List<string> { "lines.txt" };
+                return plan;
+            }
+            foreach (string line in FemaleLines)
+            {
+                string dir = Path.Combine(root, line);
+                if (Directory.Exists(dir)) plan[line] = new List<string>(Directory.GetFiles(dir, "*.wav"));
+            }
+            plan["#source"] = new List<string> { "per-line folders" };
+            return plan;
+        }
+
+        static string Hash(string path)
+        {
+            using (var md5 = System.Security.Cryptography.MD5.Create())
+                return BitConverter.ToString(md5.ComputeHash(File.ReadAllBytes(path)));
         }
 
         public const float FemaleMinPitch = .97f, FemaleMaxPitch = 1.03f;   // human voice: natural variation only
-        static string TemplateVolume;
-        const float FemaleExtraGain = 1.58f;   // +4 dB (1.0.31: Brian asked 2 more dB over 1.0.30)
+        static float TemplateVolume = -1f;
         static readonly List<AudioClip> Loaded = new List<AudioClip>();
         static readonly HashSet<string> Reported = new HashSet<string>();
 
@@ -164,7 +221,7 @@ namespace LivingWorld.Core
         const float TooHighMin = 1f, TooHighMax = 1.1f;   // 1.0.23 setting, rejected live as Fuling-like
 
         /// <summary>The once-per-raid war cry line (no policy roll: WarCry decides).</summary>
-        internal static void SayWarCry(NpcKernel kernel) { Say(kernel, "warcry"); }
+        internal static void SayWarCry(NpcKernel kernel) { Say(kernel, "warcry", "raid start"); }
 
         static EffectList List(string key)
         {
@@ -204,17 +261,49 @@ namespace LivingWorld.Core
         public static int Lines { get; private set; }
         public static event Action<NpcKernel, string> Spoke;
 
-        static void Say(NpcKernel kernel, string key)
+        static void Say(NpcKernel kernel, string key) { Say(kernel, key, key); }
+
+        /// <summary>Plays a line. Behavior is shared; gender only chooses the clip pool here. The exact clip is chosen
+        /// here too (ZSFX picks on a later frame, so the instance can be narrowed to one clip and logged).</summary>
+        static void Say(NpcKernel kernel, string key, string trigger)
         {
             if (kernel == null || kernel.Body == null || kernel.Body.Human == null || kernel.Body.Human.IsDead()) return;
-            EffectList line = IsFemale(kernel) && FemaleUsable(key) ? List("f:" + key) : List(key == "exert" ? "hit" : key);
+            bool female = IsFemale(kernel);
+            bool useFemale = female && FemaleUsable(key);
+            string pool = useFemale ? "f:" + key : MaleKey(key);
+            EffectList line = List(pool);
             if (line == null) return;
             Character body = kernel.Body.Human;
             Silence(body);
-            Speaking[body.GetInstanceID()] = line.Create(body.transform.position, body.transform.rotation, body.transform);
+            GameObject[] made = line.Create(body.transform.position, body.transform.rotation, body.transform);
+            Speaking[body.GetInstanceID()] = made;
+            string clipName = Narrow(made);
             Lines++;
+            if (CorePlugin.DevVoiceLog)
+                CorePlugin.Report("VOICE " + body.GetHoverName() + " (" + (female ? "female" : "male") + ") line=" + key +
+                    " clip=" + clipName + " trigger=" + trigger + (female && !useFemale ? " FALLBACK=male" : ""));
             Action<NpcKernel, string> spoke = Spoke;
             if (spoke != null) spoke(kernel, key);
+        }
+
+        /// <summary>Male lines that share a vanilla clip set: exertion and heavy hurt use the Fuling grunt.</summary>
+        static string MaleKey(string key) { return key == "exert" || key == "hit_heavy" ? "hit" : key; }
+
+        static string Narrow(GameObject[] made)
+        {
+            if (made == null) return "?";
+            foreach (GameObject go in made)
+            {
+                ZSFX z = go == null ? null : go.GetComponent<ZSFX>();
+                if (z == null || z.m_audioClips == null || z.m_audioClips.Length == 0) continue;
+                var alive = new List<AudioClip>();
+                foreach (AudioClip c in z.m_audioClips) if (c != null) alive.Add(c);
+                if (alive.Count == 0) return "none";
+                AudioClip pick = alive[UnityEngine.Random.Range(0, alive.Count)];
+                z.m_audioClips = new[] { pick };      // instance copy only; the prefab keeps its pool
+                return pick.name;
+            }
+            return "?";
         }
 
         /// <summary>Being hit cuts off whatever this companion was shouting.</summary>
@@ -245,7 +334,7 @@ namespace LivingWorld.Core
             float sinceStrike = LastStrike.TryGetValue(kernel.GetInstanceID(), out lastStrike) ? Time.time - lastStrike : float.PositiveInfinity;
             float distance = Vector3.Distance(kernel.transform.position, enemy.transform.position);
             if (!VoicePolicy.Noticing(sinceStrike, kernel.Frame.Senses.SecondsSinceDamaged, distance)) return;
-            if (Policy.NewEnemy(Time.time, enemy.GetInstanceID(), (float)Dice.NextDouble())) Say(kernel, "alerted");
+            if (Policy.NewEnemy(Time.time, enemy.GetInstanceID(), (float)Dice.NextDouble())) Say(kernel, "alerted", "first sight at " + distance.ToString("0") + "m");
         }
 
         internal static void OnHurt(NpcKernel kernel, float damage)
@@ -255,10 +344,11 @@ namespace LivingWorld.Core
             VoicePolicy.HurtLine line = Policy.Hurt(Time.time, body.GetInstanceID(), damage, body.GetMaxHealth(),
                 interrupted, (float)Dice.NextDouble());
             if (line == VoicePolicy.HurtLine.None) return;
-            Say(kernel, "hit");
-            if (line != VoicePolicy.HurtLine.Devastated) return;
+            bool devastated = line == VoicePolicy.HurtLine.Devastated;
+            Say(kernel, devastated ? "hit_heavy" : "hit", (devastated ? "devastating hit " : interrupted ? "hit while speaking " : "light hit ") + damage.ToString("0"));
+            if (!devastated) return;
             NpcKernel partner = NearestPartner(kernel, 25f);
-            if (partner != null) Pending[partner] = new KeyValuePair<float, string>(Time.time + VoicePolicy.PartnerReactDelay, "alerted");
+            if (partner != null) Pending[partner] = new KeyValuePair<float, string>(Time.time + VoicePolicy.PartnerReactDelay, "alerted|partner devastated");
         }
 
         static readonly Dictionary<int, float> LastStrike = new Dictionary<int, float>();
@@ -268,7 +358,7 @@ namespace LivingWorld.Core
         {
             if (kernel == null || kernel.Body == null || kernel.Body.Human == null) return;
             if (!Policy.Exert(Time.time, kernel.GetInstanceID(), heavy, (float)Dice.NextDouble())) return;
-            Say(kernel, "exert");
+            Say(kernel, "exert", heavy ? "heavy attack" : "swing");
         }
 
         internal static void OnStrike(Character attacker, Character target, float damage, bool killed)
@@ -279,7 +369,7 @@ namespace LivingWorld.Core
             if (!Policy.Mighty(Time.time, damage, target.GetMaxHealth(), killed, (float)Dice.NextDouble())) return;
             NpcKernel speaker = attacker == null ? null : attacker.GetComponent<NpcKernel>();
             if (speaker == null) speaker = NearestCompanionTo(target.transform.position, 25f);
-            if (speaker != null) Say(speaker, "idle");   // the taunting chatter
+            if (speaker != null) Say(speaker, "idle", (killed ? "kill " : "mighty blow ") + damage.ToString("0"));
         }
 
         internal static void Tick(NpcKernel kernel)
@@ -287,7 +377,8 @@ namespace LivingWorld.Core
             KeyValuePair<float, string> due;
             if (!Pending.TryGetValue(kernel, out due) || Time.time < due.Key) return;
             Pending.Remove(kernel);
-            Say(kernel, due.Value);
+            string[] parts = due.Value.Split('|');
+            Say(kernel, parts[0], parts.Length > 1 ? parts[1] : parts[0]);
         }
 
         static NpcKernel NearestPartner(NpcKernel kernel, float radius)

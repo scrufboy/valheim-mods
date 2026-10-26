@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.31";
+        public const string Version = "1.0.32";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -31,13 +31,20 @@ namespace LivingWorld.Core
 
         // Feature switches so one change can be live-tested at a time (BepInEx config file).
         static BepInEx.Configuration.ConfigEntry<bool> shieldBlocking;
-        static BepInEx.Configuration.ConfigEntry<float> foodStamina;
+        static BepInEx.Configuration.ConfigEntry<float> foodStamina, femaleVoiceGain;
+        static BepInEx.Configuration.ConfigEntry<bool> devVoiceLog;
+        public static float FemaleVoiceGain { get { return femaleVoiceGain == null ? 1.58f : Mathf.Clamp(femaleVoiceGain.Value, 0f, 2f); } }
+        public static bool DevVoiceLog { get { return devVoiceLog != null && devVoiceLog.Value; } }
         public static float FoodStamina { get { return foodStamina == null ? 100f : Mathf.Max(0f, foodStamina.Value); } }
         public static bool ShieldBlocking { get { return shieldBlocking != null && shieldBlocking.Value; } }
 
         void Awake()
         {
             Instance = this;
+            femaleVoiceGain = Config.Bind("Voice", "FemaleVoiceGain", 1.58f,
+                "Playback gain for the female voice set over the game's 0.5 voice template (clips are already normalized). 1.58 = Brian's in-game setting (1.0.31); 1.0 = template level.");
+            devVoiceLog = Config.Bind("Voice", "DevVoiceLog", false,
+                "Development only: log every companion line (who, gender, line, exact clip, trigger, fallback).");
             foodStamina = Config.Bind("Combat", "CompanionFoodStamina", 100f,
                 "Heavy-attack stamina a companion gets from food on top of the Player base 50 (only heavy attacks spend it).");
             shieldBlocking = Config.Bind("Combat", "ShieldBlocking", false,
