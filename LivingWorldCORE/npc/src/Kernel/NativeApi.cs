@@ -57,6 +57,7 @@ namespace LivingWorld.Core
         internal static readonly MethodInfo CanStartChainAttack = Method(typeof(Attack), "CanStartChainAttack");
         internal static readonly MethodInfo HaveQueuedChain = Method(typeof(Humanoid), "HaveQueuedChain");
         internal static readonly MethodInfo UpdateAttack = Method(typeof(Humanoid), "UpdateAttack", typeof(float));
+        internal static readonly MethodInfo HumanoidStartAttack = Method(typeof(Humanoid), "StartAttack", typeof(Character), typeof(bool));
 
         // Visual identity.
         internal static readonly FieldInfo HairInstance = Field(typeof(VisEquipment), "m_hairItemInstance");

@@ -743,6 +743,29 @@ namespace LivingWorld.Core
         readonly System.Collections.Generic.Dictionary<int, float> lastHurt = new System.Collections.Generic.Dictionary<int, float>();
         float lastParty = float.NegativeInfinity, lastMighty = float.NegativeInfinity;
 
+        // 1.0.30 (Brian, live): noticing is BEFORE action, exertion DURING, reactions and hits AFTER.
+        // 1.0.29 telemetry: call-outs fired a median 0.87 s after the companion's own strike (re-pick after a kill).
+        public const float NoticeQuietSeconds = 3f;   // no own strike / no hit taken this recently: still "before"
+        public const float NoticeMinDistance = 6f;    // a heads-up, not a shout at something already on you
+        public const float ExertHeavyChance = .8f, ExertSwingChance = .15f, ExertCooldown = 4f;
+        readonly System.Collections.Generic.Dictionary<int, float> lastExert = new System.Collections.Generic.Dictionary<int, float>();
+
+        /// <summary>A call-out only before contact: the companion has not struck or been hit lately and the enemy is not on it.</summary>
+        public static bool Noticing(float secondsSinceOwnStrike, float secondsSinceHurt, float enemyDistance)
+        {
+            return secondsSinceOwnStrike >= NoticeQuietSeconds && secondsSinceHurt >= NoticeQuietSeconds && enemyDistance >= NoticeMinDistance;
+        }
+
+        /// <summary>Exertion as a swing starts (plays during it): most heavies, few ordinary swings, per-companion cooldown.</summary>
+        public bool Exert(float now, int actorId, bool heavy, float roll)
+        {
+            float last;
+            if (lastExert.TryGetValue(actorId, out last) && now - last < ExertCooldown) return false;
+            if (roll >= (heavy ? ExertHeavyChance : ExertSwingChance)) return false;
+            lastExert[actorId] = now;
+            return true;
+        }
+
         /// <summary>A companion just took this enemy as a target. roll in [0,1).</summary>
         public bool NewEnemy(float now, int enemyId, float roll)
         {

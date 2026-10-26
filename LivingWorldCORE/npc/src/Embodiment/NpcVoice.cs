@@ -75,7 +75,7 @@ namespace LivingWorld.Core
         // ---- Female voice set (1.0.27): Brian's licensed "Ultimate Female Voice Pack" (topmademarti), loaded from
         // voices/female/<line>/*.wav beside this DLL. Same five lines as the male set; female companions use it,
         // male companions keep the pitched Fuling set. Missing folder or line -> that line stays male. ----
-        static readonly string[] FemaleLines = { "alerted", "hit", "death", "idle", "warcry" };
+        static readonly string[] FemaleLines = { "alerted", "hit", "death", "idle", "warcry", "exert" };
         public static string FemaleSummary { get; private set; }
 
         static void BuildFemale()
@@ -109,16 +109,20 @@ namespace LivingWorld.Core
                 Loaded.AddRange(clips);   // strong references as well
                 sfx.m_minPitch = FemaleMinPitch;
                 sfx.m_maxPitch = FemaleMaxPitch;
-                if (TemplateVolume == null) TemplateVolume = sfx.m_minVol + "-" + sfx.m_maxVol;   // kept as is
+                if (TemplateVolume == null) TemplateVolume = sfx.m_minVol + "-" + sfx.m_maxVol;
+                // 1.0.30 (Brian: "take it to 6 or 7"): +2 dB on top of the ~+5 dB normalization = ~+7 dB total.
+                sfx.m_minVol = Mathf.Min(1f, sfx.m_minVol * FemaleExtraGain);
+                sfx.m_maxVol = Mathf.Min(1f, sfx.m_maxVol * FemaleExtraGain);
                 Clips["f:" + line] = prefab;
                 parts.Add(line + " " + clips.Count);
             }
             FemaleSummary = (parts.Count == 0 ? "none" : String.Join(", ", parts.ToArray())) +
-                "; clips normalized to 0.98 peak (~+5 dB, Brian asked 3-6 dB), template volume " + (TemplateVolume ?? "?") + " unchanged";
+                "; clips normalized to 0.98 peak (~+5 dB) and volume x" + FemaleExtraGain + " (+2 dB) from template " + (TemplateVolume ?? "?");
         }
 
         public const float FemaleMinPitch = .97f, FemaleMaxPitch = 1.03f;   // human voice: natural variation only
         static string TemplateVolume;
+        const float FemaleExtraGain = 1.26f;   // +2 dB
         static readonly List<AudioClip> Loaded = new List<AudioClip>();
         static readonly HashSet<string> Reported = new HashSet<string>();
 
@@ -203,7 +207,7 @@ namespace LivingWorld.Core
         static void Say(NpcKernel kernel, string key)
         {
             if (kernel == null || kernel.Body == null || kernel.Body.Human == null || kernel.Body.Human.IsDead()) return;
-            EffectList line = IsFemale(kernel) && FemaleUsable(key) ? List("f:" + key) : List(key);
+            EffectList line = IsFemale(kernel) && FemaleUsable(key) ? List("f:" + key) : List(key == "exert" ? "hit" : key);
             if (line == null) return;
             Character body = kernel.Body.Human;
             Silence(body);
@@ -236,7 +240,11 @@ namespace LivingWorld.Core
 
         internal static void OnNewTarget(NpcKernel kernel, Character enemy)
         {
-            if (enemy == null) return;
+            if (enemy == null || kernel == null || kernel.Body == null) return;
+            float lastStrike;
+            float sinceStrike = LastStrike.TryGetValue(kernel.GetInstanceID(), out lastStrike) ? Time.time - lastStrike : float.PositiveInfinity;
+            float distance = Vector3.Distance(kernel.transform.position, enemy.transform.position);
+            if (!VoicePolicy.Noticing(sinceStrike, kernel.Frame.Senses.SecondsSinceDamaged, distance)) return;
             if (Policy.NewEnemy(Time.time, enemy.GetInstanceID(), (float)Dice.NextDouble())) Say(kernel, "alerted");
         }
 
@@ -253,8 +261,20 @@ namespace LivingWorld.Core
             if (partner != null) Pending[partner] = new KeyValuePair<float, string>(Time.time + VoicePolicy.PartnerReactDelay, "alerted");
         }
 
+        static readonly Dictionary<int, float> LastStrike = new Dictionary<int, float>();
+
+        /// <summary>A companion's swing just started (Humanoid.StartAttack): exertion plays during it.</summary>
+        internal static void OnSwing(NpcKernel kernel, bool heavy)
+        {
+            if (kernel == null || kernel.Body == null || kernel.Body.Human == null) return;
+            if (!Policy.Exert(Time.time, kernel.GetInstanceID(), heavy, (float)Dice.NextDouble())) return;
+            Say(kernel, "exert");
+        }
+
         internal static void OnStrike(Character attacker, Character target, float damage, bool killed)
         {
+            NpcKernel striker = attacker == null ? null : attacker.GetComponent<NpcKernel>();
+            if (striker != null) LastStrike[striker.GetInstanceID()] = Time.time;
             if (target == null || target.GetComponent<NpcKernel>() != null) return;
             if (!Policy.Mighty(Time.time, damage, target.GetMaxHealth(), killed, (float)Dice.NextDouble())) return;
             NpcKernel speaker = attacker == null ? null : attacker.GetComponent<NpcKernel>();

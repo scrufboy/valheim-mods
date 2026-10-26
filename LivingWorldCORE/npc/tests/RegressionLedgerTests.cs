@@ -12,6 +12,7 @@ static class RegressionLedgerTests
 
     static int Main()
     {
+        Run("1.0.30 live 1.0.29: noticing before, exertion during, reactions after", VoiceBeforeDuringAfter);
         Run("1.0.23 live 1.0.22: split pair defends the partner, not the leader regroup", SpartaDefendsThePartner);
         Run("1.0.23: war cry only at a raid start, never costing a hit", WarCryNeverCostsAHit);
         Run("1.0.21: heavy only at an opening (stagger / crowd), never into a converging crowd", HeavyOnlyWhenItPays);
@@ -767,5 +768,18 @@ static class RegressionLedgerTests
         Assert(!WarCryPolicy.Allowed(true, 20f, true, false, false), "war cry mid-swing");
         Assert(!WarCryPolicy.Allowed(true, 20f, false, true, false), "war cry while falling back");
         Assert(!WarCryPolicy.Allowed(false, 20f, false, false, false), "war cry without a raid");
+    }
+
+    static void VoiceBeforeDuringAfter()
+    {
+        Assert(VoicePolicy.Noticing(10f, 10f, 15f), "no call-out on a fresh sighting before contact");
+        Assert(!VoicePolicy.Noticing(.9f, 10f, 15f), "call-out right after its own strike (1.0.29: 0.87 s lag)");
+        Assert(!VoicePolicy.Noticing(10f, 1f, 15f), "call-out right after being hit");
+        Assert(!VoicePolicy.Noticing(10f, 10f, 2f), "call-out at an enemy already on it");
+        var v = new VoicePolicy();
+        Assert(v.Exert(0f, 1, true, .5f), "no exertion on a heavy");
+        Assert(!v.Exert(1f, 1, true, .1f), "exertion with no cooldown");
+        Assert(!v.Exert(5f, 1, false, .5f), "exertion on most ordinary swings");
+        Assert(v.Exert(5f, 2, false, .1f), "one companion's cooldown silenced another");
     }
 }

@@ -13,6 +13,17 @@ namespace LivingWorld.Core
     /// </summary>
     public static class MeleeChainHook
     {
+        /// <summary>Humanoid.StartAttack postfix: a companion's swing (native or ours) just began -> exertion may play during it.</summary>
+        public static void StartAttackPostfix(Humanoid __instance, bool secondaryAttack, bool __result)
+        {
+            if (!__result || __instance == null || __instance is Player) return;
+            NpcBody body = NpcBody.Of(__instance);
+            if (body == null || !body.IsOwner) return;
+            NpcKernel kernel = body.Root.GetComponent<NpcKernel>();
+            try { NpcVoice.OnSwing(kernel, secondaryAttack); }
+            catch (Exception e) { if (kernel != null) kernel.ReportFault("voice swing", e); }
+        }
+
         public static event Action<NpcKernel, int, float> Chained;
         public static event Action<NpcKernel> Heavy;
 

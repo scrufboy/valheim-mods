@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.29";
+        public const string Version = "1.0.30";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -60,6 +60,8 @@ namespace LivingWorld.Core
             // Chained melee: companions continue a combo inside the swing's native chain window (Player rule).
             harmony.Patch(NativeApi.HaveQueuedChain,
                 postfix: new HarmonyLib.HarmonyMethod(typeof(MeleeChainHook).GetMethod("QueuedPostfix")));
+            harmony.Patch(NativeApi.HumanoidStartAttack,
+                postfix: new HarmonyLib.HarmonyMethod(typeof(MeleeChainHook).GetMethod("StartAttackPostfix")));
             harmony.Patch(NativeApi.UpdateAttack,
                 postfix: new HarmonyLib.HarmonyMethod(typeof(MeleeChainHook).GetMethod("UpdatePostfix")));
             Report(ArmorParity.ArmorGatesPatched == 1 ? "Companion armor applies to damage (Player rule)." :
