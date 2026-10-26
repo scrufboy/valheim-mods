@@ -140,8 +140,11 @@ namespace LivingWorld.Core
                 List<string> files;
                 if (!plan.TryGetValue(line, out files) || files.Count == 0) { CorePlugin.Warn("female voice: line '" + line + "' has no clips -> male line"); continue; }
                 var clips = new List<AudioClip>();
+                var loadedHere = new Dictionary<string, AudioClip>();   // a weighted slot repeats a file: load it once
                 foreach (string file in files)
                 {
+                    AudioClip again;
+                    if (loadedHere.TryGetValue(file, out again)) { clips.Add(again); continue; }
                     string name = Path.GetFileName(file);
                     string other;
                     if (ClipLine.TryGetValue(name, out other) && other != line)
@@ -155,6 +158,7 @@ namespace LivingWorld.Core
                         byHash[hash] = line + "/" + name;
                         AudioClip clip = WavClip.Load(file);
                         if (clip.length <= 0f || clip.samples == 0) { CorePlugin.Warn("female voice: " + name + " is empty"); continue; }
+                        loadedHere[file] = clip;
                         clips.Add(clip);
                     }
                     catch (Exception e) { CorePlugin.Warn("female voice " + name + ": " + e.Message); }
@@ -177,15 +181,19 @@ namespace LivingWorld.Core
                 // One gain stage on top of consistent normalization: CorePlugin.FemaleVoiceGain (config).
                 sfx.m_minVol = sfx.m_maxVol = Mathf.Min(1f, TemplateVolume * CorePlugin.FemaleVoiceGain);
                 Clips["f:" + line] = prefab;
-                parts.Add(line + " " + clips.Count);
+                string note;
+                parts.Add(SlotNotes.TryGetValue(line, out note) ? line + " " + loadedHere.Count + " (" + note + ")" : line + " " + clips.Count);
             }
             FemaleSummary = (parts.Count == 0 ? "none" : String.Join(", ", parts.ToArray())) + "; clips normalized to 0.98 peak, volume " +
                 TemplateVolume + " x " + CorePlugin.FemaleVoiceGain + (plan.ContainsKey("#source") ? "; " + plan["#source"][0] : "");
         }
 
         /// <summary>lines.txt plan if present, else one folder per line.</summary>
+        static readonly Dictionary<string, string> SlotNotes = new Dictionary<string, string>();
+
         static Dictionary<string, List<string>> ReadPlan(string root)
         {
+            SlotNotes.Clear();
             var plan = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
             string manifest = Path.Combine(root, "lines.txt"), clipDir = Path.Combine(root, "clips");
             if (File.Exists(manifest))
@@ -196,15 +204,31 @@ namespace LivingWorld.Core
                     int colon = row.IndexOf(':');
                     if (row.Length == 0 || row.StartsWith("#") || colon <= 0) continue;
                     string line = row.Substring(0, colon).Trim();
-                    var files = new List<string>();
+                    // 1.0.32.2: "a | b" in one comma entry = one logical slot with two atomic alternatives (the male
+                    // Surprised01 model). Every slot keeps equal weight; VoiceSlots.Flatten builds the weighted pick array.
+                    var slots = new List<string[]>();
+                    bool grouped = false;
                     foreach (string part in row.Substring(colon + 1).Split(','))
                     {
-                        string f = part.Trim();
-                        if (f.Length == 0) continue;
-                        string path = Path.Combine(clipDir, f);
-                        if (File.Exists(path)) files.Add(path); else CorePlugin.Warn("female voice: " + line + " lists missing file " + f);
+                        var atoms = new List<string>();
+                        foreach (string atom in part.Split('|'))
+                        {
+                            string f = atom.Trim();
+                            if (f.Length == 0) continue;
+                            string path = Path.Combine(clipDir, f);
+                            if (File.Exists(path)) atoms.Add(path); else CorePlugin.Warn("female voice: " + line + " lists missing file " + f);
+                        }
+                        if (atoms.Count > 1) grouped = true;
+                        if (atoms.Count > 0) slots.Add(atoms.ToArray());
                     }
-                    plan[line] = files;
+                    plan[line] = new List<string>(VoiceSlots.Flatten(slots));
+                    if (grouped)
+                    {
+                        var shares = new List<string>();
+                        foreach (string[] slot in slots)
+                            foreach (string atom in slot) shares.Add(Path.GetFileNameWithoutExtension(atom) + " 1/" + (slots.Count * slot.Length));
+                        SlotNotes[line] = slots.Count + " slots, " + plan[line].Count + " entries: " + String.Join(", ", shares.ToArray());
+                    }
                 }
                 plan["#source"] = new List<string> { "lines.txt" };
                 return plan;

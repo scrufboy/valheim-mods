@@ -830,5 +830,24 @@ namespace LivingWorld.Core
             }
             return found ? flat.ToArray() : null;
         }
+
+        /// <summary>Equal-weight logical slots, each holding one or more atomic alternatives, flattened for a uniform pick:
+        /// every slot gets the same number of entries (the LCM of the atom counts), shared equally by its atoms.
+        /// {A|B}, {C}, {D} -> A B C C D D. Empty slots are skipped.</summary>
+        public static string[] Flatten(System.Collections.Generic.IList<string[]> slots)
+        {
+            var flat = new System.Collections.Generic.List<string>();
+            if (slots == null) return flat.ToArray();
+            int per = 1;
+            foreach (string[] slot in slots) if (slot != null && slot.Length > 0) per = Lcm(per, slot.Length);
+            foreach (string[] slot in slots)
+            {
+                if (slot == null || slot.Length == 0) continue;
+                foreach (string atom in slot) for (int i = 0; i < per / slot.Length; i++) flat.Add(atom);
+            }
+            return flat.ToArray();
+        }
+
+        static int Lcm(int a, int b) { int x = a, y = b; while (y != 0) { int t = x % y; x = y; y = t; } return a / x * b; }
     }
 }

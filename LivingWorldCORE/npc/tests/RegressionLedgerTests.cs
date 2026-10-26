@@ -12,6 +12,7 @@ static class RegressionLedgerTests
 
     static int Main()
     {
+        Run("1.0.32.2: female surprised pair shares one slot (A 1/6, B 1/6, others 1/3)", FemaleSlotFlatten);
         Run("1.0.32.1: Surprised01 split keeps its 1/3 slot weight (A 1/6, B 1/6)", SplitKeepsSlotWeight);
         Run("1.0.30 live 1.0.29: noticing before, exertion during, reactions after", VoiceBeforeDuringAfter);
         Run("1.0.23 live 1.0.22: split pair defends the partner, not the leader regroup", SpartaDefendsThePartner);
@@ -628,6 +629,16 @@ static class RegressionLedgerTests
     static void NoAmmoMelee()
     {
         Assert(W(true, false, 20f, true, false) == WeaponChoice.Pick.Melee, "kept an empty bow");
+    }
+
+    static void FemaleSlotFlatten()
+    {
+        string[] flat = VoiceSlots.Flatten(new[] { new[] { "inv01", "inv03" }, new[] { "rq02" }, new[] { "rq03" } });
+        Assert(string.Join(" ", flat) == "inv01 inv03 rq02 rq02 rq03 rq03", "female alerted array is " + string.Join(" ", flat));
+        string[] plain = VoiceSlots.Flatten(new[] { new[] { "a" }, new[] { "b" }, new[] { "c" } });
+        Assert(string.Join(" ", plain) == "a b c", "ungrouped lines changed weight: " + string.Join(" ", plain));
+        string[] mixed = VoiceSlots.Flatten(new[] { new[] { "a", "b", "c" }, new[] { "d", "e" } });
+        Assert(mixed.Length == 12, "3- and 2-atom slots are not both 1/2");
     }
 
     static void SplitKeepsSlotWeight()
