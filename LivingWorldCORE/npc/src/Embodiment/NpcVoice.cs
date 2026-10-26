@@ -68,8 +68,54 @@ namespace LivingWorld.Core
                 }
                 Clips["warcry"] = cry;
             }
+            SplitSurprised01();
             BuildFemale();
             Missing = missing.Count == 0 ? "" : String.Join(", ", missing.ToArray());
+        }
+
+        // ---- 1.0.32.1: male alerted Surprised01 holds two separate utterances; play either one, never both. ----
+        const string Surprised01 = "Male_LS_D_Surprised01";
+        public static string MaleAlertedSummary { get; private set; }
+
+        /// <summary>Replaces the Surprised01 entry of the male alerted set with its two atomic halves (voices/male/*_A/_B.wav)
+        /// at the slot's original weight (VoiceSlots.SplitOne): A 1/6, B 1/6, Surprised05 1/3, Surprised06 1/3. Load-time only;
+        /// anything unexpected leaves the vanilla set untouched and says so.</summary>
+        static void SplitSurprised01()
+        {
+            GameObject alerted;
+            ZSFX sfx = Clips.TryGetValue("alerted", out alerted) && alerted != null ? alerted.GetComponent<ZSFX>() : null;
+            if (sfx == null || sfx.m_audioClips == null) { MaleAlertedSummary = "unchanged (no alerted set)"; CorePlugin.Warn("male alerted split: no alerted set"); return; }
+            var byName = new Dictionary<string, AudioClip>();
+            var names = new List<string>();
+            foreach (AudioClip c in sfx.m_audioClips)
+            {
+                if (c == null) continue;
+                if (c.name.StartsWith(Surprised01 + "_", StringComparison.Ordinal)) { MaleAlertedSummary = "already split"; return; }
+                if (!byName.ContainsKey(c.name)) { byName[c.name] = c; names.Add(c.name); }
+            }
+            string dir = Path.Combine(Path.GetDirectoryName(typeof(NpcVoice).Assembly.Location) ?? "", Path.Combine("voices", "male"));
+            string pathA = Path.Combine(dir, Surprised01 + "_A.wav"), pathB = Path.Combine(dir, Surprised01 + "_B.wav");
+            string[] flat = VoiceSlots.SplitOne(names.ToArray(), Surprised01, Surprised01 + "_A", Surprised01 + "_B");
+            if (flat == null) { MaleAlertedSummary = "unchanged (" + Surprised01 + " not in the set: " + String.Join(", ", names.ToArray()) + ")"; CorePlugin.Warn("male alerted split: " + MaleAlertedSummary); return; }
+            if (!File.Exists(pathA) || !File.Exists(pathB)) { MaleAlertedSummary = "unchanged (missing voices/male split files)"; CorePlugin.Warn("male alerted split: " + MaleAlertedSummary); return; }
+            try
+            {
+                AudioClip a = WavClip.Load(pathA, false), b = WavClip.Load(pathB, false);   // keep the recording's level: no normalization
+                if (a.samples == 0 || b.samples == 0) { MaleAlertedSummary = "unchanged (empty split file)"; CorePlugin.Warn("male alerted split: " + MaleAlertedSummary); return; }
+                byName[a.name] = a; byName[b.name] = b;
+                Loaded.Add(a); Loaded.Add(b);
+                var clips = new AudioClip[flat.Length];
+                for (int i = 0; i < flat.Length; i++) clips[i] = byName[flat[i]];
+                sfx.m_audioClips = clips;
+                var share = new List<string>();
+                foreach (string n in names)
+                {
+                    if (n == Surprised01) { share.Add(n + "_A 1/" + (names.Count * 2)); share.Add(n + "_B 1/" + (names.Count * 2)); }
+                    else share.Add(n + " 1/" + names.Count);
+                }
+                MaleAlertedSummary = String.Join(", ", share.ToArray()) + "; array " + String.Join(" ", flat) + " (" + a.length.ToString("0.000") + " s / " + b.length.ToString("0.000") + " s, not normalized)";
+            }
+            catch (Exception e) { MaleAlertedSummary = "unchanged (" + e.Message + ")"; CorePlugin.Warn("male alerted split: " + MaleAlertedSummary); }
         }
 
         // ---- Female voice set: Brian's licensed "Ultimate Female Voice Pack" (topmademarti). ----

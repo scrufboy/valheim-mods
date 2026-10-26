@@ -810,4 +810,25 @@ namespace LivingWorld.Core
             return true;
         }
     }
+
+    /// <summary>1.0.32.1 (Brian's voice handoff): a vanilla random set is a list of equally weighted logical slots.
+    /// Splitting one slot's recording into two atomic utterances must keep that slot's total weight: the split slot
+    /// becomes A and B (one entry each) and every other slot appears twice, so a uniform pick over the flat array
+    /// gives A and B half the slot's share each. Returns null when the slot to split is not in the set.</summary>
+    public static class VoiceSlots
+    {
+        public static string[] SplitOne(string[] slots, string split, string partA, string partB)
+        {
+            if (slots == null || split == null || partA == null || partB == null) return null;
+            var flat = new System.Collections.Generic.List<string>();
+            bool found = false;
+            foreach (string slot in slots)
+            {
+                if (slot == null) continue;
+                if (slot == split && !found) { flat.Add(partA); flat.Add(partB); found = true; }
+                else { flat.Add(slot); flat.Add(slot); }
+            }
+            return found ? flat.ToArray() : null;
+        }
+    }
 }

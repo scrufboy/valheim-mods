@@ -7,7 +7,10 @@ namespace LivingWorld.Core
     /// <summary>Loads an uncompressed PCM WAV (8/16/24/32-bit, any channel count) into a Unity AudioClip.</summary>
     internal static class WavClip
     {
-        internal static AudioClip Load(string path)
+        internal static AudioClip Load(string path) { return Load(path, true); }
+
+        /// <param name="normalize">false keeps the recording's own level (vanilla-derived male clips must match their siblings).</param>
+        internal static AudioClip Load(string path, bool normalize)
         {
             byte[] b = File.ReadAllBytes(path);
             if (b.Length < 44 || b[0] != 'R' || b[1] != 'I' || b[2] != 'F' || b[3] != 'F' || b[8] != 'W' || b[9] != 'A' || b[10] != 'V' || b[11] != 'E')
@@ -45,7 +48,7 @@ namespace LivingWorld.Core
             // to a 0.98 peak (gain capped at 4x) so it sits level with the game's own voices.
             float peak = 0f;
             for (int s = 0; s < count; s++) { float a = Math.Abs(samples[s]); if (a > peak) peak = a; }
-            if (peak > 0f)
+            if (normalize && peak > 0f)
             {
                 float gain = Math.Min(4f, .98f / peak);
                 for (int s = 0; s < count; s++) samples[s] *= gain;

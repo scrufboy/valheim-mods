@@ -12,6 +12,7 @@ static class RegressionLedgerTests
 
     static int Main()
     {
+        Run("1.0.32.1: Surprised01 split keeps its 1/3 slot weight (A 1/6, B 1/6)", SplitKeepsSlotWeight);
         Run("1.0.30 live 1.0.29: noticing before, exertion during, reactions after", VoiceBeforeDuringAfter);
         Run("1.0.23 live 1.0.22: split pair defends the partner, not the leader regroup", SpartaDefendsThePartner);
         Run("1.0.23: war cry only at a raid start, never costing a hit", WarCryNeverCostsAHit);
@@ -627,6 +628,18 @@ static class RegressionLedgerTests
     static void NoAmmoMelee()
     {
         Assert(W(true, false, 20f, true, false) == WeaponChoice.Pick.Melee, "kept an empty bow");
+    }
+
+    static void SplitKeepsSlotWeight()
+    {
+        string[] flat = VoiceSlots.SplitOne(new[] { "S01", "S05", "S06" }, "S01", "S01_A", "S01_B");
+        Assert(flat != null && flat.Length == 6, "split set is not six entries");
+        int a = 0, b = 0, s05 = 0, s06 = 0, s01 = 0;
+        foreach (string n in flat) { if (n == "S01_A") a++; else if (n == "S01_B") b++; else if (n == "S05") s05++; else if (n == "S06") s06++; else if (n == "S01") s01++; }
+        Assert(a == 1 && b == 1, "A and B are not 1/6 each");
+        Assert(s05 == 2 && s06 == 2, "Surprised05/06 lost their 1/3");
+        Assert(s01 == 0, "the whole Surprised01 still plays (A+B would follow it)");
+        Assert(VoiceSlots.SplitOne(new[] { "S05", "S06" }, "S01", "x", "y") == null, "split invented a missing slot");
     }
 
     static void VoiceNewEnemyOnce()
