@@ -117,12 +117,12 @@ namespace LivingWorld.Core
                 parts.Add(line + " " + clips.Count);
             }
             FemaleSummary = (parts.Count == 0 ? "none" : String.Join(", ", parts.ToArray())) +
-                "; clips normalized to 0.98 peak (~+5 dB) and volume x" + FemaleExtraGain + " (+2 dB) from template " + (TemplateVolume ?? "?");
+                "; clips normalized to 0.98 peak (~+5 dB) and volume x" + FemaleExtraGain + " (+4 dB) from template " + (TemplateVolume ?? "?");
         }
 
         public const float FemaleMinPitch = .97f, FemaleMaxPitch = 1.03f;   // human voice: natural variation only
         static string TemplateVolume;
-        const float FemaleExtraGain = 1.26f;   // +2 dB
+        const float FemaleExtraGain = 1.58f;   // +4 dB (1.0.31: Brian asked 2 more dB over 1.0.30)
         static readonly List<AudioClip> Loaded = new List<AudioClip>();
         static readonly HashSet<string> Reported = new HashSet<string>();
 
