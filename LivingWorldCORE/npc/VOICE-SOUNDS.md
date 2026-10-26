@@ -25,6 +25,7 @@ Design rule (Brian): mostly silent. Noticing happens BEFORE action, exertion DUR
 | death | `sfx_goblin_death` | Male_LS_D_Death x4 | 0.8-0.9 |
 | warcry | `sfx_goblinbrute_taunt` (Fuling Berserker roar) | Male_LS_D_Scream02-04 | native 0.4-0.6 -> 0.7-0.85 (halfway between the native beast roar and the rejected 1.0-1.1) |
 
+WAV names are from the vanilla asset manifest; which WAV sits in which prefab is inferred from the names (Surprised -> alerted, HurtGrunt -> hit, Laugh -> idle, Death -> death), not read from the prefabs.
 Clones are registered with ZNetScene (`LWC_sfx_alerted/hit/death/idle/warcry`); unregistered clones caused the 1.0.17-1.0.21 respawn error floods.
 
 ## Female set — "Ultimate Female Voice Pack" by topmademarti (licensed by Brian)
