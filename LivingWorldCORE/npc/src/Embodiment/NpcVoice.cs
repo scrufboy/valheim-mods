@@ -291,7 +291,7 @@ namespace LivingWorld.Core
         const float TooHighMin = 1f, TooHighMax = 1.1f;   // 1.0.23 setting, rejected live as Fuling-like
 
         /// <summary>The once-per-raid war cry line (no policy roll: WarCry decides).</summary>
-        internal static void SayWarCry(NpcKernel kernel) { Say(kernel, "warcry", "raid start"); }
+        internal static void SayWarCry(NpcKernel kernel) { Say(kernel, "warcry"); }
 
         static EffectList List(string key)
         {
@@ -331,29 +331,30 @@ namespace LivingWorld.Core
         public static int Lines { get; private set; }
         public static event Action<NpcKernel, string> Spoke;
 
-        static void Say(NpcKernel kernel, string key) { Say(kernel, key, key); }
-
-        /// <summary>Plays a line. Behavior is shared; gender only chooses the clip pool here. The exact clip is chosen
-        /// here too (ZSFX picks on a later frame, so the instance can be narrowed to one clip and logged).</summary>
-        static void Say(NpcKernel kernel, string key, string trigger)
+        /// <summary>1.0.32.3: the 1.0.31 Say, restored. Behavior is one shared path for every companion; gender appears only
+        /// in the final pool lookup (female pool if loaded, else the male Fuling pool).</summary>
+        static void Say(NpcKernel kernel, string key)
         {
             if (kernel == null || kernel.Body == null || kernel.Body.Human == null || kernel.Body.Human.IsDead()) return;
-            bool female = IsFemale(kernel);
-            bool useFemale = female && FemaleUsable(key);
-            string pool = useFemale ? "f:" + key : MaleKey(key);
-            EffectList line = List(pool);
+            EffectList line = IsFemale(kernel) && FemaleUsable(key) ? List("f:" + key) : List(MaleKey(key));
             if (line == null) return;
             Character body = kernel.Body.Human;
             Silence(body);
             GameObject[] made = line.Create(body.transform.position, body.transform.rotation, body.transform);
             Speaking[body.GetInstanceID()] = made;
-            string clipName = Narrow(made);
             Lines++;
-            if (CorePlugin.DevVoiceLog)
-                CorePlugin.Report("VOICE " + body.GetHoverName() + " (" + (female ? "female" : "male") + ") line=" + key +
-                    " clip=" + clipName + " trigger=" + trigger + (female && !useFemale ? " FALLBACK=male" : ""));
+            if (CorePlugin.DevVoiceLog) LogLine(kernel, body, key, made);
             Action<NpcKernel, string> spoke = Spoke;
             if (spoke != null) spoke(kernel, key);
+        }
+
+        /// <summary>Development log only (DevVoiceLog): names the exact clip by narrowing this one instance to a uniform
+        /// pick from its pool (the same pick ZSFX would make). Runs after the line has already been decided and created.</summary>
+        static void LogLine(NpcKernel kernel, Character body, string key, GameObject[] made)
+        {
+            bool female = IsFemale(kernel);
+            CorePlugin.Report("VOICE " + body.GetHoverName() + " (" + (female ? "female" : "male") + ") line=" + key +
+                " clip=" + Narrow(made) + (female && !FemaleUsable(key) ? " FALLBACK=male" : ""));
         }
 
         /// <summary>Male lines that share a vanilla clip set: exertion and heavy hurt use the Fuling grunt.</summary>
@@ -404,7 +405,7 @@ namespace LivingWorld.Core
             float sinceStrike = LastStrike.TryGetValue(kernel.GetInstanceID(), out lastStrike) ? Time.time - lastStrike : float.PositiveInfinity;
             float distance = Vector3.Distance(kernel.transform.position, enemy.transform.position);
             if (!VoicePolicy.Noticing(sinceStrike, kernel.Frame.Senses.SecondsSinceDamaged, distance)) return;
-            if (Policy.NewEnemy(Time.time, enemy.GetInstanceID(), (float)Dice.NextDouble())) Say(kernel, "alerted", "first sight at " + distance.ToString("0") + "m");
+            if (Policy.NewEnemy(Time.time, enemy.GetInstanceID(), (float)Dice.NextDouble())) Say(kernel, "alerted");
         }
 
         internal static void OnHurt(NpcKernel kernel, float damage)
@@ -414,11 +415,11 @@ namespace LivingWorld.Core
             VoicePolicy.HurtLine line = Policy.Hurt(Time.time, body.GetInstanceID(), damage, body.GetMaxHealth(),
                 interrupted, (float)Dice.NextDouble());
             if (line == VoicePolicy.HurtLine.None) return;
-            bool devastated = line == VoicePolicy.HurtLine.Devastated;
-            Say(kernel, devastated ? "hit_heavy" : "hit", (devastated ? "devastating hit " : interrupted ? "hit while speaking " : "light hit ") + damage.ToString("0"));
-            if (!devastated) return;
+            // 1.0.31 said "hit" for every hurt line; "hit_heavy" only names the female devastated pool (males resolve it to "hit").
+            Say(kernel, line == VoicePolicy.HurtLine.Devastated ? "hit_heavy" : "hit");
+            if (line != VoicePolicy.HurtLine.Devastated) return;
             NpcKernel partner = NearestPartner(kernel, 25f);
-            if (partner != null) Pending[partner] = new KeyValuePair<float, string>(Time.time + VoicePolicy.PartnerReactDelay, "alerted|partner devastated");
+            if (partner != null) Pending[partner] = new KeyValuePair<float, string>(Time.time + VoicePolicy.PartnerReactDelay, "alerted");
         }
 
         static readonly Dictionary<int, float> LastStrike = new Dictionary<int, float>();
@@ -428,7 +429,7 @@ namespace LivingWorld.Core
         {
             if (kernel == null || kernel.Body == null || kernel.Body.Human == null) return;
             if (!Policy.Exert(Time.time, kernel.GetInstanceID(), heavy, (float)Dice.NextDouble())) return;
-            Say(kernel, "exert", heavy ? "heavy attack" : "swing");
+            Say(kernel, "exert");
         }
 
         internal static void OnStrike(Character attacker, Character target, float damage, bool killed)
@@ -439,7 +440,7 @@ namespace LivingWorld.Core
             if (!Policy.Mighty(Time.time, damage, target.GetMaxHealth(), killed, (float)Dice.NextDouble())) return;
             NpcKernel speaker = attacker == null ? null : attacker.GetComponent<NpcKernel>();
             if (speaker == null) speaker = NearestCompanionTo(target.transform.position, 25f);
-            if (speaker != null) Say(speaker, "idle", (killed ? "kill " : "mighty blow ") + damage.ToString("0"));
+            if (speaker != null) Say(speaker, "idle");   // the taunting chatter
         }
 
         internal static void Tick(NpcKernel kernel)
@@ -447,8 +448,7 @@ namespace LivingWorld.Core
             KeyValuePair<float, string> due;
             if (!Pending.TryGetValue(kernel, out due) || Time.time < due.Key) return;
             Pending.Remove(kernel);
-            string[] parts = due.Value.Split('|');
-            Say(kernel, parts[0], parts.Length > 1 ? parts[1] : parts[0]);
+            Say(kernel, due.Value);
         }
 
         static NpcKernel NearestPartner(NpcKernel kernel, float radius)
