@@ -31,20 +31,28 @@ Clones are registered with ZNetScene (`LWC_sfx_alerted/hit/death/idle/warcry`); 
 ## Female set — "Ultimate Female Voice Pack" by topmademarti (licensed by Brian)
 
 License: use in personal/commercial games, editing allowed; no redistribution as a standalone pack -> ship packed inside the mod, never as a loose folder; clips are not in the git repo. Credit (optional): "Voice Pack by topmademarti".
-Loaded at startup from `BepInEx/plugins/LivingWorldHumanNpc/voices/female/<line>/*.wav`.
-Level: each clip normalized to 0.98 peak (~+5 dB; pack peaks ~0.55), playback volume 0.5 template x1.58 (+4 dB) -> about +9 dB over the raw pack. Pitch 0.97-1.03 (natural variation only).
 
-| Line | Folder | Pack files |
+Since 1.0.32: `voices/female/clips/*.wav` + `voices/female/lines.txt` (`line: file, file, ...`). Edit lines.txt to approve/reject; no rebuild. The older per-line folders are ignored while lines.txt exists.
+Behavior is shared: the same VoicePolicy/WarCryPolicy for both genders; gender only selects the clip pool inside `NpcVoice.Say`.
+
+**Status: first pass chosen from acoustic measurements only (Claude cannot listen). Every clip still needs Brian's in-game audition.**
+
+| Line | Clips (first pass) | Measured reason |
 |---|---|---|
-| alerted | `female/alerted` (11) | Combat/Attack: combat_attack_01-08, combat_attack_quick_01-03 |
-| exert | `female/exert` (7) | Combat/Swings: combat_swing_01-04; Combat/Attack: combat_attack_quick_01-03 |
-| hit | `female/hit` (14) | Combat/Grunt: combat_grunt_01-03; Combat/Pain: combat_pain_01-06, combat_pain_gasp_01, combat_pain_light_01-04 |
-| idle (gloat) | `female/idle` (5) | Personality/Laugh: personality_laugh_01-05 |
-| death | `female/death` (6) | Combat/Pain: combat_pain_01-06 (the heavy ones) |
-| warcry | `female/warcry` (3) | Combat/Attack: combat_attack_02, _05, _07 (longest shouts) |
+| alerted | reaction_quick_02, _03, _05; UI_investigate_01, _03; combat_attack_04, _06 | short (0.3-0.6 s), rising pitch = surprise/heads-up |
+| exert | combat_swing_01-04; combat_attack_quick_01-03 | short single bursts at swing start |
+| hit (light) | combat_grunt_01-03; combat_pain_light_01-04; combat_pain_gasp_01 | brief, falling, moderate |
+| hit_heavy (devastating, new pool) | combat_pain_02, _04, _05, _06 | sharp falling pain |
+| death | combat_pain_01, _03 | longest fading tails (-19/-17 dB); the pack has no death category, so these are the closest available, not confirmed terminal |
+| idle (kill / mighty blow) | personality_laugh_01, _02, _04; personality_ack_03; personality_annoyed_06 | short, falling (satisfied laugh, "hm", scoff) |
+| warcry | combat_attack_02, _05, _07 | the three longest shouts; exclusive to warcry |
 
-Not used yet: Idle (Calm, Misc, Sigh, Thinking), Personality (Acknowledgment, Annoyed, Bored, Misc, Quick reactions), UI.
-Fallback: a female line with no live clips plays the male line (logged once).
+Not used, by measurement: combat_attack_01/_08 (falling = effort, not notice), combat_attack_03 (very high pitch), personality_laugh_03 (very high and bright, giggle-like), personality_laugh_05 (two bursts = "ha-ha"), Misc/vocal clips (0.9-1.5 s, too long), UI hover/select/confirm/cancel, Idle calm/sigh/thinking.
+No clip is in two lines; startup warns on any overlap (by name and by audio hash), missing/empty/failed clip, or a line falling back to male.
 
-## Vanilla female candidates found (not used)
-Hildir (trader) laughs/greet/talk/trade/goodbye; Dvergr VO alerted/attack/hurt/death/idle (gender unverified by ear); `UI_Vomit_Female_M_01-03`.
+Level: clips normalized to 0.98 peak (pack peaks ~0.55); playback = 0.5 template x `Voice.FemaleVoiceGain` (config, default 1.58 = Brian's in-game setting from 1.0.31; set 1.0 for the unboosted template level).
+
+Dev audition log (`Voice.DevVoiceLog = true` in the lab config, off by default): every line logs `VOICE <name> (<gender>) line=<line> clip=<file> trigger=<event> [FALLBACK=male]`.
+Triggers: first sight at Nm, swing, heavy attack, light hit N, hit while speaking N, devastating hit N, partner devastated, kill N, mighty blow N, raid start. Death is the native death effect (pool f:death or the Fuling death), not logged per clip.
+
+Audition scenarios (Brian): first sight of a distant enemy; ordinary swing; heavy attack; light damage; devastating damage; partner devastated; mighty blow; kill; death; raid start with two companions.
