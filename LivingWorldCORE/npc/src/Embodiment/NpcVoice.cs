@@ -109,13 +109,12 @@ namespace LivingWorld.Core
                 Loaded.AddRange(clips);   // strong references as well
                 sfx.m_minPitch = FemaleMinPitch;
                 sfx.m_maxPitch = FemaleMaxPitch;
-                if (TemplateVolume == null) TemplateVolume = sfx.m_minVol + "-" + sfx.m_maxVol;
-                sfx.m_minVol = sfx.m_maxVol = 1f;
+                if (TemplateVolume == null) TemplateVolume = sfx.m_minVol + "-" + sfx.m_maxVol;   // kept as is
                 Clips["f:" + line] = prefab;
                 parts.Add(line + " " + clips.Count);
             }
             FemaleSummary = (parts.Count == 0 ? "none" : String.Join(", ", parts.ToArray())) +
-                "; clips normalized to 0.98 peak, volume 1.0 (template was " + (TemplateVolume ?? "?") + ")";
+                "; clips normalized to 0.98 peak (~+5 dB, Brian asked 3-6 dB), template volume " + (TemplateVolume ?? "?") + " unchanged";
         }
 
         public const float FemaleMinPitch = .97f, FemaleMaxPitch = 1.03f;   // human voice: natural variation only
