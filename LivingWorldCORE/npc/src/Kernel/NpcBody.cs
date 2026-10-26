@@ -259,6 +259,19 @@ namespace LivingWorld.Core
             if (refused.Length > 0) { kitChecked = false; CorePlugin.Warn(Human.GetHoverName() + " kit " + kit + " not re-applied: " + refused); }
         }
 
+        // ---------------- Emote (1.0.23 war cry; no behavior domain; owner only) ----------------
+
+        /// <summary>The Player's own emote animation (Player.UpdateEmote: animator trigger "emote_" + name), synced.</summary>
+        internal bool PlayEmote(string emote)
+        {
+            if (!IsOwner || Human == null || Human.IsDead() || Anim == null) return false;
+            Anim.SetTrigger("emote_" + emote);
+            Emotes++;
+            return true;
+        }
+
+        public int Emotes { get; private set; }
+
         // ---------------- Look ----------------
 
         public void LookAt(NpcBehavior caller, Vector3 point)

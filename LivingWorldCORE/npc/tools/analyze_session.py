@@ -396,6 +396,22 @@ def main(paths):
             add("PASS" if not bad else "FAIL", "No single-target heavy into a converging crowd",
                 "%d of %d heavies started with 2+ other enemies within 4 m" % (len(bad), len(heavy)))
 
+    # 6n. Sparta (1.0.23): a split pair goes to the partner's attacker instead of regrouping to the leader
+    if any("partnerDefense" in r for r in npc):
+        fighting = [r for r in npc if r.get("phase") in COMBAT]
+        split = [r for r in fighting if r.get("partyDist", 0) > 16]
+        defend = [r for r in fighting if r.get("partnerDefense")]
+        picks = [r for r in rows if r.get("type") == "TargetChoice" and r.get("reason") == "defend partner"]
+        if not split:
+            add("NOT EXERCISED", "Split pair defends the partner", "pair never more than 16 m apart in combat")
+        else:
+            regroup_while = sum(1 for r in defend if r.get("phase") == "CombatRegroup")
+            add("PASS" if regroup_while == 0 else "FAIL", "Split pair defends the partner",
+                "split in %d of %d combat samples; partner under attack in %d; %d 'defend partner' picks; %d samples regrouping while the partner was attacked" % (
+                    len(split), len(fighting), len(defend), len(picks), regroup_while))
+        cries = [r for r in rows if r.get("type") == "WarCry"]
+        add("INFO", "War cries", "%d (%s)" % (len(cries), ", ".join(sorted({r.get("raid", "?") for r in cries})) or "no raid started near you"))
+
     # 6b. Shield blocking (new in 1.0.2; native AI never blocks)
     if start.get("cfgShieldBlocking") is False:
         add("NOT EXERCISED", "Shield blocks in close combat", "blocking switched off in config")

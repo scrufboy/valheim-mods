@@ -87,6 +87,7 @@ namespace LivingWorld.Core
         public bool DamagedRecently;    // within DamageMemorySeconds
         public bool AlertedHostileNear; // any alerted enemy inside the awareness radius
         public bool LocalThreat;        // an engaged enemy within EngagedPinRadius: stay and fight
+        public bool PartnerUnderAttack; // split from the partner and an enemy is on them: go fight it, not regroup
         public float LeaderDistance;
         public float NearestPartyDistance; // < 0 when alone
         public float FormationDistance;    // distance to leased formation slot
@@ -166,7 +167,7 @@ namespace LivingWorld.Core
 
             bool threat = s.HasTarget || s.DamagedRecently;
             bool returning = cohesion.Observe(inEncounter || threat, s.HasLeader ? s.LeaderDistance : 0f,
-                s.NearestPartyDistance, s.LocalThreat);
+                s.NearestPartyDistance, s.LocalThreat || s.PartnerUnderAttack);
 
             if (threat)
             {
@@ -177,7 +178,7 @@ namespace LivingWorld.Core
 
             if (inEncounter)
             {
-                if (returning && !s.LocalThreat) return Set(NpcPhase.CombatRegroup, "party separation; returning");
+                if (returning && !s.LocalThreat && !s.PartnerUnderAttack) return Set(NpcPhase.CombatRegroup, "party separation; returning");
                 if (threat) return Set(NpcPhase.Combat, returning ? "local defense while returning" :
                     s.HasTarget ? "native target" : "taking damage");
 
@@ -449,10 +450,23 @@ namespace LivingWorld.Core
     {
         public const float MaxRange = 30f;
         public const float SelfDefenseRange = 4f;
+        // Sparta (1.0.23): defend the companion next to you. When the pair is split, an enemy on the
+        // partner outranks everything but an enemy at contact with me. 1.0.22 live: pair 30 m apart
+        // (91% of combat over 16 m), each fighting the horde alone.
+        public const float SplitDistance = 16f;          // same line the analyzer grades separation at
+        public const float PartnerDefenseRadius = 6f;    // "on the partner": this close to them and choosing them
+        public const float PartnerReach = 60f;           // how far a companion will cross to help
+        public const float ContactRange = 3f;            // while split, only this close counts as "on me"
+
+        /// <summary>An enemy attacking my partner, close to them.</summary>
+        public static bool OnPartner(TargetCandidate c)
+        {
+            return c.TargetsPartner && c.PartnerDistance >= 0f && c.PartnerDistance <= PartnerDefenseRadius;
+        }
 
         public static bool Engaged(TargetCandidate c, bool encounterActive, bool leaderSneaking)
         {
-            if (c.Distance > MaxRange) return false;
+            if (c.Distance > MaxRange && !(OnPartner(c) && c.Distance <= PartnerReach)) return false;
             if (c.Committed) return true;
             if (leaderSneaking) return false;
             return encounterActive && c.Alerted && !c.Wildlife && c.CanSee;
@@ -464,18 +478,30 @@ namespace LivingWorld.Core
         public static int Choose(IList<TargetCandidate> all, int currentId, bool encounterActive, bool leaderSneaking,
             out string reason)
         {
+            return Choose(all, currentId, encounterActive, leaderSneaking, -1f, out reason);
+        }
+
+        /// <param name="partnerSeparation">my distance to the nearest partner companion, -1 if none.</param>
+        public static int Choose(IList<TargetCandidate> all, int currentId, bool encounterActive, bool leaderSneaking,
+            float partnerSeparation, out string reason)
+        {
             reason = "nothing to fight";
             if (all == null) return -1;
-            int onMe = -1, current = -1, nearest = -1;
+            bool split = partnerSeparation >= SplitDistance;
+            int onMe = -1, partner = -1, current = -1, nearest = -1;
             for (int i = 0; i < all.Count; i++)
             {
                 TargetCandidate c = all[i];
                 if (!Engaged(c, encounterActive, leaderSneaking)) continue;
-                if (OnMe(c) && (onMe < 0 || c.Distance < all[onMe].Distance)) onMe = i;
+                bool mine = split ? (c.HurtMe || c.TargetsMe) && c.Distance <= ContactRange : OnMe(c);
+                if (mine && (onMe < 0 || c.Distance < all[onMe].Distance)) onMe = i;
+                if (split && OnPartner(c) && (partner < 0 || c.PartnerDistance < all[partner].PartnerDistance)) partner = i;
+                if (c.Distance > MaxRange) continue;     // reachable only as the partner's attacker
                 if (c.Id == currentId) current = i;
                 if (nearest < 0 || c.Distance < all[nearest].Distance) nearest = i;
             }
             if (onMe >= 0) { reason = "on me"; return onMe; }
+            if (partner >= 0) { reason = "defend partner"; return partner; }
             if (current >= 0) { reason = "keep current"; return current; }
             if (nearest >= 0) { reason = "nearest engaged"; return nearest; }
             return -1;
@@ -659,6 +685,22 @@ namespace LivingWorld.Core
             }
             if (!targetStaggered || !inReach || facing > SingleFacing || othersClosing >= 2) return Why.None;
             return Why.Staggered;
+        }
+    }
+
+    /// <summary>
+    /// War cry (1.0.23): once per raid, as it starts near the leader, each companion roars (vanilla Roar
+    /// emote + pitch-shifted Fuling Berserker taunt). Never with an enemy already in reach or mid-swing:
+    /// the emote roots them, and it must never cost a hit.
+    /// </summary>
+    public static class WarCryPolicy
+    {
+        public const float ClearRadius = 6f;
+        public const float PartnerDelayMin = .35f, PartnerDelayMax = .9f;
+
+        public static bool Allowed(bool newRaidNearLeader, float nearestEnemy, bool inAttack, bool fallingBack, bool moving)
+        {
+            return newRaidNearLeader && nearestEnemy > ClearRadius && !inAttack && !fallingBack && !moving;
         }
     }
 

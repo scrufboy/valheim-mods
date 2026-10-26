@@ -88,7 +88,7 @@ namespace LivingWorld.Telemetry
             if (!subscribed)
             {
                 NpcKernel.Removed += OnRemoved; NpcKernel.Damaged += OnDamaged;
-                NpcVoice.Spoke += OnSpoke; StrikeHook.Landed += OnStrike; MeleeChainHook.Chained += OnChain; MeleeChainHook.Heavy += OnHeavy;
+                NpcVoice.Spoke += OnSpoke; StrikeHook.Landed += OnStrike; MeleeChainHook.Chained += OnChain; MeleeChainHook.Heavy += OnHeavy; WarCry.Cried += OnWarCry;
                 subscribed = true;
             }
             Begin("RunStart");
@@ -223,7 +223,7 @@ namespace LivingWorld.Telemetry
                 Num("clearQuiet", kernel.Arbiter.QuietSeconds);
                 Bool("attacking", body.Human.InAttack()); Bool("drawingBow", body.Human.IsDrawingBow());
                 Bool("blocking", body.Human.IsBlocking()); Num("ammo", body.AmmoCount);
-                Bool("shieldInHand", body.ShieldInHand); Num("blockRaises", body.BlockRaises); Num("chains", body.Chains); Num("heavies", body.Heavies); Num("heavyRolls", body.HeavyRolls); Num("stamina", body.Stamina); Num("maxStamina", body.MaxStamina); Num("exhaustions", body.Exhaustions); Str("kit", body.Kit.Length == 0 ? "iron" : body.Kit); Num("kitQ", body.KitQuality);
+                Bool("shieldInHand", body.ShieldInHand); Num("blockRaises", body.BlockRaises); Num("chains", body.Chains); Num("heavies", body.Heavies); Num("heavyRolls", body.HeavyRolls); Bool("partnerDefense", kernel.PartnerDefense); Num("stamina", body.Stamina); Num("maxStamina", body.MaxStamina); Num("exhaustions", body.Exhaustions); Str("kit", body.Kit.Length == 0 ? "iron" : body.Kit); Num("kitQ", body.KitQuality);
                 NativeCombatBehavior combat = Combat(kernel);
                 Str("block", combat == null || combat.Block == null ? "" : combat.Block.Reason);
                 Str("blockThreat", combat == null ? "" : combat.BlockThreat);
@@ -337,6 +337,12 @@ namespace LivingWorld.Telemetry
             End();
         }
 
+        void OnWarCry(NpcKernel kernel, string raid)
+        {
+            if (!active || writer == null || kernel == null) return;
+            Begin("WarCry"); Actor(kernel); Str("raid", raid ?? ""); Str("phase", kernel.Frame.Phase.ToString()); End();
+        }
+
         void OnRemoved(NpcKernel kernel, string reason)
         {
             if (!active || writer == null || kernel == null) return;
@@ -405,7 +411,7 @@ namespace LivingWorld.Telemetry
             if (subscribed)
             {
                 NpcKernel.Removed -= OnRemoved; NpcKernel.Damaged -= OnDamaged;
-                NpcVoice.Spoke -= OnSpoke; StrikeHook.Landed -= OnStrike; MeleeChainHook.Chained -= OnChain; MeleeChainHook.Heavy -= OnHeavy;
+                NpcVoice.Spoke -= OnSpoke; StrikeHook.Landed -= OnStrike; MeleeChainHook.Chained -= OnChain; MeleeChainHook.Heavy -= OnHeavy; WarCry.Cried -= OnWarCry;
             }
             if (active) Stop("shutdown");
         }

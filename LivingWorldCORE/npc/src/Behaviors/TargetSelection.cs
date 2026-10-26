@@ -42,7 +42,7 @@ namespace LivingWorld.Core
             Character current = body.Ai.GetTargetCreature();
             int currentId = current == null || current.IsDead() ? -1 : current.GetInstanceID();
             string reason;
-            int pick = TargetPolicy.Choose(candidates, currentId, encounter, s.LeaderCrouching, out reason);
+            int pick = TargetPolicy.Choose(candidates, currentId, encounter, s.LeaderCrouching, s.NearestPartyDistance, out reason);
             Reason = reason;
             if (pick < 0) return null;
             Character chosen = actors[pick];
@@ -55,6 +55,20 @@ namespace LivingWorld.Core
                 LastChoiceId = chosen.GetInstanceID();
             }
             return chosen;
+        }
+
+        /// <summary>Split from my partner (Sparta distance) and an engaged enemy is on them.</summary>
+        public bool PartnerUnderAttack()
+        {
+            NpcSenses s = kernel.Frame.Senses;
+            if (s.NearestPartyDistance < TargetPolicy.SplitDistance) return false;
+            NpcPhase phase = kernel.Arbiter.Phase;
+            bool encounter = phase == NpcPhase.Combat || phase == NpcPhase.CombatClear || phase == NpcPhase.CombatRegroup;
+            CollectPartners(s.Leader);
+            Build(kernel.Body.Human, s.Leader);
+            for (int i = 0; i < candidates.Count; i++)
+                if (TargetPolicy.OnPartner(candidates[i]) && TargetPolicy.Engaged(candidates[i], encounter, s.LeaderCrouching)) return true;
+            return false;
         }
 
         /// <summary>Nearest engaged enemy (same rule as target choice), or null.</summary>
@@ -126,10 +140,9 @@ namespace LivingWorld.Core
                 if (other == null || other == me || other.IsDead() || other.m_aiSkipTarget) continue;
                 if (!BaseAI.IsEnemy(me, other)) continue;
                 float distance = Vector3.Distance(position, other.transform.position);
-                if (distance > TargetPolicy.MaxRange) continue;
+                if (distance > TargetPolicy.PartnerReach) continue;
                 BaseAI theirAi = other.GetBaseAI();
                 if (theirAi != null && theirAi.IsSleeping()) continue;
-                if (!kernel.Body.Ai.CanSenseTarget(other)) continue;
                 MonsterAI monster = theirAi as MonsterAI;
                 Character theirTarget = monster == null ? null : monster.GetTargetCreature();
                 bool targetsPartner = false, hurtUs = false;
@@ -143,6 +156,11 @@ namespace LivingWorld.Core
                     if (ReferenceEquals(theirTarget, ph)) targetsPartner = true;
                     if (ReferenceEquals(p.RecentAttacker(HurtMemorySeconds), other)) hurtUs = true;
                 }
+                // Beyond my own range only the enemy on my partner counts (the partner "calls" it, Sparta 1.0.23);
+                // everything else still has to be within my range and sensed by me.
+                bool onPartner = targetsPartner && partnerDistance >= 0f && partnerDistance <= TargetPolicy.PartnerDefenseRadius;
+                if (distance > TargetPolicy.MaxRange && !onPartner) continue;
+                if (!onPartner && !kernel.Body.Ai.CanSenseTarget(other)) continue;
                 Humanoid humanoid = other as Humanoid;
                 ItemDrop.ItemData weapon = humanoid == null ? null : humanoid.GetCurrentWeapon();
                 candidates.Add(new TargetCandidate

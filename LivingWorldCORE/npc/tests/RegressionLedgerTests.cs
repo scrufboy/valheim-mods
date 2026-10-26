@@ -12,6 +12,8 @@ static class RegressionLedgerTests
 
     static int Main()
     {
+        Run("1.0.23 live 1.0.22: split pair defends the partner, not the leader regroup", SpartaDefendsThePartner);
+        Run("1.0.23: war cry only at a raid start, never costing a hit", WarCryNeverCostsAHit);
         Run("1.0.21: heavy only at an opening (stagger / crowd), never into a converging crowd", HeavyOnlyWhenItPays);
         Run("1.0.21: heavy-only pool refills on the Player curve, never blocked", StaminaFollowsPlayerRules);
         Run("1.0.18 lab: gear kits are complete and resupply their own arrow", KitsAreCompleteAndResupplyTheirOwnArrow);
@@ -729,5 +731,41 @@ static class RegressionLedgerTests
     {
         Assert(System.Math.Abs(StaminaRules.RegenPerSecond(150f, 150f) - 6f) < .01f, "full-pool regen is not 6/s");
         Assert(System.Math.Abs(StaminaRules.RegenPerSecond(0f, 150f) - 12f) < .01f, "empty-pool regen is not 12/s");
+    }
+
+    static int PickSplit(float separation, int current, params TargetCandidate[] c)
+    {
+        string reason;
+        int i = TargetPolicy.Choose(c, current, true, false, separation, out reason);
+        return i < 0 ? -1 : c[i].Id;
+    }
+
+    static void SpartaDefendsThePartner()
+    {
+        var nearMe = Foe(1, 6f); nearMe.TargetsMe = true;                          // coming at me, not at contact
+        var onPartner = Foe(2, 35f); onPartner.TargetsPartner = true; onPartner.PartnerDistance = 2f;
+        Assert(PickSplit(30f, -1, nearMe, onPartner) == 2, "split pair: ignored the enemy on the partner");
+        var hittingMe = Foe(3, 1.5f); hittingMe.HurtMe = true;
+        Assert(PickSplit(30f, -1, hittingMe, onPartner) == 3, "split pair: walked away from an enemy at contact");
+        Assert(PickSplit(30f, 1, nearMe, onPartner) == 2, "split pair: kept its own target over the partner's attacker");
+        Assert(PickSplit(8f, -1, nearMe, onPartner) == 1, "together: partner rule overrode the normal choice");
+        var tooFar = Foe(4, 70f); tooFar.TargetsPartner = true; tooFar.PartnerDistance = 1f;
+        Assert(PickSplit(65f, -1, tooFar) == -1, "crossed more than the partner reach");
+        var notOnThem = Foe(5, 35f); notOnThem.TargetsPartner = true; notOnThem.PartnerDistance = 15f;
+        Assert(PickSplit(30f, -1, notOnThem) == -1, "chased an enemy that is not on the partner, beyond my range");
+        var a = new PhaseArbiter();
+        var s = Calm(); s.HasTarget = true; s.LeaderDistance = 30f; s.NearestPartyDistance = 30f; s.PartnerUnderAttack = true;
+        Assert(StepN(a, s, 30) == NpcPhase.Combat, "regrouped to the leader while the partner was under attack");
+        s.PartnerUnderAttack = false;
+        Assert(StepN(a, s, 30) == NpcPhase.CombatRegroup, "no regroup once nobody is on the partner");
+    }
+
+    static void WarCryNeverCostsAHit()
+    {
+        Assert(WarCryPolicy.Allowed(true, 20f, false, false, false), "no war cry at a raid start");
+        Assert(!WarCryPolicy.Allowed(true, 3f, false, false, false), "war cry with an enemy in reach");
+        Assert(!WarCryPolicy.Allowed(true, 20f, true, false, false), "war cry mid-swing");
+        Assert(!WarCryPolicy.Allowed(true, 20f, false, true, false), "war cry while falling back");
+        Assert(!WarCryPolicy.Allowed(false, 20f, false, false, false), "war cry without a raid");
     }
 }

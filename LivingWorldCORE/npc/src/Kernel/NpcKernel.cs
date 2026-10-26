@@ -230,12 +230,14 @@ namespace LivingWorld.Core
                 DamagedRecently = s.SecondsSinceDamaged <= Tuning.DamageMemorySeconds && AttackerStillDangerous(),
                 AlertedHostileNear = s.NearestAlertedHostile != null,
                 LocalThreat = LocalThreat(s),
+                PartnerUnderAttack = PartnerUnderAttack(),
                 LeaderDistance = s.LeaderDistance,
                 NearestPartyDistance = s.NearestPartyDistance,
                 FormationDistance = frame.Board.FormationDistance
             }, dt);
             frame.Phase = phase;
             NpcVoice.Tick(this);
+            WarCry.Tick(this);
             frame.SecondsSinceEncounter = arbiter.SecondsSinceEncounter;
             bool fighting = phase == NpcPhase.Combat || phase == NpcPhase.CombatClear;
             frame.FallingBack = fallBack.Step(Time.time, fighting, body.Human.GetHealthPercentage(), nearestEngagedDistance);
@@ -343,6 +345,18 @@ namespace LivingWorld.Core
         }
 
         /// <summary>An engaged enemy (same rule as target choice) within the pin radius.</summary>
+        float nextPartnerCheck;
+        bool partnerUnderAttack;
+        public bool PartnerDefense { get { return partnerUnderAttack; } }
+
+        bool PartnerUnderAttack()
+        {
+            if (Time.time < nextPartnerCheck || Targeting == null) return partnerUnderAttack;
+            nextPartnerCheck = Time.time + .5f;
+            partnerUnderAttack = Targeting.PartnerUnderAttack();
+            return partnerUnderAttack;
+        }
+
         bool LocalThreat(NpcSenses s)
         {
             ScanEngaged();

@@ -43,8 +43,29 @@ namespace LivingWorld.Core
                 if (sfx != null) { sfx.m_minPitch = MinPitch; sfx.m_maxPitch = MaxPitch; }
                 Clips[source.Substring("sfx_goblin_".Length)] = clone;
             }
+            // War cry (1.0.23): the Fuling Berserker's taunt roar (vanilla sfx_goblinbrute_taunt; its clips are
+            // human male screams), lifted slightly toward a human shout. Registered like the voice lines.
+            GameObject cry = PrefabManager.Instance.GetPrefab(WarCryName);
+            if (cry == null && PrefabManager.Instance.GetPrefab(WarCrySource) != null)
+            {
+                cry = PrefabManager.Instance.CreateClonedPrefab(WarCryName, WarCrySource);
+                if (cry != null && cry.GetComponent<ZNetView>() != null) PrefabManager.Instance.AddPrefab(new CustomPrefab(cry, false));
+            }
+            if (cry == null) missing.Add(WarCrySource);
+            else
+            {
+                ZSFX sfx = cry.GetComponent<ZSFX>();
+                if (sfx != null) { sfx.m_minPitch = WarCryMinPitch; sfx.m_maxPitch = WarCryMaxPitch; }
+                Clips["warcry"] = cry;
+            }
             Missing = missing.Count == 0 ? "" : String.Join(", ", missing.ToArray());
         }
+
+        const string WarCrySource = "sfx_goblinbrute_taunt", WarCryName = "LWC_sfx_warcry";
+        public const float WarCryMinPitch = 1f, WarCryMaxPitch = 1.1f;
+
+        /// <summary>The once-per-raid war cry line (no policy roll: WarCry decides).</summary>
+        internal static void SayWarCry(NpcKernel kernel) { Say(kernel, "warcry"); }
 
         static EffectList List(string key)
         {
