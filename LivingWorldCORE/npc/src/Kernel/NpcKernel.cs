@@ -29,7 +29,7 @@ namespace LivingWorld.Core
         Character lastAttacker;
         Character trackedTarget;
         NpcPhase lastPhase = NpcPhase.Initializing;
-        bool wasOwner;
+        bool wasOwner, genderVoiced;
 
         public NpcBody Body { get { return body; } }
         public NpcFrame Frame { get { return frame; } }
@@ -174,7 +174,11 @@ namespace LivingWorld.Core
                 return;
             }
             wasOwner = true;
-            if (appearance != null && appearance.Ready) body.ReapplyKitOnce();
+            if (appearance != null && appearance.Ready)
+            {
+                body.ReapplyKitOnce();
+                if (!genderVoiced) { genderVoiced = true; NpcVoice.ApplyGender(this); }
+            }
             body.TickStamina(Time.deltaTime);
             if (Time.time < nextDecision) return;
             float dt = nextDecision <= 0f ? Tuning.DecisionInterval : Tuning.DecisionInterval + (Time.time - nextDecision);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Jotunn.Entities;
 using Jotunn.Managers;
 using UnityEngine;
@@ -67,7 +68,66 @@ namespace LivingWorld.Core
                 }
                 Clips["warcry"] = cry;
             }
+            BuildFemale();
             Missing = missing.Count == 0 ? "" : String.Join(", ", missing.ToArray());
+        }
+
+        // ---- Female voice set (1.0.27): Brian's licensed "Ultimate Female Voice Pack" (topmademarti), loaded from
+        // voices/female/<line>/*.wav beside this DLL. Same five lines as the male set; female companions use it,
+        // male companions keep the pitched Fuling set. Missing folder or line -> that line stays male. ----
+        static readonly string[] FemaleLines = { "alerted", "hit", "death", "idle", "warcry" };
+        public static string FemaleSummary { get; private set; }
+
+        static void BuildFemale()
+        {
+            var parts = new List<string>();
+            string root = Path.Combine(Path.GetDirectoryName(typeof(NpcVoice).Assembly.Location) ?? "", Path.Combine("voices", "female"));
+            if (!Directory.Exists(root)) { FemaleSummary = "none (no voices/female folder)"; return; }
+            GameObject template = PrefabManager.Instance.GetPrefab("sfx_goblin_hit");
+            if (template == null) { FemaleSummary = "none (template sfx missing)"; return; }
+            foreach (string line in FemaleLines)
+            {
+                string dir = Path.Combine(root, line);
+                if (!Directory.Exists(dir)) continue;
+                var clips = new List<AudioClip>();
+                foreach (string file in Directory.GetFiles(dir, "*.wav"))
+                {
+                    try { clips.Add(WavClip.Load(file)); }
+                    catch (Exception e) { CorePlugin.Warn("female voice " + Path.GetFileName(file) + ": " + e.Message); }
+                }
+                if (clips.Count == 0) continue;
+                string name = "LWC_sfx_f_" + line;
+                GameObject prefab = PrefabManager.Instance.GetPrefab(name);
+                if (prefab == null)
+                {
+                    prefab = PrefabManager.Instance.CreateClonedPrefab(name, template);
+                    if (prefab != null && prefab.GetComponent<ZNetView>() != null) PrefabManager.Instance.AddPrefab(new CustomPrefab(prefab, false));
+                }
+                ZSFX sfx = prefab == null ? null : prefab.GetComponent<ZSFX>();
+                if (sfx == null) continue;
+                sfx.m_audioClips = clips.ToArray();
+                sfx.m_minPitch = FemaleMinPitch;
+                sfx.m_maxPitch = FemaleMaxPitch;
+                Clips["f:" + line] = prefab;
+                parts.Add(line + " " + clips.Count);
+            }
+            FemaleSummary = parts.Count == 0 ? "none" : String.Join(", ", parts.ToArray());
+        }
+
+        public const float FemaleMinPitch = .97f, FemaleMaxPitch = 1.03f;   // human voice: natural variation only
+
+        static bool IsFemale(NpcKernel kernel)
+        {
+            NpcAppearance a = kernel == null ? null : kernel.GetComponent<NpcAppearance>();
+            return a != null && a.Female;
+        }
+
+        /// <summary>Once per load: a female companion's death cry uses the female set (the prefab is shared by both genders).</summary>
+        internal static void ApplyGender(NpcKernel kernel)
+        {
+            if (!IsFemale(kernel) || !Clips.ContainsKey("f:death")) return;
+            Humanoid human = kernel.Body == null ? null : kernel.Body.Human;
+            if (human != null) human.m_deathEffects = Voiced(human.m_deathEffects, "f:death");
         }
 
         const string WarCrySource = "sfx_goblinbrute_taunt", WarCryName = "LWC_sfx_warcry";
@@ -101,7 +161,8 @@ namespace LivingWorld.Core
             var keep = new List<EffectList.EffectData>();
             if (original != null && original.m_effectPrefabs != null)
                 foreach (EffectList.EffectData e in original.m_effectPrefabs)
-                    if (e != null && e.m_prefab != null && !e.m_prefab.name.StartsWith("sfx_", StringComparison.Ordinal)) keep.Add(e);
+                    if (e != null && e.m_prefab != null && !e.m_prefab.name.StartsWith("sfx_", StringComparison.Ordinal) &&
+                        !e.m_prefab.name.StartsWith("LWC_sfx_", StringComparison.Ordinal)) keep.Add(e);
             if (key != null) keep.Add(new EffectList.EffectData { m_prefab = clip, m_enabled = true, m_attach = true });
             return new EffectList { m_effectPrefabs = keep.ToArray() };
         }
@@ -117,7 +178,7 @@ namespace LivingWorld.Core
         static void Say(NpcKernel kernel, string key)
         {
             if (kernel == null || kernel.Body == null || kernel.Body.Human == null || kernel.Body.Human.IsDead()) return;
-            EffectList line = List(key);
+            EffectList line = IsFemale(kernel) && Clips.ContainsKey("f:" + key) ? List("f:" + key) : List(key);
             if (line == null) return;
             Character body = kernel.Body.Human;
             Silence(body);
