@@ -41,6 +41,15 @@ namespace LivingWorld.Core
                     default: samples[s] = BitConverter.ToInt32(b, o) / 2147483648f; break;
                 }
             }
+            // 1.0.29 (Brian, live: "not loud enough"): the pack peaks at ~0.55 of full scale. Normalize each clip
+            // to a 0.98 peak (gain capped at 4x) so it sits level with the game's own voices.
+            float peak = 0f;
+            for (int s = 0; s < count; s++) { float a = Math.Abs(samples[s]); if (a > peak) peak = a; }
+            if (peak > 0f)
+            {
+                float gain = Math.Min(4f, .98f / peak);
+                for (int s = 0; s < count; s++) samples[s] *= gain;
+            }
             AudioClip clip = AudioClip.Create(Path.GetFileNameWithoutExtension(path), count / channels, channels, rate, false);
             clip.SetData(samples, 0);
             // A runtime clip is owned by nothing in a scene: the world-load asset sweep would delete it (1.0.27 live:
