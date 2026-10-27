@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.32.4";
+        public const string Version = "1.0.32.5";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -31,9 +31,9 @@ namespace LivingWorld.Core
 
         // Feature switches so one change can be live-tested at a time (BepInEx config file).
         static BepInEx.Configuration.ConfigEntry<bool> shieldBlocking;
-        static BepInEx.Configuration.ConfigEntry<float> foodStamina, femaleVoiceGain;
+        static BepInEx.Configuration.ConfigEntry<float> foodStamina, companionVoiceGain;
         static BepInEx.Configuration.ConfigEntry<bool> devVoiceLog;
-        public static float FemaleVoiceGain { get { return femaleVoiceGain == null ? 2.0f : Mathf.Clamp(femaleVoiceGain.Value, 0f, 2f); } }
+        public static float CompanionVoiceGain { get { return companionVoiceGain == null ? 1f : Mathf.Clamp(companionVoiceGain.Value, 0f, 2f); } }
         public static bool DevVoiceLog { get { return devVoiceLog != null && devVoiceLog.Value; } }
         public static float FoodStamina { get { return foodStamina == null ? 100f : Mathf.Max(0f, foodStamina.Value); } }
         public static bool ShieldBlocking { get { return shieldBlocking != null && shieldBlocking.Value; } }
@@ -41,8 +41,8 @@ namespace LivingWorld.Core
         void Awake()
         {
             Instance = this;
-            femaleVoiceGain = Config.Bind("Voice", "FemaleVoiceGain", 2.0f,
-                "Playback gain for the female voice set over the game's 0.5 voice template (clips are already normalized). 1.58 = Brian's in-game setting (1.0.31); 1.0 = template level.");
+            companionVoiceGain = Config.Bind("Voice", "CompanionVoiceGain", 1f,
+                "One playback gain for both companion voice sets (Gamemaster Male B / Female A) over the game's 0.5 voice template. Clips are not normalized. 1.0 = template level.");
             devVoiceLog = Config.Bind("Voice", "DevVoiceLog", false,
                 "Development only: log every companion line (who, gender, line, exact clip, trigger, fallback).");
             foodStamina = Config.Bind("Combat", "CompanionFoodStamina", 100f,
@@ -105,11 +105,8 @@ namespace LivingWorld.Core
             try
             {
                 NpcVoice.Build();
-                Report(NpcVoice.Missing.Length == 0 ? "Companion voice: vanilla Fuling sounds, pitch 0.8-0.9." :
-                    "Companion voice missing sources: " + NpcVoice.Missing);
-                Report("Male alerted set: " + (NpcVoice.MaleAlertedSummary ?? "?") + ".");
-                Report("War cry: Fuling Berserker taunt, pitch " + (NpcVoice.WarCryPitch ?? "?") + ".");
-                Report("Female voice set: " + (NpcVoice.FemaleSummary ?? "?") + ".");
+                Report("Companion voice (Gamemaster Human Vocalizations; no enemy recordings): male (Male B) " + (NpcVoice.MaleSummary ?? "?") + ".");
+                Report("Companion voice: female (Female A) " + (NpcVoice.FemaleSummary ?? "?") + ".");
                 GameObject player = RequirePrefab("Player", false);
                 // No helmet: it hides native hair (0.4.0 lesson).
                 // Same kit, same behavior: the weapon follows from distance, not from a role.

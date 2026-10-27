@@ -68,178 +68,78 @@ namespace LivingWorld.Core
                 }
                 Clips["warcry"] = cry;
             }
-            SplitSurprised01();
-            BuildFemale();
+            BuildCompanion("male", "m");
+            BuildCompanion("female", "f");
             Missing = missing.Count == 0 ? "" : String.Join(", ", missing.ToArray());
         }
 
-        // ---- 1.0.32.1: male alerted Surprised01 holds two separate utterances; play either one, never both. ----
-        const string Surprised01 = "Male_LS_D_Surprised01";
-        public static string MaleAlertedSummary { get; private set; }
-
-        /// <summary>Replaces the Surprised01 entry of the male alerted set with its two atomic halves (voices/male/*_A/_B.wav)
-        /// at the slot's original weight (VoiceSlots.SplitOne): A 1/6, B 1/6, Surprised05 1/3, Surprised06 1/3. Load-time only;
-        /// anything unexpected leaves the vanilla set untouched and says so.</summary>
-        static void SplitSurprised01()
-        {
-            GameObject alerted;
-            ZSFX sfx = Clips.TryGetValue("alerted", out alerted) && alerted != null ? alerted.GetComponent<ZSFX>() : null;
-            if (sfx == null || sfx.m_audioClips == null) { MaleAlertedSummary = "unchanged (no alerted set)"; CorePlugin.Warn("male alerted split: no alerted set"); return; }
-            var byName = new Dictionary<string, AudioClip>();
-            var names = new List<string>();
-            foreach (AudioClip c in sfx.m_audioClips)
-            {
-                if (c == null) continue;
-                if (c.name.StartsWith(Surprised01 + "_", StringComparison.Ordinal)) { MaleAlertedSummary = "already split"; return; }
-                if (!byName.ContainsKey(c.name)) { byName[c.name] = c; names.Add(c.name); }
-            }
-            string dir = Path.Combine(Path.GetDirectoryName(typeof(NpcVoice).Assembly.Location) ?? "", Path.Combine("voices", "male"));
-            string pathA = Path.Combine(dir, Surprised01 + "_A.wav"), pathB = Path.Combine(dir, Surprised01 + "_B.wav");
-            string[] flat = VoiceSlots.SplitOne(names.ToArray(), Surprised01, Surprised01 + "_A", Surprised01 + "_B");
-            if (flat == null) { MaleAlertedSummary = "unchanged (" + Surprised01 + " not in the set: " + String.Join(", ", names.ToArray()) + ")"; CorePlugin.Warn("male alerted split: " + MaleAlertedSummary); return; }
-            if (!File.Exists(pathA) || !File.Exists(pathB)) { MaleAlertedSummary = "unchanged (missing voices/male split files)"; CorePlugin.Warn("male alerted split: " + MaleAlertedSummary); return; }
-            try
-            {
-                AudioClip a = WavClip.Load(pathA, false), b = WavClip.Load(pathB, false);   // keep the recording's level: no normalization
-                if (a.samples == 0 || b.samples == 0) { MaleAlertedSummary = "unchanged (empty split file)"; CorePlugin.Warn("male alerted split: " + MaleAlertedSummary); return; }
-                byName[a.name] = a; byName[b.name] = b;
-                Loaded.Add(a); Loaded.Add(b);
-                var clips = new AudioClip[flat.Length];
-                for (int i = 0; i < flat.Length; i++) clips[i] = byName[flat[i]];
-                sfx.m_audioClips = clips;
-                var share = new List<string>();
-                foreach (string n in names)
-                {
-                    if (n == Surprised01) { share.Add(n + "_A 1/" + (names.Count * 2)); share.Add(n + "_B 1/" + (names.Count * 2)); }
-                    else share.Add(n + " 1/" + names.Count);
-                }
-                MaleAlertedSummary = String.Join(", ", share.ToArray()) + "; array " + String.Join(" ", flat) + " (" + a.length.ToString("0.000") + " s / " + b.length.ToString("0.000") + " s, not normalized)";
-            }
-            catch (Exception e) { MaleAlertedSummary = "unchanged (" + e.Message + ")"; CorePlugin.Warn("male alerted split: " + MaleAlertedSummary); }
-        }
-
-        // ---- Female voice set: Brian's licensed "Ultimate Female Voice Pack" (topmademarti). ----
-        // 1.0.32 layout: voices/female/clips/*.wav + voices/female/lines.txt ("line: file, file, ..."), so clips are
-        // approved or rejected by editing names. (Fallback: the 1.0.27 voices/female/<line>/*.wav folders.)
-        // Same lines and the same VoicePolicy/WarCryPolicy for both genders; gender only picks the clip pool in Say.
-        static readonly string[] FemaleLines = { "alerted", "exert", "hit", "hit_heavy", "idle", "death", "warcry" };
+        // ---- 1.0.32.5 companion voice overhaul (Brian 22:49): companions stop reusing enemy (Fuling/Berserker) recordings.
+        // Each gender has its own complete set from the licensed Gamemaster Human Vocalizations library:
+        // voices/companion/<male|female>/<pool>/*.wav, array order = file name order (two-digit prefix).
+        // Pools: alerted, exert, hit, hit_heavy, gloat (= the "idle" line), death, warcry. Clips play as delivered:
+        // no normalization, no pitch shift, one equal gain for both genders (CorePlugin.CompanionVoiceGain). ----
+        static readonly string[] CompanionLines = { "alerted", "exert", "hit", "hit_heavy", "idle", "death", "warcry" };
+        static string PoolFolder(string line) { return line == "idle" ? "gloat" : line; }
+        public static string MaleSummary { get; private set; }
         public static string FemaleSummary { get; private set; }
-        static readonly Dictionary<string, string> ClipLine = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        public const float CompanionPitch = 1f;   // as recorded
 
-        static void BuildFemale()
+        static void BuildCompanion(string gender, string prefix)
         {
             var parts = new List<string>();
-            string root = Path.Combine(Path.GetDirectoryName(typeof(NpcVoice).Assembly.Location) ?? "", Path.Combine("voices", "female"));
-            if (!Directory.Exists(root)) { FemaleSummary = "none (no voices/female folder)"; return; }
-            GameObject template = PrefabManager.Instance.GetPrefab("sfx_goblin_hit");
-            if (template == null) { FemaleSummary = "none (template sfx missing)"; return; }
-            Dictionary<string, List<string>> plan = ReadPlan(root);
-            var byHash = new Dictionary<string, string>();
-            foreach (string line in FemaleLines)
+            string root = Path.Combine(Path.GetDirectoryName(typeof(NpcVoice).Assembly.Location) ?? "", Path.Combine("voices", Path.Combine("companion", gender)));
+            string summary;
+            GameObject template = PrefabManager.Instance.GetPrefab("sfx_goblin_hit");   // container only (ZSFX + ZNetView); its clips are replaced
+            if (!Directory.Exists(root)) summary = "none (no voices/companion/" + gender + " folder) -> silent";
+            else if (template == null) summary = "none (template sfx missing) -> silent";
+            else
             {
-                List<string> files;
-                if (!plan.TryGetValue(line, out files) || files.Count == 0) { CorePlugin.Warn("female voice: line '" + line + "' has no clips -> male line"); continue; }
-                var clips = new List<AudioClip>();
-                var loadedHere = new Dictionary<string, AudioClip>();   // a weighted slot repeats a file: load it once
-                foreach (string file in files)
+                var byHash = new Dictionary<string, string>();
+                foreach (string line in CompanionLines)
                 {
-                    AudioClip again;
-                    if (loadedHere.TryGetValue(file, out again)) { clips.Add(again); continue; }
-                    string name = Path.GetFileName(file);
-                    string other;
-                    if (ClipLine.TryGetValue(name, out other) && other != line)
-                        CorePlugin.Warn("female voice: " + name + " is in both '" + other + "' and '" + line + "'");
-                    ClipLine[name] = line;
-                    try
+                    string dir = Path.Combine(root, PoolFolder(line));
+                    string[] files = Directory.Exists(dir) ? Directory.GetFiles(dir, "*.wav") : new string[0];
+                    Array.Sort(files, StringComparer.Ordinal);
+                    if (files.Length == 0) { CorePlugin.Warn(gender + " voice: pool '" + PoolFolder(line) + "' has no clips -> silent"); continue; }
+                    var clips = new List<AudioClip>();
+                    foreach (string file in files)
                     {
-                        string hash = Hash(file);
-                        if (byHash.TryGetValue(hash, out other) && other != line + "/" + name)
-                            CorePlugin.Warn("female voice: " + line + "/" + name + " has the same audio as " + other);
-                        byHash[hash] = line + "/" + name;
-                        AudioClip clip = WavClip.Load(file);
-                        if (clip.length <= 0f || clip.samples == 0) { CorePlugin.Warn("female voice: " + name + " is empty"); continue; }
-                        loadedHere[file] = clip;
-                        clips.Add(clip);
-                    }
-                    catch (Exception e) { CorePlugin.Warn("female voice " + name + ": " + e.Message); }
-                }
-                if (clips.Count == 0) { CorePlugin.Warn("female voice: line '" + line + "' loaded no clips -> male line"); continue; }
-                string prefabName = "LWC_sfx_f_" + line;
-                GameObject prefab = PrefabManager.Instance.GetPrefab(prefabName);
-                if (prefab == null)
-                {
-                    prefab = PrefabManager.Instance.CreateClonedPrefab(prefabName, template);
-                    if (prefab != null && prefab.GetComponent<ZNetView>() != null) PrefabManager.Instance.AddPrefab(new CustomPrefab(prefab, false));
-                }
-                ZSFX sfx = prefab == null ? null : prefab.GetComponent<ZSFX>();
-                if (sfx == null) continue;
-                sfx.m_audioClips = clips.ToArray();
-                Loaded.AddRange(clips);   // strong references as well
-                sfx.m_minPitch = FemaleMinPitch;
-                sfx.m_maxPitch = FemaleMaxPitch;
-                if (TemplateVolume < 0f) TemplateVolume = sfx.m_maxVol;
-                // One gain stage on top of consistent normalization: CorePlugin.FemaleVoiceGain (config).
-                sfx.m_minVol = sfx.m_maxVol = Mathf.Min(1f, TemplateVolume * CorePlugin.FemaleVoiceGain);
-                Clips["f:" + line] = prefab;
-                string note;
-                parts.Add(SlotNotes.TryGetValue(line, out note) ? line + " " + loadedHere.Count + " (" + note + ")" : line + " " + clips.Count);
-            }
-            FemaleSummary = (parts.Count == 0 ? "none" : String.Join(", ", parts.ToArray())) + "; clips normalized to 0.98 peak, volume " +
-                TemplateVolume + " x " + CorePlugin.FemaleVoiceGain + (plan.ContainsKey("#source") ? "; " + plan["#source"][0] : "");
-        }
-
-        /// <summary>lines.txt plan if present, else one folder per line.</summary>
-        static readonly Dictionary<string, string> SlotNotes = new Dictionary<string, string>();
-
-        static Dictionary<string, List<string>> ReadPlan(string root)
-        {
-            SlotNotes.Clear();
-            var plan = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
-            string manifest = Path.Combine(root, "lines.txt"), clipDir = Path.Combine(root, "clips");
-            if (File.Exists(manifest))
-            {
-                foreach (string raw in File.ReadAllLines(manifest))
-                {
-                    string row = raw.Trim();
-                    int colon = row.IndexOf(':');
-                    if (row.Length == 0 || row.StartsWith("#") || colon <= 0) continue;
-                    string line = row.Substring(0, colon).Trim();
-                    // 1.0.32.2: "a | b" in one comma entry = one logical slot with two atomic alternatives (the male
-                    // Surprised01 model). Every slot keeps equal weight; VoiceSlots.Flatten builds the weighted pick array.
-                    var slots = new List<string[]>();
-                    bool grouped = false;
-                    foreach (string part in row.Substring(colon + 1).Split(','))
-                    {
-                        var atoms = new List<string>();
-                        foreach (string atom in part.Split('|'))
+                        string name = Path.GetFileName(file);
+                        string other;
+                        try
                         {
-                            string f = atom.Trim();
-                            if (f.Length == 0) continue;
-                            string path = Path.Combine(clipDir, f);
-                            if (File.Exists(path)) atoms.Add(path); else CorePlugin.Warn("female voice: " + line + " lists missing file " + f);
+                            string hash = Hash(file);
+                            if (byHash.TryGetValue(hash, out other))
+                                CorePlugin.Warn(gender + " voice: " + PoolFolder(line) + "/" + name + " has the same audio as " + other);
+                            byHash[hash] = PoolFolder(line) + "/" + name;
+                            AudioClip clip = WavClip.Load(file, false);   // as delivered: no normalization
+                            if (clip.length <= 0f || clip.samples == 0) { CorePlugin.Warn(gender + " voice: " + name + " is empty"); continue; }
+                            clips.Add(clip);
                         }
-                        if (atoms.Count > 1) grouped = true;
-                        if (atoms.Count > 0) slots.Add(atoms.ToArray());
+                        catch (Exception e) { CorePlugin.Warn(gender + " voice " + name + ": " + e.Message); }
                     }
-                    plan[line] = new List<string>(VoiceSlots.Flatten(slots));
-                    if (grouped)
+                    if (clips.Count == 0) { CorePlugin.Warn(gender + " voice: pool '" + PoolFolder(line) + "' loaded no clips -> silent"); continue; }
+                    string prefabName = "LWC_sfx_" + prefix + "_" + line;
+                    GameObject prefab = PrefabManager.Instance.GetPrefab(prefabName);
+                    if (prefab == null)
                     {
-                        var shares = new List<string>();
-                        foreach (string[] slot in slots)
-                            foreach (string atom in slot) shares.Add(Path.GetFileNameWithoutExtension(atom) + " 1/" + (slots.Count * slot.Length));
-                        SlotNotes[line] = slots.Count + " slots, " + plan[line].Count + " entries: " + String.Join(", ", shares.ToArray());
+                        prefab = PrefabManager.Instance.CreateClonedPrefab(prefabName, template);
+                        if (prefab != null && prefab.GetComponent<ZNetView>() != null) PrefabManager.Instance.AddPrefab(new CustomPrefab(prefab, false));
                     }
+                    ZSFX sfx = prefab == null ? null : prefab.GetComponent<ZSFX>();
+                    if (sfx == null) continue;
+                    sfx.m_audioClips = clips.ToArray();
+                    Loaded.AddRange(clips);   // strong references as well
+                    sfx.m_minPitch = sfx.m_maxPitch = CompanionPitch;
+                    if (TemplateVolume < 0f) TemplateVolume = sfx.m_maxVol;
+                    sfx.m_minVol = sfx.m_maxVol = Mathf.Min(1f, TemplateVolume * CorePlugin.CompanionVoiceGain);
+                    Clips[prefix + ":" + line] = prefab;
+                    parts.Add(PoolFolder(line) + " " + clips.Count);
                 }
-                plan["#source"] = new List<string> { "lines.txt" };
-                return plan;
+                summary = (parts.Count == 0 ? "none" : String.Join(", ", parts.ToArray())) + "; as delivered (no normalization), pitch " +
+                    CompanionPitch + ", volume " + TemplateVolume + " x " + CorePlugin.CompanionVoiceGain;
             }
-            foreach (string line in FemaleLines)
-            {
-                string dir = Path.Combine(root, line);
-                if (Directory.Exists(dir)) plan[line] = new List<string>(Directory.GetFiles(dir, "*.wav"));
-            }
-            plan["#source"] = new List<string> { "per-line folders" };
-            return plan;
+            if (prefix == "m") MaleSummary = summary; else FemaleSummary = summary;
         }
 
         static string Hash(string path)
@@ -248,26 +148,26 @@ namespace LivingWorld.Core
                 return BitConverter.ToString(md5.ComputeHash(File.ReadAllBytes(path)));
         }
 
-        public const float FemaleMinPitch = .97f, FemaleMaxPitch = 1.03f;   // human voice: natural variation only
         static float TemplateVolume = -1f;
         static readonly List<AudioClip> Loaded = new List<AudioClip>();
         static readonly HashSet<string> Reported = new HashSet<string>();
 
         /// <summary>A female line is usable only while its clips still exist; otherwise the male line plays (and it is logged once).</summary>
-        static bool FemaleUsable(string key)
+        static string Prefix(NpcKernel kernel) { return IsFemale(kernel) ? "f" : "m"; }
+
+        static bool Usable(string prefix, string key)
         {
             GameObject prefab;
-            if (!Clips.TryGetValue("f:" + key, out prefab) || prefab == null) return false;
+            if (!Clips.TryGetValue(prefix + ":" + key, out prefab) || prefab == null) return false;
             ZSFX sfx = prefab.GetComponent<ZSFX>();
             int alive = 0;
             if (sfx != null && sfx.m_audioClips != null)
                 foreach (AudioClip c in sfx.m_audioClips) if (c != null && c.length > 0f) alive++;
-            if (!Reported.Contains(key))
+            if (!Reported.Contains(prefix + key))
             {
-                Reported.Add(key);
-                CorePlugin.Warn("female voice '" + key + "' first use: " + alive + " of " +
-                    (sfx == null || sfx.m_audioClips == null ? 0 : sfx.m_audioClips.Length) + " clips alive" +
-                    (alive == 0 ? " -> using the male line" : ""));
+                Reported.Add(prefix + key);
+                CorePlugin.Warn((prefix == "f" ? "female" : "male") + " voice '" + key + "' first use: " + alive + " of " +
+                    (sfx == null || sfx.m_audioClips == null ? 0 : sfx.m_audioClips.Length) + " clips alive" + (alive == 0 ? " -> silent" : ""));
             }
             return alive > 0;
         }
@@ -281,9 +181,10 @@ namespace LivingWorld.Core
         /// <summary>Once per load: a female companion's death cry uses the female set (the prefab is shared by both genders).</summary>
         internal static void ApplyGender(NpcKernel kernel)
         {
-            if (!IsFemale(kernel) || !FemaleUsable("death")) return;
+            string prefix = Prefix(kernel);
+            if (!Usable(prefix, "death")) return;
             Humanoid human = kernel.Body == null ? null : kernel.Body.Human;
-            if (human != null) human.m_deathEffects = Voiced(human.m_deathEffects, "f:death");
+            if (human != null) human.m_deathEffects = Voiced(human.m_deathEffects, prefix + ":death");
         }
 
         const string WarCrySource = "sfx_goblinbrute_taunt", WarCryName = "LWC_sfx_warcry";
@@ -304,7 +205,7 @@ namespace LivingWorld.Core
         internal static void Configure(Humanoid human, MonsterAI ai)
         {
             human.m_hitEffects = Voiced(human.m_hitEffects, null);
-            human.m_deathEffects = Voiced(human.m_deathEffects, "death");
+            human.m_deathEffects = Voiced(human.m_deathEffects, null);   // 1.0.32.5: no enemy death cry; ApplyGender adds the companion's own
             ai.m_idleSound = new EffectList();
             ai.m_idleSoundChance = 0f;
             ai.m_alertedEffects = new EffectList();
@@ -341,7 +242,8 @@ namespace LivingWorld.Core
             // 1.0.32.4: a lower-priority line (alerted, exert, idle) never cuts off pain that is still sounding.
             KeyValuePair<int, float> held;
             if (Holding.TryGetValue(id, out held) && Time.time < held.Value && Priority(key) < held.Key) { Skip(kernel, key, "lower priority"); return; }
-            EffectList line = IsFemale(kernel) && FemaleUsable(key) ? List("f:" + key) : List(MaleKey(key));
+            string prefix = Prefix(kernel);
+            EffectList line = Usable(prefix, key) ? List(prefix + ":" + key) : null;   // no fallback to enemy voices
             if (line == null) { Skip(kernel, key, "no clip"); return; }
             Silence(body);
             GameObject[] made = line.Create(body.transform.position, body.transform.rotation, body.transform);
@@ -372,11 +274,9 @@ namespace LivingWorld.Core
         {
             bool female = IsFemale(kernel);
             CorePlugin.Report("VOICE " + body.GetHoverName() + " (" + (female ? "female" : "male") + ") line=" + key +
-                " clip=" + Narrow(made) + (female && !FemaleUsable(key) ? " FALLBACK=male" : ""));
+                " clip=" + Narrow(made));
         }
 
-        /// <summary>Male lines that share a vanilla clip set: exertion and heavy hurt use the Fuling grunt.</summary>
-        static string MaleKey(string key) { return key == "exert" || key == "hit_heavy" ? "hit" : key; }
 
         static string Narrow(GameObject[] made)
         {
