@@ -12,6 +12,14 @@ static class RegressionLedgerTests
 
     static int Main()
     {
+        Run("LOCK combat voice 1.0.32.6: every rule constant is the approved value", CombatVoiceConstantsLocked);
+        Run("LOCK combat voice: alert only before contact, once per enemy, party cooldown", CombatVoiceAlertsLocked);
+        Run("LOCK combat voice: every heavy exertion voiced, ordinary swings 30% / 2.5 s", CombatVoiceExertionLocked);
+        Run("LOCK combat voice: ordinary 65%/1.5 s, devastating always/4 s, hit mid-line always", CombatVoiceHurtLocked);
+        Run("LOCK combat voice: one stagger cry per 1.5 s; its damage is the same event", CombatVoiceStaggerLocked);
+        Run("LOCK combat voice: gloat only at kills or 25% blows, 35%, 10 s", CombatVoiceGloatLocked);
+        Run("LOCK combat voice: war cry only at a calm raid start", CombatVoiceWarCryLocked);
+        Run("LOCK combat voice: death = one unattached line from the identity's own pool", CombatVoiceDeathLocked);
         Run("1.0.32.6 Fuling raid: death cry from the gendered pool, unattached, exactly one", DeathVoiceIsOneUnattachedGenderedLine);
         Run("1.0.32.2: female surprised pair shares one slot (A 1/6, B 1/6, others 1/3)", FemaleSlotFlatten);
         Run("1.0.32.1: Surprised01 split keeps its 1/3 slot weight (A 1/6, B 1/6)", SplitKeepsSlotWeight);
@@ -630,6 +638,94 @@ static class RegressionLedgerTests
     static void NoAmmoMelee()
     {
         Assert(W(true, false, 20f, true, false) == WeaponChoice.Pick.Melee, "kept an empty bow");
+    }
+
+    // ---- Combat-voice lock (approved 1.0.32.6, 2026-10-27). Companion combat module, combat voice: COMPLETE.
+    // These values were tuned live by Brian. Changing any of them needs his approval and a new lock; never "tidy" them.
+    static void CombatVoiceConstantsLocked()
+    {
+        Assert(CombatVoicePolicy.NewEnemyChance == .7f && CombatVoicePolicy.PartyCooldown == 4f && CombatVoicePolicy.HeardMemory == 180f, "alert law changed");
+        Assert(CombatVoicePolicy.NoticeQuietSeconds == 3f && CombatVoicePolicy.NoticeMinDistance == 6f, "alert gate changed");
+        Assert(CombatVoicePolicy.PartnerReactDelay == .6f, "partner reaction delay changed");
+        Assert(CombatVoicePolicy.ExertHeavyChance == 1f && CombatVoicePolicy.ExertSwingChance == .30f && CombatVoicePolicy.ExertCooldown == 2.5f, "exertion law changed");
+        Assert(CombatVoicePolicy.GruntChance == .65f && CombatVoicePolicy.GruntCooldown == 1.5f, "ordinary-hit law changed");
+        Assert(CombatVoicePolicy.HurtFraction == .15f && CombatVoicePolicy.HurtCooldown == 4f, "devastating-hit law changed");
+        Assert(CombatVoicePolicy.InterruptedChance == 1f && CombatVoicePolicy.InterruptedCooldown == 1.5f, "interruption law changed");
+        Assert(CombatVoicePolicy.StaggerCooldown == 1.5f && CombatVoicePolicy.SameEventWindow == .3f, "stagger law changed");
+        Assert(CombatVoicePolicy.MightyFraction == .25f && CombatVoicePolicy.MightyChance == .35f && CombatVoicePolicy.MightyCooldown == 10f, "gloat law changed");
+        Assert(WarCryPolicy.ClearRadius == 6f, "war cry clearance changed");
+    }
+
+    static void CombatVoiceAlertsLocked()
+    {
+        Assert(CombatVoicePolicy.Noticing(3f, 3f, 6f), "a calm sighting at 6 m is not called out");
+        Assert(!CombatVoicePolicy.Noticing(2.9f, 9f, 20f) && !CombatVoicePolicy.Noticing(9f, 2.9f, 20f), "called out mid-fight");
+        Assert(!CombatVoicePolicy.Noticing(9f, 9f, 5.9f), "called out an enemy already on us");
+        var v = new CombatVoicePolicy();
+        Assert(v.NewEnemy(0f, 1, .69f), "alert at .69 roll silent (chance .7)");
+        Assert(!v.NewEnemy(10f, 1, .0f), "same enemy called out twice inside 180 s");
+        Assert(!v.NewEnemy(3.9f, 2, .0f), "second alert inside the 4 s party cooldown");
+        Assert(v.NewEnemy(4.1f, 2, .0f) == false, "an enemy heard during the cooldown is remembered, not re-announced");
+        Assert(v.NewEnemy(4.2f, 3, .0f), "a new enemy after the cooldown is not called out");
+        Assert(!new CombatVoicePolicy().NewEnemy(0f, 1, .7f), "alert at .7 roll (chance .7)");
+    }
+
+    static void CombatVoiceExertionLocked()
+    {
+        var v = new CombatVoicePolicy();
+        Assert(v.Exert(0f, 1, true, .999f) && v.Exert(.1f, 1, true, .999f), "a heavy attack went unvoiced (roll or cooldown)");
+        Assert(!v.Exert(.2f, 1, false, .0f), "ordinary swing voiced inside 2.5 s of the last exertion");
+        Assert(v.Exert(2.7f, 1, false, .29f), "ordinary swing at .29 silent (chance .30)");
+        Assert(!v.Exert(9f, 1, false, .30f), "ordinary swing at .30 voiced");
+        Assert(v.Exert(9f, 2, false, .0f), "one companion's exertion silenced another");
+    }
+
+    static void CombatVoiceHurtLocked()
+    {
+        var v = new CombatVoicePolicy();
+        Assert(v.Hurt(0f, 1, 37.5f, 250f, false, .999f) == CombatVoicePolicy.HurtLine.Devastated, "15% blow not a guaranteed devastating cry");
+        Assert(v.Hurt(3.9f, 1, 60f, 250f, false, .0f) == CombatVoicePolicy.HurtLine.None, "pain cry inside the 4 s cooldown");
+        Assert(v.Hurt(4.1f, 1, 60f, 250f, false, .999f) == CombatVoicePolicy.HurtLine.Devastated, "devastating cry after 4 s missing");
+        var w = new CombatVoicePolicy();
+        Assert(w.Hurt(0f, 1, 37f, 250f, false, .64f) == CombatVoicePolicy.HurtLine.Grunt, "ordinary hit at .64 silent (chance .65)");
+        Assert(w.Hurt(1.4f, 1, 10f, 250f, false, .0f) == CombatVoicePolicy.HurtLine.None, "ordinary hit inside 1.5 s voiced");
+        Assert(w.Hurt(9f, 1, 10f, 250f, false, .65f) == CombatVoicePolicy.HurtLine.None, "ordinary hit at .65 voiced");
+        Assert(w.Hurt(9.1f, 1, 10f, 250f, true, .999f) == CombatVoicePolicy.HurtLine.Grunt, "hit mid-line not always answered");
+    }
+
+    static void CombatVoiceStaggerLocked()
+    {
+        var v = new CombatVoicePolicy();
+        Assert(v.Stagger(0f, 1), "a new stagger drew no cry");
+        Assert(v.StaggerAnswered(.29f, 1) && !v.StaggerAnswered(.31f, 1), "stagger and its damage are not one 0.3 s event");
+        Assert(!v.Stagger(1.4f, 1) && v.Stagger(1.6f, 1), "stagger cry cooldown is not 1.5 s");
+        Assert(v.Stagger(0f, 2), "one companion's stagger silenced another");
+    }
+
+    static void CombatVoiceGloatLocked()
+    {
+        var v = new CombatVoicePolicy();
+        Assert(!v.Mighty(0f, 24f, 100f, false, .0f), "gloated at a 24% blow");
+        Assert(v.Mighty(0f, 25f, 100f, false, .34f), "no gloat at a 25% blow, .34 roll");
+        Assert(!v.Mighty(9.9f, 0f, 100f, true, .0f) && v.Mighty(10.1f, 0f, 100f, true, .0f), "gloat cooldown is not 10 s");
+        Assert(!new CombatVoicePolicy().Mighty(0f, 0f, 100f, true, .35f), "gloated at .35 roll (chance .35)");
+    }
+
+    static void CombatVoiceWarCryLocked()
+    {
+        Assert(WarCryPolicy.Allowed(true, 6.1f, false, false, false), "no war cry at a calm raid start");
+        Assert(!WarCryPolicy.Allowed(false, 99f, false, false, false), "war cry outside a new raid");
+        Assert(!WarCryPolicy.Allowed(true, 6f, false, false, false), "war cry with an enemy inside 6 m");
+        Assert(!WarCryPolicy.Allowed(true, 99f, true, false, false) && !WarCryPolicy.Allowed(true, 99f, false, true, false) &&
+               !WarCryPolicy.Allowed(true, 99f, false, false, true), "war cry while attacking, falling back or moving");
+    }
+
+    static void CombatVoiceDeathLocked()
+    {
+        Assert(DeathVoice.Key(true) == "f:death" && DeathVoice.Key(false) == "m:death", "death pool not chosen by identity gender");
+        Assert(!DeathVoice.Attach, "death line attached to the body destroyed in the same OnDeath call");
+        foreach (string enemy in new[] { "sfx_goblin_death", "sfx_goblinbrute_death", "sfx_troll_death", "LWC_sfx_death" })
+            Assert(DeathVoice.Merge(new[] { enemy }, "m:death").Count == 1, enemy + " survives beside the companion death line");
     }
 
     static void DeathVoiceIsOneUnattachedGenderedLine()

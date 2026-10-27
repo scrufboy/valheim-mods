@@ -1,0 +1,923 @@
+{
+ "baseline": "combat-voice-approved-1.0.32.6",
+ "dll_sha256": "4dee75d49c01a32f0250a09595b166e2deac5ad43d8b46aabeb3257b2667cc6e",
+ "methods": {
+  "CombatVoicePolicy::.ctor#1": "6179b2886776d1b192333c42295ef75aaffaeb9d35fb9423953fe8d4197a5ab4",
+  "CombatVoicePolicy::Exert#1": "5122d9c79b2dc6cd2cdd5aeff8ddd5277f592c96ddc382d90cd0758d2d0d61d9",
+  "CombatVoicePolicy::Exert#2": "e865928f81a7a13046b5399802ef54fed151cbb14a3d648283d2db37bca963bc",
+  "CombatVoicePolicy::Hurt#1": "cd107433aacbc313283635ee180f64e13c5ee42510f365d1ef5c951194607603",
+  "CombatVoicePolicy::Hurt#2": "ef6dcef62cc749fe4eb7adb013898473daf8a857ded2e9353aefb1fe85517729",
+  "CombatVoicePolicy::Mighty#1": "8bec4b8f230b849a7457de4b8376378fc79d8eeacad40a15be031aadb049f2d9",
+  "CombatVoicePolicy::NewEnemy#1": "fc4d0b42443ae01d84c8afe2918e6bc465f2a8b7485a48cd6a865c02aa889777",
+  "CombatVoicePolicy::Noticing#1": "5fd975f0808752cd4536da58d5efa5dfc1bd88b718e7605fcbb1cb90b86a5a29",
+  "CombatVoicePolicy::Stagger#1": "d679955c5edf73b2ec4dfe489b52181cc5bc29bd884895491df2642389446a71",
+  "CombatVoicePolicy::StaggerAnswered#1": "938e505e058641100e2af8a8a7cea8e0be290f95c50392c33655051f670b353d",
+  "CompanionCombatVoice::.cctor#1": "c76cf0c112336d190282d76976667d2026649735b72f5701b50ffcbe4fba529f",
+  "CompanionCombatVoice::ApplyGender#1": "ad84f801bcc8f8cc425e3926cd7532480e2a9b86db5b5ff4139bc57d62434316",
+  "CompanionCombatVoice::AttackTriggerPostfix#1": "b19a4a8649751f483fbe4373c7139a9aeb0ab637f4c178f5ee70581c9bb3f61c",
+  "CompanionCombatVoice::Build#1": "728f56b56d84de62aa0481fbc09716fd22045869428617e0b6dd082321176015",
+  "CompanionCombatVoice::BuildCompanion#1": "a4929f5ae0a82d63ddd33b4e193ebb6c8dce4da39af401aec4ba412e637d2e59",
+  "CompanionCombatVoice::Configure#1": "7d8b84889566718960c78723260e6333b53130c68afc27eb07da368c7ed76324",
+  "CompanionCombatVoice::DeathFinalizer#1": "dd2c26e24788f10552727ca5600e819cb653396376302100a3a660e918f85a77",
+  "CompanionCombatVoice::DeathPrefix#1": "0d07365c8efd682f7a0e09de1c754c05e225f86ffaa6fcc4998ede117a16037d",
+  "CompanionCombatVoice::Hash#1": "901c20c0bcf538b059230597b6da40a4caee72869c71fa6df823506ab22205f0",
+  "CompanionCombatVoice::IsFemale#1": "b7130231e200c9dc0b20fce3e63600d04ce42f84bd933f7934eeb53c043a62f6",
+  "CompanionCombatVoice::List#1": "2284dbfecf5e957bca3919ae46654f1cd361443509125dba0784041915748654",
+  "CompanionCombatVoice::LogLine#1": "da7c0c494c02f5e25e3efacb094cb374eab23ccbc35d69d3fa24f6b814dca25e",
+  "CompanionCombatVoice::Narrow#1": "2e05cea1ccada9c739259751ee86c2df6e05eec1e4998ce3ebfa5f2ed3f08ac7",
+  "CompanionCombatVoice::NearestCompanionTo#1": "4a7a7cb255019f69c85426ceab4b9557fdb54baa6e653ddebb42693c554ce7fd",
+  "CompanionCombatVoice::NearestPartner#1": "b1c925031e1371eaaadaad89afe8e9c6d4f181977030bdcee84fbf82e0778206",
+  "CompanionCombatVoice::OnHurt#1": "4a10afd2e6eda319530d32a96e6c97df879e0d42d1594e023f969bce5a32e7d6",
+  "CompanionCombatVoice::OnNewTarget#1": "b9f7e9de8f7dfd2a3299f7326b57dc7113d6cdeab2b858a4fc9f64d1fd5edd5e",
+  "CompanionCombatVoice::OnStrike#1": "1aba52023ec3141d44db9ed31a5cfa2ac07263d7fc5a305eef24b831b7216480",
+  "CompanionCombatVoice::OnSwing#1": "9c1384b7377b5e37f3e7a322b0485e0eff676f4bb077b5b76b56df5bd72bbd42",
+  "CompanionCombatVoice::PoolFolder#1": "6d148fc011534c460a189760f0a59579d07e51b1e058f34e89a622e3b3ed0a74",
+  "CompanionCombatVoice::Prefix#1": "4230f0d980910d8089936737e619c559a59e09e8a5b754836726151a59415ccd",
+  "CompanionCombatVoice::Priority#1": "a3e2ad5079dc6a59de04a896054e8e052c7727e845075f32019891c3779ffad7",
+  "CompanionCombatVoice::RpcStaggerPrefix#1": "a29f6666f9dc574c646ba7993f562076e345651c490129ac6d5bdc44d031eebe",
+  "CompanionCombatVoice::Say#1": "940dc26d4aa059fd9488a7936db287307f46b88ff264f6d33dc175ee9015c966",
+  "CompanionCombatVoice::SayWarCry#1": "ebdbd022e3d73b3909b781470fff3f5b18d0fe32d85e705364594cfeba03546e",
+  "CompanionCombatVoice::Silence#1": "8351dace3d223098fdc2bace3cb18bd19c6cfeae4dd8ee6005b12cd8f6c0ef53",
+  "CompanionCombatVoice::Skip#1": "d539bdd890f1f66ddb7b1a76c6648c02113ba846deaeb008877c4f6de89f34da",
+  "CompanionCombatVoice::Tick#1": "14e8eb24e2242bd7de739cb802049b955213644a43c6c9ed5f3e963eafe89761",
+  "CompanionCombatVoice::Usable#1": "b300928822c3cb6268f351635e3a61a6a4b3a07175be5bf2fb5fdc18e5eb8a81",
+  "CompanionCombatVoice::Voiced#1": "b1626d999939418c2fa844aee442dba3778d46481369087f57a32762dd5a88fd",
+  "CompanionCombatVoice::add_Spoke#1": "c2ce5fe8f582744cd057f9a5bdbe79478794b02af40c3040d654e6143889cd7b",
+  "CompanionCombatVoice::get_FemaleSummary#1": "df52ad82b6ca7fcc788bfb5b1805fb760f40d54aa50a621d4f20b7e6f85ca006",
+  "CompanionCombatVoice::get_Lines#1": "237b621b5a986868f7a1b78eb608eb07d23e1fd967f1058a0340234b14f85599",
+  "CompanionCombatVoice::get_MaleSummary#1": "cbb0006fb7b5e242d08ac346cc93740f8f406a60586349ef352ed10a5ddbd576",
+  "CompanionCombatVoice::get_Missing#1": "0ac700c1cc57217825c6f56ba4426bf67dfceb995788556788756bb450f6b308",
+  "CompanionCombatVoice::get_WarCryPitch#1": "991e7829ed665d49e4c592a0541bf453ded3c4d20247555e507c371aa1507af4",
+  "CompanionCombatVoice::remove_Spoke#1": "e7af707e9b3e4b38c567551ea2d5b329a91bb452b0776d4080a716f55092a1c0",
+  "CompanionCombatVoice::set_FemaleSummary#1": "a36c3bc93716637b721236a4353297040d7477ba1846d14f4b77b80d46888a8a",
+  "CompanionCombatVoice::set_Lines#1": "bf9fedfd44b68d0ba023b9e7741f69f123c260fc8c80ff3cffa050d0a2fc6da2",
+  "CompanionCombatVoice::set_MaleSummary#1": "c15de3133c1cc5e5bd3fe2749cd60d3dec812ad1a9826702920f9e1423cde2a7",
+  "CompanionCombatVoice::set_Missing#1": "eb88d4fa00dde1d3f06a247a178f56c057a23e85f61b47222e5cb381ffe08cb5",
+  "CompanionCombatVoice::set_WarCryPitch#1": "e2aba853efc300494af5f2a9c5018c1aef3227012ab3aaddbb9144354c6dd37e",
+  "CorePlugin::get_CompanionVoiceGain#1": "b52e5b663c0dbbddaa449fd2e3c862e42fa5cb9e5b78dd9c0060597fb74370a4",
+  "CorePlugin::get_DevVoiceLog#1": "6073ed735a28a53d0d5ad7dbc6d5dfbd08e9f9a0781c956b043ef325f8f9fda6",
+  "DeathVoice::IsVoice#1": "7348174941f67218658c2df963c9fed49a91558cba3e8a2f0ae6f72cf5e77e0c",
+  "DeathVoice::Key#1": "fe7192a08a8ae5bb1c75020b0d59cdf39c7b2ca043554383312cd6d60bfc14f8",
+  "DeathVoice::Merge#1": "c2bbb304f4d7aa0db355cc1d34e9e2b92a1297d9c9f8a8dbc68bb1ebf8051e88",
+  "StrikeHook::Postfix#1": "4f2e560483688d3750c14d162b27a767f94a7ef7194219a9a6f0bfc0ff79c35e",
+  "StrikeHook::add_Landed#1": "0a766050fc0aa856a00a88d661ea4b017aa583523e81feab81df6f189182c477",
+  "StrikeHook::remove_Landed#1": "a35df0ce5016eceabaf96288461bfc34129629bdeb2fe35ac932ea047268f628",
+  "VoiceSlots::Flatten#1": "6c6bc8cc790f8227beee17d00c9ed7b7a9b135e7364a325a00c80601e2c23465",
+  "VoiceSlots::Lcm#1": "a572099a3dfe68a046670dbe30fa7d44738b4ef58172ec6dfe6714837ff0ea80",
+  "VoiceSlots::SplitOne#1": "d47ad40a653c6a8f4354281e7d90907578b416f6c9fbe6b02dc0ace72a8c2281",
+  "WarCry/State::.ctor#1": "6787c0f09958ca8be45dda9a038f325a83c25214eea81b094baf9e97c8749913",
+  "WarCry::.cctor#1": "927697d5972546b9ba5141b30363c6444bbb97272a2c1c6a7799e61446389acf",
+  "WarCry::Tick#1": "9d4ca4db08723246edc1a86f0913b1c89ec80401d0d18950b7aadf550b024ae5",
+  "WarCry::add_Cried#1": "8b18bd2b7b799e6dcebe36758dbdf63525daca5de5fae70f8cc5c4c33f1e6cc6",
+  "WarCry::remove_Cried#1": "2eea6cce35959eab4085c17c2c2099e5abe9137ef2404a58b47855c492cb0a3c",
+  "WarCryPolicy::Allowed#1": "ad081d7ee5dcf2b868aa2db9f1e30dce7153b05f69c1993b3862d9dcc42e5708",
+  "WavClip::Load#1": "2a4a2a56137774af324642a668693b1b8c116abfbc65112c601d27552bd47016",
+  "WavClip::Load#2": "65483ba5490d651204cd37d6f020b4d0ec46a857e75764af93df5a93b9976671"
+ },
+ "voices": {
+  "female": {
+   "alerted": [
+    [
+     "01__voice_female_a_expression_emote_03.wav",
+     "87c024b694c3e41b2944fb78c6f7c957470686b8385b15e7248ad19e943bb150",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_female_a_expression_emote_11.wav",
+     "b129c67851bb837992366c1827da1f2e6370227abdcc2b20b59e72a7c986cdb6",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ],
+   "death": [
+    [
+     "01__voice_female_a_death_06.wav",
+     "667ffead57ba730175f612dcb73dc6d77df560b0fe62aafe708f265c8053eac2",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_female_a_death_11.wav",
+     "d757061a6d5bc25a2f7c09897893b6acb903a5e7afe602b9c3fda465520844a4",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "03__voice_female_a_death_08.wav",
+     "1c78bdc473762457136afd0edd15b9623737b27ed2aa620a3255b6b0e5851570",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "04__voice_female_a_death_05.wav",
+     "6f5a9ee92dba851fb81963f694ac393a3fdc733f5a794f4aaf961b92c77bbf7b",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ],
+   "exert": [
+    [
+     "01__voice_female_a_effort_quick_action_07.wav",
+     "290833604d55bf1783c3431251995999105a30d025ca3b0d0bedfcd977b69e91",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_female_a_attack_01.wav",
+     "5a20426f43142ff7e5e208b9aa0d317d6a0184aa9ddfe809935f22223446c80f",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "03__voice_female_a_effort_push_fast_02.wav",
+     "fdbdc8424955aa9b5204fe2e0a5a88b2bb8ae0f01ac96c6a2636196ba1425eaf",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "04__voice_female_a_effort_quick_action_05.wav",
+     "695a252484b60470776e967bb1dced2f14cea2c52691fb964a9134f8807c73ce",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "05__voice_female_a_attack_12.wav",
+     "114efefb099566ef97996dc7eae36e54f557e85e7bb9df4b041c519adf2a8412",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "06__voice_female_a_attack_05.wav",
+     "e0d80c6ec56396de7bd7c1d609a7bf8c0fe59c0310f92b7c616cf88ad85eabad",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "07__voice_female_a_effort_quick_action_04.wav",
+     "b4a41bc7eb330f5521930915cba18d4fecc3911812daa464c1f46b2f855b5cad",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "08__voice_female_a_effort_push_fast_05.wav",
+     "3917f4a9da06a81117a0ff2f5bf1d7ffbf2bf1137463716337aea771b41b6893",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "09__voice_female_a_attack_02.wav",
+     "a2e2c2eea5678fb3a8ca38c3577b6a4e01bab573a46c25c7a42d2438c422970a",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ],
+   "gloat": [
+    [
+     "01__voice_female_a_laugh_14.wav",
+     "dcd82aebadf20b8d357554db9ac6752db023f2e17cce94f08cd34e134f4548bf",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_female_a_laugh_01.wav",
+     "deae090bb53d97f3ead6522fa93d05467461dd1eb6dd967b167b4aa03d5d8541",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "03__voice_female_a_laugh_12.wav",
+     "0291e603d403478dafd9baee3a5cf2a07d7e763db84cfd93802bb4806b72c36c",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "04__voice_female_a_laugh_09.wav",
+     "f3c99e91d605a4c6adc622c7a9bbc3a18713f8d7fef8d48986f17f775b388e6d",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ],
+   "hit": [
+    [
+     "01__voice_female_a_hurt_pain_03.wav",
+     "5dbb06f467b40044b2882770bb9ec660fd061c11c7bd17effe98a81df1dda623",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_female_a_hurt_pain_12.wav",
+     "b4e464271c9280fa296ca4015c5d77f852b0a4211d405c501551d95ba1a84fc2",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "03__voice_female_a_hurt_pain_18.wav",
+     "a87107fe8b15261bf899d2cc05bfc92863693c7b2a00af75423bb7a8ae28a9bb",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "04__voice_female_a_hurt_pain_01.wav",
+     "ef4e81a0f139dbd89906a0d0e7ae5b9752587ba8e305a812b72bbffe9a4ecff2",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "05__voice_female_a_hurt_pain_14.wav",
+     "79fb5d9098894cd721d2d81b987a50c21694c1255999bc92e363537bafcd22dd",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "06__voice_female_a_hurt_pain_08.wav",
+     "15cba93a8dd25c55c9b644f98376e605c49beef017e0ff48537db3ea323a4ff2",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "07__voice_female_a_hurt_pain_02.wav",
+     "45e4638edbf40b09e7e7eaa219d56a072ac2ee93f3304ceaa6432dcb2d4cf76a",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "08__voice_female_a_hurt_pain_09.wav",
+     "715a1e299b2febc162724ece0f80bdac6aad181700e0345d5efe77129cf91896",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "09__voice_female_a_hurt_pain_13.wav",
+     "9b1c3acd14cef0233ca9415455802229c0b0f2cdd20fb3ca5eb38740ca086d8c",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ],
+   "hit_heavy": [
+    [
+     "01__voice_female_a_hurt_pain_intense_01.wav",
+     "bd3098efc1eec6995b9d0845db0dc1d0ab9a344ec82c866dd8fffee5de23fe5b",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_female_a_hurt_pain_15.wav",
+     "19cc1664c7909283d95178496f486b6d26bee1cc450bcc53f301443451ea96d2",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "03__voice_female_a_hurt_pain_05.wav",
+     "74494dee5ab80cc08fd1ed4c4682a9e267d5d2113617a5537d4d7c251165f659",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "04__voice_female_a_hurt_pain_04.wav",
+     "c8364846374296e5849a13967354f1bdc92bbd899fab69ac7e3c69ada223b8df",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "05__voice_female_a_hurt_pain_intense_03.wav",
+     "bbe3275a44051979bd7b465b209634fca587f88b9059ff2e4410a68b9bbca4fa",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "06__voice_female_a_hurt_pain_06.wav",
+     "5b88580058ed1491da75f0d21ab881e6c6170af984eeed84fea7cb364a288bf2",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "07__voice_female_a_hurt_pain_10.wav",
+     "c9599296a84237556f0d7ca2e545e805ce6d196449e35e30f49d4f81907e88c4",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "08__voice_female_a_hurt_pain_intense_02.wav",
+     "ee81aee84bb3750c9524778a08ec7374295336c35b15315ffe26b28a5b3e8cb1",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "09__voice_female_a_hurt_pain_17.wav",
+     "478b7026e97ce68bf83290e67efeab83c6ea81752ddad818336614eca1938798",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ],
+   "warcry": [
+    [
+     "01__voice_female_a_battle_shout_05.wav",
+     "1a88014ceba8fce55b309f2a5a6b51bedf270820f412513702dab4af1e1279df",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_female_a_battle_shout_07.wav",
+     "9bae19c98989b2400cdcb8f08a89c043c29767a1edbabbc45d081ac39bb73966",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "03__voice_female_a_battle_shout_01.wav",
+     "26a785eaf1c816668f06b781f514ec5630a76b3538fa2c45b5d4374b09644acf",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ]
+  },
+  "male": {
+   "alerted": [
+    [
+     "01__voice_male_b_breath_shock_alert_01.wav",
+     "c2b9316ba42620a7c0a8a31f014a8ba880f870a4279ef0673c9e677bbce14c59",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_male_b_breath_shock_alert_02.wav",
+     "63a3c8df9df050ee898bc3bd8f99b13eafb569e0c2256860ae760f433be2bd8c",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ],
+   "death": [
+    [
+     "01__voice_male_b_death_low_10.wav",
+     "11f71d2e3f8242541d27c4d78870d0dcf29cee67b1a5f27836383f3b2bd342d0",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_male_b_death_high_02.wav",
+     "127a70e8f4aaa0c59334f28fd992985cb15b3b892145ec7de0fde0dbbf00e64e",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "03__voice_male_b_death_high_03.wav",
+     "74b486a5049520c5edefca32453696b7285f87040c80ae84e6b3ab34c99c9e8c",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "04__voice_male_b_death_low_02.wav",
+     "424542564beafd2937fc0bd7fd7687d89a5253093433d8b251a3bdeb0eaba7f0",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ],
+   "exert": [
+    [
+     "01__voice_male_b_effort_quick_action_04.wav",
+     "2967825ea4eb043292f09dd44352a670759072d0fcd88429fd387e8c034fa8cf",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_male_b_attack_set2_08.wav",
+     "941f312a54419b2d43c08a0a278b71f5fb8091b51efa007e5201a990fc9eddc9",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "03__voice_male_b_attack_set4_07.wav",
+     "ebfa12741faf49fc19f5b4922faf3ae0ad94602138cdd0ae40b8af356a571e62",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "04__voice_male_b_attack_set1_05.wav",
+     "8849c422bc7d6517518356182f82ac5c820c937c5c858c2d0c2f836b183c1ee4",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "05__voice_male_b_attack_set3_07.wav",
+     "1873baa77928e35a7df67052bba0d56277a39fdc6bf49d6312bf43fbcc37195a",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "06__voice_male_b_attack_set4_06.wav",
+     "5ce17d864706ef4eefe6a299ac8cde165ccbf21dab0cce709dcc9b2090a05372",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "07__voice_male_b_attack_set1_07.wav",
+     "4f8320961e864e7f6f0bd72ebf03c50c4f107b4f2fa230be16a1d53f0aeffc8e",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "08__voice_male_b_attack_set4_05.wav",
+     "fd7373463ae45b80b1178eb8e9cfc163ced5c62ec44f237731a8dec9c7454a01",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "09__voice_male_b_attack_set1_02.wav",
+     "0a53485fa5222956d2e3e1e380fc597e3e340d798fc5b0ae8bc572e16b84d2f5",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ],
+   "gloat": [
+    [
+     "01__voice_male_b_laugh_short_02.wav",
+     "1f07970ef4f996e0f0e72f64cc7b73d04c81894636f41e4adba5fa2c37e2c595",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_male_b_laugh_short_06.wav",
+     "cca8a6975bb0f50c0a3b9a52676c6a115e75c88d3bb6af2e15072e66db2be01b",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "03__voice_male_b_battle_laugh_02.wav",
+     "cb45e6506c743991c838bd00bcc6bc5b47b23d3061d6d1ff6c76242a489aea79",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "04__voice_male_b_laugh_short_07.wav",
+     "2d7f0e3fb82069c4a0202eb731b3d8eb5453bae0a09750b3b774a1aa2d6b15d7",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ],
+   "hit": [
+    [
+     "01__voice_male_b_hurt_pain_set_1_02.wav",
+     "cad10688a59f609c782cd9ac6a7b9231823bfee2ed788b00f133c9267eafa04c",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_male_b_hurt_pain_set_3_06.wav",
+     "e2d198fa1bb361ae97fefd10acd038b72bf6945ab39f29e2aa891b4aedcf2cc0",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "03__voice_male_b_hurt_pain_set_3_04.wav",
+     "10545916975aee5996c0cf9675a148bf250a42e1f190c3567d4f5570aee0ee13",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "04__voice_male_b_hurt_pain_set_2_02.wav",
+     "1c94e5f3709a8a7e1a0850e5a0e20d963dbe49175d183dd1e733a7dfa5ecc109",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "05__voice_male_b_hurt_pain_set_3_02.wav",
+     "f8ef18b154b557300794f1875961af4822bbf83decafd65008a362ed9cb139a3",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "06__voice_male_b_hurt_pain_set_2_05.wav",
+     "53db98ea1be9e1f25e0056701347d21cc03b50330c738ae89491d9ae1b3b3e0e",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "07__voice_male_b_hurt_pain_set_2_01.wav",
+     "5055d1c5e605d44b15ae9547bde759c8e22138bf95643ab08ea6868e70ab98fe",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "08__voice_male_b_hurt_pain_set_4_02.wav",
+     "4528d355a7c283148197ec029351755fc0bb3ba0035a8d9c2c1fe057abaa94fb",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "09__voice_male_b_hurt_pain_set_4_03.wav",
+     "815063cd58d27ebeb370088de3d7431730b9ad9c1eb27906af18a56404067647",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ],
+   "hit_heavy": [
+    [
+     "01__voice_male_b_hurt_pain_set_5_14.wav",
+     "a24c776f96a8e38be6e6c5fc8d479edaf538ae434f0380fe9cb3cdb219f32774",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_male_b_hurt_pain_set_5_12.wav",
+     "65c52c5a979bf1dac83475b4c14b0e36290427551e2e03a2dfb3b847674c48ac",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "03__voice_male_b_hurt_pain_set_5_15.wav",
+     "b52b7885b5b4e3bdf608fb22e7e682c641b49d2c5170cb72368c46cdcf75db74",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "04__voice_male_b_hurt_pain_set_5_03.wav",
+     "0a5c808e883b6bd8ca964d53d736543c78f2af0ba772c6a97450be628f407893",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "05__voice_male_b_hurt_pain_set_5_01.wav",
+     "220376e7157fd898608c63bcbefce3fb74dbf6224b246f71c6464e8df6800f8e",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "06__voice_male_b_hurt_pain_set_5_09.wav",
+     "69579afdb07963ac2b2a1c6db21edc693d68f4ccc052e2c9a3d8896b893973b0",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "07__voice_male_b_hurt_pain_set_5_16.wav",
+     "4bc5dc50b42fa261e5f755b6b5ef27093c84e95fc77bd0eeacf0cc2afedf804e",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "08__voice_male_b_hurt_pain_set_5_19.wav",
+     "f3abe78726c1048242816a84c2384bc43336648f01440f8fe86367a2fa4a5d3e",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "09__voice_male_b_hurt_pain_set_5_17.wav",
+     "9a7056b9efdc25fa4fd468c5e4ece492fe46699d03b87bcd307b3f90c9d8cad6",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ],
+   "warcry": [
+    [
+     "01__voice_male_b_battle_shout_long_03.wav",
+     "2de5c6c4a93c8a9847f41202393275b0e3f835f709657da0ca2f65a8c8924602",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "02__voice_male_b_battle_shout_long_11.wav",
+     "f29fd97cf02d1824b95260b8ea294c5dea75493a7327ae15c3b15dc815d4762a",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ],
+    [
+     "03__voice_male_b_battle_shout_short_14.wav",
+     "46269ff60012f4b1fe0db78ddd82f1aaecb93d4897595e7670ea8ce5edbf7b33",
+     [
+      1,
+      1,
+      48000,
+      16
+     ]
+    ]
+   ]
+  }
+ },
+ "wiring": [
+  "CorePlugin::RegisterPrefabs -> CompanionCombatVoice::Build",
+  "CorePlugin::RegisterPrefabs -> CompanionCombatVoice::get_FemaleSummary",
+  "CorePlugin::RegisterPrefabs -> CompanionCombatVoice::get_MaleSummary",
+  "MeleeChainHook::StartAttackPostfix -> CompanionCombatVoice::OnSwing",
+  "NpcFactory::Create -> CompanionCombatVoice::Configure",
+  "NpcKernel::Decide -> CompanionCombatVoice::Tick",
+  "NpcKernel::Decide -> WarCry::Tick",
+  "NpcKernel::OnDamaged -> CompanionCombatVoice::OnHurt",
+  "NpcKernel::Update -> CompanionCombatVoice::ApplyGender",
+  "TargetSelector::Choose -> CompanionCombatVoice::OnNewTarget"
+ ]
+}
