@@ -46,6 +46,9 @@ Check $LASTEXITCODE 'core compile'
 Step '4/6 Ownership gate'
 & $Python "$root\tools\ownership_gate.py" "$build\LivingWorld.HumanNpc.dll"; Check $LASTEXITCODE 'ownership gate'
 
+Step 'Combat-voice lock (companion combat module, approved 1.0.32.6)'
+& $Python -I "$root\tools\combat_voice_gate.py" "$build\LivingWorld.HumanNpc.dll"; Check $LASTEXITCODE 'combat-voice lock'
+
 Step '5/6 Compile telemetry'
 & $csc /nologo /target:library /optimize+ /langversion:5 /nostdlib+ /r:"$Managed\mscorlib.dll" /r:"$Managed\System.dll" `
     /r:"$Managed\System.Core.dll" @refArgs /r:"$build\LivingWorld.HumanNpc.dll" /out:"$build\LivingWorld.Telemetry.dll" `

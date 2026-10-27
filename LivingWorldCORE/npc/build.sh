@@ -42,6 +42,9 @@ test -f build/LivingWorld.Telemetry.dll || { echo "TELEMETRY COMPILE FAILED"; ex
 echo "== 6/6 Analyzer self-test"
 python3 tools/analyzer_selftest.py
 
+echo "== Combat-voice lock (companion combat module, approved 1.0.32.6; set VOICES=<voices/companion dir> to check the pools too)"
+python3 -I tools/combat_voice_gate.py build/LivingWorld.HumanNpc.dll ${VOICES:+--voices "$VOICES"}
+
 cp build/LivingWorld.HumanNpc.dll build/LivingWorld.Telemetry.dll "$OUT/"
 ( cd "$OUT" && sha256sum LivingWorld.HumanNpc.dll LivingWorld.Telemetry.dll | tee SHA256SUMS )
 echo "BUILD VERIFIED. Offline only: live behavior is proven by a play session + tools/analyze_session.py."
