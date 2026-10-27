@@ -62,6 +62,8 @@ namespace LivingWorld.Core
         internal static readonly MethodInfo AttackTrigger = Method(typeof(Attack), "OnAttackTrigger");
         internal static readonly FieldInfo AttackCharacter = Field(typeof(Attack), "m_character");
         internal static readonly MethodInfo RpcStagger = Method(typeof(Character), "RPC_Stagger", typeof(long), typeof(Vector3));
+        // 1.0.32.6 voice: death-line dev log (observes only).
+        internal static readonly MethodInfo CharacterOnDeath = Method(typeof(Character), "OnDeath");
 
         // Visual identity.
         internal static readonly FieldInfo HairInstance = Field(typeof(VisEquipment), "m_hairItemInstance");

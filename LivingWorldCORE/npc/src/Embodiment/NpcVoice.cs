@@ -178,13 +178,14 @@ namespace LivingWorld.Core
             return a != null && a.Female;
         }
 
-        /// <summary>Once per load: a female companion's death cry uses the female set (the prefab is shared by both genders).</summary>
+        /// <summary>Once per load: the companion's own death cry from its identity-gendered pool (the prefab is shared by both
+        /// genders). Native Character.OnDeath plays it: guaranteed, no chance, cooldown or priority. 1.0.32.6: not attached.</summary>
         internal static void ApplyGender(NpcKernel kernel)
         {
             string prefix = Prefix(kernel);
             if (!Usable(prefix, "death")) return;
             Humanoid human = kernel.Body == null ? null : kernel.Body.Human;
-            if (human != null) human.m_deathEffects = Voiced(human.m_deathEffects, prefix + ":death");
+            if (human != null) human.m_deathEffects = Voiced(human.m_deathEffects, DeathVoice.Key(prefix == "f"));
         }
 
         const string WarCrySource = "sfx_goblinbrute_taunt", WarCryName = "LWC_sfx_warcry";
@@ -218,9 +219,10 @@ namespace LivingWorld.Core
             var keep = new List<EffectList.EffectData>();
             if (original != null && original.m_effectPrefabs != null)
                 foreach (EffectList.EffectData e in original.m_effectPrefabs)
-                    if (e != null && e.m_prefab != null && !e.m_prefab.name.StartsWith("sfx_", StringComparison.Ordinal) &&
-                        !e.m_prefab.name.StartsWith("LWC_sfx_", StringComparison.Ordinal)) keep.Add(e);
-            if (key != null) keep.Add(new EffectList.EffectData { m_prefab = clip, m_enabled = true, m_attach = true });
+                    if (e != null && e.m_prefab != null && !DeathVoice.IsVoice(e.m_prefab.name)) keep.Add(e);
+            // 1.0.32.6: only the death line is added here. Attached, it was destroyed with the body in the same
+            // Character.OnDeath call and never heard; unattached, it plays at the death position and outlives the body.
+            if (key != null) keep.Add(new EffectList.EffectData { m_prefab = clip, m_enabled = true, m_attach = DeathVoice.Attach });
             return new EffectList { m_effectPrefabs = keep.ToArray() };
         }
 
@@ -409,6 +411,57 @@ namespace LivingWorld.Core
                 Say(kernel, "exert");
             }
             catch (Exception e) { kernel.ReportFault("voice heavy", e); }
+        }
+
+        // ---- 1.0.32.6 death: development log only (DevVoiceLog). Native OnDeath still plays the line; this names it. ----
+        static ZSFX deathPool;
+        static AudioClip[] deathPoolClips;
+
+        /// <summary>Character.OnDeath prefix (dev log only). Names the exact clip by narrowing the shared death prefab to one
+        /// uniform pick for this one Create (the same pick ZSFX makes); the finalizer restores the pool.</summary>
+        public static void DeathPrefix(Character __instance)
+        {
+            if (!CorePlugin.DevVoiceLog || __instance == null || __instance is Player) return;
+            NpcBody body = NpcBody.Of(__instance);
+            NpcKernel kernel = body == null ? null : body.Root.GetComponent<NpcKernel>();
+            if (kernel == null) return;
+            try
+            {
+                int voices = 0, attached = 0;
+                GameObject line = null;
+                EffectList list = __instance.m_deathEffects;
+                if (list != null && list.m_effectPrefabs != null)
+                    foreach (EffectList.EffectData e in list.m_effectPrefabs)
+                    {
+                        if (e == null || !e.m_enabled || e.m_prefab == null || !DeathVoice.IsVoice(e.m_prefab.name)) continue;
+                        voices++;
+                        if (e.m_attach) attached++;
+                        line = e.m_prefab;
+                    }
+                string clip = "none";
+                ZSFX z = line == null ? null : line.GetComponent<ZSFX>();
+                if (z != null && z.m_audioClips != null && voices == 1)
+                {
+                    var alive = new List<AudioClip>();
+                    foreach (AudioClip c in z.m_audioClips) if (c != null) alive.Add(c);
+                    if (alive.Count > 0)
+                    {
+                        AudioClip pick = alive[UnityEngine.Random.Range(0, alive.Count)];
+                        deathPool = z; deathPoolClips = z.m_audioClips;
+                        z.m_audioClips = new[] { pick };
+                        clip = pick.name;
+                    }
+                }
+                CorePlugin.Report("VOICE-DEATH " + __instance.GetHoverName() + " (" + (IsFemale(kernel) ? "female" : "male") + ") line=death pool=" +
+                    (line == null ? "none" : line.name) + " clip=" + clip + " voices=" + voices + " attached=" + attached + " t=" + Time.time.ToString("0.00"));
+            }
+            catch (Exception e) { kernel.ReportFault("voice death", e); }
+        }
+
+        public static void DeathFinalizer()
+        {
+            if (deathPool != null) deathPool.m_audioClips = deathPoolClips;
+            deathPool = null; deathPoolClips = null;
         }
 
         internal static void OnStrike(Character attacker, Character target, float damage, bool killed)

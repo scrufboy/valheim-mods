@@ -12,6 +12,7 @@ static class RegressionLedgerTests
 
     static int Main()
     {
+        Run("1.0.32.6 Fuling raid: death cry from the gendered pool, unattached, exactly one", DeathVoiceIsOneUnattachedGenderedLine);
         Run("1.0.32.2: female surprised pair shares one slot (A 1/6, B 1/6, others 1/3)", FemaleSlotFlatten);
         Run("1.0.32.1: Surprised01 split keeps its 1/3 slot weight (A 1/6, B 1/6)", SplitKeepsSlotWeight);
         Run("1.0.30 live 1.0.29: noticing before, exertion during, reactions after", VoiceBeforeDuringAfter);
@@ -629,6 +630,22 @@ static class RegressionLedgerTests
     static void NoAmmoMelee()
     {
         Assert(W(true, false, 20f, true, false) == WeaponChoice.Pick.Melee, "kept an empty bow");
+    }
+
+    static void DeathVoiceIsOneUnattachedGenderedLine()
+    {
+        Assert(DeathVoice.Key(true) == "f:death" && DeathVoice.Key(false) == "m:death", "death pool is not chosen by gender");
+        Assert(!DeathVoice.Attach, "death line is attached to the body that is destroyed in the same OnDeath call");
+        // Native Fuling death list: its cry is dropped, non-voice effects (vfx, ragdoll) are kept in order.
+        var native = new[] { "vfx_goblin_death", "sfx_goblin_death", "Goblin_ragdoll" };
+        var once = DeathVoice.Merge(native, "f:death");
+        Assert(string.Join(" ", once.ToArray()) == "vfx_goblin_death Goblin_ragdoll f:death", "death list is " + string.Join(" ", once.ToArray()));
+        // Re-applying (a second ApplyGender, or a list that already holds our line) never stacks a second cry.
+        var twice = DeathVoice.Merge(new[] { "vfx_goblin_death", "LWC_sfx_m_death", "LWC_sfx_f_death" }, "f:death");
+        int lines = 0; foreach (string n in twice) if (n == "f:death" || DeathVoice.IsVoice(n)) lines++;
+        Assert(lines == 1, lines + " death voices after re-apply");
+        Assert(DeathVoice.Merge(native, null).Count == 2, "factory-time list still holds an enemy death voice");
+        Assert(DeathVoice.IsVoice("LWC_sfx_m_death") && DeathVoice.IsVoice("sfx_goblin_death") && !DeathVoice.IsVoice("vfx_goblin_death"), "voice filter wrong");
     }
 
     static void FemaleSlotFlatten()

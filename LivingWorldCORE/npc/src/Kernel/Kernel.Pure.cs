@@ -847,6 +847,34 @@ namespace LivingWorld.Core
     /// Splitting one slot's recording into two atomic utterances must keep that slot's total weight: the split slot
     /// becomes A and B (one entry each) and every other slot appears twice, so a uniform pick over the flat array
     /// gives A and B half the slot's share each. Returns null when the slot to split is not in the set.</summary>
+    /// <summary>1.0.32.6: the companion death cry. Native Character.OnDeath creates m_deathEffects and then destroys the
+    /// character in the same call, so an attached voice died with the body (four silent deaths, Fuling raid 2026-10-27).
+    /// The death line is created at the death position and NOT parented, so it outlives the body.</summary>
+    public static class DeathVoice
+    {
+        public const bool Attach = false;
+
+        /// <summary>The identity-gendered death pool.</summary>
+        public static string Key(bool female) { return (female ? "f" : "m") + ":death"; }
+
+        /// <summary>A voice entry: any vanilla sound (sfx_*, e.g. the Fuling death cry) or one of ours (LWC_sfx_*).</summary>
+        public static bool IsVoice(string prefabName)
+        {
+            return prefabName != null && (prefabName.StartsWith("sfx_", StringComparison.Ordinal) ||
+                prefabName.StartsWith("LWC_sfx_", StringComparison.Ordinal));
+        }
+
+        /// <summary>The death list by prefab name: every non-voice entry kept in order, every voice entry dropped, then exactly
+        /// one companion death line (none if key is null). Applying it again gives the same list.</summary>
+        public static List<string> Merge(IEnumerable<string> existing, string key)
+        {
+            var keep = new List<string>();
+            if (existing != null) foreach (string name in existing) if (name != null && !IsVoice(name)) keep.Add(name);
+            if (key != null) keep.Add(key);
+            return keep;
+        }
+    }
+
     public static class VoiceSlots
     {
         public static string[] SplitOne(string[] slots, string split, string partA, string partB)
