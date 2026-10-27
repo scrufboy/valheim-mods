@@ -541,3 +541,18 @@ namespace LivingWorld.Core
         }
     }
 }
+
+namespace LivingWorld.Core
+{
+    /// <summary>Compatibility name only. The installed LivingWorld.Telemetry (1.0.23 build) subscribes to NpcVoice.Spoke by
+    /// name; this forwards to CompanionCombatVoice.Spoke so the recorder keeps working without being replaced.
+    /// Remove when the telemetry recorder is rebuilt against CompanionCombatVoice.</summary>
+    public static class NpcVoice
+    {
+        public static event System.Action<NpcKernel, string> Spoke
+        {
+            add { CompanionCombatVoice.Spoke += value; }
+            remove { CompanionCombatVoice.Spoke -= value; }
+        }
+    }
+}
