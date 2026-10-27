@@ -1,6 +1,6 @@
 # Living World C.O.R.E. — companion voice sounds (as of NPC 1.0.31)
 
-Source of truth: `LivingWorldCORE/npc/src/Embodiment/NpcVoice.cs`, `VoicePolicy` in `src/Kernel/Kernel.Pure.cs`.
+Source of truth: `LivingWorldCORE/npc/src/Companion/Combat/CompanionCombatVoice.cs`, `CombatVoicePolicy` in `src/Kernel/Kernel.Pure.cs`.
 Design rule (Brian): mostly silent. Noticing happens BEFORE action, exertion DURING it, reactions and hits AFTER.
 
 ## When each line plays (same rules for men and women)
@@ -33,7 +33,7 @@ Clones are registered with ZNetScene (`LWC_sfx_alerted/hit/death/idle/warcry`); 
 License: use in personal/commercial games, editing allowed; no redistribution as a standalone pack -> ship packed inside the mod, never as a loose folder; clips are not in the git repo. Credit (optional): "Voice Pack by topmademarti".
 
 Since 1.0.32: `voices/female/clips/*.wav` + `voices/female/lines.txt` (`line: file, file, ...`). Edit lines.txt to approve/reject; no rebuild. The older per-line folders are ignored while lines.txt exists.
-Behavior is shared: the same VoicePolicy/WarCryPolicy for both genders; gender only selects the clip pool inside `NpcVoice.Say`.
+Behavior is shared: the same CombatVoicePolicy/WarCryPolicy for both genders; gender only selects the clip pool inside `CompanionCombatVoice.Say`.
 
 **Status: first pass chosen from acoustic measurements only (Claude cannot listen). Every clip still needs Brian's in-game audition.**
 

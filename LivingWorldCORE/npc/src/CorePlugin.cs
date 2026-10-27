@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.32.6";
+        public const string Version = "1.0.32.7";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -73,12 +73,12 @@ namespace LivingWorld.Core
                 postfix: new HarmonyLib.HarmonyMethod(typeof(MeleeChainHook).GetMethod("UpdatePostfix")));
             // 1.0.32.4 voice (observes only; never changes the attack or the stagger).
             harmony.Patch(NativeApi.AttackTrigger,
-                postfix: new HarmonyLib.HarmonyMethod(typeof(NpcVoice).GetMethod("AttackTriggerPostfix")));
+                postfix: new HarmonyLib.HarmonyMethod(typeof(CompanionCombatVoice).GetMethod("AttackTriggerPostfix")));
             harmony.Patch(NativeApi.RpcStagger,
-                prefix: new HarmonyLib.HarmonyMethod(typeof(NpcVoice).GetMethod("RpcStaggerPrefix")));
+                prefix: new HarmonyLib.HarmonyMethod(typeof(CompanionCombatVoice).GetMethod("RpcStaggerPrefix")));
             harmony.Patch(NativeApi.CharacterOnDeath,
-                prefix: new HarmonyLib.HarmonyMethod(typeof(NpcVoice).GetMethod("DeathPrefix")),
-                finalizer: new HarmonyLib.HarmonyMethod(typeof(NpcVoice).GetMethod("DeathFinalizer")));
+                prefix: new HarmonyLib.HarmonyMethod(typeof(CompanionCombatVoice).GetMethod("DeathPrefix")),
+                finalizer: new HarmonyLib.HarmonyMethod(typeof(CompanionCombatVoice).GetMethod("DeathFinalizer")));
             Report(ArmorParity.ArmorGatesPatched == 1 ? "Companion armor applies to damage (Player rule)." :
                 "WARNING: companion armor gate not patched.");
             Report("Companion damage parity: stagger x2 " + (ArmorParity.StaggerGatesPatched == 1 ? "off" : "NOT PATCHED") +
@@ -107,9 +107,9 @@ namespace LivingWorld.Core
             if (registered) return;
             try
             {
-                NpcVoice.Build();
-                Report("Companion voice (Gamemaster Human Vocalizations; no enemy recordings): male (Male B) " + (NpcVoice.MaleSummary ?? "?") + ".");
-                Report("Companion voice: female (Female A) " + (NpcVoice.FemaleSummary ?? "?") + ".");
+                CompanionCombatVoice.Build();
+                Report("Companion voice (Gamemaster Human Vocalizations; no enemy recordings): male (Male B) " + (CompanionCombatVoice.MaleSummary ?? "?") + ".");
+                Report("Companion voice: female (Female A) " + (CompanionCombatVoice.FemaleSummary ?? "?") + ".");
                 GameObject player = RequirePrefab("Player", false);
                 // No helmet: it hides native hair (0.4.0 lesson).
                 // Same kit, same behavior: the weapon follows from distance, not from a role.

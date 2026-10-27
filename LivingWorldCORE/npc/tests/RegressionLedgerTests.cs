@@ -672,17 +672,17 @@ static class RegressionLedgerTests
 
     static void VoiceNewEnemyOnce()
     {
-        var v = new VoicePolicy();
+        var v = new CombatVoicePolicy();
         Assert(v.NewEnemy(0f, 7, .1f), "new enemy not called out");
         Assert(!v.NewEnemy(10f, 7, .1f), "same enemy called out twice");
-        var w = new VoicePolicy();
+        var w = new CombatVoicePolicy();
         Assert(!w.NewEnemy(0f, 8, .95f), "spoke on a failed roll");
         Assert(!w.NewEnemy(10f, 8, .1f), "silent first sighting allowed a later call-out for the same enemy");
     }
 
     static void VoicePartyCooldown()
     {
-        var v = new VoicePolicy();
+        var v = new CombatVoicePolicy();
         Assert(v.NewEnemy(0f, 1, .1f), "first call-out refused");
         Assert(!v.NewEnemy(1f, 2, .1f), "two call-outs within the party cooldown");
         Assert(v.NewEnemy(5f, 3, .1f), "call-out refused after the cooldown");
@@ -690,30 +690,30 @@ static class RegressionLedgerTests
 
     static void VoiceHurt()
     {
-        var v = new VoicePolicy();
-        Assert(v.Hurt(0f, 1, 45f, 250f, false, .99f) == VoicePolicy.HurtLine.Devastated, "silent at a devastating hit");
-        Assert(v.Hurt(1f, 1, 60f, 250f, false, .0f) == VoicePolicy.HurtLine.None, "no cooldown on pain cries");
-        Assert(v.Hurt(1f, 2, 60f, 250f, false, .99f) == VoicePolicy.HurtLine.Devastated, "one companion's cooldown silenced the other");
-        var w = new VoicePolicy();
-        Assert(w.Hurt(0f, 1, 20f, 250f, false, .9f) == VoicePolicy.HurtLine.None, "grunted at every ordinary hit");
-        Assert(w.Hurt(0f, 1, 20f, 250f, false, .1f) == VoicePolicy.HurtLine.Grunt, "never grunts at ordinary hits");
-        Assert(w.Hurt(1f, 1, 20f, 250f, false, .1f) == VoicePolicy.HurtLine.None, "grunts with no cooldown");
+        var v = new CombatVoicePolicy();
+        Assert(v.Hurt(0f, 1, 45f, 250f, false, .99f) == CombatVoicePolicy.HurtLine.Devastated, "silent at a devastating hit");
+        Assert(v.Hurt(1f, 1, 60f, 250f, false, .0f) == CombatVoicePolicy.HurtLine.None, "no cooldown on pain cries");
+        Assert(v.Hurt(1f, 2, 60f, 250f, false, .99f) == CombatVoicePolicy.HurtLine.Devastated, "one companion's cooldown silenced the other");
+        var w = new CombatVoicePolicy();
+        Assert(w.Hurt(0f, 1, 20f, 250f, false, .9f) == CombatVoicePolicy.HurtLine.None, "grunted at every ordinary hit");
+        Assert(w.Hurt(0f, 1, 20f, 250f, false, .1f) == CombatVoicePolicy.HurtLine.Grunt, "never grunts at ordinary hits");
+        Assert(w.Hurt(1f, 1, 20f, 250f, false, .1f) == CombatVoicePolicy.HurtLine.None, "grunts with no cooldown");
     }
 
     static void VoiceInterrupted()
     {
-        var v = new VoicePolicy();
-        Assert(v.Hurt(0f, 1, 20f, 250f, true, .5f) == VoicePolicy.HurtLine.Grunt, "gloat cut off with no answer at 50% roll");
-        Assert(v.Hurt(.5f, 1, 20f, 250f, true, .1f) == VoicePolicy.HurtLine.None, "answers stack with no cooldown");
-        Assert(v.Hurt(2f, 1, 20f, 250f, true, .99f) == VoicePolicy.HurtLine.Grunt, "1.0.32.4: hit mid-line not always answered");
-        var w = new VoicePolicy();
-        Assert(w.Hurt(0f, 1, 20f, 250f, false, .6f) == VoicePolicy.HurtLine.Grunt, "1.0.32.4: ordinary hit at .6 roll silent (chance .65)");
-        Assert(w.Hurt(1.6f, 1, 20f, 250f, false, .1f) == VoicePolicy.HurtLine.Grunt, "1.0.32.4: grunt cooldown longer than 1.5 s");
+        var v = new CombatVoicePolicy();
+        Assert(v.Hurt(0f, 1, 20f, 250f, true, .5f) == CombatVoicePolicy.HurtLine.Grunt, "gloat cut off with no answer at 50% roll");
+        Assert(v.Hurt(.5f, 1, 20f, 250f, true, .1f) == CombatVoicePolicy.HurtLine.None, "answers stack with no cooldown");
+        Assert(v.Hurt(2f, 1, 20f, 250f, true, .99f) == CombatVoicePolicy.HurtLine.Grunt, "1.0.32.4: hit mid-line not always answered");
+        var w = new CombatVoicePolicy();
+        Assert(w.Hurt(0f, 1, 20f, 250f, false, .6f) == CombatVoicePolicy.HurtLine.Grunt, "1.0.32.4: ordinary hit at .6 roll silent (chance .65)");
+        Assert(w.Hurt(1.6f, 1, 20f, 250f, false, .1f) == CombatVoicePolicy.HurtLine.Grunt, "1.0.32.4: grunt cooldown longer than 1.5 s");
     }
 
     static void VoiceMighty()
     {
-        var v = new VoicePolicy();
+        var v = new CombatVoicePolicy();
         Assert(!v.Mighty(0f, 10f, 100f, false, .1f), "taunted at a small hit");
         Assert(!v.Mighty(0f, 60f, 100f, false, .9f), "taunted on a failed roll");
         Assert(v.Mighty(0f, 60f, 100f, false, .1f), "no taunt at a mighty blow");
@@ -817,17 +817,17 @@ static class RegressionLedgerTests
 
     static void VoiceBeforeDuringAfter()
     {
-        Assert(VoicePolicy.Noticing(10f, 10f, 15f), "no call-out on a fresh sighting before contact");
-        Assert(!VoicePolicy.Noticing(.9f, 10f, 15f), "call-out right after its own strike (1.0.29: 0.87 s lag)");
-        Assert(!VoicePolicy.Noticing(10f, 1f, 15f), "call-out right after being hit");
-        Assert(!VoicePolicy.Noticing(10f, 10f, 2f), "call-out at an enemy already on it");
-        var v = new VoicePolicy();
+        Assert(CombatVoicePolicy.Noticing(10f, 10f, 15f), "no call-out on a fresh sighting before contact");
+        Assert(!CombatVoicePolicy.Noticing(.9f, 10f, 15f), "call-out right after its own strike (1.0.29: 0.87 s lag)");
+        Assert(!CombatVoicePolicy.Noticing(10f, 1f, 15f), "call-out right after being hit");
+        Assert(!CombatVoicePolicy.Noticing(10f, 10f, 2f), "call-out at an enemy already on it");
+        var v = new CombatVoicePolicy();
         Assert(v.Exert(0f, 1, true, .5f), "no exertion on a heavy");
         Assert(!v.Exert(1f, 1, false, .1f), "ordinary exertion with no cooldown");
         Assert(v.Exert(1.5f, 1, true, .99f), "1.0.32.4: a heavy went unvoiced (roll or cooldown)");
         Assert(v.Exert(4f, 1, false, .2f), "1.0.32.4: ordinary swing not voiced at .2 roll after 2.5 s");
         Assert(!v.Exert(5f, 1, false, .2f), "1.0.32.4: ordinary exertion inside the 2.5 s cooldown");
-        var st = new VoicePolicy();
+        var st = new CombatVoicePolicy();
         Assert(st.Stagger(0f, 1), "stagger entry not voiced");
         Assert(!st.Stagger(1f, 1), "stagger voiced twice inside 1.5 s");
         Assert(st.Stagger(1.6f, 1) && st.Stagger(1.6f, 2), "stagger cooldown wrong");

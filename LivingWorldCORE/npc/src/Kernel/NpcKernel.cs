@@ -130,7 +130,7 @@ namespace LivingWorld.Core
         void OnDamaged(float damage, Character attacker)
         {
             lastDamageTime = Time.time;
-            try { NpcVoice.OnHurt(this, damage); } catch (Exception error) { CorePlugin.Warn("voice hurt: " + error.Message); }
+            try { CompanionCombatVoice.OnHurt(this, damage); } catch (Exception error) { CorePlugin.Warn("voice hurt: " + error.Message); }
             if (body.Human != null) LastHealth = body.Human.GetHealth();
             Action<NpcKernel, float, Character> damaged = Damaged;
             if (damaged != null)
@@ -177,7 +177,7 @@ namespace LivingWorld.Core
             if (appearance != null && appearance.Ready)
             {
                 body.ReapplyKitOnce();
-                if (!genderVoiced) { genderVoiced = true; NpcVoice.ApplyGender(this); }
+                if (!genderVoiced) { genderVoiced = true; CompanionCombatVoice.ApplyGender(this); }
             }
             body.TickStamina(Time.deltaTime);
             if (Time.time < nextDecision) return;
@@ -240,7 +240,7 @@ namespace LivingWorld.Core
                 FormationDistance = frame.Board.FormationDistance
             }, dt);
             frame.Phase = phase;
-            NpcVoice.Tick(this);
+            CompanionCombatVoice.Tick(this);
             WarCry.Tick(this);
             frame.SecondsSinceEncounter = arbiter.SecondsSinceEncounter;
             bool fighting = phase == NpcPhase.Combat || phase == NpcPhase.CombatClear;

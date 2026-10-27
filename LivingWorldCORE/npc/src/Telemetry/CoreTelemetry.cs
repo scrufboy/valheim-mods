@@ -88,7 +88,7 @@ namespace LivingWorld.Telemetry
             if (!subscribed)
             {
                 NpcKernel.Removed += OnRemoved; NpcKernel.Damaged += OnDamaged;
-                NpcVoice.Spoke += OnSpoke; StrikeHook.Landed += OnStrike; MeleeChainHook.Chained += OnChain; MeleeChainHook.Heavy += OnHeavy; WarCry.Cried += OnWarCry;
+                CompanionCombatVoice.Spoke += OnSpoke; StrikeHook.Landed += OnStrike; MeleeChainHook.Chained += OnChain; MeleeChainHook.Heavy += OnHeavy; WarCry.Cried += OnWarCry;
                 subscribed = true;
             }
             Begin("RunStart");
@@ -411,7 +411,7 @@ namespace LivingWorld.Telemetry
             if (subscribed)
             {
                 NpcKernel.Removed -= OnRemoved; NpcKernel.Damaged -= OnDamaged;
-                NpcVoice.Spoke -= OnSpoke; StrikeHook.Landed -= OnStrike; MeleeChainHook.Chained -= OnChain; MeleeChainHook.Heavy -= OnHeavy; WarCry.Cried -= OnWarCry;
+                CompanionCombatVoice.Spoke -= OnSpoke; StrikeHook.Landed -= OnStrike; MeleeChainHook.Chained -= OnChain; MeleeChainHook.Heavy -= OnHeavy; WarCry.Cried -= OnWarCry;
             }
             if (active) Stop("shutdown");
         }

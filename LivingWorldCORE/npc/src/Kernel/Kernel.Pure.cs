@@ -731,7 +731,7 @@ namespace LivingWorld.Core
     /// enemy per party, sometimes), a devastating hit on itself (and the partner reacts), a mighty
     /// blow or kill by a companion or the leader (rarely, a taunt), and death (native).
     /// </summary>
-    public sealed class VoicePolicy
+    public sealed class CombatVoicePolicy
     {
         public const float NewEnemyChance = .7f, PartyCooldown = 4f, HeardMemory = 180f;
         public const float HurtFraction = .15f, HurtCooldown = 4f, PartnerReactDelay = .6f;

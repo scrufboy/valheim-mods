@@ -20,7 +20,7 @@ namespace LivingWorld.Core
             NpcBody body = NpcBody.Of(__instance);
             if (body == null || !body.IsOwner) return;
             NpcKernel kernel = body.Root.GetComponent<NpcKernel>();
-            try { NpcVoice.OnSwing(kernel, secondaryAttack); }
+            try { CompanionCombatVoice.OnSwing(kernel, secondaryAttack); }
             catch (Exception e) { if (kernel != null) kernel.ReportFault("voice swing", e); }
         }
 

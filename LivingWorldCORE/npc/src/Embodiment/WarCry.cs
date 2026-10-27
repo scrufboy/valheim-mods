@@ -43,7 +43,7 @@ namespace LivingWorld.Core
             if (!WarCryPolicy.Allowed(true, nearest, body.Human.InAttack(), kernel.Frame.FallingBack, moving)) return;
             st.Pending = false;
             body.PlayEmote("roar");
-            NpcVoice.SayWarCry(kernel);
+            CompanionCombatVoice.SayWarCry(kernel);
             System.Action<NpcKernel, string> cried = Cried;
             if (cried != null) cried(kernel, raid.m_name);
         }

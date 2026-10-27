@@ -8,14 +8,15 @@ using UnityEngine;
 namespace LivingWorld.Core
 {
     /// <summary>
-    /// Companion voice from vanilla assets, the same recipe Souls of the Land's RRR NPCs use
-    /// (verified in RRRCore Npc.DesignSfxDeepen): clone the Fuling sounds sfx_goblin_alerted /
-    /// _hit / _death / _idle and lower their pitch range to 0.8-0.9. Presentation only: holds no
-    /// behavior domain and decides nothing. Hit, death and idle are played by native code
-    /// (Character hit/death effects, BaseAI idle timer); curious and battle-cry lines are played
-    /// once on entering Readiness / Combat, at most every CueCooldown seconds.
+    /// Companion combat module: combat voice. Complete and approved at 1.0.32.6 (2026-10-27); frozen behavior.
+    /// Lines: alerted, exert, hit, hit_heavy (devastating / stagger), gloat (pool "gloat", line "idle"), death, warcry.
+    /// Decisions live in CombatVoicePolicy (Kernel.Pure.cs); this class only selects the identity-gendered pool
+    /// (voices/companion/&lt;male|female&gt;/&lt;pool&gt;, Gamemaster Male B / Female A, no enemy recordings, no fallback)
+    /// and plays it. Presentation only: holds no behavior domain. Non-combat speech (idle, village, conversation)
+    /// is not part of this module.
+    /// The Fuling clones built below (Sources, war cry) stay registered for save compatibility only; companions never play them.
     /// </summary>
-    public static class NpcVoice
+    public static class CompanionCombatVoice
     {
         public const float MinPitch = .8f, MaxPitch = .9f, CueCooldown = 10f;
         static readonly string[] Sources = { "sfx_goblin_alerted", "sfx_goblin_hit", "sfx_goblin_death", "sfx_goblin_idle" };
@@ -87,7 +88,7 @@ namespace LivingWorld.Core
         static void BuildCompanion(string gender, string prefix)
         {
             var parts = new List<string>();
-            string root = Path.Combine(Path.GetDirectoryName(typeof(NpcVoice).Assembly.Location) ?? "", Path.Combine("voices", Path.Combine("companion", gender)));
+            string root = Path.Combine(Path.GetDirectoryName(typeof(CompanionCombatVoice).Assembly.Location) ?? "", Path.Combine("voices", Path.Combine("companion", gender)));
             string summary;
             GameObject template = PrefabManager.Instance.GetPrefab("sfx_goblin_hit");   // container only (ZSFX + ZNetView); its clips are replaced
             if (!Directory.Exists(root)) summary = "none (no voices/companion/" + gender + " folder) -> silent";
@@ -226,8 +227,8 @@ namespace LivingWorld.Core
             return new EffectList { m_effectPrefabs = keep.ToArray() };
         }
 
-        // ---- runtime: the rules live in VoicePolicy; this only plays and silences ----
-        static readonly VoicePolicy Policy = new VoicePolicy();
+        // ---- runtime: the rules live in CombatVoicePolicy; this only plays and silences ----
+        static readonly CombatVoicePolicy Policy = new CombatVoicePolicy();
         static readonly System.Random Dice = new System.Random();
         static readonly Dictionary<int, GameObject[]> Speaking = new Dictionary<int, GameObject[]>();
         static readonly Dictionary<NpcKernel, KeyValuePair<float, string>> Pending = new Dictionary<NpcKernel, KeyValuePair<float, string>>();
@@ -324,7 +325,7 @@ namespace LivingWorld.Core
             float lastStrike;
             float sinceStrike = LastStrike.TryGetValue(kernel.GetInstanceID(), out lastStrike) ? Time.time - lastStrike : float.PositiveInfinity;
             float distance = Vector3.Distance(kernel.transform.position, enemy.transform.position);
-            if (!VoicePolicy.Noticing(sinceStrike, kernel.Frame.Senses.SecondsSinceDamaged, distance)) return;
+            if (!CombatVoicePolicy.Noticing(sinceStrike, kernel.Frame.Senses.SecondsSinceDamaged, distance)) return;
             if (Policy.NewEnemy(Time.time, enemy.GetInstanceID(), (float)Dice.NextDouble())) Say(kernel, "alerted");
         }
 
@@ -335,14 +336,14 @@ namespace LivingWorld.Core
             if (Policy.StaggerAnswered(Time.time, body.GetInstanceID())) { Skip(kernel, "hit", "lower priority"); return; }
             bool interrupted = Silence(body);
             string why;
-            VoicePolicy.HurtLine line = Policy.Hurt(Time.time, body.GetInstanceID(), damage, body.GetMaxHealth(),
+            CombatVoicePolicy.HurtLine line = Policy.Hurt(Time.time, body.GetInstanceID(), damage, body.GetMaxHealth(),
                 interrupted, (float)Dice.NextDouble(), out why);
-            if (line == VoicePolicy.HurtLine.None) { Skip(kernel, "hit", why); return; }
+            if (line == CombatVoicePolicy.HurtLine.None) { Skip(kernel, "hit", why); return; }
             // 1.0.31 said "hit" for every hurt line; "hit_heavy" only names the female devastated pool (males resolve it to "hit").
-            Say(kernel, line == VoicePolicy.HurtLine.Devastated ? "hit_heavy" : "hit");
-            if (line != VoicePolicy.HurtLine.Devastated) return;
+            Say(kernel, line == CombatVoicePolicy.HurtLine.Devastated ? "hit_heavy" : "hit");
+            if (line != CombatVoicePolicy.HurtLine.Devastated) return;
             NpcKernel partner = NearestPartner(kernel, 25f);
-            if (partner != null) Pending[partner] = new KeyValuePair<float, string>(Time.time + VoicePolicy.PartnerReactDelay, "alerted");
+            if (partner != null) Pending[partner] = new KeyValuePair<float, string>(Time.time + CombatVoicePolicy.PartnerReactDelay, "alerted");
         }
 
         /// <summary>1.0.32.4: Character.RPC_Stagger prefix (owner). Not yet staggering = a new stagger: one guaranteed pain cry.</summary>
@@ -359,7 +360,7 @@ namespace LivingWorld.Core
                 if (CorePlugin.DevVoiceLog) CorePlugin.Report("VOICE-STAGGER " + __instance.GetHoverName() + " entered stagger t=" + Time.time.ToString("0.00"));
                 if (!Policy.Stagger(Time.time, id)) { Skip(kernel, "hit_heavy", "cooldown"); return; }
                 KeyValuePair<float, string> pain;   // the same blow already drew a devastating cry: one line per event
-                if (LastPain.TryGetValue(id, out pain) && Time.time - pain.Key < VoicePolicy.SameEventWindow && pain.Value == "hit_heavy")
+                if (LastPain.TryGetValue(id, out pain) && Time.time - pain.Key < CombatVoicePolicy.SameEventWindow && pain.Value == "hit_heavy")
                 { Skip(kernel, "hit_heavy", "lower priority"); return; }
                 Holding.Remove(id);   // stagger pain outranks whatever is sounding
                 Say(kernel, "hit_heavy");
@@ -533,7 +534,7 @@ namespace LivingWorld.Core
             if (!byCompanion && !byLeader) return;
             float damage = hit.GetTotalDamage();
             bool killed = __instance.IsDead() || __instance.GetHealth() <= 0f;
-            try { NpcVoice.OnStrike(attacker, __instance, damage, killed); }
+            try { CompanionCombatVoice.OnStrike(attacker, __instance, damage, killed); }
             catch (Exception e) { CorePlugin.Warn("voice strike: " + e.Message); }
             Action<Character, Character, float, bool> landed = Landed;
             if (landed != null && byCompanion) landed(attacker, __instance, damage, killed);
