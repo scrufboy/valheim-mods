@@ -354,11 +354,11 @@ namespace LivingWorld.Core
             if (spoke != null) spoke(kernel, key);
         }
 
-        // ---- 1.0.32.4 priority: pain (stagger / devastating 3, hit 2) outranks war cry 2 and alerted / exert / idle 1. ----
+        // ---- 1.0.32.4 priority (Brian 20:27): stagger / devastating 4, ordinary hit 3, war cry 2, alerted / exert / idle 1. ----
         const float HoldSeconds = .7f;   // a pain line is protected from lower lines for about its length
         static readonly Dictionary<int, KeyValuePair<int, float>> Holding = new Dictionary<int, KeyValuePair<int, float>>();
         static readonly Dictionary<int, KeyValuePair<float, string>> LastPain = new Dictionary<int, KeyValuePair<float, string>>();
-        static int Priority(string key) { return key == "hit_heavy" ? 3 : key == "hit" || key == "warcry" ? 2 : 1; }
+        static int Priority(string key) { return key == "hit_heavy" ? 4 : key == "hit" ? 3 : key == "warcry" ? 2 : 1; }
 
         static void Skip(NpcKernel kernel, string key, string why)
         {
