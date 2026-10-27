@@ -12,6 +12,16 @@ static class RegressionLedgerTests
 
     static int Main()
     {
+        Run("1.0.32.8 spacing: leader standing in the route is walked around, never touched", SpacingLeaderBlocksRoute);
+        Run("1.0.32.8 spacing: a standing companion in the route is walked around", SpacingCompanionBlocksCompanion);
+        Run("1.0.32.8 spacing: narrow corridor - lower slot goes, higher slot waits, no side flipping", SpacingNarrowCorridor);
+        Run("1.0.32.8 spacing: a companion already in its soft region does not reposition", SpacingHoldsInsideRegion);
+        Run("1.0.32.8 spacing: brief proximity does not start a sidestep", SpacingBriefProximityIgnored);
+        Run("1.0.32.8 spacing: sidestep releases smoothly after clearance, side locked", SpacingReleasesSmoothly);
+        Run("1.0.32.8 spacing: never sidesteps into an invalid lane; waits, then hands back", SpacingNoInvalidLane);
+        Run("1.0.32.8 spacing: local crowding never calls a regroup", SpacingCrowdingNeverRegroups);
+        Run("1.0.32.8 spacing: a party walking together never sidesteps (leader weaving, walk to run)", SpacingFormationTravelQuiet);
+        Run("1.0.32.8 spacing (Brian): leader in a menu is never pushed; companions ease back out", SpacingMenuNeverPushes);
         Run("LOCK combat voice 1.0.32.6: every rule constant is the approved value", CombatVoiceConstantsLocked);
         Run("LOCK combat voice: alert only before contact, once per enemy, party cooldown", CombatVoiceAlertsLocked);
         Run("LOCK combat voice: every heavy exertion voiced, ordinary swings 30% / 2.5 s", CombatVoiceExertionLocked);
@@ -638,6 +648,213 @@ static class RegressionLedgerTests
     static void NoAmmoMelee()
     {
         Assert(W(true, false, 20f, true, false) == WeaponChoice.Pick.Melee, "kept an empty bow");
+    }
+
+    // ---- 1.0.32.8 party spacing. A tiny native-Follow model: stop inside 3 m of the anchor, else walk 2 m/s at it.
+    sealed class OpenGround : ISpacingTerrain { public bool Clear(P2 a, P2 b) { return true; } }
+    sealed class Corridor : ISpacingTerrain
+    {   // a 1 m wide corridor along z = 0: any lane that leaves it is blocked
+        public bool Clear(P2 a, P2 b) { P2 d = b - a; float l = d.Length; if (l < .05f) return true; P2 end = a + d * (Math.Min(l, 3f) / l); return Math.Abs(end.Z) < .5f; }
+    }
+    sealed class WallOnLeft : ISpacingTerrain
+    {   // nothing is standable at x < -0.3 (relative to a walk along +z the left side is -x)
+        public bool Clear(P2 a, P2 b) { P2 d = b - a; float l = d.Length; if (l < .05f) return true; P2 end = a + d * (Math.Min(l, 3f) / l); return end.X > -.3f; }
+    }
+
+    sealed class Walker
+    {
+        public P2 Pos; public P2 Goal; public int Slot, SlotSide; public PartySpacing Law = new PartySpacing();
+        public SpacingResult Last; public float Speed; public int Enters, Waits, SideFlips; int lastSide;
+        public float MaxStepOffset;
+        public void Tick(float now, float dt, SpacingNeighbor[] near, int n, ISpacingTerrain terrain, bool standing, bool menu)
+        {
+            P2 walk = Goal - Pos; float l = walk.Length;
+            P2 aim = l > PartySpacing.HoldEnter ? Goal + walk * (2.6f / l) : Goal;   // TraversalBehavior.Beyond
+            float before = Last.Offset;
+            Last = Law.Step(now, dt, Pos, Speed, aim, Goal, standing, menu, SlotSide, Slot, near, n, terrain);
+            MaxStepOffset = Math.Max(MaxStepOffset, Math.Abs(Last.Offset - before));
+            if (Last.Event == "enter") Enters++;
+            if (Last.Mode == SpacingMode.Wait) Waits++;
+            if (Last.Side != 0 && lastSide != 0 && Last.Side != lastSide && Last.Event != "enter") SideFlips++;
+            if (Last.Side != 0) lastSide = Last.Side;
+            P2 anchor = Last.Mode == SpacingMode.Hold || Last.Mode == SpacingMode.Wait ? Pos
+                : Last.Mode == SpacingMode.BackOff ? Last.Point + Last.Shift * 3.2f
+                : Last.Mode == SpacingMode.Sidestep ? Last.Point + (Last.Point - Pos).Normalized * 3.6f : aim + Last.Shift;
+            P2 to = anchor - Pos; float d = to.Length;
+            if (d < 3f) { Speed = 0f; return; }                                     // BaseAI.Follow: StopMoving inside 3 m
+            P2 step = to * (Math.Min(2f * dt, d) / d); Pos = Pos + step; Speed = 2f;
+        }
+    }
+
+    static SpacingNeighbor Leader(P2 at) { return new SpacingNeighbor { Id = 0, IsLeader = true, Position = at, Slot = -1 }; }
+    static SpacingNeighbor Mate(int id, P2 at, int slot) { return new SpacingNeighbor { Id = id, Position = at, Slot = slot }; }
+
+    static void SpacingLeaderBlocksRoute()
+    {   // companion in front of a standing leader, its spot directly behind him: the straight walk goes through him
+        var w = new Walker { Pos = new P2(0f, 5f), Goal = new P2(0f, -3.2f), Slot = 0, SlotSide = 1 };
+        var near = new[] { Leader(new P2(0f, 0f)) };
+        float closest = 99f;
+        for (int i = 0; i < 150; i++) { w.Tick(i * .1f, .1f, near, 1, new OpenGround(), true, false); closest = Math.Min(closest, w.Pos.Length); }
+        Assert(w.Enters >= 1 && w.Last.Mode != SpacingMode.Wait, "no sidestep around the leader");
+        Assert(closest >= PartySpacing.ContactLeader + .2f, "came within " + closest.ToString("0.00") + " m of the leader");
+        Assert(P2.Distance(w.Pos, w.Goal) <= PartySpacing.HoldExit, "never reached its spot: " + P2.Distance(w.Pos, w.Goal).ToString("0.00") + " m");
+        Assert(w.SideFlips == 0, "side flipped " + w.SideFlips + " times");
+    }
+
+    static void SpacingCompanionBlocksCompanion()
+    {
+        var w = new Walker { Pos = new P2(0f, 6f), Goal = new P2(0f, -2f), Slot = 1, SlotSide = -1 };
+        var near = new[] { Leader(new P2(20f, 0f)), Mate(7, new P2(0f, 2f), 0) };
+        float closest = 99f;
+        for (int i = 0; i < 150; i++) { w.Tick(i * .1f, .1f, near, 2, new OpenGround(), true, false); closest = Math.Min(closest, P2.Distance(w.Pos, near[1].Position)); }
+        Assert(w.Enters >= 1, "walked straight into the standing companion");
+        Assert(closest >= PartySpacing.ContactMate + .2f, "came within " + closest.ToString("0.00") + " m of the companion");
+        Assert(P2.Distance(w.Pos, w.Goal) <= PartySpacing.HoldExit, "never reached its spot");
+    }
+
+    static void SpacingNarrowCorridor()
+    {   // two companions meet head-on in a 1 m corridor: no lane either side
+        var a = new Walker { Pos = new P2(-6f, 0f), Goal = new P2(8f, 0f), Slot = 0, SlotSide = 1 };
+        var b = new Walker { Pos = new P2(6f, 0f), Goal = new P2(-8f, 0f), Slot = 3, SlotSide = -1 };
+        var t = new Corridor();
+        var na = new SpacingNeighbor[2]; var nb = new SpacingNeighbor[2];
+        for (int i = 0; i < 40; i++)
+        {
+            na[0] = Leader(new P2(0f, 30f)); na[1] = Mate(2, b.Pos, 3); na[1].Velocity = new P2(-b.Speed, 0f);
+            nb[0] = Leader(new P2(0f, 30f)); nb[1] = Mate(1, a.Pos, 0); nb[1].Velocity = new P2(a.Speed, 0f);
+            a.Tick(i * .1f, .1f, na, 2, t, false, false);
+            b.Tick(i * .1f, .1f, nb, 2, t, false, false);
+        }
+        Assert(a.Waits == 0, "the lower slot waited " + a.Waits + " ticks");
+        Assert(b.Waits > 0, "the higher slot never gave way");
+        Assert(a.SideFlips == 0 && b.SideFlips == 0, "sidestep side oscillated");
+        Assert(a.Last.Offset == 0f || a.Last.Mode != SpacingMode.Sidestep, "sidestepped out of the corridor");
+    }
+
+    static void SpacingHoldsInsideRegion()
+    {   // standing in its region, well spaced: the spot centre wobbling (leader shuffling) must not move it
+        var law = new PartySpacing();
+        var near = new[] { Leader(new P2(0f, 0f)), Mate(5, new P2(4f, -3f), 1) };
+        P2 me = new P2(-1.5f, -2.3f);
+        for (int i = 0; i < 60; i++)
+        {
+            P2 goal = new P2(-1.65f + (float)Math.Sin(i) * .6f, -2.75f + (float)Math.Cos(i) * .6f);
+            SpacingResult r = law.Step(i * .1f, .1f, me, 0f, goal, goal, true, false, 1, 0, near, 2, new OpenGround());
+            Assert(r.Mode == SpacingMode.Hold, "tick " + i + ": left its region for the mathematical centre (" + r.Mode + ")");
+        }
+        SpacingResult far = law.Step(7f, .1f, me, 0f, new P2(-1.65f, -5f), new P2(-1.65f, -5f), true, false, 1, 0, near, 2, new OpenGround());
+        Assert(far.Mode != SpacingMode.Hold, "held even though its spot is 2.7 m away");
+    }
+
+    static void SpacingBriefProximityIgnored()
+    {
+        var law = new PartySpacing();
+        var near = new[] { Leader(new P2(30f, 0f)), Mate(4, new P2(0f, 2f), 1) };
+        P2 me = new P2(0f, 0f), aim = new P2(0f, 8f);
+        SpacingResult r = law.Step(0f, .1f, me, 2f, aim, aim, false, false, 1, 0, near, 2, new OpenGround());
+        r = law.Step(.1f, .1f, me, 2f, aim, aim, false, false, 1, 0, near, 2, new OpenGround());
+        Assert(r.Event != "enter" && r.Mode == SpacingMode.Travel, "sidestepped after 0.1 s of proximity");
+        r = law.Step(.2f, .1f, me, 2f, aim, aim, false, false, 1, 0, near, 1, new OpenGround());   // gone
+        r = law.Step(.3f, .1f, me, 2f, aim, aim, false, false, 1, 0, near, 2, new OpenGround());   // back again: timer restarts
+        Assert(r.Mode == SpacingMode.Travel, "a flicker of proximity started an episode");
+    }
+
+    static void SpacingReleasesSmoothly()
+    {
+        var law = new PartySpacing();
+        var near = new[] { Leader(new P2(30f, 0f)), Mate(4, new P2(-.6f, 3f), 1) };   // -x = left of a walk along +z, outside the head-on band
+        P2 me = new P2(0f, 0f), aim = new P2(0f, 10f);
+        int side = 0; float peak = 0f, last = 0f; bool released = false, monotone = true;
+        for (int i = 0; i < 60; i++)
+        {
+            int n = i < 25 ? 2 : 1;                                   // the companion walks away at 2.5 s
+            SpacingResult r = law.Step(i * .1f, .1f, me, 2f, aim, aim, false, false, 1, 0, near, n, new OpenGround());
+            if (r.Side != 0) { if (side == 0) side = r.Side; Assert(r.Side == side, "side changed mid-episode"); }
+            if (r.Event == "release") released = true;
+            if (released && r.Offset > last + 1e-4f) monotone = false;
+            Assert(Math.Abs(r.Offset - last) <= PartySpacing.RateIn * .1f + 1e-4f, "offset jumped " + (r.Offset - last).ToString("0.00") + " m in one tick");
+            peak = Math.Max(peak, r.Offset); last = r.Offset;
+        }
+        Assert(side == -1, "obstacle slightly left of the line: must step right");
+        Assert(peak >= PartySpacing.MinOffset && peak <= PartySpacing.MaxOffset, "offset out of bounds: " + peak);
+        Assert(released && monotone && last == 0f, "release not smooth or not complete (last " + last + ")");
+    }
+
+    static void SpacingNoInvalidLane()
+    {   // leader dead ahead, head-on; the formation side (left) is a wall: must not step left; right is fine
+        var law = new PartySpacing();
+        var near = new[] { Leader(new P2(0f, 3f)) };
+        P2 me = new P2(0f, 0f), aim = new P2(0f, 9f);
+        SpacingResult r = default(SpacingResult);
+        for (int i = 0; i < 5; i++) r = law.Step(i * .1f, .1f, me, 2f, aim, aim, false, false, 1, 0, near, 1, new WallOnLeft());
+        Assert(r.Mode != SpacingMode.Sidestep || r.Point.X > 0f, "sidestepped into the wall");
+        // both sides walled: wait for the leader (never push), then hand back to native following after WaitMax
+        var boxed = new PartySpacing(); bool waited = false, handedBack = false;
+        for (int i = 0; i < 40; i++)
+        {
+            SpacingResult q = boxed.Step(i * .1f, .1f, me, 2f, aim, aim, false, false, 1, 0, near, 1, new Corridor0());
+            Assert(q.Mode != SpacingMode.Sidestep, "sidestepped with no lane");
+            if (q.Mode == SpacingMode.Wait) waited = true;
+            if (waited && q.Mode == SpacingMode.Travel) handedBack = true;
+        }
+        Assert(waited && handedBack, "did not wait and then hand back (waited " + waited + ")");
+    }
+    sealed class Corridor0 : ISpacingTerrain { public bool Clear(P2 a, P2 b) { P2 d = b - a; float l = d.Length; if (l < .05f) return true; P2 e = a + d * (Math.Min(l, 3f) / l); return Math.Abs(e.X) < .2f; } }
+
+    static void SpacingCrowdingNeverRegroups()
+    {
+        Assert(!PartySpacing.CrowdingCallsRegroup(), "crowding is wired to regroup");
+        // the largest correction spacing can make stays far inside the cohesion limits that drive regroup
+        Assert(PartySpacing.MaxOffset + PartySpacing.MenuLeaderClear < Tuning.CohesionInnerLeader, "spacing correction can reach the cohesion limit");
+        // a crowded calm party stays calm in the phase law (crowding is not an input to it)
+        var input = Calm(); input.LeaderDistance = 1.2f; input.NearestPartyDistance = .8f; input.FormationDistance = 1.5f;
+        var arbiter = new PhaseArbiter();
+        NpcPhase p = StepN(arbiter, input, 100);
+        Assert(p == NpcPhase.Calm, "a crowded calm party left Calm: " + p);
+    }
+
+    static void SpacingFormationTravelQuiet()
+    {   // two companions in the rear slots while the leader walks / runs and weaves: nobody is being closed on
+        foreach (float speed in new[] { 2f, 4f, 7f })
+        {
+            var laws = new[] { new PartySpacing(), new PartySpacing() };
+            var pos = new[] { new P2(-1.65f, -2.75f), new P2(1.65f, -2.75f) };
+            for (int i = 0; i < 300; i++)
+            {
+                float now = i * .1f;
+                P2 l = new P2((float)Math.Sin(now * .7f) * 1.2f, speed * now);
+                for (int k = 0; k < 2; k++)
+                {
+                    var near = new[] { new SpacingNeighbor { Id = 0, IsLeader = true, Position = l, Velocity = new P2(0f, speed) },
+                        new SpacingNeighbor { Id = 2 - k, Position = pos[1 - k], Slot = 1 - k, Velocity = new P2(0f, speed) } };
+                    P2 slot = l + new P2(k == 0 ? -1.65f : 1.65f, -2.75f), aim = slot + new P2(0f, 3.25f);
+                    SpacingResult r = laws[k].Step(now, .1f, pos[k], speed, aim, slot, false, false, k == 0 ? 1 : -1, k, near, 2, new OpenGround());
+                    Assert(r.Mode == SpacingMode.Travel && r.Event == null, "formation travel at " + speed + " m/s triggered " + r.Mode + " " + r.Event + " at " + now.ToString("0.0") + " s");
+                    P2 to = aim - pos[k]; float d = to.Length;
+                    if (d >= 3f) pos[k] = pos[k] + to * (Math.Min(speed * 1.3f * .1f, d) / d);
+                }
+            }
+        }
+    }
+
+    static void SpacingMenuNeverPushes()
+    {
+        var law = new PartySpacing();
+        var near = new[] { Leader(new P2(0f, 0f)) };
+        P2 me = new P2(1.5f, 0f);
+        SpacingResult r = law.Step(0f, .1f, me, 0f, new P2(-1.65f, -2.75f), new P2(-1.65f, -2.75f), true, true, 1, 0, near, 1, new OpenGround());
+        Assert(r.Mode == SpacingMode.BackOff && P2.Distance(r.Point, near[0].Position) >= PartySpacing.MenuLeaderClear, "in a menu at 1.5 m it did not ease back");
+        P2 goal = PartySpacing.KeepGoalOffLeader(new P2(.5f, -.5f), near[0].Position, true);
+        Assert(P2.Distance(goal, near[0].Position) >= PartySpacing.MenuLeaderClear, "a standing spot stayed inside the menu clearance");
+        // not in a menu, 1.5 m away and standing still: no back-off (only contact < 1 m triggers it)
+        var calm = new PartySpacing();
+        SpacingResult c = calm.Step(0f, .1f, me, 0f, me, me, true, false, 1, 0, near, 1, new OpenGround());
+        Assert(c.Mode != SpacingMode.BackOff, "backed off with no menu and no contact");
+        // a walker approaching a leader in a menu never gets inside the clearance
+        var w = new Walker { Pos = new P2(0f, 6f), Goal = new P2(0f, -3.2f), Slot = 0, SlotSide = 1 };
+        float closest = 99f;
+        for (int i = 0; i < 150; i++) { w.Tick(i * .1f, .1f, near, 1, new OpenGround(), true, true); closest = Math.Min(closest, w.Pos.Length); }
+        Assert(closest >= PartySpacing.ContactLeader + .5f, "came within " + closest.ToString("0.00") + " m of a leader in a menu");
     }
 
     // ---- Combat-voice lock (approved 1.0.32.6, 2026-10-27). Companion combat module, combat voice: COMPLETE.

@@ -22,6 +22,14 @@ namespace LivingWorld.Core
         bool formationFrameReady;
         int slot = -1;
         bool catchingUp;
+        // 1.0.32.8 party spacing: changes only where the anchor is placed; Follow stays the sole movement writer.
+        const float StandingArrival = 2.6f;
+        const float PassAnchor = 3.6f;        // > Follow's 3 m stop radius
+        const float BackOffAnchor = 3.2f;   // anchor this far past a standing spot so Follow's 3 m stop lands at it
+        readonly PartySpacing spacing = new PartySpacing();
+        readonly PartySpacingProbe probe = new PartySpacingProbe();
+        readonly PartySpacingLog spacingLog = new PartySpacingLog();
+        SpacingResult lastSpacing;
 
         public override string Name { get { return "traversal"; } }
         public override NpcDomain Claims { get { return NpcDomain.Movement; } }
@@ -36,6 +44,7 @@ namespace LivingWorld.Core
         {
             formationFrameReady = false;
             catchingUp = false;
+            spacing.Reset();
         }
 
         public override void Tick(NpcFrame f)
@@ -50,6 +59,8 @@ namespace LivingWorld.Core
             Vector3 slotPosition = FormationLeases.Position(leader, slot, formationForward);
             Vector3 destination = settled ? board.SettledDestination : slotPosition;
             Vector3 followAnchor = settled ? board.SettledFollowAnchor : FollowAnchorPosition(leader, destination);
+            if (CorePlugin.PartySpacingEnabled) followAnchor = Spaced(f, leader, settled, destination, followAnchor);
+            else lastSpacing = new SpacingResult { AvoidedId = -1 };
             anchor.transform.position = followAnchor;
             anchor.transform.rotation = Quaternion.LookRotation(formationForward, Vector3.up);
             Body.Follow(this, anchor);
@@ -68,7 +79,7 @@ namespace LivingWorld.Core
 
             Status = (settled ? "settled guard " + (board.SettledHold ? "hold" : "approach") : "slot " + slot) +
                 (sneak ? "; sneak" : run ? "; run" : "; walk") + (catchingUp ? "; catch-up" : "") +
-                "; lease " + board.FormationDistance.ToString("0.0") + "m";
+                "; lease " + board.FormationDistance.ToString("0.0") + "m" + SpacingStatus();
         }
 
         public override void Exit(NpcFrame f, string reason)
@@ -90,6 +101,70 @@ namespace LivingWorld.Core
                 if (anchor != null) UnityEngine.Object.Destroy(anchor);
                 anchor = null;
             }
+        }
+
+        /// <summary>1.0.32.8 party spacing. Standing: the spot keeps off the leader and the companion walks onto it
+        /// (soft region, then holds). Any walk: a party member in the corridor bends the aim sideways; blocked = wait;
+        /// in the leader's menu clearance = ease back. Returns only the anchor point.</summary>
+        Vector3 Spaced(NpcFrame f, Player leader, bool settled, Vector3 destination, Vector3 followAnchor)
+        {
+            Vector3 self = Body.Root.transform.position;
+            bool inMenu = PartySpacingProbe.LeaderInMenu(leader);
+            bool standing = !settled && !f.Senses.LeaderMoving;
+            P2 leaderFlat = PartySpacingProbe.Flat(leader.transform.position);
+            if (standing)
+            {
+                P2 goalFlat = PartySpacing.KeepGoalOffLeader(PartySpacingProbe.Flat(destination), leaderFlat, inMenu);
+                destination = new Vector3(goalFlat.X, destination.y, goalFlat.Z);
+                followAnchor = Beyond(self, destination);
+            }
+            NpcKernel kernel = Body.Root.GetComponent<NpcKernel>();
+            probe.Gather(kernel, leader);
+            SpacingResult r = spacing.Step(f.Now, f.Dt, PartySpacingProbe.Flat(self), f.Senses.OwnSpeed,
+                PartySpacingProbe.Flat(followAnchor), PartySpacingProbe.Flat(destination), standing, inMenu,
+                PartySpacingProbe.SlotSide(slot), slot, probe.Near, probe.Count, probe);
+            lastSpacing = r;
+            spacingLog.Write(kernel, probe, r, slot, f.Now);
+            switch (r.Mode)
+            {
+                case SpacingMode.Hold:
+                case SpacingMode.Wait:
+                    return self;                                   // Follow stops inside its 3 m radius
+                case SpacingMode.BackOff:
+                    // straight out from the leader; anchored past Follow's 3 m stop so it really reaches the clearance
+                    return new Vector3(r.Point.X + r.Shift.X * BackOffAnchor, self.y, r.Point.Z + r.Shift.Z * BackOffAnchor);
+                case SpacingMode.Sidestep:
+                {
+                    // walk at the pass point; the anchor sits on that line at least PassAnchor out so Follow keeps walking
+                    Vector3 toPass = new Vector3(r.Point.X - self.x, 0f, r.Point.Z - self.z);
+                    float d = toPass.magnitude;
+                    if (d < .05f) return followAnchor;
+                    return self + toPass * (Mathf.Max(d, PassAnchor) / d) + Vector3.up * (followAnchor.y - self.y);
+                }
+                default:
+                    return followAnchor + new Vector3(r.Shift.X, 0f, r.Shift.Z);   // zero unless easing back
+            }
+        }
+
+        /// <summary>An anchor past the point along the walk, so native Follow's 3 m stop radius lands on the point.
+        /// If that anchor is not on clear ground, the point itself (native stop short of it, as before 1.0.32.8).</summary>
+        Vector3 Beyond(Vector3 self, Vector3 point)
+        {
+            Vector3 walk = point - self;
+            walk.y = 0f;
+            if (walk.magnitude <= PartySpacing.HoldEnter) return point;
+            Vector3 beyond = point + walk.normalized * StandingArrival;
+            return probe.Clear(PartySpacingProbe.Flat(point), PartySpacingProbe.Flat(beyond)) ? beyond : point;
+        }
+
+        string SpacingStatus()
+        {
+            if (!CorePlugin.PartySpacingEnabled) return "";
+            SpacingResult r = lastSpacing;
+            if (r.Mode == SpacingMode.Travel && r.Offset <= 0f) return "";
+            return "; space " + r.Mode.ToString().ToLowerInvariant() +
+                (r.Side != 0 ? " " + (r.Side > 0 ? "left" : "right") + " " + r.Offset.ToString("0.0") + "m" : "") +
+                (r.AvoidedId >= 0 ? " around " + (r.AvoidedLeader ? "leader" : probe.NameOf(r.AvoidedId)) : "");
         }
 
         void EnsureSlot(Player leader)
@@ -174,6 +249,9 @@ namespace LivingWorld.Core
             return actor != null && leader != null && Claims.TryGetValue(actor, out lease) &&
                 lease.LeaderId == leader.GetPlayerID() && lease.Slot == slot;
         }
+
+        /// <summary>Lateral offset of a slot (negative = left of the leader's travel direction).</summary>
+        public static float LocalX(int slot) { return slot < 0 ? 0f : LocalSlots[Mathf.Clamp(slot, 0, LocalSlots.Length - 1)].x; }
 
         public static Vector3 Position(Player leader, int slot, Vector3 forward)
         {

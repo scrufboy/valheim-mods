@@ -29,7 +29,7 @@ function Check($code, $what) { if ($code -ne 0) { throw "$what failed" } }
 
 Step '1/6 Regression ledger'
 & $csc /nologo /langversion:5 /out:"$build\ledger.exe" "$root\tests\RegressionLedgerTests.cs" `
-    "$root\src\Kernel\Kernel.Pure.cs" "$root\src\Kernel\GuardCoverage.Pure.cs" "$root\src\Identity\NpcIdentityRecord.cs"
+    "$root\src\Kernel\Kernel.Pure.cs" "$root\src\Kernel\GuardCoverage.Pure.cs" "$root\src\Kernel\PartySpacing.Pure.cs" "$root\src\Identity\NpcIdentityRecord.cs"
 Check $LASTEXITCODE 'ledger compile'
 & "$build\ledger.exe"; Check $LASTEXITCODE 'regression ledger'
 
@@ -48,6 +48,9 @@ Step '4/6 Ownership gate'
 
 Step 'Combat-voice lock (companion combat module, approved 1.0.32.6)'
 & $Python -I "$root\tools\combat_voice_gate.py" "$build\LivingWorld.HumanNpc.dll"; Check $LASTEXITCODE 'combat-voice lock'
+
+Step 'Movement-writer gate (native Follow is the only calm-movement writer)'
+& $Python -I "$root\tools\movement_writer_gate.py" "$build\LivingWorld.HumanNpc.dll"; Check $LASTEXITCODE 'movement-writer gate'
 
 Step '5/6 Compile telemetry'
 & $csc /nologo /target:library /optimize+ /langversion:5 /nostdlib+ /r:"$Managed\mscorlib.dll" /r:"$Managed\System.dll" `

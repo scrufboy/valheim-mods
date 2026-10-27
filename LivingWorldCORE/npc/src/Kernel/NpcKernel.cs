@@ -14,6 +14,8 @@ namespace LivingWorld.Core
     {
         static readonly HashSet<NpcKernel> Live = new HashSet<NpcKernel>();
         public static IEnumerable<NpcKernel> All { get { return Live; } }
+        /// <summary>1.0.32.8: the same registry as a set, so party spacing can walk it without allocating.</summary>
+        internal static HashSet<NpcKernel> LiveSet { get { return Live; } }
 
         readonly NpcFrame frame = new NpcFrame();
         readonly PhaseArbiter arbiter = new PhaseArbiter();

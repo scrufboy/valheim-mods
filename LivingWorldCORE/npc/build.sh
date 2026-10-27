@@ -22,7 +22,7 @@ CSC="mcs -nologo -target:library -langversion:5 -optimize+ -nostdlib -r:$REFS/ms
 
 echo "== 1/6 Regression ledger (offline policy tests)"
 mcs -nologo -langversion:5 -out:build/ledger.exe tests/RegressionLedgerTests.cs \
-    src/Kernel/Kernel.Pure.cs src/Kernel/GuardCoverage.Pure.cs src/Identity/NpcIdentityRecord.cs
+    src/Kernel/Kernel.Pure.cs src/Kernel/GuardCoverage.Pure.cs src/Kernel/PartySpacing.Pure.cs src/Identity/NpcIdentityRecord.cs
 mono build/ledger.exe | tail -1
 
 echo "== 2/6 Native compatibility gate"
@@ -44,6 +44,9 @@ python3 tools/analyzer_selftest.py
 
 echo "== Combat-voice lock (companion combat module, approved 1.0.32.6; set VOICES=<voices/companion dir> to check the pools too)"
 python3 -I tools/combat_voice_gate.py build/LivingWorld.HumanNpc.dll ${VOICES:+--voices "$VOICES"}
+
+echo "== Movement-writer gate (native Follow is the only calm-movement writer; party spacing writes nothing)"
+python3 -I tools/movement_writer_gate.py build/LivingWorld.HumanNpc.dll
 
 cp build/LivingWorld.HumanNpc.dll build/LivingWorld.Telemetry.dll "$OUT/"
 ( cd "$OUT" && sha256sum LivingWorld.HumanNpc.dll LivingWorld.Telemetry.dll | tee SHA256SUMS )

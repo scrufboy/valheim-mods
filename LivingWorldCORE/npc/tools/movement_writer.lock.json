@@ -1,0 +1,27 @@
+{
+ "traversal_wants": "b8d308c08ac9b4e7b256ee3cd101d4a07b03be98c79b23a0a0905b1227d63a9d",
+ "writers": {
+  "Character::SetRun": [
+   "NpcBody::SetPace",
+   "NpcBody::SetRun"
+  ],
+  "MonsterAI::SetFollowTarget": [
+   "NpcBody::Follow"
+  ],
+  "Rigidbody::set_position": [
+   "NpcBody::PlaceAt"
+  ],
+  "Rigidbody::set_velocity": [
+   "NpcBody::PlaceAt"
+  ],
+  "Transform::set_position": [
+   "FallBackBehavior::Tick",
+   "NpcBody::PlaceAt",
+   "TraversalBehavior::Tick"
+  ],
+  "Transform::set_rotation": [
+   "NpcBody::PlaceAt",
+   "TraversalBehavior::Tick"
+  ]
+ }
+}
