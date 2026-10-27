@@ -336,16 +336,34 @@ namespace LivingWorld.Core
         static void Say(NpcKernel kernel, string key)
         {
             if (kernel == null || kernel.Body == null || kernel.Body.Human == null || kernel.Body.Human.IsDead()) return;
-            EffectList line = IsFemale(kernel) && FemaleUsable(key) ? List("f:" + key) : List(MaleKey(key));
-            if (line == null) return;
             Character body = kernel.Body.Human;
+            int id = body.GetInstanceID();
+            // 1.0.32.4: a lower-priority line (alerted, exert, idle) never cuts off pain that is still sounding.
+            KeyValuePair<int, float> held;
+            if (Holding.TryGetValue(id, out held) && Time.time < held.Value && Priority(key) < held.Key) { Skip(kernel, key, "lower priority"); return; }
+            EffectList line = IsFemale(kernel) && FemaleUsable(key) ? List("f:" + key) : List(MaleKey(key));
+            if (line == null) { Skip(kernel, key, "no clip"); return; }
             Silence(body);
             GameObject[] made = line.Create(body.transform.position, body.transform.rotation, body.transform);
-            Speaking[body.GetInstanceID()] = made;
+            Speaking[id] = made;
+            Holding[id] = new KeyValuePair<int, float>(Priority(key), Time.time + HoldSeconds);
+            if (key == "hit" || key == "hit_heavy") LastPain[id] = new KeyValuePair<float, string>(Time.time, key);
             Lines++;
             if (CorePlugin.DevVoiceLog) LogLine(kernel, body, key, made);
             Action<NpcKernel, string> spoke = Spoke;
             if (spoke != null) spoke(kernel, key);
+        }
+
+        // ---- 1.0.32.4 priority: pain (stagger / devastating 3, hit 2) outranks war cry 2 and alerted / exert / idle 1. ----
+        const float HoldSeconds = .7f;   // a pain line is protected from lower lines for about its length
+        static readonly Dictionary<int, KeyValuePair<int, float>> Holding = new Dictionary<int, KeyValuePair<int, float>>();
+        static readonly Dictionary<int, KeyValuePair<float, string>> LastPain = new Dictionary<int, KeyValuePair<float, string>>();
+        static int Priority(string key) { return key == "hit_heavy" ? 3 : key == "hit" || key == "warcry" ? 2 : 1; }
+
+        static void Skip(NpcKernel kernel, string key, string why)
+        {
+            if (!CorePlugin.DevVoiceLog || kernel == null || kernel.Body == null || kernel.Body.Human == null) return;
+            CorePlugin.Report("VOICE-SKIP " + kernel.Body.Human.GetHoverName() + " line=" + key + " reason=" + why + " t=" + Time.time.ToString("0.00"));
         }
 
         /// <summary>Development log only (DevVoiceLog): names the exact clip by narrowing this one instance to a uniform
@@ -411,10 +429,13 @@ namespace LivingWorld.Core
         internal static void OnHurt(NpcKernel kernel, float damage)
         {
             Character body = kernel.Body.Human;
+            // 1.0.32.4: the stagger cry already answered this blow (stagger and damage are one event).
+            if (Policy.StaggerAnswered(Time.time, body.GetInstanceID())) { Skip(kernel, "hit", "lower priority"); return; }
             bool interrupted = Silence(body);
+            string why;
             VoicePolicy.HurtLine line = Policy.Hurt(Time.time, body.GetInstanceID(), damage, body.GetMaxHealth(),
-                interrupted, (float)Dice.NextDouble());
-            if (line == VoicePolicy.HurtLine.None) return;
+                interrupted, (float)Dice.NextDouble(), out why);
+            if (line == VoicePolicy.HurtLine.None) { Skip(kernel, "hit", why); return; }
             // 1.0.31 said "hit" for every hurt line; "hit_heavy" only names the female devastated pool (males resolve it to "hit").
             Say(kernel, line == VoicePolicy.HurtLine.Devastated ? "hit_heavy" : "hit");
             if (line != VoicePolicy.HurtLine.Devastated) return;
@@ -422,14 +443,72 @@ namespace LivingWorld.Core
             if (partner != null) Pending[partner] = new KeyValuePair<float, string>(Time.time + VoicePolicy.PartnerReactDelay, "alerted");
         }
 
+        /// <summary>1.0.32.4: Character.RPC_Stagger prefix (owner). Not yet staggering = a new stagger: one guaranteed pain cry.</summary>
+        public static void RpcStaggerPrefix(Character __instance)
+        {
+            if (__instance == null || __instance is Player) return;
+            NpcBody body = NpcBody.Of(__instance);
+            if (body == null || !body.IsOwner || __instance.IsDead() || __instance.IsStaggering()) return;
+            NpcKernel kernel = body.Root.GetComponent<NpcKernel>();
+            if (kernel == null) return;
+            try
+            {
+                int id = __instance.GetInstanceID();
+                if (CorePlugin.DevVoiceLog) CorePlugin.Report("VOICE-STAGGER " + __instance.GetHoverName() + " entered stagger t=" + Time.time.ToString("0.00"));
+                if (!Policy.Stagger(Time.time, id)) { Skip(kernel, "hit_heavy", "cooldown"); return; }
+                KeyValuePair<float, string> pain;   // the same blow already drew a devastating cry: one line per event
+                if (LastPain.TryGetValue(id, out pain) && Time.time - pain.Key < VoicePolicy.SameEventWindow && pain.Value == "hit_heavy")
+                { Skip(kernel, "hit_heavy", "lower priority"); return; }
+                Holding.Remove(id);   // stagger pain outranks whatever is sounding
+                Say(kernel, "hit_heavy");
+            }
+            catch (Exception e) { kernel.ReportFault("voice stagger", e); }
+        }
+
         static readonly Dictionary<int, float> LastStrike = new Dictionary<int, float>();
 
-        /// <summary>A companion's swing just started (Humanoid.StartAttack): exertion plays during it.</summary>
+        /// <summary>A companion's attack just started (Humanoid.StartAttack). Ordinary: one exertion decision per attack, played
+        /// now (during the swing). Heavy (1.0.32.4): always voiced, but held until the committed attack frame.</summary>
         internal static void OnSwing(NpcKernel kernel, bool heavy)
         {
             if (kernel == null || kernel.Body == null || kernel.Body.Human == null) return;
-            if (!Policy.Exert(Time.time, kernel.GetInstanceID(), heavy, (float)Dice.NextDouble())) return;
-            Say(kernel, "exert");
+            Humanoid human = kernel.Body.Human;
+            int id = human.GetInstanceID();
+            object attack = NativeApi.CurrentAttack.GetValue(human);   // once per attack start, not per frame
+            object decided;
+            if (attack != null && Decided.TryGetValue(id, out decided) && ReferenceEquals(decided, attack)) return;   // one decision per attack (bow draw)
+            if (attack != null) Decided[id] = attack;
+            string why;
+            if (!Policy.Exert(Time.time, kernel.GetInstanceID(), heavy, (float)Dice.NextDouble(), out why)) { Skip(kernel, "exert", why); return; }
+            if (!heavy) { Say(kernel, "exert"); return; }
+            HeavyPending[id] = Time.time;
+            if (CorePlugin.DevVoiceLog) CorePlugin.Report("VOICE-HEAVY " + human.GetHoverName() + " selected t=" + Time.time.ToString("0.00") + " (exertion waits for the attack frame)");
+        }
+
+        static readonly Dictionary<int, object> Decided = new Dictionary<int, object>();
+        static readonly Dictionary<int, float> HeavyPending = new Dictionary<int, float>();
+        const float HeavyPendingLimit = 3f;   // an attack that never reaches its frame is treated as aborted
+
+        /// <summary>1.0.32.4: Attack.OnAttackTrigger postfix: the attack became active. A pending heavy exertion plays now, once.</summary>
+        public static void AttackTriggerPostfix(Attack __instance)
+        {
+            if (__instance == null || HeavyPending.Count == 0) return;
+            Humanoid human = NativeApi.AttackCharacter.GetValue(__instance) as Humanoid;
+            if (human == null || human is Player) return;
+            int id = human.GetInstanceID();
+            float since;
+            if (!HeavyPending.TryGetValue(id, out since)) return;
+            HeavyPending.Remove(id);
+            NpcBody body = NpcBody.Of(human);
+            NpcKernel kernel = body == null || !body.IsOwner ? null : body.Root.GetComponent<NpcKernel>();
+            if (kernel == null) return;
+            try
+            {
+                if (human.IsDead() || human.IsStaggering()) { Skip(kernel, "exert", "attack aborted"); return; }
+                if (CorePlugin.DevVoiceLog) CorePlugin.Report("VOICE-HEAVY " + human.GetHoverName() + " attack frame t=" + Time.time.ToString("0.00") + " (+" + (Time.time - since).ToString("0.00") + " s after selection)");
+                Say(kernel, "exert");
+            }
+            catch (Exception e) { kernel.ReportFault("voice heavy", e); }
         }
 
         internal static void OnStrike(Character attacker, Character target, float damage, bool killed)
@@ -445,6 +524,14 @@ namespace LivingWorld.Core
 
         internal static void Tick(NpcKernel kernel)
         {
+            Humanoid human = kernel == null || kernel.Body == null ? null : kernel.Body.Human;
+            float since;
+            if (human != null && HeavyPending.TryGetValue(human.GetInstanceID(), out since) &&
+                (human.IsDead() || Time.time - since > HeavyPendingLimit || (Time.time - since > .25f && !human.InAttack())))
+            {
+                HeavyPending.Remove(human.GetInstanceID());
+                Skip(kernel, "exert", "attack aborted");
+            }
             KeyValuePair<float, string> due;
             if (!Pending.TryGetValue(kernel, out due) || Time.time < due.Key) return;
             Pending.Remove(kernel);

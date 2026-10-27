@@ -688,6 +688,10 @@ static class RegressionLedgerTests
         var v = new VoicePolicy();
         Assert(v.Hurt(0f, 1, 20f, 250f, true, .5f) == VoicePolicy.HurtLine.Grunt, "gloat cut off with no answer at 50% roll");
         Assert(v.Hurt(.5f, 1, 20f, 250f, true, .1f) == VoicePolicy.HurtLine.None, "answers stack with no cooldown");
+        Assert(v.Hurt(2f, 1, 20f, 250f, true, .99f) == VoicePolicy.HurtLine.Grunt, "1.0.32.4: hit mid-line not always answered");
+        var w = new VoicePolicy();
+        Assert(w.Hurt(0f, 1, 20f, 250f, false, .6f) == VoicePolicy.HurtLine.Grunt, "1.0.32.4: ordinary hit at .6 roll silent (chance .65)");
+        Assert(w.Hurt(1.6f, 1, 20f, 250f, false, .1f) == VoicePolicy.HurtLine.Grunt, "1.0.32.4: grunt cooldown longer than 1.5 s");
     }
 
     static void VoiceMighty()
@@ -802,7 +806,15 @@ static class RegressionLedgerTests
         Assert(!VoicePolicy.Noticing(10f, 10f, 2f), "call-out at an enemy already on it");
         var v = new VoicePolicy();
         Assert(v.Exert(0f, 1, true, .5f), "no exertion on a heavy");
-        Assert(!v.Exert(1f, 1, true, .1f), "exertion with no cooldown");
+        Assert(!v.Exert(1f, 1, false, .1f), "ordinary exertion with no cooldown");
+        Assert(v.Exert(1.5f, 1, true, .99f), "1.0.32.4: a heavy went unvoiced (roll or cooldown)");
+        Assert(v.Exert(4f, 1, false, .2f), "1.0.32.4: ordinary swing not voiced at .2 roll after 2.5 s");
+        Assert(!v.Exert(5f, 1, false, .2f), "1.0.32.4: ordinary exertion inside the 2.5 s cooldown");
+        var st = new VoicePolicy();
+        Assert(st.Stagger(0f, 1), "stagger entry not voiced");
+        Assert(!st.Stagger(1f, 1), "stagger voiced twice inside 1.5 s");
+        Assert(st.Stagger(1.6f, 1) && st.Stagger(1.6f, 2), "stagger cooldown wrong");
+        Assert(st.StaggerAnswered(1.8f, 1) && !st.StaggerAnswered(2f, 1), "same-event window is not 0.3 s");
         Assert(!v.Exert(5f, 1, false, .5f), "exertion on most ordinary swings");
         Assert(v.Exert(5f, 2, false, .1f), "one companion's cooldown silenced another");
     }

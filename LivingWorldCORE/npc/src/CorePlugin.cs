@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.32.3";
+        public const string Version = "1.0.32.4";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -33,7 +33,7 @@ namespace LivingWorld.Core
         static BepInEx.Configuration.ConfigEntry<bool> shieldBlocking;
         static BepInEx.Configuration.ConfigEntry<float> foodStamina, femaleVoiceGain;
         static BepInEx.Configuration.ConfigEntry<bool> devVoiceLog;
-        public static float FemaleVoiceGain { get { return femaleVoiceGain == null ? 1.58f : Mathf.Clamp(femaleVoiceGain.Value, 0f, 2f); } }
+        public static float FemaleVoiceGain { get { return femaleVoiceGain == null ? 2.0f : Mathf.Clamp(femaleVoiceGain.Value, 0f, 2f); } }
         public static bool DevVoiceLog { get { return devVoiceLog != null && devVoiceLog.Value; } }
         public static float FoodStamina { get { return foodStamina == null ? 100f : Mathf.Max(0f, foodStamina.Value); } }
         public static bool ShieldBlocking { get { return shieldBlocking != null && shieldBlocking.Value; } }
@@ -41,7 +41,7 @@ namespace LivingWorld.Core
         void Awake()
         {
             Instance = this;
-            femaleVoiceGain = Config.Bind("Voice", "FemaleVoiceGain", 1.58f,
+            femaleVoiceGain = Config.Bind("Voice", "FemaleVoiceGain", 2.0f,
                 "Playback gain for the female voice set over the game's 0.5 voice template (clips are already normalized). 1.58 = Brian's in-game setting (1.0.31); 1.0 = template level.");
             devVoiceLog = Config.Bind("Voice", "DevVoiceLog", false,
                 "Development only: log every companion line (who, gender, line, exact clip, trigger, fallback).");
@@ -71,6 +71,11 @@ namespace LivingWorld.Core
                 postfix: new HarmonyLib.HarmonyMethod(typeof(MeleeChainHook).GetMethod("StartAttackPostfix")));
             harmony.Patch(NativeApi.UpdateAttack,
                 postfix: new HarmonyLib.HarmonyMethod(typeof(MeleeChainHook).GetMethod("UpdatePostfix")));
+            // 1.0.32.4 voice (observes only; never changes the attack or the stagger).
+            harmony.Patch(NativeApi.AttackTrigger,
+                postfix: new HarmonyLib.HarmonyMethod(typeof(NpcVoice).GetMethod("AttackTriggerPostfix")));
+            harmony.Patch(NativeApi.RpcStagger,
+                prefix: new HarmonyLib.HarmonyMethod(typeof(NpcVoice).GetMethod("RpcStaggerPrefix")));
             Report(ArmorParity.ArmorGatesPatched == 1 ? "Companion armor applies to damage (Player rule)." :
                 "WARNING: companion armor gate not patched.");
             Report("Companion damage parity: stagger x2 " + (ArmorParity.StaggerGatesPatched == 1 ? "off" : "NOT PATCHED") +

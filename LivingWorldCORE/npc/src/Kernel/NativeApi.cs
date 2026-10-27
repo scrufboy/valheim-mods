@@ -58,6 +58,10 @@ namespace LivingWorld.Core
         internal static readonly MethodInfo HaveQueuedChain = Method(typeof(Humanoid), "HaveQueuedChain");
         internal static readonly MethodInfo UpdateAttack = Method(typeof(Humanoid), "UpdateAttack", typeof(float));
         internal static readonly MethodInfo HumanoidStartAttack = Method(typeof(Humanoid), "StartAttack", typeof(Character), typeof(bool));
+        // 1.0.32.4 voice: heavy exertion at the committed attack frame; one exertion per attack; stagger pain on entry.
+        internal static readonly MethodInfo AttackTrigger = Method(typeof(Attack), "OnAttackTrigger");
+        internal static readonly FieldInfo AttackCharacter = Field(typeof(Attack), "m_character");
+        internal static readonly MethodInfo RpcStagger = Method(typeof(Character), "RPC_Stagger", typeof(long), typeof(Vector3));
 
         // Visual identity.
         internal static readonly FieldInfo HairInstance = Field(typeof(VisEquipment), "m_hairItemInstance");

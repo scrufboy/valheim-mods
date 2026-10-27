@@ -735,8 +735,8 @@ namespace LivingWorld.Core
     {
         public const float NewEnemyChance = .7f, PartyCooldown = 4f, HeardMemory = 180f;
         public const float HurtFraction = .15f, HurtCooldown = 4f, PartnerReactDelay = .6f;
-        public const float GruntChance = .35f, GruntCooldown = 2.5f;          // tanking is audible, not every hit
-        public const float InterruptedChance = .8f, InterruptedCooldown = 1.5f; // hit mid-gloat: cut off, usually answers
+        public const float GruntChance = .65f, GruntCooldown = 1.5f;          // 1.0.32.4 (Brian, live 19:37): .35/2.5 left too many silent hits
+        public const float InterruptedChance = 1f, InterruptedCooldown = 1.5f;  // 1.0.32.4: hit mid-line always answers (was .8)
         public const float MightyFraction = .25f, MightyChance = .35f, MightyCooldown = 10f;
 
         readonly System.Collections.Generic.Dictionary<int, float> heard = new System.Collections.Generic.Dictionary<int, float>();
@@ -747,7 +747,12 @@ namespace LivingWorld.Core
         // 1.0.29 telemetry: call-outs fired a median 0.87 s after the companion's own strike (re-pick after a kill).
         public const float NoticeQuietSeconds = 3f;   // no own strike / no hit taken this recently: still "before"
         public const float NoticeMinDistance = 6f;    // a heads-up, not a shout at something already on you
-        public const float ExertHeavyChance = .8f, ExertSwingChance = .15f, ExertCooldown = 4f;
+        // 1.0.32.4 (Brian, live 19:37: 15 heavies, 5 voiced): every heavy is voiced (no roll, no cooldown gate) and plays at the
+        // committed attack trigger; ordinary swings .15 -> .30, cooldown 4 -> 2.5 s.
+        public const float ExertHeavyChance = 1f, ExertSwingChance = .30f, ExertCooldown = 2.5f;
+        public const float StaggerCooldown = 1.5f;     // one pain cry per stagger entry
+        public const float SameEventWindow = .3f;      // a stagger and its damage are one event: one line
+        readonly System.Collections.Generic.Dictionary<int, float> lastStagger = new System.Collections.Generic.Dictionary<int, float>();
         readonly System.Collections.Generic.Dictionary<int, float> lastExert = new System.Collections.Generic.Dictionary<int, float>();
 
         /// <summary>A call-out only before contact: the companion has not struck or been hit lately and the enemy is not on it.</summary>
@@ -757,13 +762,33 @@ namespace LivingWorld.Core
         }
 
         /// <summary>Exertion as a swing starts (plays during it): most heavies, few ordinary swings, per-companion cooldown.</summary>
-        public bool Exert(float now, int actorId, bool heavy, float roll)
+        public bool Exert(float now, int actorId, bool heavy, float roll) { string why; return Exert(now, actorId, heavy, roll, out why); }
+
+        /// <param name="why">"chance" or "cooldown" when refused.</param>
+        public bool Exert(float now, int actorId, bool heavy, float roll, out string why)
         {
+            why = null;
             float last;
-            if (lastExert.TryGetValue(actorId, out last) && now - last < ExertCooldown) return false;
-            if (roll >= (heavy ? ExertHeavyChance : ExertSwingChance)) return false;
+            if (!heavy && lastExert.TryGetValue(actorId, out last) && now - last < ExertCooldown) { why = "cooldown"; return false; }
+            if (roll >= (heavy ? ExertHeavyChance : ExertSwingChance)) { why = "chance"; return false; }
             lastExert[actorId] = now;
             return true;
+        }
+
+        /// <summary>1.0.32.4: a newly entered stagger is one guaranteed pain cry, deduplicated per companion.</summary>
+        public bool Stagger(float now, int companionId)
+        {
+            float last;
+            if (lastStagger.TryGetValue(companionId, out last) && now - last < StaggerCooldown) return false;
+            lastStagger[companionId] = now;
+            return true;
+        }
+
+        /// <summary>True if this companion's stagger cry already answered an event at this moment.</summary>
+        public bool StaggerAnswered(float now, int companionId)
+        {
+            float last;
+            return lastStagger.TryGetValue(companionId, out last) && now - last < SameEventWindow;
         }
 
         /// <summary>A companion just took this enemy as a target. roll in [0,1).</summary>
@@ -781,23 +806,30 @@ namespace LivingWorld.Core
 
         /// <param name="interrupted">the companion was speaking when hit (the line is cut off regardless).</param>
         public HurtLine Hurt(float now, int companionId, float damage, float maxHealth, bool interrupted, float roll)
+        { string why; return Hurt(now, companionId, damage, maxHealth, interrupted, roll, out why); }
+
+        /// <param name="why">"chance" or "cooldown" when no line.</param>
+        public HurtLine Hurt(float now, int companionId, float damage, float maxHealth, bool interrupted, float roll, out string why)
         {
+            why = null;
             float last;
             bool known = lastHurt.TryGetValue(companionId, out last);
             float since = known ? now - last : float.PositiveInfinity;
             if (maxHealth > 0f && damage >= HurtFraction * maxHealth)
             {
-                if (since < HurtCooldown) return HurtLine.None;
+                if (since < HurtCooldown) { why = "cooldown"; return HurtLine.None; }
                 lastHurt[companionId] = now;
                 return HurtLine.Devastated;
             }
             if (interrupted)
             {
-                if (since < InterruptedCooldown || roll >= InterruptedChance) return HurtLine.None;
+                if (since < InterruptedCooldown) { why = "cooldown"; return HurtLine.None; }
+                if (roll >= InterruptedChance) { why = "chance"; return HurtLine.None; }
                 lastHurt[companionId] = now;
                 return HurtLine.Grunt;
             }
-            if (since < GruntCooldown || roll >= GruntChance) return HurtLine.None;
+            if (since < GruntCooldown) { why = "cooldown"; return HurtLine.None; }
+            if (roll >= GruntChance) { why = "chance"; return HurtLine.None; }
             lastHurt[companionId] = now;
             return HurtLine.Grunt;
         }
