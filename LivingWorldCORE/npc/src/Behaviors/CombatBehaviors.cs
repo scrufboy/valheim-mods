@@ -93,65 +93,83 @@ namespace LivingWorld.Core
             Status = "released: " + reason;
         }
 
-        // ---- 1.0.32.11 bomb throw: decide with BombPolicy, execute with the native attack, finish and restore.
-        readonly BombPolicy bombs = new BombPolicy();
+        // ---- 1.0.32.12 bomb throw: Souls Pillager throw, player-like decision (ThrowPlanner), native execution.
+        readonly ThrowCadence cadence = new ThrowCadence();
         float nextBombCheck, nextBombSkipLog;
+        bool aiming; Vector3 aimPoint; float aimSince; ThrowPlan aimPlan;
+        readonly ThrowBody[] hostileBuf = new ThrowBody[24];
+        readonly ThrowBody[] friendBuf = new ThrowBody[16];
+
+        static ThrowBody BodyOf(Character c)
+        {
+            Vector3 p = c.transform.position, v = c.GetVelocity();
+            return new ThrowBody { Position = new P2(p.x, p.z), Velocity = new P2(v.x, v.z), Height = p.y, MaxHealth = c.GetMaxHealth() };
+        }
 
         void StepBomb(NpcFrame f)
         {
+            Humanoid me = Body.Human;
             if (Body.Throwing)
             {
-                if (Body.FinishBomb(this)) CorePlugin.Report("BOMB-DONE " + Body.Human.GetHoverName() + " left=" + Body.BombReserve + " t=" + f.Now.ToString("0.00"));
+                if (Body.FinishBomb(this)) CorePlugin.Report("BOMB-DONE " + me.GetHoverName() + (CorePlugin.BombsEndless ? "" : " left=" + Body.BombReserve) + " t=" + f.Now.ToString("0.00"));
                 return;
             }
+            cadence.Cooldown = CorePlugin.BombCooldown;
+            if (!cadence.Ready(f.Now)) { aiming = false; return; }
+            if (!CorePlugin.BombsEndless && Body.BombReserve <= 0) { aiming = false; return; }
             if (f.Now < nextBombCheck) return;
-            nextBombCheck = f.Now + .25f;
+            nextBombCheck = f.Now + .2f;
+            bool busy = me.InAttack() || me.IsDrawingBow() || me.IsStaggering() || me.IsBlocking();
             Character target = f.Senses.Target;
-            Humanoid me = Body.Human;
-            var sit = new BombSituation
+            if (busy || target == null) { aiming = false; return; }
+
+            Vector3 at = me.transform.position;
+            int nh = 0, nf = 0;
+            P2 party = new P2(at.x, at.z); int partyN = 1;
+            foreach (Character c in Character.GetAllCharacters())
             {
-                Reserve = Body.BombReserve,
-                TargetDistance = target == null || target.IsDead() ? -1f : Vector3.Distance(me.transform.position, target.transform.position),
-                TargetVisible = target != null && Body.Ai != null && Body.Ai.CanSeeTarget(target),
-                Busy = me.InAttack() || me.IsDrawingBow() || me.IsStaggering() || me.IsBlocking(),
-                NearestAllyToTarget = float.PositiveInfinity,
-                TargetMaxHealth = target == null ? 0f : target.GetMaxHealth(),
-            };
-            sit.SelfToTarget = sit.TargetDistance;
-            if (target != null)
-            {
-                Vector3 to = target.transform.position - me.transform.position; to.y = 0f;
-                sit.FacingAngle = to.sqrMagnitude < 1e-4f ? 0f : Vector3.Angle(new Vector3(me.transform.forward.x, 0f, me.transform.forward.z), to);
-            }
-            if (target != null && sit.Reserve > 0)
-            {
-                Vector3 at = target.transform.position;
-                foreach (Character c in Character.GetAllCharacters())
+                if (c == null || c == me || c.IsDead()) continue;
+                float d = Vector3.Distance(c.transform.position, at);
+                if (d > 30f) continue;
+                bool friend = c.IsPlayer() || c.GetComponent<NpcKernel>() != null || !BaseAI.IsEnemy(me, c);
+                if (friend)
                 {
-                    if (c == null || c == me || c.IsDead()) continue;
-                    float d = Vector3.Distance(c.transform.position, at);
-                    bool ally = c.IsPlayer() || c.GetComponent<NpcKernel>() != null || (!BaseAI.IsEnemy(me, c) && c.IsTamed());
-                    if (ally) { if (d < sit.NearestAllyToTarget) sit.NearestAllyToTarget = d; }
-                    else if (d <= BombPolicy.BlastRadius && BaseAI.IsEnemy(me, c)) sit.HostilesNearTarget++;
+                    if (c.IsPlayer() || c.GetComponent<NpcKernel>() != null) { party = party + new P2(c.transform.position.x, c.transform.position.z); partyN++; }
+                    if (nf < friendBuf.Length) friendBuf[nf++] = BodyOf(c);
                 }
+                else if (nh < hostileBuf.Length && Body.Ai != null && Body.Ai.CanSeeTarget(c)) hostileBuf[nh++] = BodyOf(c);
             }
-            if (bombs.Decide(f.Now, sit))
+            party = party * (1f / partyN);
+            Vector3 fw = me.transform.forward;
+            ThrowPlan plan = ThrowPlanner.Plan(new P2(at.x, at.z), at.y, new P2(fw.x, fw.z), party, hostileBuf, nh, friendBuf, nf);
+            if (!plan.Throw)
             {
-                if (Body.ThrowBomb(this, target))
+                aiming = false;
+                if (CorePlugin.DevBombLog && f.Now >= nextBombSkipLog)
                 {
-                    bombs.Started(f.Now);
-                    CorePlugin.Report("BOMB-THROW " + me.GetHoverName() + " at=" + target.GetHoverName() + " dist=" + sit.TargetDistance.ToString("0.0") +
-                        " hostiles=" + sit.HostilesNearTarget + " allyToTarget=" + (float.IsInfinity(sit.NearestAllyToTarget) ? "none" : sit.NearestAllyToTarget.ToString("0.0")) +
-                        " kind=" + Body.BombKind + " left=" + Body.BombReserve + " t=" + f.Now.ToString("0.00"));
+                    nextBombSkipLog = f.Now + 3f;
+                    CorePlugin.Report("BOMB-SKIP " + me.GetHoverName() + " reason=" + plan.Reason + " hostilesSeen=" + nh + " t=" + f.Now.ToString("0.00"));
                 }
-                else { bombs.Failed(f.Now); CorePlugin.Report("BOMB-REFUSED " + me.GetHoverName() + " native attack did not start t=" + f.Now.ToString("0.00")); }
+                return;
             }
-            else if (CorePlugin.DevBombLog && sit.Reserve > 0 && target != null && f.Now >= nextBombSkipLog && bombs.LastReason != "cooldown" && bombs.LastReason != "busy")
+            aimPlan = plan;
+            aimPoint = new Vector3(plan.Aim.X, plan.AimHeight, plan.Aim.Z);
+            if (!aiming) { aiming = true; aimSince = f.Now; }
+            if (plan.TurnNeeded > ThrowPlanner.MaxTurn)
             {
-                nextBombSkipLog = f.Now + 3f;
-                CorePlugin.Report("BOMB-SKIP " + me.GetHoverName() + " reason=" + bombs.LastReason + " dist=" + sit.TargetDistance.ToString("0.0") +
-                    " hostiles=" + sit.HostilesNearTarget + " t=" + f.Now.ToString("0.00"));
+                if (f.Now - aimSince > 2f) { aiming = false; cadence.Failed(f.Now); }   // could not turn in time
+                return;                                                                 // LateFrame turns to the aim
             }
+            aiming = false;
+            if (Body.ThrowBomb(this, target, aimPoint))
+            {
+                cadence.Started(f.Now);
+                CorePlugin.Report("BOMB-THROW " + me.GetHoverName() + " cluster=" + plan.Members + " incoming=" + plan.Incoming +
+                    " dist=" + plan.Distance.ToString("0.0") + " lead=" + plan.Lead.ToString("0.0") + " elev=" + (plan.Elevation * Mathf.Rad2Deg).ToString("0") +
+                    " friendClear=" + (float.IsInfinity(plan.FriendClearance) ? "none" : plan.FriendClearance.ToString("0.0")) +
+                    (CorePlugin.BombsEndless ? " endless" : " left=" + Body.BombReserve) + " t=" + f.Now.ToString("0.00"));
+            }
+            else { cadence.Failed(f.Now); CorePlugin.Report("BOMB-REFUSED " + me.GetHoverName() + " native attack did not start t=" + f.Now.ToString("0.00")); }
         }
 
         // Shield discipline inside native combat: same owner, same tick, no extra loop.
@@ -177,6 +195,7 @@ namespace LivingWorld.Core
         // Turn to face the projectile shooter while the shield is up (native block needs a frontal hit).
         public override void LateFrame(NpcFrame f)
         {
+            if (aiming && !Body.Throwing) { Body.LookAt(this, aimPoint); return; }   // 1.0.32.12: face the throw
             if (block != null && block.Raised && block.AgainstRanged && blockThreat != null)
                 Body.LookAt(this, blockThreat.GetCenterPoint());
         }

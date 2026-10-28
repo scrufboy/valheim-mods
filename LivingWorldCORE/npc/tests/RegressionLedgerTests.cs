@@ -37,10 +37,11 @@ static class RegressionLedgerTests
         Run("1.0.32.10 gait: a companion behind its spot catches up, bounded by its native jog", GaitCatchUpBounded);
         Run("1.0.32.10 gait: the leader's walk toggle always means walk; far away means ordinary pace", GaitToggleAndRange);
         Run("1.0.32.10 gait: noisy leader speed does not flip walk/jog every tick", GaitNoFlicker);
-        Run("1.0.32.11 bombs: a group at mid range with no ally near is bombed; then a 12 s cooldown", BombThrowsAtGroup);
-        Run("1.0.32.11 bombs: never with the leader or a companion inside blast + margin of the target", BombNeverNearAllies);
-        Run("1.0.32.11 bombs: never at its feet, never out of range or out of sight, never while busy", BombRangeSightBusy);
-        Run("1.0.32.11 bombs: finite - none carried means none thrown; a lone weak enemy is not worth one", BombFiniteAndWorth);
+        Run("1.0.32.12 throw: an incoming cluster farther off is chosen over a closer pair standing still", ThrowPrefersIncomingCluster);
+        Run("1.0.32.12 throw (Brian hard rule): never lands near the leader or a companion, now or when it lands", ThrowNeverNearFriends);
+        Run("1.0.32.12 throw: aims ahead of a moving group, inside reach, not at its feet", ThrowLeadsAndRange);
+        Run("1.0.32.12 throw: ballistic elevation lands at the planned distance for the Souls throw speed", ThrowBallistics);
+        Run("1.0.32.12 throw: a lone weak enemy is not worth it; a lone tough one is; cooldown holds", ThrowWorthAndCadence);
         Run("LOCK combat voice 1.0.32.6: every rule constant is the approved value", CombatVoiceConstantsLocked);
         Run("LOCK combat voice: alert only before contact, once per enemy, party cooldown", CombatVoiceAlertsLocked);
         Run("LOCK combat voice: every heavy exertion voiced, ordinary swings 30% / 2.5 s", CombatVoiceExertionLocked);
@@ -1110,46 +1111,61 @@ static class RegressionLedgerTests
     }
 
 
-    // ---- 1.0.32.11 bombs (first shared thrown-area capability)
-    static BombSituation Group() { return new BombSituation { Reserve = 3, TargetDistance = 9f, SelfToTarget = 9f, TargetVisible = true, NearestAllyToTarget = 9f, HostilesNearTarget = 3, TargetMaxHealth = 60f }; }
-
-    static void BombThrowsAtGroup()
+    // ---- 1.0.32.12 throw planner (Souls Pillager throw, player-like decision)
+    static ThrowBody Foe(float x, float z, float vx = 0f, float vz = 0f, float hp = 60f) { return new ThrowBody { Position = new P2(x, z), Velocity = new P2(vx, vz), MaxHealth = hp }; }
+    static ThrowBody Friend(float x, float z, float vx = 0f, float vz = 0f) { return new ThrowBody { Position = new P2(x, z), Velocity = new P2(vx, vz) }; }
+    static ThrowPlan PlanAt(ThrowBody[] h, ThrowBody[] f)
     {
-        var p = new BombPolicy();
-        Assert(p.Decide(10f, Group()), "did not throw at three enemies 9 m away: " + p.LastReason);
-        p.Started(10f);
-        Assert(!p.Decide(15f, Group()) && p.LastReason == "cooldown", "threw again inside the cooldown");
-        Assert(p.Decide(22.1f, Group()), "never threw again after the cooldown");
-        var q = new BombPolicy(); q.Failed(10f);
-        Assert(q.Decide(12.1f, Group()), "a refused throw waited the full cooldown");
+        return ThrowPlanner.Plan(new P2(0f, 0f), 0f, new P2(0f, 1f), new P2(0f, -1f), h, h.Length, f, f.Length);
     }
 
-    static void BombNeverNearAllies()
-    {
-        var p = new BombPolicy(); BombSituation s = Group();
-        s.NearestAllyToTarget = BombPolicy.BlastRadius + BombPolicy.SafetyMargin - .1f;
-        Assert(!p.Decide(0f, s) && p.LastReason == "ally near target", "threw with an ally 5.4 m from the target");
-        s.NearestAllyToTarget = 1f;
-        Assert(!p.Decide(0f, s), "threw at an enemy fighting the leader");
+    static void ThrowPrefersIncomingCluster()
+    {   // a still pair at 7 m to the right, three coming at us from 12 m ahead
+        var h = new[] { Foe(7f, 0f), Foe(7.5f, .5f), Foe(0f, 12f, 0f, -1.5f), Foe(.8f, 12.4f, 0f, -1.5f), Foe(-.8f, 12.3f, 0f, -1.5f) };
+        ThrowPlan p = PlanAt(h, new[] { Friend(0f, -2f) });
+        Assert(p.Throw && p.Members == 3 && p.Incoming == 3, "did not pick the incoming three (members " + p.Members + ", incoming " + p.Incoming + ", " + p.Reason + ")");
     }
 
-    static void BombRangeSightBusy()
+    static void ThrowNeverNearFriends()
     {
-        var p = new BombPolicy(); BombSituation s = Group();
-        s.TargetDistance = s.SelfToTarget = 5.9f; Assert(!p.Decide(0f, s) && p.LastReason == "too close", "threw at its feet");
-        s = Group(); s.TargetDistance = s.SelfToTarget = 14.1f; Assert(!p.Decide(0f, s) && p.LastReason == "too far", "threw beyond range");
-        s = Group(); s.TargetVisible = false; Assert(!p.Decide(0f, s), "threw without line of sight");
-        s = Group(); s.Busy = true; Assert(!p.Decide(0f, s), "threw mid-attack or staggered");
-        s = Group(); s.TargetDistance = -1f; Assert(!p.Decide(0f, s), "threw with no target");
-        s = Group(); s.FacingAngle = 60f; Assert(!p.Decide(0f, s) && p.LastReason == "not facing", "threw sideways at a target 60 degrees off");
+        var h = new[] { Foe(0f, 10f), Foe(1f, 10f), Foe(-1f, 10.5f) };
+        ThrowPlan near = PlanAt(h, new[] { Friend(0f, 6f) });       // leader 4 m from the group
+        Assert(!near.Throw && near.Reason == "friend near the landing", "threw with a friend 4 m from the landing (" + near.Reason + ")");
+        ThrowPlan walking = PlanAt(h, new[] { Friend(0f, 3f, 0f, 4f) });   // a companion running into the blast
+        Assert(!walking.Throw, "threw where a companion will be when it lands");
+        ThrowPlan clear = PlanAt(h, new[] { Friend(0f, -2f) });
+        Assert(clear.Throw && clear.FriendClearance >= ThrowPlanner.BlastRadius + ThrowPlanner.FriendMargin, "a clear throw was refused or too close");
     }
 
-    static void BombFiniteAndWorth()
+    static void ThrowLeadsAndRange()
     {
-        var p = new BombPolicy(); BombSituation s = Group();
-        s.Reserve = 0; Assert(!p.Decide(0f, s) && p.LastReason == "none carried", "threw a bomb it does not carry");
-        s = Group(); s.HostilesNearTarget = 1; s.TargetMaxHealth = 60f; Assert(!p.Decide(0f, s), "wasted a bomb on one weak enemy");
-        s.TargetMaxHealth = 500f; Assert(p.Decide(0f, s), "would not bomb one tough enemy (troll-sized)");
+        var moving = new[] { Foe(4f, 10f, -2f, 0f), Foe(4.5f, 10.5f, -2f, 0f) };
+        ThrowPlan p = PlanAt(moving, new ThrowBody[0]);
+        Assert(p.Throw && p.Lead > .5f && p.Aim.X < 4.2f, "did not aim ahead of a group walking left (lead " + p.Lead.ToString("0.0") + ")");
+        Assert(!PlanAt(new[] { Foe(0f, 3f), Foe(.5f, 3f) }, new ThrowBody[0]).Throw, "threw at its feet");
+        Assert(!PlanAt(new[] { Foe(0f, 20f), Foe(.5f, 20f) }, new ThrowBody[0]).Throw, "threw beyond reach");
+    }
+
+    static void ThrowBallistics()
+    {
+        foreach (float d in new[] { 6f, 9f, 13f })
+        {
+            float e = ThrowPlanner.Elevation(d, 0f);
+            Assert(!float.IsNaN(e), "no solution at " + d + " m");
+            float range = ThrowPlanner.Speed * ThrowPlanner.Speed * (float)Math.Sin(2 * e) / ThrowPlanner.Gravity;
+            Assert(Math.Abs(range - d) < .05f, "elevation lands at " + range.ToString("0.00") + " m instead of " + d);
+        }
+        Assert(float.IsNaN(ThrowPlanner.Elevation(16f, 0f)), "claimed a solution beyond 14.4 m");
+    }
+
+    static void ThrowWorthAndCadence()
+    {
+        Assert(!PlanAt(new[] { Foe(0f, 9f) }, new ThrowBody[0]).Throw, "wasted a throw on one weak enemy");
+        Assert(PlanAt(new[] { Foe(0f, 9f, 0f, 0f, 600f) }, new ThrowBody[0]).Throw, "would not throw at one troll-sized enemy");
+        var c = new ThrowCadence { Cooldown = 10f };
+        Assert(c.Ready(0f), "not ready at start"); c.Started(0f);
+        Assert(!c.Ready(9.9f) && c.Ready(10f), "cooldown wrong");
+        c.Failed(20f); Assert(c.Ready(22f), "a failed throw waited the full cooldown");
     }
 
     // ---- Combat-voice lock (approved 1.0.32.6, 2026-10-27). Companion combat module, combat voice: COMPLETE.

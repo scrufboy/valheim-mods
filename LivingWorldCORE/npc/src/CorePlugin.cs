@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.32.11";
+        public const string Version = "1.0.32.12";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -30,7 +30,8 @@ namespace LivingWorld.Core
         public static bool Registered { get { return Instance != null && Instance.registered; } }
 
         // Feature switches so one change can be live-tested at a time (BepInEx config file).
-        static BepInEx.Configuration.ConfigEntry<bool> shieldBlocking, companionBombs, devBombLog;
+        static BepInEx.Configuration.ConfigEntry<bool> shieldBlocking, companionBombs, devBombLog, bombsEndless;
+        static BepInEx.Configuration.ConfigEntry<float> bombCooldown;
         static BepInEx.Configuration.ConfigEntry<float> foodStamina, companionVoiceGain;
         static BepInEx.Configuration.ConfigEntry<bool> devVoiceLog;
         static BepInEx.Configuration.ConfigEntry<bool> partySpacing, devSpacingLog, matchGait;
@@ -43,6 +44,8 @@ namespace LivingWorld.Core
         public static bool ShieldBlocking { get { return shieldBlocking != null && shieldBlocking.Value; } }
         public static bool CompanionBombs { get { return companionBombs == null || companionBombs.Value; } }
         public static bool DevBombLog { get { return devBombLog != null && devBombLog.Value; } }
+        public static bool BombsEndless { get { return bombsEndless == null || bombsEndless.Value; } }
+        public static float BombCooldown { get { return bombCooldown == null ? 10f : Mathf.Clamp(bombCooldown.Value, 2f, 120f); } }
 
         void Awake()
         {
@@ -62,7 +65,11 @@ namespace LivingWorld.Core
             shieldBlocking = Config.Bind("Combat", "ShieldBlocking", false,
                 "Experimental: companions raise shields against close melee and aimed projectiles.");
             companionBombs = Config.Bind("Combat", "CompanionBombs", true,
-                "Companions carrying bombs (lab: lwbombs) throw one at a group or a tough enemy 6-14 m away, never with you or another companion within 5.5 m of the target. Finite; one per 12 s. Off = never throw.");
+                "Companions throw bombs the Souls of the Land Pillager way (Greydwarf throw, ooze bomb, overhead swing) at the best enemy cluster 6-13.5 m out, favouring groups coming at the party, aimed where they are headed. Never if you or another companion would be within 5.5 m of the landing. Off = never throw.");
+            bombsEndless = Config.Bind("Combat", "BombsEndless", true,
+                "Test mode: bombs never run out (lwbombs is not needed). False = each companion carries the lwbombs reserve.");
+            bombCooldown = Config.Bind("Combat", "BombCooldown", 10f,
+                "Seconds between one companion's throws (Souls Pillager: 16).");
             devBombLog = Config.Bind("Combat", "DevBombLog", false,
                 "Development only: log why a companion carrying bombs did not throw (BOMB-SKIP), at most every 3 s.");
             // One hook: companions answer native MonsterAI's own "which enemy?" question.
@@ -90,6 +97,11 @@ namespace LivingWorld.Core
             // 1.0.32.4 voice (observes only; never changes the attack or the stagger).
             harmony.Patch(NativeApi.AttackTrigger,
                 postfix: new HarmonyLib.HarmonyMethod(typeof(CompanionCombatVoice).GetMethod("AttackTriggerPostfix")));
+            // 1.0.32.12 throws: only the Living World throw item with a pending aim (ThrowAimHook.Mine).
+            harmony.Patch(NativeApi.FireProjectileBurst,
+                prefix: new HarmonyLib.HarmonyMethod(typeof(ThrowAimHook).GetMethod("FirePrefix")));
+            harmony.Patch(NativeApi.GetProjectileSpawnPoint,
+                postfix: new HarmonyLib.HarmonyMethod(typeof(ThrowAimHook).GetMethod("SpawnPostfix")));
             harmony.Patch(NativeApi.RpcStagger,
                 prefix: new HarmonyLib.HarmonyMethod(typeof(CompanionCombatVoice).GetMethod("RpcStaggerPrefix")));
             harmony.Patch(NativeApi.CharacterOnDeath,
@@ -120,6 +132,27 @@ namespace LivingWorld.Core
                 (missing.Length == 0 ? "" : " NATIVE API MISSING: " + missing));
         }
 
+        /// <summary>1.0.32.12: the Souls of the Land Pillager bomb, rebuilt on our own clone so vanilla
+        /// Greydwarf_throw and the player's bombs are untouched: Greydwarf_throw attack, oozebomb projectile,
+        /// mace_secondary swing, sfx_unarmed_swing, pierce 5 + fire 25 on the projectile hit.</summary>
+        void RegisterThrowItem()
+        {
+            GameObject projectile = PrefabManager.Instance.GetPrefab("oozebomb_projectile");
+            if (projectile == null) { Report("THROW item not registered: oozebomb_projectile missing."); return; }
+            var item = new CustomItem(ThrowAimHook.ThrowItem, "Greydwarf_throw");
+            if (item.ItemDrop == null) { Report("THROW item not registered: Greydwarf_throw missing."); return; }
+            ItemDrop.ItemData.SharedData shared = item.ItemDrop.m_itemData.m_shared;
+            shared.m_name = "Living World throw";
+            shared.m_attack.m_attackAnimation = "mace_secondary";
+            shared.m_attack.m_attackProjectile = projectile;
+            shared.m_damages = new HitData.DamageTypes { m_pierce = 5f, m_fire = 25f };
+            GameObject swing = PrefabManager.Instance.GetPrefab("sfx_unarmed_swing");
+            if (swing != null) shared.m_attack.m_startEffect = new EffectList { m_effectPrefabs = new[] { new EffectList.EffectData { m_prefab = swing, m_enabled = true } } };
+            ItemManager.Instance.AddItem(item);
+            Report("THROW item " + ThrowAimHook.ThrowItem + ": Greydwarf_throw + oozebomb_projectile, anim mace_secondary, vel " +
+                shared.m_attack.m_projectileVel + ", spread " + shared.m_attack.m_projectileAccuracy + "/" + shared.m_attack.m_projectileAccuracyMin + ".");
+        }
+
         void RegisterPrefabs()
         {
             if (registered) return;
@@ -135,6 +168,7 @@ namespace LivingWorld.Core
                 GameObject[] archerItems = Items("ArmorIronChest", "ArmorIronLegs", "CapeDeerHide", "BowFineWood", "ArrowWood", "SwordIron", "ShieldBanded");
                 PrefabManager.Instance.AddPrefab(new CustomPrefab(NpcFactory.Create(GuardPrefab, player, guardItems, "guard"), false));
                 PrefabManager.Instance.AddPrefab(new CustomPrefab(NpcFactory.Create(ArcherPrefab, player, archerItems, "archer"), false));
+                RegisterThrowItem();
                 registered = true;
                 Report("Registered guard and archer native humans.");
                 try { CombatDataReport.Write(Report); }

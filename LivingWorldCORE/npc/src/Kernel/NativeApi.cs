@@ -61,6 +61,12 @@ namespace LivingWorld.Core
         // 1.0.32.4 voice: heavy exertion at the committed attack frame; one exertion per attack; stagger pain on entry.
         internal static readonly MethodInfo AttackTrigger = Method(typeof(Attack), "OnAttackTrigger");
         internal static readonly FieldInfo AttackCharacter = Field(typeof(Attack), "m_character");
+        // 1.0.32.12 throws: aim the companion's own throw attack at a planned point (verified in IL, 1.0.20:
+        // FireProjectileBurst reads velocity, random-velocity and launch angle, then GetProjectileSpawnPoint gives aimDir).
+        internal static readonly FieldInfo AttackWeapon = Field(typeof(Attack), "m_weapon");
+        internal static readonly MethodInfo FireProjectileBurst = Method(typeof(Attack), "FireProjectileBurst");
+        internal static readonly MethodInfo GetProjectileSpawnPoint = typeof(Attack).GetMethod("GetProjectileSpawnPoint", Instance, null,
+            new[] { typeof(Vector3).MakeByRefType(), typeof(Vector3).MakeByRefType() }, null);
         internal static readonly MethodInfo RpcStagger = Method(typeof(Character), "RPC_Stagger", typeof(long), typeof(Vector3));
         // 1.0.32.6 voice: death-line dev log (observes only).
         internal static readonly MethodInfo CharacterOnDeath = Method(typeof(Character), "OnDeath");

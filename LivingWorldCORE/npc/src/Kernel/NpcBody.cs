@@ -230,13 +230,14 @@ namespace LivingWorld.Core
         }
 
         /// <summary>Put one bomb in hand and start the native throw at the current target. False = nothing changed.</summary>
-        public bool ThrowBomb(NpcBehavior caller, Character target)
+        public bool ThrowBomb(NpcBehavior caller, Character target, Vector3 aim)
         {
             Require(NpcDomain.Hands, caller);
             if (thrownBomb != null || target == null || Human.InAttack()) return false;
             int reserve = BombReserve;
-            if (reserve <= 0 || ObjectDB.instance == null) return false;
-            GameObject prefab = ObjectDB.instance.GetItemPrefab(BombKind);
+            bool endless = CorePlugin.BombsEndless;
+            if ((!endless && reserve <= 0) || ObjectDB.instance == null) return false;
+            GameObject prefab = ObjectDB.instance.GetItemPrefab(ThrowAimHook.ThrowItem);   // Souls-style throw (Greydwarf_throw + oozebomb)
             if (prefab == null || prefab.GetComponent<ItemDrop>() == null) return false;
             Inventory inventory = Human.GetInventory();
             if (inventory == null) return false;
@@ -246,11 +247,13 @@ namespace LivingWorld.Core
             bombPrevRight = RightItem; bombPrevLeft = LeftItem;
             DouseTorchCore();
             ItemDrop.ItemData backLeft = BackLeft, backRight = BackRight;   // EquipItem wipes the back slots
+            ThrowAimHook.Set(Human, aim);
             Human.EquipItem(bomb, false);
             NativeApi.HiddenLeftItem.SetValue(Human, backLeft);
             NativeApi.HiddenRightItem.SetValue(Human, backRight);
             if (!Human.IsItemEquiped(bomb) || !Human.StartAttack(target, false))
             {
+                ThrowAimHook.Clear(Human);
                 Human.UnequipItem(bomb, false);
                 inventory.RemoveItem(bomb);
                 RestoreAfterBomb();
@@ -258,7 +261,7 @@ namespace LivingWorld.Core
                 return false;
             }
             thrownBomb = bomb;
-            View.GetZDO().Set(BombsKey, reserve - 1);   // the throw is committed once the native attack starts
+            if (!endless) View.GetZDO().Set(BombsKey, reserve - 1);   // the throw is committed once the native attack starts
             BombThrows++;
             return true;
         }
@@ -273,11 +276,11 @@ namespace LivingWorld.Core
             Inventory inventory = Human.GetInventory();
             if (inventory != null && inventory.ContainsItem(thrownBomb))
             {
+                // the throw item is not consumed by its attack (Greydwarf_throw has no consumeItem): always remove it
                 Human.UnequipItem(thrownBomb, false);
                 inventory.RemoveItem(thrownBomb);
-                View.GetZDO().Set(BombsKey, BombReserve + 1);   // never thrown: refund
-                BombThrows--; BombRefused++;
             }
+            ThrowAimHook.Clear(Human);
             thrownBomb = null;
             RestoreAfterBomb();
             return true;
