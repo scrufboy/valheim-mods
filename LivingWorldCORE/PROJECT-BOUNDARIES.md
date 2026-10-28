@@ -82,6 +82,10 @@ describes the complete actor, not only combat:
 - Formidable actors must remain capable when telemetry and the Tooler are removed.
 - Friendly and hostile humanoids share core actor capabilities; faction, role,
   loadout, initiative, and content profiles produce the differences.
+- A third-party benchmark actor is evidence for capabilities and presentation,
+  not a permanent one-prefab/one-faction truth. Living World may build friendly,
+  neutral, hostile, living, bound, freed, or revenant variants on its own core
+  when the approved lore supports each variant.
 
 ## Souls Forest Child lineage and regional content track
 

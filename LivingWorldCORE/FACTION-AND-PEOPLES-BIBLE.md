@@ -10,6 +10,25 @@ Species, body type, sex, and biome never determine morality. Faction records
 describe current allegiance and permitted hostility. Individuals may defect,
 refuse recruitment, tolerate a local people, or protect a mixed camp.
 
+## One core, multiple world variants
+
+Living World does not import a Souls NPC as one indivisible prefab-and-faction
+truth. It preserves useful visual, equipment, attack, and role evidence, then
+rebuilds approved variants on the Formidable actor core.
+
+An archetype may therefore have:
+
+- a hostile wilderness or raid variant;
+- a neutral camp or unaffiliated variant;
+- a friendly/recruitable variant when its origin supports personhood and choice;
+- corrupted, bound, revenant, freed, or living presentations where lore supports
+  those states;
+- biome and tier variants that share capabilities without sharing allegiance.
+
+Variants are separate content profiles with stable identities. They are not a
+mid-combat morality switch and do not make every enemy recruitable. Friendly and
+hostile people simply coexist in the world using the same reliable actor systems.
+
 ## Friendly and recruitable lineages
 
 | Existing functional lineage | Living World place in the story |
@@ -59,11 +78,15 @@ matrix becomes deliberately hostile to Hearthbound, player, Fuling, Pillager,
 Guardian, and rival hostile forces. Temporary target priority is tactical, never
 proof of friendship.
 
-Its origin remains open for final naming: oath-broken Second-Breath champion,
-revenant war-captain, Forsaken-made enforcer, or person hollowed into an office of
-war. Do not settle that choice merely to explain an enum. `Einherjar` remains
-reserved for Odin's chosen battle-dead and must not be used as a generic elite
-title.
+Its origin and life-state remain open for final naming: oath-broken Second-Breath
+champion, undead or revenant war-captain, Forsaken-made enforcer, or a person
+hollowed into an office of war. Do not decide that it is living or undead merely
+from the old `PlainsMonsters` value or its model. If the approved origin supports
+both, the core may instantiate a hostile corrupted lieutenant and a distinct
+living/freed counterpart with different identity and allegiance profiles.
+
+`Einherjar` remains reserved for Odin's chosen battle-dead and must not be used as
+a generic elite title.
 
 ### Fen Draugr (`RRRN_Neckman`)
 
