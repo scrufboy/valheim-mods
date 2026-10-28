@@ -15,11 +15,15 @@ without taking the game away from the player.
 The package should support fully lore-friendly, adventurous, well-written and
 well-scripted encounters. Dialogue, voice, work, travel, enemy relations, and
 quest flags respond to a person's situation and to what the player has actually
-done. Affinity records earned trust and boundaries. Aid can lead to temporary
-travel and, later, a mutual invitation; people are not acquired through food
-taming or mercenary payment. Friendly people and enemy families belong to the
-same living world and use shared actor capabilities with different allegiances,
-roles, and stories.
+done. At a camp, a person may ask for food because they are hungry, ask for a
+nearby threat to be cleared, or ask for help reclaiming a village. The player
+may agree, decline, or leave. If the player helps, the person remembers the
+specific act and may choose to help in return or travel together for that
+purpose. Shared events can deepen affinity. Later, either person may invite the
+other into the expedition, and the other may accept or decline. Friendship,
+story partnership, and family-like bonds grow from those continuing choices.
+Friendly people and enemy families belong to the same living world and use
+shared actor capabilities with different allegiances, roles, and stories.
 
 Study every relevant mod the owner supplies in depth. Identify useful methods,
 Valheim hooks, and working capabilities; test what applies; improve what falls

@@ -146,10 +146,17 @@ boundaries, duties, and relationships even when grateful. The player can learn a
 short account of who they are from the tasks they do, what they ask for, and how
 they respond to the result.
 
-Food cannot tame a person, coin cannot hire one into obedience, and sight alone
-cannot turn anyone into a follower. The server records the exact accepted
-request, the person's own agreement, witnessed help, safe temporary return,
-and a later separate invitation. Loaded and unloaded scenes project those
+A concrete path begins when a camp resident tells the player about hungry
+people, a nearby hostile group, or a village they hope to reclaim. The player
+may agree to help. A witnessed hunt, cleared route, or successful return gives
+the person a reason to trust the player and perhaps offer help in return. They
+may travel together for that specific task. After shared action and safe
+return, either may offer a separate expedition invitation. Acceptance begins
+party membership; later friendship or family-like loyalty develops through
+further choices and history. Food delivered for a stated need resolves that
+need; it does not flip a person into a follower. The server records the exact
+accepted request, the person's agreement, witnessed help, safe temporary
+return, and separate invitation. Loaded and unloaded scenes project those
 durable facts rather than reset or invent them. The active field limit remains
 two people, counting temporary help as a field position.
 
