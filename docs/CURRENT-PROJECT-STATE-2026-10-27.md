@@ -5,8 +5,10 @@ approved runtime branches into `main`.
 
 ## Design authority
 
-- `main` @ `54f8d7a` — current lore, framework boundaries, world companions,
-  roster/progression, appearance and permanent-mortality design.
+- `main` — current lore, framework boundaries, world companions,
+  roster/progression, appearance and permanent-mortality design. The latest
+  substantive design commit in this record is `54f8d7a`; later commits add this
+  navigation documentation.
 - `design/lwc-design-archive` @ `6b9efbd` — reconciled design archive,
   implementation map, traversal gate, work order and Claude source audit.
 
