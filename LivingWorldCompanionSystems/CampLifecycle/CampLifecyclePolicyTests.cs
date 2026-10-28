@@ -88,6 +88,29 @@ static class CampLifecyclePolicyTests
         var frozen=CampLifecyclePolicy.Observe(p,c,unloaded); Check(frozen.Directive==RuntimeDirective.Despawn && frozen.State.Life==PersonLife.Living && !frozen.Persist, "unload freezes and never kills");
         var absent=Seen(1800); absent.PlayerNear=false; absent.ConfirmedDeath=true;
         Check(CampLifecyclePolicy.Observe(p,c,absent).State.Life==PersonLife.Living, "offscreen death claim refused");
+        var residentCamp=Camp(); residentCamp.ServerResident=true;
+        var resident=Seen(1800); resident.PlayerNear=false; resident.ServerZoneRetained=true; resident.AwaySafetyEnforced=true;
+        var residentLife=CampLifecyclePolicy.Observe(p,residentCamp,resident);
+        Check(residentLife.Directive==RuntimeDirective.RunRoutine && residentLife.Owner==ActionOwner.CampRoutine && residentLife.State.Life==PersonLife.Living,
+            "chosen server-resident camp keeps its loaded actor and routine without a nearby player");
+        resident.ConfirmedDeath=true;
+        Check(CampLifecyclePolicy.Observe(p,residentCamp,resident).State.Life==PersonLife.Living,
+            "resident camp cannot turn unwitnessed death into a permanent casualty");
+        resident.ConfirmedDeath=false; resident.AwaySafetyEnforced=false;
+        Check(CampLifecyclePolicy.Observe(p,residentCamp,resident).Directive==RuntimeDirective.Despawn,
+            "resident actor cannot remain active without away-safety enforcement");
+        resident.AwaySafetyEnforced=true; resident.ServerZoneRetained=false;
+        Check(CampLifecyclePolicy.Observe(p,residentCamp,resident).Directive==RuntimeDirective.Despawn,
+            "resident actor requires an actually retained server zone");
+        resident.ServerZoneRetained=true; resident.ZoneLoaded=false;
+        Check(CampLifecyclePolicy.Observe(p,residentCamp,resident).Directive==RuntimeDirective.Despawn,
+            "resident designation cannot invent a loaded zone");
+        resident.ZoneLoaded=true; resident.ActorExists=false;
+        Check(CampLifecyclePolicy.Observe(p,residentCamp,resident).Directive==RuntimeDirective.Despawn,
+            "resident designation cannot invent a loaded actor");
+        resident.ActorExists=true; resident.AuthoritativeOwner=false;
+        Check(CampLifecyclePolicy.Observe(p,residentCamp,resident).Directive==RuntimeDirective.Despawn,
+            "resident designation requires server actor ownership");
         var remote=Seen(1800); remote.AuthoritativeOwner=false; remote.ConfirmedDeath=true;
         Check(CampLifecyclePolicy.Observe(p,c,remote).State.Life==PersonLife.Living, "remote death claim refused");
 

@@ -241,11 +241,22 @@ permanent and cannot be converted into release, rescue, or a new spawn.
 
 ## When the player leaves
 
-Zone unload is a checkpoint, not an invitation for simulated invisible combat.
-Persist the site, cast, incident state, injuries, gear, threat state, and last
-safe location before unloading. No Unity actor AI continues offscreen. The host
-may advance only bounded, nonlethal world-time facts such as a watch rotation,
-supplies becoming strained, or a planned migration. It must never roll a hidden
+Selected authored camps may be **server-resident areas** while a dedicated
+server is running. Their named people retain the same persistent identities,
+loaded actors, and bounded camp routines even when no player is nearby. The
+server must actually retain each selected zone, own the actors, enforce an
+unwitnessed-combat safety rule, and stay within an explicit camp/actor budget.
+A saved ZDO alone does not prove continuous AI: persistent objects are
+instantiated when their zone loads. The current pure camp policy supports a
+server-resident decision, but the maintained Valheim adapter has not yet been
+wired to retain zones or enforce that safety rule. This is a required code and
+dedicated-server test gate, not a claim of a running feature. See Jotunn's
+[zone and persistent-object documentation](https://valheim-modding.github.io/Jotunn/tutorials/zones.html).
+
+Other camps may unload normally. Zone unload checkpoints the site, cast,
+incident state, injuries, gear, threat state, and last safe location. The
+server may advance bounded, nonlethal world-time facts, such as a watch
+rotation, strained supplies, or planned migration. It must never roll a hidden
 death, pay out resources, create a replacement, or turn a living named person
 into an untracked ambient spawn.
 

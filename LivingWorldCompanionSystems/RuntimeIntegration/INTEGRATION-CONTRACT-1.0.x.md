@@ -20,7 +20,7 @@ The store implementation must be server-only and provide real compare-and-swap s
 
 1. Discovery chooses a safe site and produces the encounter instance ID. Creation validates that the lead, camp, lifecycle person, and roster person agree.
 2. A zone-load adapter uses `PersonSpawnClaims.TryClaim`. A second GameObject for the same `PersonId` is refused. Zone unload releases only the process claim; persisted identity and life remain.
-3. An unloaded or distant observation follows `CampLifecyclePolicy.Observe`: it requests despawn and does not persist death. Death commits only with loaded, near, existing actor, authoritative owner, place, and cause evidence.
+3. An unloaded observation follows `CampLifecyclePolicy.Observe`: it requests despawn and does not persist death. Player distance also requests despawn unless this is an authored server-resident camp and the adapter proves actual retained-zone ownership plus away-safety enforcement. A resident actor may continue bounded camp routines without a nearby player. Death still commits only with loaded, near, existing actor, authoritative owner, place, and cause evidence.
 4. Material danger enters Friend in Need once. When native combat commits, the alert emits `YieldToNativeCombat`; lifecycle receives combat ownership and camp activity yields.
 5. Rescue outcome and discovery lead closure publish in one aggregate revision.
 6. Release may enter `AwaitingSafeHandoff`. It becomes `BondedResident` only after the destination is established and loaded, the same companion is present there, unsafe transitions are false, and player-loan exchange is complete.

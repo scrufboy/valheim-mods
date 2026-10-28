@@ -34,6 +34,8 @@ namespace LivingWorld.CompanionSystems.CampLifecycle
     {
         public string CampId, MigrationDestinationCampId;
         public CampDisposition Disposition;
+        // Authored, bounded camps may remain active on a running dedicated server.
+        public bool ServerResident;
         public long RoutineEpoch, LastObservedWorldTick;
         public int SchemaVersion;
         public CampState Copy() { return (CampState)MemberwiseClone(); }
@@ -44,6 +46,8 @@ namespace LivingWorld.CompanionSystems.CampLifecycle
         public long WorldTick;
         public bool ZoneLoaded, PlayerNear, AuthoritativeOwner, ActorExists, CombatActive, CombatClearRegroup,
             AlertActive, Incapacitated, ConfirmedDeath, SafeAnchorAvailable, DestinationLoaded, ArrivalConfirmed;
+        // Both facts must be supplied by the server adapter, never inferred from a saved ZDO.
+        public bool ServerZoneRetained, AwaySafetyEnforced;
         public string SafeAnchor, DeathPlace, DeathCause;
         // Supplied by AssignCampRoutines for a loaded multi-person camp.
         public bool HasCampRoutineAssignment;
@@ -245,9 +249,11 @@ namespace LivingWorld.CompanionSystems.CampLifecycle
                 return Decision(next, RuntimeDirective.RecordMemorial, ActionOwner.Dead, "authoritative death committed once", true);
             }
 
-            if (!o.ZoneLoaded || !o.PlayerNear)
+            bool serverResidentActive = camp.ServerResident && o.ServerZoneRetained &&
+                o.AwaySafetyEnforced && o.ActorExists && o.AuthoritativeOwner;
+            if (!o.ZoneLoaded || (!o.PlayerNear && !serverResidentActive))
                 return Decision(next, RuntimeDirective.Despawn, ActionOwner.None,
-                    "unloaded or unobserved: freeze persisted person; do not simulate casualty", false);
+                    "zone unavailable or no safe server residency: freeze persisted person", false);
 
             if (!o.AuthoritativeOwner)
                 return Decision(next, RuntimeDirective.None, ActionOwner.None, "remote replica is read-only", false);

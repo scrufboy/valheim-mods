@@ -14,7 +14,7 @@ The runtime must acquire a global `livingworld.person.<person_id>` spawn claim b
 2. Apply a decision with a compare-and-swap on record revision. Persist the complete person transition before spawning/despawning. Retry from a fresh read on conflict.
 3. For every loaded camp, collect its living actor IDs and station facts, call `AssignCampRoutines`, and pass each result into its `Observation`. This reserves exactly one watcher, staggers other work, and excludes cook/rest/repair when the required fire/shelter/work surface is absent. Map `RunRoutine` to a cancellable peaceful lease. The lease may control only while the existing exclusive owner is at the camp/resident tier.
 4. On readiness, combat, combat pursuit/regroup, incapacity, or death, cancel animation/navigation/hand claims synchronously. Do not resume until the higher owner explicitly releases; then call the policy again.
-5. On zone unload or player absence, save the last safe anchor and remove the scene actor. Do not advance health, hazards, combat, inventory, or mortality offscreen.
+5. For a selected `ServerResident` camp, retain its actual zone and owned actors on the running dedicated server within a fixed budget. Supply `ServerZoneRetained` only after checking real zone residency, and `AwaySafetyEnforced` only after preventing unwitnessed native damage/death and unsafe combat. Then the camp policy keeps bounded routines active without a nearby player. This does not follow from ZDO persistence alone. If either guarantee fails, save the last safe anchor and remove the scene actor. Never advance hidden mortality.
 6. Commit death only from the authoritative loaded actor's confirmed native death transaction. Make it idempotent by `person_id`; write memorial facts and release roster/party assignments in the same server transaction. Never turn a missing actor into a casualty.
 7. Migration begins by persisting `Migrating + destination`. The origin remains authoritative until a loaded destination confirms arrival. Commit the new camp and clear destination atomically; only then transfer the spawn claim. A failed or interrupted journey remains retryable from the last safe anchor.
 8. Return/release uses the same stable record. Rejoining changes assignment only; it never creates a new person or rerolls appearance, history, equipment, relationship, or wounds.
@@ -38,6 +38,7 @@ Do not run this seam for unloaded/away people. Do not preserve a stale sighting 
 ## Adapter acceptance still required
 
 - Dedicated-server and owner-transfer tests for one spawn per `person_id`.
+- Selected server-resident zone retention with zero players nearby, one- and two-player approach, safety enforcement, budget exhaustion, and orderly release on shutdown or zone loss.
 - Save/reload and zone unload/reload through actual ZDO serialization.
 - Combat preemption of every routine, including native hands, path, facing, and animation cleanup.
 - Live station discovery and loss (fire destroyed, shelter invalidated, work surface removed) followed by deterministic reassignment with one watcher retained.
