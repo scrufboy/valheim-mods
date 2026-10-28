@@ -7,6 +7,16 @@ protocol; prior dated submissions remain intact.
 
 ## Owner intent and fixed rules
 
+- DESIGN-AUTHORITY: The owner goal is to make the best NPCs Valheim can have:
+  one modular, cohesive living world of capable friendly and hostile people,
+  biome-shaped identity and equipment, authored adventures, working routines,
+  earned affinity, and telemetry-refined combat. Read
+  `LivingWorldCORE/PROJECT-BOUNDARIES.md` under **Owner goal** before treating
+  any later correction as a change to project scope.
+- DESIGN-AUTHORITY: A narrow correction changes its stated subject only. Keep
+  the existing research, implementation direction, and accepted contracts
+  unless the owner explicitly changes them. Clarify an ambiguous reversal
+  before undoing work.
 - SOURCE-INSPECTED: Brian wants people encountered in a living world, with their
   own home, kit, knowledge, needs, consent, and history. No food taming, coin
   hiring, instant follower command, or automatic friendship.
