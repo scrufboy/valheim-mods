@@ -18,7 +18,7 @@ approved runtime branches into `main`.
 | --- | --- | --- |
 | `lwc-core-1.0/baseline-combat-voice-1.0.32.6` | `26fd295` | approved and locked combat-voice source |
 | `combat-voice-approved-1.0.32.6` | peels to `26fd295` | annotated approval tag |
-| `lwc-core-1.0/installed-1.0.32.7` | `9933763` | installed rename/module-boundary build; launch proof pending |
+| `lwc-core-1.0/installed-1.0.32.7` | `9933763` | installed rename/module-boundary build; LIVE-PROVEN 2026-10-28 (one-launch check, see `claude-exchange/CLAUDE-OUTBOX/2026-10-28-launch-proof-1.0.32.7`) |
 | `lwc-core-1.0/1.0.32.8b-party-spacing-test` | `33addad` | current spacing review build; offline tested, not installed |
 | `lwc-core-1.0/parked-1.0.33` | `965a2a0` | parked hot-path experiment; not installed |
 
@@ -27,9 +27,9 @@ These refs share their complete prerequisite history. They remain separate from
 
 ## Immediate order
 
-1. Launch installed 1.0.32.7 once and verify its runtime evidence.
+1. ~~Launch installed 1.0.32.7 once and verify its runtime evidence.~~ Done 2026-10-28.
 2. Install/test 1.0.32.8b only after that proof, with spacing telemetry enabled.
-3. Source-inspect and design identity-preserving portal/instanced-interior travel.
+3. Implement identity-preserving travel: cave/dungeon doors first, then portals with inventory persistence. Design: `claude-exchange/CLAUDE-OUTBOX/2026-10-28-portal-dungeon-gate-design`.
 4. Reconcile the 1.0.x actor line with the Formidable framework boundary.
 5. Continue shared bomb/AOE, heavy weapon, class/role, needs, gear, progression and
    township work through modular gates.
