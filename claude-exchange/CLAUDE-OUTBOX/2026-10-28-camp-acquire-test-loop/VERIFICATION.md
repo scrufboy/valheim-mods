@@ -1,0 +1,3 @@
+# Verification
+
+NOT RUN: design request. SOURCE-INSPECTED: PROJECT-BOUNDARIES.md, WORLD-COMPANION-DISCOVERY-AND-BIOME-ROLES.md, COMPANION-PROGRESSION-ROSTER-AND-RELEASE.md, 1.0.x persistence per implementation map.
