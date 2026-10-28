@@ -21,7 +21,8 @@ approved runtime branches into `main`.
 | `lwc-core-1.0/installed-1.0.32.7` | `9933763` | installed rename/module-boundary build; LIVE-PROVEN 2026-10-28 (one-launch check, see `claude-exchange/CLAUDE-OUTBOX/2026-10-28-launch-proof-1.0.32.7`) |
 | `lwc-core-1.0/1.0.32.8b-party-spacing-test` | `33addad` | spacing review build; live-tested 2026-10-28 (contact failures, see CLAUDE-OUTBOX/2026-10-28-spacing-live-result) |
 | `lwc-core-1.0/1.0.32.11-bombs` | `f69f217` | 1.0.32.9 contact + 1.0.32.10 gait + finite bombs; superseded before play |
-| `lwc-core-1.0/1.0.32.12-souls-throw` | `1a7174e` | + Souls Pillager throw, cluster aim, endless test mode; INSTALLED 2026-10-28 (hash `c3ee23cb…`), live test pending |
+| `lwc-core-1.0/1.0.32.12-souls-throw` | `1a7174e` | + Souls Pillager throw, cluster aim, endless test mode; superseded before play |
+| `lwc-core-1.0/1.0.32.13-body-voice` | see branch | + body-reaction voice addon (poison cough); INSTALLED 2026-10-28 (hash `0a44d570…`), live test pending |
 | `lwc-core-1.0/parked-1.0.33` | `965a2a0` | parked hot-path experiment; not installed |
 
 These refs share their complete prerequisite history. They remain separate from
