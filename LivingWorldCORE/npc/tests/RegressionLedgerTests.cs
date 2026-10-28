@@ -45,6 +45,14 @@ static class RegressionLedgerTests
         Run("1.0.32.13 body voice: one onset cough, bounded repeats, one recovery breath", BodyVoiceOnsetRepeatRecover);
         Run("1.0.32.13 body voice: combat lines win; an onset is deferred then dropped, never stacked", BodyVoiceYieldsToCombat);
         Run("1.0.32.13 body voice: nothing after death; a one-tick flicker is not an exposure", BodyVoiceDeathAndFlicker);
+        Run("1.0.32.13 poison law unchanged by 1.0.32.14: same constants", BodyVoicePoisonLocked);
+        Run("1.0.32.14 burning/frost: one onset, sparse repeats, one exhale only after real exposure", StateLastingOnsetRepeatRecover);
+        Run("1.0.32.14 states: never over a combat or body line; deferred onset dropped, not stacked", StateYieldsWhenNotQuiet);
+        Run("1.0.32.14 states: nothing while dead; a status flicker is not a condition", StateDeathAndFlicker);
+        Run("1.0.32.14 swim: short swim or bobbing out says nothing; a long swim earns one breath on leaving", SwimOnlyAfterLongSwim);
+        Run("1.0.32.14 exhaustion: one breath per event, 45 s cooldown, dropped if it cannot be voiced", ExhaustionEventCooldown);
+        Run("1.0.32.14 actor gate: one voice at a time, min gap, exhale at most every 30 s", ActorGateOneVoice);
+        Run("1.0.32.14 clip choice: never the same clip twice in a row", ClipPickerNoRepeat);
         Run("LOCK combat voice 1.0.32.6: every rule constant is the approved value", CombatVoiceConstantsLocked);
         Run("LOCK combat voice: alert only before contact, once per enemy, party cooldown", CombatVoiceAlertsLocked);
         Run("LOCK combat voice: every heavy exertion voiced, ordinary swings 30% / 2.5 s", CombatVoiceExertionLocked);
@@ -1208,6 +1216,114 @@ static class RegressionLedgerTests
         var q = new BodyVoicePolicy(3); int flick = 0;
         for (int i = 0; i < 20; i++) if (q.Step(i * .1f, i % 3 == 0, false, float.NegativeInfinity) != BodyLine.None) flick++;
         Assert(flick == 0, "a 0.1 s flicker counted as exposure");
+    }
+
+    // ---- 1.0.32.14 body states (burning, frost, long swim, exhaustion, environment recovery)
+    static void BodyVoicePoisonLocked()
+    {
+        Assert(BodyVoicePolicy.Confirm == .3f && BodyVoicePolicy.RepeatMin == 4f && BodyVoicePolicy.RepeatMax == 7f, "poison timing changed");
+        Assert(BodyVoicePolicy.CombatQuiet == 1.2f && BodyVoicePolicy.MinForRecover == 1.5f && BodyVoicePolicy.CombatDefer == 1.5f, "poison priority changed");
+    }
+
+    static void StateLastingOnsetRepeatRecover()
+    {
+        var p = new LastingStatePolicy(5, 6f, 9f, 3f); int on = 0, rep = 0, rec = 0; float last = -99f, gap = 99f;
+        for (int i = 0; i < 300; i++)   // 30 s burning
+        {
+            float t = i * .1f; StateLine l = p.Step(t, true, false, true);
+            if (l == StateLine.Onset) on++;
+            if (l == StateLine.Repeat) { rep++; if (last > -99f) gap = Math.Min(gap, t - last); last = t; }
+        }
+        for (int i = 300; i < 320; i++) if (p.Step(i * .1f, false, false, true) == StateLine.Recover) rec++;
+        Assert(on == 1, "onset " + on);
+        Assert(rep >= 2 && rep <= 5, "repeats in 30 s: " + rep);
+        Assert(gap >= 6f - .11f, "repeats too close: " + gap);
+        Assert(rec == 1, "recoveries " + rec);
+        var q = new LastingStatePolicy(5, 6f, 9f, 3f); int shortRec = 0;      // 2 s of burning: cry, no exhale
+        for (int i = 0; i < 20; i++) q.Step(i * .1f, true, false, true);
+        for (int i = 20; i < 40; i++) if (q.Step(i * .1f, false, false, true) == StateLine.Recover) shortRec++;
+        Assert(shortRec == 0, "exhaled after a fleeting exposure");
+        var n = new LastingStatePolicy(5, 0f, 0f, 3f); int nr = 0;            // RepeatMin 0 = no repeats
+        for (int i = 0; i < 300; i++) if (n.Step(i * .1f, true, false, true) == StateLine.Repeat) nr++;
+        Assert(nr == 0, "repeated with repeats off");
+    }
+
+    static void StateYieldsWhenNotQuiet()
+    {
+        var p = new LastingStatePolicy(2, 6f, 9f, 3f); int any = 0;
+        for (int i = 0; i < 100; i++) if (p.Step(i * .1f, true, false, false) != StateLine.None) any++;
+        Assert(any == 0, "spoke while not quiet");
+        var q = new LastingStatePolicy(2, 6f, 9f, 3f); int on = 0;           // busy for 3 s: onset dropped, repeat later
+        for (int i = 0; i < 30; i++) if (q.Step(i * .1f, true, false, false) == StateLine.Onset) on++;
+        for (int i = 30; i < 40; i++) if (q.Step(i * .1f, true, false, true) == StateLine.Onset) on++;
+        Assert(on == 0, "a dropped onset played late");
+    }
+
+    static void StateDeathAndFlicker()
+    {
+        var p = new LastingStatePolicy(4, 6f, 9f, 3f); int any = 0;
+        for (int i = 0; i < 100; i++) if (p.Step(i * .1f, true, true, true) != StateLine.None) any++;
+        Assert(any == 0, "spoke while dead");
+        var q = new LastingStatePolicy(4, 6f, 9f, 3f); int fl = 0;
+        for (int i = 0; i < 30; i++) if (q.Step(i * .1f, i % 3 == 0, false, true) != StateLine.None) fl++;
+        Assert(fl == 0, "a flicker counted");
+        var e = new EventStatePolicy(45f); int ev = 0;
+        for (int i = 0; i < 10; i++) if (e.Step(i * .1f, true, true, true) != StateLine.None) ev++;
+        Assert(ev == 0, "event voiced while dead");
+    }
+
+    static void SwimOnlyAfterLongSwim()
+    {
+        var s = new SwimTracker(20f, 1.5f); int fired = 0;
+        for (int i = 0; i < 100; i++) if (s.Step(i * .1f, true, false)) fired++;           // 10 s swim
+        for (int i = 100; i < 140; i++) if (s.Step(i * .1f, false, false)) fired++;
+        Assert(fired == 0, "short swim earned a breath");
+        var l = new SwimTracker(20f, 1.5f); int lf = 0; float at = -1f;
+        for (int i = 0; i < 300; i++) { bool bob = i % 50 == 0 && i > 0; if (l.Step(i * .1f, !bob, false)) lf++; }   // 30 s, bobbing out briefly
+        Assert(lf == 0, "bobbing out ended the swim");
+        for (int i = 300; i < 340; i++) if (l.Step(i * .1f, false, false)) { lf++; at = i * .1f; }
+        Assert(lf == 1, "long swim breaths: " + lf);
+        Assert(at >= 30f + 1.4f && at <= 30f + 1.7f, "breath came at " + at);
+    }
+
+    static void ExhaustionEventCooldown()
+    {
+        var e = new EventStatePolicy(45f); int n = 0;
+        if (e.Step(0f, true, false, true) == StateLine.Event) n++;
+        if (e.Step(10f, true, false, true) == StateLine.Event) n++;          // inside cooldown
+        if (e.Step(46f, true, false, true) == StateLine.Event) n++;
+        Assert(n == 2, "exhaustion lines " + n);
+        var d = new EventStatePolicy(45f); int late = 0;                       // cannot be voiced for 2 s: dropped
+        d.Step(0f, true, false, false); d.Step(1f, false, false, false);
+        if (d.Step(2f, false, false, true) == StateLine.Event) late++;
+        Assert(late == 0, "a dropped event played late");
+        var w = new EventStatePolicy(45f); int ok = 0;                         // busy 1 s: voiced when quiet
+        w.Step(0f, true, false, false);
+        if (w.Step(1f, false, false, true) == StateLine.Event) ok++;
+        Assert(ok == 1, "a briefly deferred event never played");
+    }
+
+    static void ActorGateOneVoice()
+    {
+        var g = new BodyActorGate();
+        Assert(g.Quiet(0f, float.NegativeInfinity), "fresh actor not quiet");
+        g.Started(0f, 1.4f, false);
+        Assert(!g.Quiet(1f, float.NegativeInfinity), "overlapped a sounding line");
+        Assert(!g.Quiet(2f, float.NegativeInfinity), "min gap not held");
+        Assert(g.Quiet(2.6f, float.NegativeInfinity), "stayed busy too long");
+        Assert(!g.Quiet(3f, 2.5f), "spoke within 1.2 s of a combat line");
+        g.Started(3f, 1f, true);
+        Assert(!g.RecoverAllowed(20f) && g.RecoverAllowed(33f), "exhale cooldown wrong");
+        g.Started(40f, 5f, false); g.Cut(41f);
+        Assert(g.Quiet(42.6f, float.NegativeInfinity), "a cut line still held the voice");
+    }
+
+    static void ClipPickerNoRepeat()
+    {
+        var p = new ClipPicker(9); int prev = -1; var seen = new bool[4];
+        for (int i = 0; i < 200; i++) { int c = p.Pick(4); Assert(c != prev, "same clip twice"); seen[c] = true; prev = c; }
+        Assert(seen[0] && seen[1] && seen[2] && seen[3], "a clip never played");
+        Assert(p.Pick(1) == 0 && p.Pick(0) == -1, "edge pools wrong");
     }
 
     // ---- Combat-voice lock (approved 1.0.32.6, 2026-10-27). Companion combat module, combat voice: COMPLETE.

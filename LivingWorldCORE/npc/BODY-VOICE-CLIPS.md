@@ -46,3 +46,52 @@ Candidate set for Brian's in-game audition (issue #5). None of these is a combat
 | female | recover | `03__voice_female_a_breath_exhausted_02.wav` | 1.15 | `d81b0bce272d0c69` |
 | female | recover | `04__voice_female_a_breath_tired_02.wav` | 0.94 | `5ff899d98ee4ddc1` |
 | female | recover | `05__voice_female_a_breath_tired_03.wav` | 0.85 | `1091e6aef403a6c2` |
+
+## 1.0.32.14 body states (candidates, installed for audition; not live-verified)
+
+Source: ChatGPT's private handoff `Living_World_CORE_Body_Reactions_COMPLETE_PRIVATE_2026-10-28` (18 audition
+candidates, package SHA-256 list verified). Licensed Gamemaster Human Male B / Female A; WAVs are not in this repo.
+Installed to `voices/body/<gender>/<pool>/` under their original file names. The 40 poison clips above are unchanged.
+
+Triggers (source-inspected in Valheim 1.0.20 decompile; status owner only, never damage ticks):
+
+| Pool | Trigger | Rule |
+| --- | --- | --- |
+| `burning_onset` | native `Burning` status present (fire-damage hits, lava; `Character.AddFireDamage` / `UpdateLava`) | once, 0.3 s after it holds |
+| `burning_repeat` | same, still burning | every 6–9 s |
+| `frost` | native `Frost` status (frost hits; `Character.AddFrostDamage`) | onset, then every 8–12 s |
+| `swim` | `Character.IsSwimming` continuous ≥ SwimSeconds (20), then out of the water ≥ 1.5 s | one breath, 30 s cooldown |
+| `exhaustion` | companion heavy-attack stamina reaches 0 (`NpcBody.Exhaustions`) | one breath, 45 s cooldown |
+| `env_recover` | burning or frost ends after ≥ 3 s | one exhale, at most one per 30 s |
+
+One voice per actor: combat lines and poison lines take precedence and cut a state line; a state line starts only when
+the actor is silent and 2.5 s after its last body line; a line whose state ends while it sounds is cut. No other-gender
+fallback; a missing pool is silent.
+
+Not wired (no native signal reaches a companion; would need a new status writer = Brian's decision):
+- **Cold / Freezing** (weather): applied only in `Player.UpdateEnvStatusEffects`. Companions are non-Player Humanoids.
+- **Wet / rain**: by design never a voice trigger.
+- **Smoke** (`Smoked`): companions can receive it (`Character.UpdateSmoke`, Player-copied `m_tolerateSmoke`), but the
+  handoff requires source validation and no duplicate cough pool; left silent.
+- **Air / drowning**: Valheim has no air meter; only the long-swim rule above.
+
+| Gender | Pool | File | s | SHA-256 (16) |
+| --- | --- | --- | --- | --- |
+| male | burning_onset | `voice_male_b_hurt_pain_set_4_04.wav` | 0.61 | `a06dcb2c9a5f9f3a` |
+| male | burning_repeat | `voice_male_b_effort_struggle_01.wav` | 1.42 | `027b058dfd398691` |
+| male | env_recover | `voice_male_b_breath_sigh_03.wav` | 1.66 | `ec7611ad54bdc2f9` |
+| male | exhaustion | `voice_male_b_breath_sigh_04.wav` | 1.38 | `6dfee4197a0c15fa` |
+| male | exhaustion | `voice_male_b_breathing_08_sequence_short_03.wav` | 0.65 | `e3bb80739e8ba5a0` |
+| male | frost | `voice_male_b_breath_quick_06.wav` | 0.36 | `1164580b36f279a2` |
+| male | frost | `voice_male_b_breath_struggle_01.wav` | 0.38 | `92f0adc1a4c63eef` |
+| male | swim | `voice_male_b_breath_pant_04.wav` | 1.48 | `16ddc82951e117fe` |
+| male | swim | `voice_male_b_breath_struggle_03.wav` | 0.68 | `3d09bfef2c54a848` |
+| female | burning_onset | `voice_female_a_hurt_pain_07.wav` | 0.46 | `dc52c47c04e05f8f` |
+| female | burning_repeat | `voice_female_a_growl_frustrated_05.wav` | 0.6 | `81cead3cfd06507c` |
+| female | env_recover | `voice_female_a_breath_deep_out_01.wav` | 1.2 | `7d6b342a5e52d216` |
+| female | exhaustion | `voice_female_a_breath_tired_01.wav` | 1.17 | `1467eb2e889060ff` |
+| female | exhaustion | `voice_female_a_effort_tired_03.wav` | 0.41 | `616818919fa9a350` |
+| female | frost | `voice_female_a_breath_blow_01.wav` | 0.9 | `30667e5371c64f60` |
+| female | frost | `voice_female_a_breath_quick_01.wav` | 0.71 | `f318040cc8cf2b3a` |
+| female | swim | `voice_female_a_breath_deep_01.wav` | 1.09 | `3d90c64c5f067402` |
+| female | swim | `voice_female_a_breath_out_of_air_01.wav` | 1.96 | `29479e4d2751dbf7` |

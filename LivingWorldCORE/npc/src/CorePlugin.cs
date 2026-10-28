@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.32.13";
+        public const string Version = "1.0.32.14";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -25,13 +25,21 @@ namespace LivingWorld.Core
         internal static CorePlugin Instance;
         bool registered;
         bool partyBusy;
-        Terminal.ConsoleCommand partyCommand, statusCommand, healCommand, summonCommand, gotoCommand, gearCommand, bombsCommand;
+        Terminal.ConsoleCommand partyCommand, statusCommand, healCommand, summonCommand, gotoCommand, gearCommand, bombsCommand, bodyAuditionCommand;
 
         public static bool Registered { get { return Instance != null && Instance.registered; } }
 
         // Feature switches so one change can be live-tested at a time (BepInEx config file).
         static BepInEx.Configuration.ConfigEntry<bool> shieldBlocking, companionBombs, devBombLog, bombsEndless, bodyVoice;
         static BepInEx.Configuration.ConfigEntry<float> bombCooldown;
+        static BepInEx.Configuration.ConfigEntry<bool> bodyBurning, bodyFrost, bodySwim, bodyExhaustion, bodyEnvRecover;
+        static BepInEx.Configuration.ConfigEntry<float> bodySwimSeconds;
+        public static bool BodyBurning { get { return bodyBurning == null || bodyBurning.Value; } }
+        public static bool BodyFrost { get { return bodyFrost == null || bodyFrost.Value; } }
+        public static bool BodySwim { get { return bodySwim == null || bodySwim.Value; } }
+        public static bool BodyExhaustion { get { return bodyExhaustion == null || bodyExhaustion.Value; } }
+        public static bool BodyEnvRecover { get { return bodyEnvRecover == null || bodyEnvRecover.Value; } }
+        public static float BodySwimSeconds { get { return bodySwimSeconds == null ? 20f : Mathf.Clamp(bodySwimSeconds.Value, 5f, 120f); } }
         static BepInEx.Configuration.ConfigEntry<float> foodStamina, companionVoiceGain;
         static BepInEx.Configuration.ConfigEntry<bool> devVoiceLog;
         static BepInEx.Configuration.ConfigEntry<bool> partySpacing, devSpacingLog, matchGait;
@@ -69,6 +77,18 @@ namespace LivingWorld.Core
                 "Companions throw bombs the Souls of the Land Pillager way (Greydwarf throw, ooze bomb, overhead swing) at the best enemy cluster 6-13.5 m out, favouring groups coming at the party, aimed where they are headed. Never if you or another companion would be within 5.5 m of the landing. Off = never throw.");
             bodyVoice = Config.Bind("BodyVoice", "Enabled", true,
                 "Body-reaction voice addon (separate from the locked combat voice): companions cough when poison or gas first takes hold, again every 4-7 s while it lasts, and catch their breath when it clears. Combat lines always take priority. Clips: voices/body/<male|female>/<onset|repeat|recover>/*.wav.");
+            bodyBurning = Config.Bind("BodyVoice", "Burning", true,
+                "1.0.32.14 candidate: a short pain cry when the native Burning status takes hold (fire hits, lava), a strain every 6-9 s while it lasts. Never per damage tick, never for standing near a fire. Clips: voices/body/<g>/burning_onset, burning_repeat.");
+            bodyFrost = Config.Bind("BodyVoice", "Frost", true,
+                "1.0.32.14 candidate: a cold breath when the native Frost status (frost hits) takes hold, again every 8-12 s while it lasts. Clips: voices/body/<g>/frost. Weather Cold/Freezing are Player-only statuses in Valheim and do not reach companions.");
+            bodySwim = Config.Bind("BodyVoice", "SwimBreathless", true,
+                "1.0.32.14 candidate: one catch-breath when a companion comes out of a long continuous swim (SwimSeconds). Being wet or a short swim says nothing. Clips: voices/body/<g>/swim.");
+            bodySwimSeconds = Config.Bind("BodyVoice", "SwimSeconds", 20f,
+                "Continuous swim time before leaving the water earns a catch-breath (5-120).");
+            bodyExhaustion = Config.Bind("BodyVoice", "Exhaustion", true,
+                "1.0.32.14 candidate: one strained breath when a companion's heavy-attack stamina runs out, at most every 45 s. Clips: voices/body/<g>/exhaustion.");
+            bodyEnvRecover = Config.Bind("BodyVoice", "EnvironmentRecover", true,
+                "1.0.32.14 candidate: one quiet exhale when burning or frost ends after at least 3 s, at most one per 30 s. Clips: voices/body/<g>/env_recover. Poison keeps its own recovery pool.");
             bombsEndless = Config.Bind("Combat", "BombsEndless", true,
                 "Test mode: bombs never run out (lwbombs is not needed). False = each companion carries the lwbombs reserve.");
             bombCooldown = Config.Bind("Combat", "BombCooldown", 10f,
@@ -128,10 +148,13 @@ namespace LivingWorld.Core
                 new Terminal.ConsoleEvent(OnGear));
             bombsCommand = new Terminal.ConsoleCommand("lwbombs", "Living World (lab): give each companion bombs (lwbombs [count 0-20] [ooze|bile])",
                 new Terminal.ConsoleEvent(OnBombs));
+            bodyAuditionCommand = new Terminal.ConsoleCommand("lwbodyaudition",
+                "Living World (lab): play every clip of one body pool on a companion, 3 s apart (lwbodyaudition list | <pool> [male|female])",
+                new Terminal.ConsoleEvent(args => BodyReactionVoice.Audition(args.Args)));
             gotoCommand = new Terminal.ConsoleCommand("lwgoto", "Living World: teleport yourself to your nearest companion",
                 new Terminal.ConsoleEvent(args => OnGoto()));
             string missing = NativeApi.MissingMembers();
-            Report(Version + " loaded. Commands: lwparty, lwparty new, lwparty plains [q], lwparty clean, lwgear iron|plains [q], lwbombs [n] [ooze|bile], lwstatus, lwheal, lwsummon, lwgoto." +
+            Report(Version + " loaded. Commands: lwparty, lwparty new, lwparty plains [q], lwparty clean, lwgear iron|plains [q], lwbombs [n] [ooze|bile], lwbodyaudition, lwstatus, lwheal, lwsummon, lwgoto." +
                 (missing.Length == 0 ? "" : " NATIVE API MISSING: " + missing));
         }
 
