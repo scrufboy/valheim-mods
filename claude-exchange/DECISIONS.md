@@ -49,3 +49,25 @@ Brian, as the safe starting version:
 - **The end is a token.** On a companion's permanent death the player receives a
   memorial token and chooses whether to place a tombstone. This is separate from
   the equipment-recovery transaction and is not a replacement or revival token.
+
+## 2026-10-28 — Correction: "camp of one" and the found companion (owner idea, unresolved)
+
+Supersedes Claude's unconfirmed "Pairs" reading in the previous entry; that
+reading was wrong.
+
+Brian: a companion released back to the wild forms a **camp of one**. When the
+player later re-enters the general area, the camp (possibly moved) may hold a
+**second person**: someone who found them. Lore question in the world: is there
+another out there, and have they found each other? Brian marks this as an
+unresolved idea with a quick code implementation.
+
+Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
+
+- On each camp respawn, a camp of one may gain one newcomer, decided
+  deterministically from the camp id and respawn count (no reload rerolls).
+- The newcomer is a new persisted person with a new identity and history,
+  never a reroll of the existing one and never a dead companion returning.
+- The newcomer's role complements the existing one (the biome class pair).
+- At most one newcomer; a camp never grows past two through this rule.
+- Open: does the newcomer count as a recruitment lead under the one-active-lead
+  and five-day rules, and how long must the player be away first?
