@@ -18,7 +18,13 @@ static class RegressionLedgerTests
         Run("1.0.32.8 spacing: a companion already in its soft region does not reposition", SpacingHoldsInsideRegion);
         Run("1.0.32.8 spacing: brief proximity does not start a sidestep", SpacingBriefProximityIgnored);
         Run("1.0.32.8 spacing: sidestep releases smoothly after clearance, side locked", SpacingReleasesSmoothly);
-        Run("1.0.32.8 spacing: never sidesteps into an invalid lane; waits, then hands back", SpacingNoInvalidLane);
+        Run("1.0.32.8 spacing: never sidesteps into an invalid lane; with no lane it waits and never hands back into the blockage", SpacingNoInvalidLane);
+        Run("1.0.32.8b blocked: a leader still blocking both lanes after 1.5 s is never entered or pushed", SpacingBlockedLeaderHeld);
+        Run("1.0.32.8b blocked: a companion still blocking both lanes after 1.5 s is never entered or pushed", SpacingBlockedCompanionHeld);
+        Run("1.0.32.8b blocked: the yielding companion stays stopped without side oscillation", SpacingYielderStill);
+        Run("1.0.32.8b blocked: the right-of-way companion keeps moving; the yielder gives way, no contact", SpacingRightOfWayMoves);
+        Run("1.0.32.8b blocked: movement resumes once the corridor clears", SpacingResumesAfterClear);
+        Run("1.0.32.8b blocked: a permanently unreachable spot never causes approach/back-off oscillation", SpacingUnreachableStable);
         Run("1.0.32.8 spacing: local crowding never calls a regroup", SpacingCrowdingNeverRegroups);
         Run("1.0.32.8 spacing: a party walking together never sidesteps (leader weaving, walk to run)", SpacingFormationTravelQuiet);
         Run("1.0.32.8 spacing (Brian): leader in a menu is never pushed; companions ease back out", SpacingMenuNeverPushes);
@@ -788,18 +794,131 @@ static class RegressionLedgerTests
         SpacingResult r = default(SpacingResult);
         for (int i = 0; i < 5; i++) r = law.Step(i * .1f, .1f, me, 2f, aim, aim, false, false, 1, 0, near, 1, new WallOnLeft());
         Assert(r.Mode != SpacingMode.Sidestep || r.Point.X > 0f, "sidestepped into the wall");
-        // both sides walled: wait for the leader (never push), then hand back to native following after WaitMax
-        var boxed = new PartySpacing(); bool waited = false, handedBack = false;
-        for (int i = 0; i < 40; i++)
+        // both sides walled: wait for the leader and keep waiting while he blocks (1.0.32.8b: no hand-back into him)
+        var boxed = new PartySpacing(); bool waited = false;
+        for (int i = 0; i < 60; i++)
         {
-            SpacingResult q = boxed.Step(i * .1f, .1f, me, 2f, aim, aim, false, false, 1, 0, near, 1, new Corridor0());
+            SpacingResult q = boxed.Step(i * .1f, .1f, me, waited ? 0f : 2f, aim, aim, false, false, 1, 0, near, 1, new Corridor0());
             Assert(q.Mode != SpacingMode.Sidestep, "sidestepped with no lane");
             if (q.Mode == SpacingMode.Wait) waited = true;
-            if (waited && q.Mode == SpacingMode.Travel) handedBack = true;
+            Assert(!waited || q.Mode == SpacingMode.Wait, "tick " + i + ": handed back (" + q.Mode + ") while the leader still blocks");
         }
-        Assert(waited && handedBack, "did not wait and then hand back (waited " + waited + ")");
+        Assert(waited, "never waited");
     }
     sealed class Corridor0 : ISpacingTerrain { public bool Clear(P2 a, P2 b) { P2 d = b - a; float l = d.Length; if (l < .05f) return true; P2 e = a + d * (Math.Min(l, 3f) / l); return Math.Abs(e.X) < .2f; } }
+
+    // ---- 1.0.32.8b blocked corridor. Corridor0 walls both lanes (only |x| < 0.2 is standable off the walk line).
+    static float Run1(Walker w, SpacingNeighbor[] near, int ticks, ISpacingTerrain t, out int afterBlockTravel, out int backOffs, out int transitions)
+    {
+        float closest = 99f; afterBlockTravel = 0; backOffs = 0; transitions = 0; bool blocked = false; SpacingMode last = SpacingMode.Travel;
+        for (int i = 0; i < ticks; i++)
+        {
+            w.Tick(i * .1f, .1f, near, near.Length, t, false, false);
+            if (w.Last.Mode == SpacingMode.Wait) blocked = true;
+            if (blocked && w.Last.Mode == SpacingMode.Travel) afterBlockTravel++;
+            if (w.Last.Mode == SpacingMode.BackOff) backOffs++;
+            if (i > 20 && w.Last.Mode != last) transitions++;
+            last = w.Last.Mode;
+            foreach (var n in near) closest = Math.Min(closest, P2.Distance(w.Pos, n.Position));
+        }
+        return closest;
+    }
+
+    static void SpacingBlockedLeaderHeld()
+    {
+        var w = new Walker { Pos = new P2(0f, 0f), Goal = new P2(0f, 12f), Slot = 0, SlotSide = 1 };
+        w.Law.SelfId = 10;
+        int travel, back, trans;
+        float closest = Run1(w, new[] { Leader(new P2(0f, 4f)) }, 80, new Corridor0(), out travel, out back, out trans);
+        Assert(w.Waits > 15, "did not hold behind the leader (" + w.Waits + " wait ticks)");
+        Assert(travel == 0, "resumed native Follow " + travel + " ticks while the leader still blocks");
+        Assert(closest >= PartySpacing.LeaderClear, "entered the leader's clearance: " + closest.ToString("0.00") + " m");
+        Assert(back == 0 && w.SideFlips == 0, "back-off or side flipping while held");
+    }
+
+    static void SpacingBlockedCompanionHeld()
+    {
+        foreach (int blockerSlot in new[] { 0, 3 })   // blocker has right of way (we yield) / we have right of way (stop short)
+        {
+            var w = new Walker { Pos = new P2(0f, 0f), Goal = new P2(0f, 12f), Slot = 1, SlotSide = -1 };
+            w.Law.SelfId = 11;
+            int travel, back, trans;
+            var near = new[] { Leader(new P2(30f, 0f)), Mate(7, new P2(0f, 4f), blockerSlot) };
+            float closest = Run1(w, near, 80, new Corridor0(), out travel, out back, out trans);
+            Assert(closest >= PartySpacing.ContactMate + .2f, "slot " + blockerSlot + " blocker: came within " + closest.ToString("0.00") + " m");
+            Assert(w.Last.Mode == SpacingMode.Wait, "slot " + blockerSlot + " blocker: not holding at the end (" + w.Last.Mode + ")");
+            if (blockerSlot == 0) Assert(travel == 0, "yielder resumed walking into the blocker");
+        }
+    }
+
+    static void SpacingYielderStill()
+    {
+        var w = new Walker { Pos = new P2(0f, 0f), Goal = new P2(0f, 12f), Slot = 2, SlotSide = 1 };
+        w.Law.SelfId = 12;
+        var near = new[] { Leader(new P2(30f, 0f)), Mate(5, new P2(0f, 3.5f), 0) };
+        P2 stoppedAt = new P2(99f, 99f); int moved = 0;
+        for (int i = 0; i < 80; i++)
+        {
+            w.Tick(i * .1f, .1f, near, 2, new Corridor0(), false, false);
+            if (w.Last.Mode == SpacingMode.Wait)
+            {
+                if (stoppedAt.X == 99f) stoppedAt = w.Pos;
+                else if (P2.Distance(stoppedAt, w.Pos) > .01f) moved++;
+            }
+        }
+        Assert(stoppedAt.X != 99f && moved == 0, "the yielding companion crept forward " + moved + " ticks");
+        Assert(w.SideFlips == 0, "side oscillated " + w.SideFlips + " times");
+    }
+
+    static void SpacingRightOfWayMoves()
+    {   // head-on in a 1 m corridor: slot 0 has right of way, slot 3 gives way by backing out
+        var a = new Walker { Pos = new P2(-6f, 0f), Goal = new P2(10f, 0f), Slot = 0, SlotSide = 1 };
+        var b = new Walker { Pos = new P2(4f, 0f), Goal = new P2(-10f, 0f), Slot = 3, SlotSide = -1 };
+        a.Law.SelfId = 20; b.Law.SelfId = 21;
+        var t = new Corridor();
+        var na = new SpacingNeighbor[2]; var nb = new SpacingNeighbor[2];
+        float closest = 99f, startA = a.Pos.X; P2 lastA = a.Pos, lastB = b.Pos;
+        for (int i = 0; i < 80; i++)
+        {
+            na[0] = Leader(new P2(0f, 30f)); na[1] = Mate(21, b.Pos, 3); na[1].Velocity = (b.Pos - lastB) * 10f;
+            nb[0] = Leader(new P2(0f, 30f)); nb[1] = Mate(20, a.Pos, 0); nb[1].Velocity = (a.Pos - lastA) * 10f;
+            lastA = a.Pos; lastB = b.Pos;
+            a.Tick(i * .1f, .1f, na, 2, t, false, false);
+            b.Tick(i * .1f, .1f, nb, 2, t, false, false);
+            closest = Math.Min(closest, P2.Distance(a.Pos, b.Pos));
+        }
+        Assert(a.Pos.X - startA >= 6f, "right-of-way companion only advanced " + (a.Pos.X - startA).ToString("0.0") + " m");
+        Assert(closest >= PartySpacing.ContactMate, "the two companions touched: " + closest.ToString("0.00") + " m");
+        Assert(a.Waits == 0 || a.Pos.X - startA >= 6f, "right-of-way companion stuck waiting");
+        Assert(a.SideFlips == 0 && b.SideFlips == 0, "side oscillation in the corridor");
+    }
+
+    static void SpacingResumesAfterClear()
+    {
+        var w = new Walker { Pos = new P2(0f, 0f), Goal = new P2(0f, 12f), Slot = 0, SlotSide = 1 };
+        w.Law.SelfId = 13;
+        var near = new[] { Leader(new P2(0f, 4f)) };
+        bool held = false;
+        for (int i = 0; i < 140; i++)
+        {
+            if (i == 40) near[0] = Leader(new P2(8f, 4f));      // the leader steps out of the corridor
+            w.Tick(i * .1f, .1f, near, 1, new Corridor0(), false, false);
+            if (i < 40 && w.Last.Mode == SpacingMode.Wait) held = true;
+        }
+        Assert(held, "never held while blocked");
+        Assert(P2.Distance(w.Pos, w.Goal) <= 3.2f, "did not resume and arrive after the corridor cleared (" + P2.Distance(w.Pos, w.Goal).ToString("0.0") + " m short)");
+    }
+
+    static void SpacingUnreachableStable()
+    {
+        var w = new Walker { Pos = new P2(0f, 0f), Goal = new P2(0f, 8f), Slot = 1, SlotSide = -1 };
+        w.Law.SelfId = 14;
+        int travel, back, trans;
+        float closest = Run1(w, new[] { Leader(new P2(0f, 5f)) }, 200, new Corridor0(), out travel, out back, out trans);
+        Assert(back == 0, "backed off " + back + " ticks");
+        Assert(trans <= 1, "mode changed " + trans + " times while the spot stayed unreachable");
+        Assert(closest >= PartySpacing.LeaderClear, "reached into the leader: " + closest.ToString("0.00"));
+    }
 
     static void SpacingCrowdingNeverRegroups()
     {

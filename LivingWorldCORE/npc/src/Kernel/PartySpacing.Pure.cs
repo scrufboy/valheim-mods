@@ -59,7 +59,7 @@ namespace LivingWorld.Core
     /// Soft region: a standing companion near its spot (within HoldEnter) stays put until it is HoldExit away, its
     /// spacing is violated, or the leader moves - it does not chase the mathematical centre.
     /// Sidestep: a party member in the walking corridor shifts the follow aim sideways (bounded, smoothed, side locked
-    /// for the whole episode, hysteresis on entry and release). If neither side is clear: wait, never push.
+    /// for the whole episode, hysteresis on entry and release). If no lane is clear: wait (re-evaluating both lanes), never push and never hand back into the blockage.
     /// Never used in combat (traversal does not run there) and never a reason to regroup.
     /// </summary>
     public sealed class PartySpacing
@@ -69,14 +69,16 @@ namespace LivingWorld.Core
         public const float Lookahead = 5f, LookaheadSeconds = 1.5f, PassMargin = .4f, EnterPersist = .2f, ReleaseMargin = .5f, ReleaseBehind = .6f, ReleasePersist = .5f;
         public const float MinClosing = .3f, MinOffset = .6f, MaxOffset = 2.4f, RateIn = 2.5f, RateOut = 1.5f, HeadOn = .35f;
         public const float HoldEnter = 1f, HoldExit = 1.8f, HoldSpeed = .8f, WaitMax = 1.5f, BackOffMargin = .3f;
-        public const float MinAhead = 1.5f, MenuBackOffHysteresis = .3f;
+        public const float MinAhead = 1.5f, MenuBackOffHysteresis = .3f, RightOfWayStop = .4f, GiveWayRange = 2f, GiveWayStep = 1.5f;
         public const int MaxNeighbors = 8;
 
         // episode state
         bool holding;
         int pendingId = -1; float pendingSince;
         int activeId = -1; bool activeLeader; int side; float offset; float clearSince = -1f;
-        bool releasing; float waitSince = -1f; bool waitSpent; bool backingOff;
+        bool releasing; float waitSince = -1f; bool backingOff;
+        /// <summary>This companion's stable identity (instance id) for right-of-way ties.</summary>
+        public int SelfId;
 
         public bool Holding { get { return holding; } }
         public bool Avoiding { get { return activeId != -1 || releasing; } }
@@ -104,7 +106,7 @@ namespace LivingWorld.Core
         public void Reset()
         {
             holding = false; pendingId = -1; activeId = -1; side = 0; offset = 0f; clearSince = -1f;
-            releasing = false; waitSince = -1f; waitSpent = false; backingOff = false;
+            releasing = false; waitSince = -1f; backingOff = false;
         }
 
         /// <param name="self">this companion</param>
@@ -180,70 +182,111 @@ namespace LivingWorld.Core
                 if (pendingId != id) { pendingId = id; pendingSince = now; return r; }
                 if (now - pendingSince < EnterPersist) return r;
                 // start an episode, side locked until it ends
-                activeId = id; activeLeader = near[hit].IsLeader; clearSince = -1f; waitSince = -1f; waitSpent = false;
+                activeId = id; activeLeader = near[hit].IsLeader; clearSince = -1f; waitSince = -1f;
                 if (Math.Abs(hitLat) > HeadOn) side = hitLat > 0f ? -1 : 1;
                 else if (!near[hit].IsLeader && P2.Dot(near[hit].Velocity, u) < -.3f) side = -1;   // oncoming: keep right
                 else side = slotSide != 0 ? slotSide : -1;
                 r.Event = "enter";
             }
 
-            // 4. Active episode: walk to a pass point beside and just past the party member, on the locked side.
+            // 4. Active episode: walk to a pass point beside the party member, on the locked side.
             //    Offset = how far that point sits from the straight walk (smoothed in, smoothed out).
-            float desired = 0f;
+            float desired = 0f, epClear = 0f, epLat = 0f, epT = 0f;
             int idx = activeId == -1 ? -1 : Find(near, count, activeId);
             P2 pass = aim;
             if (idx >= 0 && !releasing)
             {
-                float clear = Clearance(near[idx].IsLeader, leaderInMenu);
+                epClear = Clearance(near[idx].IsLeader, leaderInMenu);
                 P2 rel = near[idx].Position - self;
-                float t = P2.Dot(rel, u), lat = P2.Dot(rel, left);
-                bool cleared = t < -ReleaseBehind || ownSpeed - P2.Dot(near[idx].Velocity, u) <= MinClosing || side * -lat >= clear + ReleaseMargin ||
-                    (t > Math.Min(look, length + clear) && rel.Length > clear + ReleaseMargin);
+                epT = P2.Dot(rel, u); epLat = P2.Dot(rel, left);
+                // 1.0.32.8b: release is geometric. "Not closing" only counts while we are actually walking (moving on
+                // together); a stopped companion never treats a party member still standing in its corridor as clear.
+                bool intrudes = (epT > 0f && epT < Math.Min(look, length + epClear) && Math.Abs(epLat) < epClear) ||
+                    (rel.Length < epClear && epT > -.3f);
+                bool movingOnTogether = ownSpeed > HoldSpeed && ownSpeed - P2.Dot(near[idx].Velocity, u) <= MinClosing;
+                bool cleared = epT < -ReleaseBehind || side * -epLat >= epClear + ReleaseMargin || !intrudes || movingOnTogether;
                 if (cleared) { if (clearSince < 0f) clearSince = now; }
                 else clearSince = -1f;
                 if (clearSince >= 0f && now - clearSince >= ReleasePersist) { releasing = true; r.Event = "release"; }
-                else
-                {
-                    // the pass point sits level with the party member, clear + 0.2 m out on the locked side
-                    desired = Clamp(side * lat + clear + PassMargin, MinOffset, MaxOffset);
-                    float ahead = Math.Max(t, MinAhead);
-                    pass = self + u * ahead + left * (side * Math.Max(offset, Approach(offset, desired, rateIn * dt)));
-                }
+                else desired = Desired(side, epLat, epClear);
             }
             else if (idx < 0 && activeId != -1 && !releasing) { releasing = true; r.Event = "release"; }
 
             float rate = desired > offset ? rateIn : RateOut;
-            offset = Approach(offset, desired, rate * dt);
-            r.AvoidedId = activeId; r.AvoidedLeader = activeLeader; r.Side = side; r.Offset = offset;
-
-            if (releasing)
+            if (releasing || Lane(terrain, self, u, left, length, side, desired))
             {
-                if (offset <= .05f) { Reset(); r.Offset = 0f; r.Side = 0; return r; }
-                r.Mode = SpacingMode.Travel;                      // easing back onto the walk
-                r.Shift = left * (side * offset);
-                return r;
-            }
-
-            if (terrain != null && !terrain.Clear(self, self + (left * (side * desired)) + u * Math.Max(1.5f, Math.Min(length, 3f))))
-            {
-                // no lane on the locked side: wait for the way to clear (right of way to the leader and lower slots), never push
-                bool yield = activeLeader || (idx >= 0 && near[idx].Slot >= 0 && mySlot >= 0 && near[idx].Slot < mySlot);
-                if (yield && !waitSpent)
+                if (!releasing && idx >= 0)
+                    pass = self + u * Math.Max(epT, MinAhead) + left * (side * Math.Max(offset, Approach(offset, desired, rateIn * dt)));
+                offset = Approach(offset, desired, rate * dt);
+                waitSince = -1f;
+                r.AvoidedId = activeId; r.AvoidedLeader = activeLeader; r.Side = side; r.Offset = offset;
+                if (releasing)
                 {
-                    if (waitSince < 0f) { waitSince = now; r.Event = "blocked"; }
-                    if (now - waitSince < WaitMax) { r.Mode = SpacingMode.Wait; r.Point = self; return r; }
-                    waitSpent = true;
+                    if (offset <= .05f) { Reset(); r.Offset = 0f; r.Side = 0; return r; }
+                    r.Mode = SpacingMode.Travel;                  // easing back onto the walk
+                    r.Shift = left * (side * offset);
+                    return r;
                 }
-                // no wait (or wait spent): hand the walk back to native following unchanged
-                Reset();
-                r.Mode = SpacingMode.Travel; r.Offset = 0f; r.Side = 0; r.AvoidedId = -1;
-                if (r.Event == null) r.Event = "release";
+                r.Mode = SpacingMode.Sidestep;
+                r.Point = pass;
+                r.Shift = pass - aim;
                 return r;
             }
-            r.Mode = SpacingMode.Sidestep;
-            r.Point = pass;
-            r.Shift = pass - aim;
+
+            // 5. 1.0.32.8b: no lane on the locked side while the party member still blocks the corridor.
+            //    Never hand back into the known collision. Wait first; then re-evaluate both lanes; otherwise stay put.
+            r.AvoidedId = activeId; r.AvoidedLeader = activeLeader; r.Side = side; r.Offset = offset;
+            if (waitSince < 0f) { waitSince = now; r.Event = "blocked"; }
+            if (now - waitSince >= WaitMax && Lane(terrain, self, u, left, length, -side, Desired(-side, epLat, epClear)))
+            {
+                side = -side;                                         // the other lane opened: take it
+                offset = 0f; waitSince = -1f; r.Side = side; r.Event = "switch";
+                r.Mode = SpacingMode.Sidestep;
+                r.Point = self + u * Math.Max(epT, MinAhead) + left * (side * Math.Min(Desired(side, epLat, epClear), rateIn * dt));
+                r.Shift = r.Point - aim;
+                return r;
+            }
+            bool rightOfWay = idx >= 0 && HasRightOfWay(mySlot, SelfId, near[idx]);
+            if (rightOfWay)
+            {
+                // the other companion gives way; keep walking but stop short of contact rather than push
+                if (epT > 0f && epT < ContactMate + RightOfWayStop) { r.Mode = SpacingMode.Wait; r.Point = self; return r; }
+                r.Mode = SpacingMode.Travel;
+                return r;
+            }
+            if (idx >= 0 && !near[idx].IsLeader)
+            {
+                // yielding to a companion that is walking at us: back out of its way if there is room behind
+                P2 rel = near[idx].Position - self;
+                float d = rel.Length;
+                P2 away = d < 1e-3f ? u * -1f : rel * (-1f / d);
+                bool comingAtUs = P2.Dot(near[idx].Velocity, away) > MinClosing;
+                if (comingAtUs && d < epClear + GiveWayRange && (terrain == null || terrain.Clear(self, self + away * GiveWayStep)))
+                {
+                    r.Mode = SpacingMode.BackOff; r.Point = self + away * GiveWayStep; r.Shift = away;
+                    if (r.Event == null) r.Event = "giveway";
+                    return r;
+                }
+            }
+            r.Mode = SpacingMode.Wait;                                // leader, or nowhere to go: remain stopped on this side
+            r.Point = self;
             return r;
+        }
+
+        float Desired(int s, float lat, float clear) { return Clamp(s * lat + clear + PassMargin, MinOffset, MaxOffset); }
+
+        static bool Lane(ISpacingTerrain terrain, P2 self, P2 u, P2 left, float length, int s, float offsetWanted)
+        {
+            return terrain == null || terrain.Clear(self, self + left * (s * offsetWanted) + u * Math.Max(1.5f, Math.Min(length, 3f)));
+        }
+
+        /// <summary>Deterministic right of way between companions: the lower formation slot; if either slot is unknown
+        /// or they are equal, the lower identity. The leader always has right of way.</summary>
+        public static bool HasRightOfWay(int mySlot, int myId, SpacingNeighbor other)
+        {
+            if (other.IsLeader) return false;
+            if (mySlot >= 0 && other.Slot >= 0 && mySlot != other.Slot) return mySlot < other.Slot;
+            return myId < other.Id;
         }
 
         static bool Spaced(P2 self, SpacingNeighbor[] near, int count, bool leaderInMenu, int mySlot)

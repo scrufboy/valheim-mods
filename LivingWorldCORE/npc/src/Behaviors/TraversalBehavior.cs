@@ -119,6 +119,7 @@ namespace LivingWorld.Core
                 followAnchor = Beyond(self, destination);
             }
             NpcKernel kernel = Body.Root.GetComponent<NpcKernel>();
+            if (kernel != null) spacing.SelfId = kernel.GetInstanceID();
             probe.Gather(kernel, leader);
             SpacingResult r = spacing.Step(f.Now, f.Dt, PartySpacingProbe.Flat(self), f.Senses.OwnSpeed,
                 PartySpacingProbe.Flat(followAnchor), PartySpacingProbe.Flat(destination), standing, inMenu,
