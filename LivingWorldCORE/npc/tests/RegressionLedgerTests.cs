@@ -42,6 +42,9 @@ static class RegressionLedgerTests
         Run("1.0.32.12 throw: aims ahead of a moving group, inside reach, not at its feet", ThrowLeadsAndRange);
         Run("1.0.32.12 throw: ballistic elevation lands at the planned distance for the Souls throw speed", ThrowBallistics);
         Run("1.0.32.12 throw: a lone weak enemy is not worth it; a lone tough one is; cooldown holds", ThrowWorthAndCadence);
+        Run("1.0.32.13 body voice: one onset cough, bounded repeats, one recovery breath", BodyVoiceOnsetRepeatRecover);
+        Run("1.0.32.13 body voice: combat lines win; an onset is deferred then dropped, never stacked", BodyVoiceYieldsToCombat);
+        Run("1.0.32.13 body voice: nothing after death; a one-tick flicker is not an exposure", BodyVoiceDeathAndFlicker);
         Run("LOCK combat voice 1.0.32.6: every rule constant is the approved value", CombatVoiceConstantsLocked);
         Run("LOCK combat voice: alert only before contact, once per enemy, party cooldown", CombatVoiceAlertsLocked);
         Run("LOCK combat voice: every heavy exertion voiced, ordinary swings 30% / 2.5 s", CombatVoiceExertionLocked);
@@ -1166,6 +1169,45 @@ static class RegressionLedgerTests
         Assert(c.Ready(0f), "not ready at start"); c.Started(0f);
         Assert(!c.Ready(9.9f) && c.Ready(10f), "cooldown wrong");
         c.Failed(20f); Assert(c.Ready(22f), "a failed throw waited the full cooldown");
+    }
+
+
+    // ---- 1.0.32.13 body-reaction voice addon (poison/gas)
+    static void BodyVoiceOnsetRepeatRecover()
+    {
+        var p = new BodyVoicePolicy(7); int onset = 0, repeat = 0, recover = 0; float lastRepeat = -99f, minGap = 99f;
+        for (int i = 0; i < 200; i++)   // 20 s exposed, then clear
+        {
+            float t = i * .1f;
+            BodyLine l = p.Step(t, true, false, float.NegativeInfinity);
+            if (l == BodyLine.Onset) onset++;
+            if (l == BodyLine.Repeat) { repeat++; if (lastRepeat > -99f) minGap = Math.Min(minGap, t - lastRepeat); lastRepeat = t; }
+        }
+        for (int i = 200; i < 230; i++) if (p.Step(i * .1f, false, false, float.NegativeInfinity) == BodyLine.Recover) recover++;
+        Assert(onset == 1, "onset " + onset + " times");
+        Assert(repeat >= 2 && repeat <= 5, "repeats in 20 s: " + repeat);
+        Assert(minGap >= BodyVoicePolicy.RepeatMin - .11f, "repeats too close: " + minGap.ToString("0.0") + " s");
+        Assert(recover == 1, "recovery breaths: " + recover);
+    }
+
+    static void BodyVoiceYieldsToCombat()
+    {
+        var p = new BodyVoicePolicy(1); int onset = 0;
+        for (int i = 0; i < 25; i++) { float t = i * .1f; if (p.Step(t, true, false, t) == BodyLine.Onset) onset++; }   // combat line every tick
+        Assert(onset == 0, "coughed over a combat line");
+        var q = new BodyVoicePolicy(1); int late = 0;
+        for (int i = 0; i < 40; i++) { float t = i * .1f; if (q.Step(t, true, false, t < 1f ? t : float.NegativeInfinity) == BodyLine.Onset) late++; }
+        Assert(late == 1, "an onset deferred by a short combat line never played");
+    }
+
+    static void BodyVoiceDeathAndFlicker()
+    {
+        var p = new BodyVoicePolicy(3); int any = 0;
+        for (int i = 0; i < 100; i++) if (p.Step(i * .1f, true, true, float.NegativeInfinity) != BodyLine.None) any++;
+        Assert(any == 0, "spoke while dead");
+        var q = new BodyVoicePolicy(3); int flick = 0;
+        for (int i = 0; i < 20; i++) if (q.Step(i * .1f, i % 3 == 0, false, float.NegativeInfinity) != BodyLine.None) flick++;
+        Assert(flick == 0, "a 0.1 s flicker counted as exposure");
     }
 
     // ---- Combat-voice lock (approved 1.0.32.6, 2026-10-27). Companion combat module, combat voice: COMPLETE.

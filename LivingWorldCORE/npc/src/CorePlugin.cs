@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.32.12";
+        public const string Version = "1.0.32.13";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -30,7 +30,7 @@ namespace LivingWorld.Core
         public static bool Registered { get { return Instance != null && Instance.registered; } }
 
         // Feature switches so one change can be live-tested at a time (BepInEx config file).
-        static BepInEx.Configuration.ConfigEntry<bool> shieldBlocking, companionBombs, devBombLog, bombsEndless;
+        static BepInEx.Configuration.ConfigEntry<bool> shieldBlocking, companionBombs, devBombLog, bombsEndless, bodyVoice;
         static BepInEx.Configuration.ConfigEntry<float> bombCooldown;
         static BepInEx.Configuration.ConfigEntry<float> foodStamina, companionVoiceGain;
         static BepInEx.Configuration.ConfigEntry<bool> devVoiceLog;
@@ -44,6 +44,7 @@ namespace LivingWorld.Core
         public static bool ShieldBlocking { get { return shieldBlocking != null && shieldBlocking.Value; } }
         public static bool CompanionBombs { get { return companionBombs == null || companionBombs.Value; } }
         public static bool DevBombLog { get { return devBombLog != null && devBombLog.Value; } }
+        public static bool BodyVoiceEnabled { get { return bodyVoice == null || bodyVoice.Value; } }
         public static bool BombsEndless { get { return bombsEndless == null || bombsEndless.Value; } }
         public static float BombCooldown { get { return bombCooldown == null ? 10f : Mathf.Clamp(bombCooldown.Value, 2f, 120f); } }
 
@@ -66,6 +67,8 @@ namespace LivingWorld.Core
                 "Experimental: companions raise shields against close melee and aimed projectiles.");
             companionBombs = Config.Bind("Combat", "CompanionBombs", true,
                 "Companions throw bombs the Souls of the Land Pillager way (Greydwarf throw, ooze bomb, overhead swing) at the best enemy cluster 6-13.5 m out, favouring groups coming at the party, aimed where they are headed. Never if you or another companion would be within 5.5 m of the landing. Off = never throw.");
+            bodyVoice = Config.Bind("BodyVoice", "Enabled", true,
+                "Body-reaction voice addon (separate from the locked combat voice): companions cough when poison or gas first takes hold, again every 4-7 s while it lasts, and catch their breath when it clears. Combat lines always take priority. Clips: voices/body/<male|female>/<onset|repeat|recover>/*.wav.");
             bombsEndless = Config.Bind("Combat", "BombsEndless", true,
                 "Test mode: bombs never run out (lwbombs is not needed). False = each companion carries the lwbombs reserve.");
             bombCooldown = Config.Bind("Combat", "BombCooldown", 10f,
@@ -161,6 +164,8 @@ namespace LivingWorld.Core
                 CompanionCombatVoice.Build();
                 Report("Companion voice (Gamemaster Human Vocalizations; no enemy recordings): male (Male B) " + (CompanionCombatVoice.MaleSummary ?? "?") + ".");
                 Report("Companion voice: female (Female A) " + (CompanionCombatVoice.FemaleSummary ?? "?") + ".");
+                BodyReactionVoice.Build();
+                Report("Body-reaction voice addon: " + (BodyReactionVoice.Summary ?? "?") + ".");
                 GameObject player = RequirePrefab("Player", false);
                 // No helmet: it hides native hair (0.4.0 lesson).
                 // Same kit, same behavior: the weapon follows from distance, not from a role.
@@ -379,6 +384,8 @@ namespace LivingWorld.Core
             Report("BOMBS: " + done + " companion(s) now carry " + Mathf.Clamp(count, 0, 20) + " " + kind + "." +
                 (refusals.Count > 0 ? " Refused: " + String.Join("; ", refusals.ToArray()) : ""));
         }
+
+        void Update() { BodyReactionVoice.Tick(); }
 
         void OnHeal()
         {
