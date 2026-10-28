@@ -26,6 +26,8 @@ approved runtime branches into `main`.
 | `lwc-core-1.0/1.0.32.14-body-states` | `3c7e0da` | + body states (burning, frost, long swim, exhaustion, recovery) from ChatGPT's handoff; INSTALLED 2026-10-28 (hash `206653b4…`), live test and clip audition pending |
 | `lwc-core-1.0/parked-1.0.33` | `965a2a0` | parked hot-path experiment; not installed |
 
+**Game build:** Brian's installed Valheim updated to **1.0.21** on 2026-10-28 (assembly `9f959c03…`); prior inspections used 1.0.20. 1.0.32.14 rebuilt against 1.0.21 is byte-identical and passes all gates (OFFLINE-TESTED).
+
 These refs share their complete prerequisite history. They remain separate from
 `main` until an explicit reconciliation and acceptance plan is approved.
 
