@@ -1,20 +1,25 @@
 # Claude work order
 
-1. Read this archive and the binding source documents in `README.md`.
-2. Inspect both histories: GitHub `main` and the local v3 bundle/current 1.0.32.x
-   source. Report provenance and conflicts before merging or moving code.
-3. Preserve the locked 1.0.32.6 combat-voice baseline and its gate.
-4. Finish the spacing review without collision fallback, deadlock or a second
-   movement controller; install only after the agreed prior-build validation.
-5. Inspect native portal/dungeon transitions and return the narrow design for the
-   mandatory transition gate. Do not implement mortality before this gate passes.
-6. Solidify identity, persistence and shared-core ownership boundaries.
-7. Implement/test common bombs and heavy-weapon capability without class-local AI
-   copies; then compose classes/roles.
-8. Add needs, gear upkeep and progression through shared services.
-9. Recover/approve the complete township contract before implementing totem authority.
+1. Fetch and verify `main`, this archive branch, all four
+   `lwc-core-1.0/*` branches, and tag `combat-voice-approved-1.0.32.6`.
+2. Preserve the locked 1.0.32.6 combat-voice baseline and gate. Do not merge the
+   runtime branches into `main` merely because they are now published.
+3. Brian launches installed 1.0.32.7 once. Confirm version/log/runtime integrity.
+4. Only then install 1.0.32.8b with `DevSpacingLog = true` for live traversal,
+   menu, door, slope, corridor, physical-contact and formation-feel testing.
+5. Inspect native portal/dungeon mechanisms and return the narrow design for the
+   mandatory identity-preserving transition gate. Do not implement or enable
+   permanent mortality before traversal, hazards, authority and death attribution
+   are live-proven.
+6. Reconcile the 1.0.x actor line with the Formidable framework boundary. Split
+   shared services from Living World content without regressing accepted behavior.
+7. Implement/test common bomb/AOE and heavy-weapon capabilities through shared
+   profiles, then compose classes/roles without class-local AI copies.
+8. Add needs, inventory/gear upkeep, progression and the versioned persistent
+   character record through shared services.
+9. Recover and approve the complete township/reclamation contract before granting
+   any totem settlement authority.
 
-Every report must separate: source-inspected, offline-tested, built, installed and
-live-proven. A build that compiles is not an approved installation. Do not alter
-unrelated locked behavior while advancing one gate.
-
+Every report separates source-inspected, offline-tested, built, installed and
+live-proven. A compiling build is not an approved installation. Do not alter an
+unrelated locked module while advancing another gate.
