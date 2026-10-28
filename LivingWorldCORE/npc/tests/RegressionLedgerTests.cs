@@ -28,6 +28,10 @@ static class RegressionLedgerTests
         Run("1.0.32.8 spacing: local crowding never calls a regroup", SpacingCrowdingNeverRegroups);
         Run("1.0.32.8 spacing: a party walking together never sidesteps (leader weaving, walk to run)", SpacingFormationTravelQuiet);
         Run("1.0.32.8 spacing (Brian): leader in a menu is never pushed; companions ease back out", SpacingMenuNeverPushes);
+        Run("1.0.32.9 live 2026-10-28: a companion backs away from the leader before touching him", SpacingLeaderBackOffBeforeContact);
+        Run("1.0.32.9 live 2026-10-28: two standing companions pressed together separate; only the yielder moves, no oscillation", SpacingPressedMatesSeparate);
+        Run("1.0.32.9 live 2026-10-28: a companion pressed against the leader with a wall behind it still separates sideways", SpacingBackOffAroundWall);
+        Run("1.0.32.9 live 2026-10-28: a standing spot against a right-of-way companion moves off it", SpacingGoalOffMate);
         Run("LOCK combat voice 1.0.32.6: every rule constant is the approved value", CombatVoiceConstantsLocked);
         Run("LOCK combat voice: alert only before contact, once per enemy, party cooldown", CombatVoiceAlertsLocked);
         Run("LOCK combat voice: every heavy exertion voiced, ordinary swings 30% / 2.5 s", CombatVoiceExertionLocked);
@@ -965,7 +969,7 @@ static class RegressionLedgerTests
         Assert(r.Mode == SpacingMode.BackOff && P2.Distance(r.Point, near[0].Position) >= PartySpacing.MenuLeaderClear, "in a menu at 1.5 m it did not ease back");
         P2 goal = PartySpacing.KeepGoalOffLeader(new P2(.5f, -.5f), near[0].Position, true);
         Assert(P2.Distance(goal, near[0].Position) >= PartySpacing.MenuLeaderClear, "a standing spot stayed inside the menu clearance");
-        // not in a menu, 1.5 m away and standing still: no back-off (only contact < 1 m triggers it)
+        // not in a menu, 1.5 m away and standing still: no back-off (1.0.32.9: it starts inside 1.3 m)
         var calm = new PartySpacing();
         SpacingResult c = calm.Step(0f, .1f, me, 0f, me, me, true, false, 1, 0, near, 1, new OpenGround());
         Assert(c.Mode != SpacingMode.BackOff, "backed off with no menu and no contact");
@@ -974,6 +978,72 @@ static class RegressionLedgerTests
         float closest = 99f;
         for (int i = 0; i < 150; i++) { w.Tick(i * .1f, .1f, near, 1, new OpenGround(), true, true); closest = Math.Min(closest, w.Pos.Length); }
         Assert(closest >= PartySpacing.ContactLeader + .5f, "came within " + closest.ToString("0.00") + " m of a leader in a menu");
+    }
+
+
+    // ---- 1.0.32.9 corrections from the 2026-10-28 live spacing test (DevSpacingLog + telemetry + OBS video).
+    sealed class WallBehindLeft : ISpacingTerrain
+    {   // nothing standable at x > 1.6: a companion east of the leader cannot back straight out
+        public bool Clear(P2 a, P2 b) { return b.X <= 1.6f; }
+    }
+
+    static void SpacingLeaderBackOffBeforeContact()
+    {
+        var law = new PartySpacing();
+        var near = new[] { Leader(new P2(0f, 0f)) };
+        P2 me = new P2(1.2f, 0f);
+        SpacingResult r = law.Step(0f, .1f, me, 0f, me, me, false, false, 1, 0, near, 1, new OpenGround());
+        Assert(r.Mode == SpacingMode.BackOff, "at 1.2 m it waited for contact (" + r.Mode + ")");
+        Assert(P2.Distance(r.Point, near[0].Position) >= PartySpacing.LeaderClear, "backed off to less than the clearance");
+        var w = new Walker { Pos = new P2(0f, 6f), Goal = new P2(0f, -1.0f), Slot = 0, SlotSide = 1 };
+        float closest = 99f;
+        for (int i = 0; i < 200; i++) { w.Tick(i * .1f, .1f, near, 1, new OpenGround(), true, false); closest = Math.Min(closest, w.Pos.Length); }
+        Assert(closest >= PartySpacing.ContactLeader, "touched the leader: " + closest.ToString("0.00") + " m");
+    }
+
+    static void SpacingPressedMatesSeparate()
+    {   // the indoor case: both standing spots on the same point, bodies at 0.98 m
+        var a = new Walker { Pos = new P2(0f, 0f), Goal = new P2(.2f, 0f), Slot = 0, SlotSide = 1 };
+        var b = new Walker { Pos = new P2(.98f, 0f), Goal = new P2(.2f, 0f), Slot = 2, SlotSide = -1 };
+        b.Law.SelfId = 2; a.Law.SelfId = 1;
+        var lead = Leader(new P2(0f, 6f));
+        var na = new SpacingNeighbor[2]; var nb = new SpacingNeighbor[2];
+        int aMoves = 0, bBackOffs = 0; SpacingMode lastB = SpacingMode.Travel; float minD = 99f, endD = 0f;
+        for (int i = 0; i < 200; i++)
+        {
+            na[0] = lead; na[1] = Mate(2, b.Pos, 2); nb[0] = lead; nb[1] = Mate(1, a.Pos, 0);
+            P2 before = a.Pos;
+            a.Tick(i * .1f, .1f, na, 2, new OpenGround(), true, false);
+            b.Tick(i * .1f, .1f, nb, 2, new OpenGround(), true, false);
+            if (a.Last.Mode == SpacingMode.BackOff) aMoves++;
+            if (b.Last.Mode == SpacingMode.BackOff && lastB != SpacingMode.BackOff) bBackOffs++;
+            lastB = b.Last.Mode;
+            endD = P2.Distance(a.Pos, b.Pos); if (i > 50) minD = Math.Min(minD, endD);
+        }
+        Assert(aMoves == 0, "the right-of-way companion backed off " + aMoves + " ticks");
+        Assert(endD >= PartySpacing.MateBackOffEnter, "still pressed: " + endD.ToString("0.00") + " m");
+        Assert(minD >= PartySpacing.MateBackOffEnter, "drifted back into contact after separating: " + minD.ToString("0.00") + " m");
+        Assert(bBackOffs <= 2, "approach/back-off oscillation: " + bBackOffs + " back-off episodes");
+    }
+
+    static void SpacingBackOffAroundWall()
+    {
+        var law = new PartySpacing();
+        var near = new[] { Leader(new P2(0f, 0f)) };
+        P2 me = new P2(1.0f, 0f);
+        SpacingResult r = law.Step(0f, .1f, me, 0f, me, me, false, false, 1, 0, near, 1, new WallBehindLeft());
+        Assert(r.Mode == SpacingMode.BackOff, "with a wall behind it the companion stayed pressed (" + r.Mode + ")");
+        Assert(r.Point.X <= 1.6f && P2.Distance(r.Point, near[0].Position) >= PartySpacing.LeaderClear, "backed off into the wall or not far enough");
+    }
+
+    static void SpacingGoalOffMate()
+    {
+        var law = new PartySpacing { SelfId = 9 };
+        var near = new[] { Leader(new P2(0f, 8f)), Mate(1, new P2(0f, 0f), 0) };
+        P2 me = new P2(0f, -5f), goal = new P2(.3f, 0f);
+        SpacingResult r = law.Step(0f, .1f, me, 2f, goal, goal, true, false, -1, 2, near, 2, new OpenGround());
+        P2 anchor = goal + r.Shift;
+        Assert(r.Mode != SpacingMode.Travel || P2.Distance(anchor, near[1].Position) >= PartySpacing.MateClear, "aimed at a spot pressed against the other companion");
     }
 
     // ---- Combat-voice lock (approved 1.0.32.6, 2026-10-27). Companion combat module, combat voice: COMPLETE.

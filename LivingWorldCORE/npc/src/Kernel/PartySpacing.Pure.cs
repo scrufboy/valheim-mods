@@ -1,4 +1,4 @@
-// Living World C.O.R.E. - party spacing (1.0.32.8). Pure decision law, no Unity: offline-testable.
+// Living World C.O.R.E. - party spacing (1.0.32.8, corrections 1.0.32.9). Pure decision law, no Unity: offline-testable.
 // Movement presentation only. The result is a point; native MonsterAI.Follow stays the sole movement writer.
 using System;
 
@@ -65,7 +65,11 @@ namespace LivingWorld.Core
     public sealed class PartySpacing
     {
         public const float LeaderClear = 1.6f, MenuLeaderClear = 2.2f, MateClear = 1.3f;
-        public const float ContactLeader = 1.0f, ContactMate = .9f;
+        // 1.0.32.9: contact = bodies touching. Live 2026-10-28: pressed capsules sit at 0.95-0.98 m centre to centre, so the
+        // old 0.9 m companion threshold never fired; contact is now 1.05 m for both.
+        public const float ContactLeader = 1.05f, ContactMate = 1.05f;
+        // 1.0.32.9: back off BEFORE touching. Leader: inside 1.3 m (LeaderClear less hysteresis); companion: inside 1.1 m.
+        public const float BackOffHysteresis = .3f, MateBackOffEnter = 1.1f;
         public const float Lookahead = 5f, LookaheadSeconds = 1.5f, PassMargin = .4f, EnterPersist = .2f, ReleaseMargin = .5f, ReleaseBehind = .6f, ReleasePersist = .5f;
         public const float MinClosing = .3f, MinOffset = .6f, MaxOffset = 2.4f, RateIn = 2.5f, RateOut = 1.5f, HeadOn = .35f;
         public const float HoldEnter = 1f, HoldExit = 1.8f, HoldSpeed = .8f, WaitMax = 1.5f, BackOffMargin = .3f;
@@ -76,7 +80,7 @@ namespace LivingWorld.Core
         bool holding;
         int pendingId = -1; float pendingSince;
         int activeId = -1; bool activeLeader; int side; float offset; float clearSince = -1f;
-        bool releasing; float waitSince = -1f; bool backingOff;
+        bool releasing; float waitSince = -1f; bool backingOff; int mateBackId = -1;
         /// <summary>This companion's stable identity (instance id) for right-of-way ties.</summary>
         public int SelfId;
 
@@ -106,7 +110,7 @@ namespace LivingWorld.Core
         public void Reset()
         {
             holding = false; pendingId = -1; activeId = -1; side = 0; offset = 0f; clearSince = -1f;
-            releasing = false; waitSince = -1f; backingOff = false;
+            releasing = false; waitSince = -1f; backingOff = false; mateBackId = -1;
         }
 
         /// <param name="self">this companion</param>
@@ -119,6 +123,55 @@ namespace LivingWorld.Core
         public SpacingResult Step(float now, float dt, P2 self, float ownSpeed, P2 aim, P2 goal, bool standing,
             bool leaderInMenu, int slotSide, int mySlot, SpacingNeighbor[] near, int count, ISpacingTerrain terrain)
         {
+            // 1.0.32.9: a standing spot never lies against a companion that has right of way over this one; it moves
+            // out to that companion's clearance (the yielder stands beside it instead of pressing into it).
+            P2 goalShift = new P2(0f, 0f);
+            if (standing)
+            {
+                int n = Math.Min(count, MaxNeighbors);
+                for (int i = 0; i < n; i++)
+                {
+                    if (near[i].IsLeader || !HasRightOfWay(near[i].Slot, near[i].Id, SelfOf(mySlot, SelfId))) continue;
+                    P2 moved = KeepGoalOff(goal + goalShift, near[i].Position, MateClear + .2f);
+                    goalShift = moved - goal;
+                }
+            }
+            SpacingResult r = StepCore(now, dt, self, ownSpeed, aim + goalShift, goal + goalShift, standing, leaderInMenu,
+                slotSide, mySlot, near, count, terrain);
+            if (r.Mode == SpacingMode.Travel) r.Shift = r.Shift + goalShift;
+            return r;
+        }
+
+        static SpacingNeighbor SelfOf(int slot, int id) { return new SpacingNeighbor { Id = id, Slot = slot }; }
+
+        /// <summary>A point inside `clear` of `center` moves straight out to that distance.</summary>
+        public static P2 KeepGoalOff(P2 goal, P2 center, float clear)
+        {
+            P2 out_ = goal - center;
+            float d = out_.Length;
+            if (d >= clear) return goal;
+            P2 dir = d < 1e-3f ? new P2(0f, -1f) : out_ * (1f / d);
+            return center + dir * clear;
+        }
+
+        /// <summary>1.0.32.9: the clear point to back off to. Straight away first; if a wall or drop blocks it, the
+        /// nearest clear direction at +-45 then +-90 degrees (a companion against a wall indoors still separates).</summary>
+        static bool AwayPoint(ISpacingTerrain terrain, P2 self, P2 center, P2 away, float radius, out P2 to, out P2 dir)
+        {
+            float[] turns = { 0f, .785398f, -.785398f, 1.570796f, -1.570796f };
+            for (int k = 0; k < turns.Length; k++)
+            {
+                float c = (float)Math.Cos(turns[k]), s = (float)Math.Sin(turns[k]);
+                dir = new P2(away.X * c - away.Z * s, away.X * s + away.Z * c);
+                to = center + dir * radius;
+                if (terrain == null || terrain.Clear(self, to)) return true;
+            }
+            to = self; dir = away; return false;
+        }
+
+        SpacingResult StepCore(float now, float dt, P2 self, float ownSpeed, P2 aim, P2 goal, bool standing,
+            bool leaderInMenu, int slotSide, int mySlot, SpacingNeighbor[] near, int count, ISpacingTerrain terrain)
+        {
             var r = new SpacingResult { Mode = SpacingMode.Travel, AvoidedId = -1 };
             if (count > MaxNeighbors) count = MaxNeighbors;
 
@@ -128,20 +181,46 @@ namespace LivingWorld.Core
                 if (!near[i].IsLeader) continue;
                 float d = P2.Distance(self, near[i].Position);
                 // enter inside the contact distance (or the menu clearance less hysteresis); leave once back at the clearance
-                float enter = leaderInMenu ? MenuLeaderClear - MenuBackOffHysteresis : ContactLeader;
+                // 1.0.32.9: enter before touching (1.3 m, or the menu clearance less hysteresis); leave at the clearance
+                float enter = leaderInMenu ? MenuLeaderClear - MenuBackOffHysteresis : LeaderClear - BackOffHysteresis;
                 float leave = Clearance(true, leaderInMenu);
                 backingOff = backingOff ? d < leave : d < enter;
                 if (backingOff)
                 {
                     P2 away = d < 1e-3f ? new P2(0f, -1f) : (self - near[i].Position) * (1f / d);
-                    P2 to = near[i].Position + away * (Clearance(true, leaderInMenu) + BackOffMargin);
+                    P2 to, dir;
                     holding = false; pendingId = -1;
                     r.AvoidedId = near[i].Id; r.AvoidedLeader = true;
-                    if (terrain == null || terrain.Clear(self, to)) { r.Mode = SpacingMode.BackOff; r.Point = to; r.Shift = away; r.Event = "backoff"; }
+                    if (AwayPoint(terrain, self, near[i].Position, away, Clearance(true, leaderInMenu) + BackOffMargin, out to, out dir))
+                    { r.Mode = SpacingMode.BackOff; r.Point = to; r.Shift = dir; r.Event = "backoff"; }
                     else { r.Mode = SpacingMode.Wait; r.Point = self; r.Event = "blocked"; }
                     return r;
                 }
             }
+
+            // 1b. 1.0.32.9: never stay pressed against another companion (live 2026-10-28: 17 s shoulder to shoulder
+            //     indoors). Only the companion without right of way steps out, so the two never both move.
+            int pressed = -1; float pressedD = 0f;
+            for (int i = 0; i < count; i++)
+            {
+                if (near[i].IsLeader || HasRightOfWay(mySlot, SelfId, near[i])) continue;
+                float d = P2.Distance(self, near[i].Position);
+                float enter = mateBackId == near[i].Id ? MateClear : MateBackOffEnter;
+                if (d < enter && (pressed < 0 || d < pressedD)) { pressed = i; pressedD = d; }
+            }
+            if (pressed >= 0)
+            {
+                mateBackId = near[pressed].Id;
+                P2 away = pressedD < 1e-3f ? new P2(0f, -1f) : (self - near[pressed].Position) * (1f / pressedD);
+                P2 to, dir;
+                holding = false; pendingId = -1;
+                r.AvoidedId = near[pressed].Id; r.AvoidedLeader = false;
+                if (AwayPoint(terrain, self, near[pressed].Position, away, MateClear + BackOffMargin, out to, out dir))
+                { r.Mode = SpacingMode.BackOff; r.Point = to; r.Shift = dir; r.Event = "giveway"; }
+                else { r.Mode = SpacingMode.Wait; r.Point = self; r.Event = "blocked"; }
+                return r;
+            }
+            mateBackId = -1;
 
             // 2. Soft region: a standing companion near its spot, well spaced, stays where it is.
             float fromGoal = P2.Distance(self, goal);
