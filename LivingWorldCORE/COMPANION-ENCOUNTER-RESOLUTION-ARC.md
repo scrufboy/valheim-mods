@@ -109,6 +109,32 @@ enough; a perfect map pin should be earned by a reliable messenger or later
 contact. The player can discover a camp that says no, and can revisit a known
 person without generating a new encounter.
 
+## Who lives at the site
+
+The server commits a seed-stable cast and kit before creating scene actors.
+Biome and verified site context shape a one- to four-person selection: regional
+clothing and armor, a credible threat level, distinct combat roles, personal
+weapons, finite supplies, and local knowledge. The same seeded choice and
+`PersonId` return on reload. A Meadows wanderer, marsh survivor, and Plains
+warrior should look and fight as people of their land, without assuming any of
+them are already friends. The named Split-Ash pair remain authored exceptions;
+the generated catalog fills other claimed sites.
+
+The client receives only visible silhouette, equipment presentation, approved
+voice, and server-revealed identity. The server alone owns site and spawn claims,
+allegiance, relationship, affinity, invitations, inventory, and combat requests.
+An armed stranger may belong to Hearthless, Pillager, or Eitrherjar people;
+equipment never proves allegiance. Enemy cast selection does not silently turn
+into a recruitable companion. Alliance or temporary aid requires witnessed
+terms, and full party membership requires a later distinct offer and acceptance.
+
+Spear and bomb work as one equipment package. A spear user has a different
+melee fallback while the spear is in flight or lost. Reclamation requires the
+same owned projectile and a safe return path. A finite bomb reserve can coexist
+with spear use; exhausting bombs leaves spear and fallback behavior intact.
+Knife lunge and atgeir attacks are separate native-combat capabilities, each
+enabled only after its exact live animation, item, safety, and replication checks.
+
 ## Needs, aid, and earned respect
 
 Camp life can reveal a person's immediate need: food, a threatened approach,
@@ -119,6 +145,13 @@ repeatable reputation bar, or recruits someone automatically. People keep
 boundaries, duties, and relationships even when grateful. The player can learn a
 short account of who they are from the tasks they do, what they ask for, and how
 they respond to the result.
+
+Food cannot tame a person, coin cannot hire one into obedience, and sight alone
+cannot turn anyone into a follower. The server records the exact accepted
+request, the person's own agreement, witnessed help, safe temporary return,
+and a later separate invitation. Loaded and unloaded scenes project those
+durable facts rather than reset or invent them. The active field limit remains
+two people, counting temporary help as a field position.
 
 Each request binds to a verified nearby world target and an authored need. A
 food request can use a bounded hunt or delivery; a safety request can point to a
