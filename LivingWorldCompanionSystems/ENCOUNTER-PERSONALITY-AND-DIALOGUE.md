@@ -102,7 +102,7 @@ only the person's honest expression.
 - “Our hunter has not returned. Help me bring them home.”
 - “The dead rise whenever the mist thickens. Hold this fire until dawn.”
 - “We can move the wounded or defend the stores. We cannot do both.”
-- “The Idolbound pass here with Fulings and leave each other untouched.”
+- “That black-armored brute struck Fuling and traveller alike. It serves only the fight.”
 - “Clear the burial house, but do not break the marked stones.”
 
 ### Boasts and offers
@@ -158,4 +158,3 @@ forbidden because its clip owns a death event.
 - Let people be funny, tired, vain, frightened, practical, or wrong.
 - Never expose numerical personality, affinity, karma, or thresholds.
 - Camp members may disagree without changing shared faction.
-

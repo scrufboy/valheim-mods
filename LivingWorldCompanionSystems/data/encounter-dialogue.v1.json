@@ -32,7 +32,7 @@
     {"id":"belief.mutual.01","intent":"belief","text":"We answered the raven once. Now we answer one another."},
     {"id":"plight.missing.01","intent":"pleading","requiredFacts":["camp_member_missing"],"text":"Our hunter has not returned. Help me bring them home."},
     {"id":"plight.defense.01","intent":"pleading","requiredFacts":["camp_wounded","threat_expected"],"text":"We can move the wounded or defend the stores. We cannot do both."},
-    {"id":"warning.idolbound.01","intent":"warning","biomes":["Plains"],"requiredFacts":["idolbound_fuling_alliance_known"],"text":"The Idolbound pass here with Fulings and leave each other untouched."},
+    {"id":"warning.war_lieutenant.01","intent":"warning","biomes":["Plains"],"requiredFacts":["war_lieutenant_everyone_hostile_known"],"text":"That black-armored brute struck Fuling and traveller alike. It serves only the fight."},
     {"id":"ask.grave.01","intent":"asking","requiredFacts":["burial_site_target"],"text":"Clear the burial house, but do not break the marked stones."},
     {"id":"boast.spear.01","intent":"bragging","roles":["plains_spear_hunter"],"roleConfidence":["veteran","master"],"text":"I have put a spear through a running Fuling at twenty paces."},
     {"id":"offer.spear.01","intent":"selling","roles":["plains_spear_hunter"],"text":"Give me a clear lane and nothing reaches your shield wall untouched."},

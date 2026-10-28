@@ -43,10 +43,12 @@ field group should perform staggered activities while another watches. Equipment
 is stowed unless danger or work requires it. The group may cook, rest, repair,
 spar, hunt local wildlife, or actively fight a faction it opposes.
 
-Local faction tolerance is explicit. A Legion-aligned camp may ignore or aid
-Fulings; a Plains survivor camp may attack them. Species proximity alone does not
-define hostility. The same faction matrix governs ambient encounters, raids, and
-recruited actors so alliances do not change merely because the player arrived.
+Local faction tolerance must be authored rather than inferred from a transitional
+Valheim faction enum. The Souls war-lieutenant currently ignores Fulings because
+both use `PlainsMonsters`; that is implementation history, not a Living World
+alliance. Its replacement relationship is hostile to players, Hearthbound camps,
+Fulings, and other combatants unless a future encounter explicitly creates a
+short-lived battlefield exception.
 
 ## Recruitment context and answer
 

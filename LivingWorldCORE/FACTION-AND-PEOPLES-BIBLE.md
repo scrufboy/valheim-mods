@@ -42,16 +42,28 @@ Some claim Odin rewards victory; others believe only in the next winter. Their
 humanity matters: they can bargain, flee, boast, betray, or rarely defect. They
 are not generic undead despite the transitional runtime faction value.
 
-### Idolbound Legion (`RRRN_OrcBrute`)
+### Dark War-Lieutenant (`RRRN_OrcBrute`, final name pending)
 
-Replacement for “Krauguk Legions” and the misleading “Eitrherjar Legionary.” They
-are a disciplined non-Fuling people who made compact with Fuling clans, accept
-their territory and idols, and treat opposition to that compact as the greater
-enemy. They do not automatically attack Fulings. Their alliance is political,
-ritual, and practical—not a proximity-hostility bug.
+Replacement role for “Krauguk Legions” and the misleading “Eitrherjar Legionary.”
+This is not a Fuling-aligned people. The installed Souls actor shares the
+`PlainsMonsters` combat faction with Fulings, which accidentally makes them ignore
+one another. Living World treats that as inherited implementation behavior, not
+lore.
 
-`Einherjar` remains reserved for Odin's chosen battle-dead. Do not use a near-copy
-to make this legion sound mythic.
+The replacement is a solitary or sparsely deployed battlefield lieutenant: a
+war-made destroyer that enters existing conflict, drives pressure, and attacks
+whoever remains. It does not require soldiers, a nation, or lasting allegiance.
+Its heavy armor, mixed brutal weapon loadout, high battlefield presence, and
+lieutenant behavior are preserved from the Souls profile while its relationship
+matrix becomes deliberately hostile to Hearthbound, player, Fuling, Pillager,
+Guardian, and rival hostile forces. Temporary target priority is tactical, never
+proof of friendship.
+
+Its origin remains open for final naming: oath-broken Second-Breath champion,
+revenant war-captain, Forsaken-made enforcer, or person hollowed into an office of
+war. Do not settle that choice merely to explain an enum. `Einherjar` remains
+reserved for Odin's chosen battle-dead and must not be used as a generic elite
+title.
 
 ### Fen Draugr (`RRRN_Neckman`)
 
@@ -97,7 +109,7 @@ elves, and regional peoples when faction and origin permit it.
 ## Relationship matrix rules
 
 Every faction definition must state default relationships to the player,
-Hearthbound, Pillagers, Idolbound, Fulings, Guardians, draugr, Rimebound,
+Hearthbound, Pillagers, war-lieutenants, Fulings, Guardians, draugr, Rimebound,
 Emberworn, and Forsaken servants; whether reputation is individual, camp, people,
 or world-wide; what witnessed acts change it; how combat may end; and which
 relationship survives recruitment or village assignment.
@@ -114,4 +126,3 @@ is richer and persists independently.
 - Avoid modern fantasy race morality.
 - Titles are earned deeds, offices, conditions, or allegiances.
 - Preserve internal prefab IDs until save migration proves replacement safe.
-

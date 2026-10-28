@@ -36,7 +36,7 @@ map, not a claim that medieval Scandinavian religion was one consistent system.
 ## Terminology cautions
 
 - **Einherjar/einherji:** Odin's chosen battle-dead associated with Valholl; do not
-  use as a generic synonym for elite warrior or Fuling ally.
+  use as a generic synonym for an elite warrior or unaffiliated war-lieutenant.
 - **Draugr:** literary uses vary; “corporeal revenant” is safer than treating it as
   a single standardized species.
 - **Seidr and galdr:** not interchangeable generic spell schools. Any class using
@@ -53,4 +53,3 @@ map, not a claim that medieval Scandinavian religion was one consistent system.
 When a source supports atmosphere but not the exact event, write “inspired by,”
 not “according to Norse mythology.” The project's strongest lore will be honest
 about where the old material ends and Living World's story begins.
-
