@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "status": "authored starter repository; text and nonverbal selection only",
+  "invitation": {
+    "playerLine": "Will you come with me?",
+    "answers": ["yes", "no"],
+    "randomRollAllowed": false
+  },
+  "personaAxes": {
+    "initiative": ["waits", "signals", "approaches", "intercepts", "calls_from_cover"],
+    "courage": ["avoids", "watches", "holds", "challenges", "advances"],
+    "caution": ["open", "measured", "guarded", "suspicious", "closed"],
+    "mercy": ["hard", "selective", "ordinary", "generous"],
+    "pride": ["plain", "reserved", "boasting", "competitive", "status_conscious"],
+    "need": ["secure", "strained", "hungry", "injured", "hunted", "bereaved", "desperate"],
+    "bond": ["alone", "paired", "family", "war_band", "leader", "dependent", "debtor"],
+    "purpose": ["survive", "defend", "hunt", "avenge", "recover", "study", "trade", "rebuild", "escape", "find_hearth"],
+    "roleConfidence": ["novice", "practiced", "veteran", "master", "diminished"],
+    "odinStance": ["faithful", "dutiful", "doubtful", "resentful", "defiant", "unknown"]
+  },
+  "nonverbal": {
+    "voiceCategories": ["hail", "warning", "acknowledgment", "question", "challenge", "alarm", "grief", "relief", "laugh", "cheer", "refusal", "assent"],
+    "gestureCandidates": ["wave", "point", "challenge", "cheer", "nonono", "thumbsup", "bow", "cower", "cry", "despair", "flex", "comehere", "kneel", "laugh", "roar", "shrug", "toast", "rest", "relax"],
+    "forbidden": ["KneelDeath"]
+  },
+  "components": [
+    {"id":"greeting.wary.01","intent":"greeting","tones":["wary"],"gesture":"halt","voice":"warning","text":"Hold there. We saw your smoke before you saw ours."},
+    {"id":"greeting.open.01","intent":"greeting","tones":["welcoming"],"gesture":"wave","voice":"hail","text":"The fire is small, but there is room if you bring no feud."},
+    {"id":"greeting.urgent.01","intent":"pleading","tones":["urgent"],"gesture":"comehere","voice":"alarm","text":"Over here! Quickly—before they circle back."},
+    {"id":"origin.second_breath.01","intent":"origin","odinStance":["doubtful","resentful"],"text":"I woke beneath branches I had never seen, with my last battle still in my mouth."},
+    {"id":"belief.odin.01","intent":"belief","odinStance":["resentful","defiant"],"text":"Odin remembered my spear. He remembered nothing of why I carried it."},
+    {"id":"belief.mutual.01","intent":"belief","text":"We answered the raven once. Now we answer one another."},
+    {"id":"plight.missing.01","intent":"pleading","requiredFacts":["camp_member_missing"],"text":"Our hunter has not returned. Help me bring them home."},
+    {"id":"plight.defense.01","intent":"pleading","requiredFacts":["camp_wounded","threat_expected"],"text":"We can move the wounded or defend the stores. We cannot do both."},
+    {"id":"warning.idolbound.01","intent":"warning","biomes":["Plains"],"requiredFacts":["idolbound_fuling_alliance_known"],"text":"The Idolbound pass here with Fulings and leave each other untouched."},
+    {"id":"ask.grave.01","intent":"asking","requiredFacts":["burial_site_target"],"text":"Clear the burial house, but do not break the marked stones."},
+    {"id":"boast.spear.01","intent":"bragging","roles":["plains_spear_hunter"],"roleConfidence":["veteran","master"],"text":"I have put a spear through a running Fuling at twenty paces."},
+    {"id":"offer.spear.01","intent":"selling","roles":["plains_spear_hunter"],"text":"Give me a clear lane and nothing reaches your shield wall untouched."},
+    {"id":"offer.crafter.01","intent":"selling","purposes":["rebuild","trade"],"text":"I can mend iron, but I will not forge chains."},
+    {"id":"question.purpose.01","intent":"asking","text":"Do you clear halls for homes, or only for what lies in their chests?"},
+    {"id":"question.consent.01","intent":"asking","caution":["guarded","suspicious"],"text":"When someone tells you no, does your hand stay off your weapon?"},
+    {"id":"question.hearth.01","intent":"asking","purposes":["find_hearth","rebuild"],"text":"Will your hearth take the wounded, or only useful hands?"},
+    {"id":"question.odin.01","intent":"asking","odinStance":["doubtful","resentful","defiant"],"text":"Are you Odin's hand, or your own?"},
+    {"id":"yes.general.01","intent":"accepting","answer":"yes","gesture":"thumbsup","voice":"assent","text":"Yes. My road and yours run together now."},
+    {"id":"yes.bond.01","intent":"accepting","answer":"yes","requiredFacts":["continuing_people_obligation"],"text":"Yes—but when my people call, I answer them."},
+    {"id":"yes.hearth.01","intent":"accepting","answer":"yes","requiredFacts":["defended_hearth_known"],"text":"I will come. Show me the hearth you mean to defend."},
+    {"id":"yes.shared_defense.01","intent":"accepting","answer":"yes","requiredFacts":["player_held_shared_defense"],"text":"You held when leaving was easier. I will do the same."},
+    {"id":"no.missing.01","intent":"refusing","answer":"no","gesture":"nonono","voice":"refusal","requiredFacts":["camp_member_missing"],"text":"No. Not while one of mine is still missing."},
+    {"id":"no.unknown_purpose.01","intent":"refusing","answer":"no","requiredFacts":["player_purpose_unproven"],"text":"No. You have strength, but I do not yet know what it serves."},
+    {"id":"no.friendly.01","intent":"refusing","answer":"no","text":"I will share the fire. I will not follow you."},
+    {"id":"no.no_hearth.01","intent":"refusing","answer":"no","requiredFacts":["safe_hearth_required","defended_hearth_missing"],"text":"Not now. Make that village a home, then ask me again."},
+    {"id":"no.odin.01","intent":"refusing","answer":"no","odinStance":["resentful","defiant"],"text":"No. I gave one god more battles than he deserved."}
+  ]
+}

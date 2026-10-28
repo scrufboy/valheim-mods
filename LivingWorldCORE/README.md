@@ -14,3 +14,9 @@ The authoritative package boundaries, capability gates, enemy-family track, and
 migration sequence are defined in [PROJECT-BOUNDARIES.md](./PROJECT-BOUNDARIES.md).
 
 Owner: Brian (`scrufboy`).
+
+## Story authorities
+
+- [The Second Breath lore bible](./LORE-BIBLE-THE-SECOND-BREATH.md)
+- [Faction and peoples bible](./FACTION-AND-PEOPLES-BIBLE.md)
+- [World companion discovery and biome roles](./WORLD-COMPANION-DISCOVERY-AND-BIOME-ROLES.md)

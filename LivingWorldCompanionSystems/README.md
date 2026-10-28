@@ -5,6 +5,10 @@ Companion activities, classes, population, party continuity, tactics, and relate
 Current design authorities:
 
 - [World companion discovery and biome-role architecture](../LivingWorldCORE/WORLD-COMPANION-DISCOVERY-AND-BIOME-ROLES.md)
+- [The Second Breath lore bible](../LivingWorldCORE/LORE-BIBLE-THE-SECOND-BREATH.md)
+- [Faction and peoples bible](../LivingWorldCORE/FACTION-AND-PEOPLES-BIBLE.md)
+- [Encounter personality and dialogue grammar](./ENCOUNTER-PERSONALITY-AND-DIALOGUE.md)
+- [Structured encounter dialogue repository](./data/encounter-dialogue.v1.json)
 - [Specialist combat capability plan](../LivingWorldHumanNPC/SPECIALIST-COMBAT-CAPABILITY-PLAN.md)
 - [Offline Companions and Vikings for Hire audit](../research/COMPETITOR-AUDIT-OFFLINE-COMPANIONS.md)
 - [Human companion behavior-state contract](../LivingWorldHumanNPC/BEHAVIOR-STATE-CONTRACT.md)

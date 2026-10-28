@@ -48,24 +48,21 @@ Fulings; a Plains survivor camp may attack them. Species proximity alone does no
 define hostility. The same faction matrix governs ambient encounters, raids, and
 recruited actors so alliances do not change merely because the player arrived.
 
-## Recruitment paths
+## Recruitment context and answer
 
-Recruitment is an outcome of the encounter and the person's origin. Supported
-paths are:
-
-- **Shared defense:** survive an attack with the group without harming allies.
-- **Rescue:** free, revive, escort, or recover a missing group member.
-- **Proof:** complete a biome-appropriate trial or defeat a marked threat.
-- **Provision:** provide food, medicine, ammunition, tools, or repair materials.
-- **Reputation:** earn standing with the person's people or opposed faction.
-- **Contract:** pay an explicit temporary or permanent fee where mercenary lore
-  supports it.
-- **Sanctuary:** offer a valid reclaimed-village bed, safety, and role.
-- **Invitation:** a person who respects the player offers service without payment.
+Recruitment has no minigame or random persuasion roll. Shared defense, rescue,
+proof, provision, standing, sanctuary, and compatible purpose establish facts the
+person can know. The player eventually asks: **Will you come with me?** The answer
+is yes or no, deterministically supported by those facts and the person's current
+obligations. Personality changes expression, not the truth of the answer.
 
 No path instantly erases the person's companions or camp. Non-recruited members
 may remain, relocate, visit the reclaimed village later, or supply another
 encounter. Declining a recruit is not a failure state.
+
+Canonical origins and conversation rules live in
+[The Second Breath](./LORE-BIBLE-THE-SECOND-BREATH.md) and
+[Encounter personality and dialogue](../LivingWorldCompanionSystems/ENCOUNTER-PERSONALITY-AND-DIALOGUE.md).
 
 ## Class, loadout, and person
 
@@ -144,4 +141,3 @@ and named survivors never expire through the ambient population budget.
 7. Add knife lunge capability and its range prediction.
 8. Add hand-origin magic presentation and bounded support/offense profiles.
 9. Connect recruited identities to reclaimed-village residency and raids.
-
