@@ -225,6 +225,32 @@ After confirmed clear, actors regroup, check casualties, tend wounds, and only
 then resume a changed routine. A destroyed fire or lost shelter changes what the
 camp can do; routines cannot pretend the furniture still exists.
 
+## Movement and inhabited structures
+
+The player's body must remain under the player's control. A companion may
+yield, wait, or pass around the player, but must not physically shove them.
+The 2026-10-28 installed 1.0.32.8 review found that some pushing remains;
+the no-push acceptance gate is still open. Anchor steering and a low close-
+contact count do not prove that native colliders cannot push. Repair and test
+the player/companion collision owner in narrow paths, inside structures,
+while standing in a menu, and through combat transitions before promoting
+another movement build.
+
+A deliberate slow walk should look like traveling together. The companion's
+gait policy should match the leader's sustained walking speed when native
+animation supports it, with smooth changes and bounded catch-up rather than
+repeated sprint-stop corrections. Running, sneaking, combat, and hazardous
+terrain keep their own movement rules. This gait polish follows the no-push
+repair and has its own video/telemetry acceptance.
+
+Structure traversal can look good without using its objects. A door opener,
+chair/bench claimant, and workstation user are separate living-routine
+behaviors. Each requires a real loaded object, a server-owned reservation,
+reachability, animation/interaction proof, and a clean release on combat,
+departure, unload, or object destruction. Sitting when the leader sits is
+not the same as choosing a seat. These routines belong with camp and resident
+life, not with combat attacks.
+
 ## Shock alert and Friend in Need event
 
 An alert requires a witnessed fact: a known friend injured, an attacker
