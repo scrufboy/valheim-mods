@@ -39,6 +39,10 @@ Core, Formidable NPC, optional enemy-family, asset, and special-attack plan.
 
 Shared material is organized under [docs](./docs), [research](./research), [tests](./tests), and [archive](./archive).
 
+Project-owned visual references are indexed under [art](./art). Current companion
+world-discovery and specialist-combat direction is indexed from
+[LivingWorldCompanionSystems](./LivingWorldCompanionSystems).
+
 Generated binaries, game/runtime files, downloaded third-party mods, videos, raw logs, and private test telemetry are intentionally excluded.
 
 Copyright © 2026 [scrufboy](https://github.com/scrufboy). Released under the repository MIT license.
