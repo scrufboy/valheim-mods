@@ -4,16 +4,16 @@ Date: 2026-10-27
 Owner: Brian (`scrufboy`)  
 Status: navigation and provenance authority; not a claim that every design is implemented.
 
-This archive reconciles three different evidence sources that must not be confused:
+This archive reconciles three evidence sources that must not be confused:
 
-1. **GitHub `main` design authority** — lore, product boundaries, roster, progression,
-   appearance, mortality, factions, and world-companion design.
-2. **Approved local runtime line** — the saved 1.0.32.6 combat-voice baseline and the
-   later rename/spacing work preserved in `Documents/LivingWorld-CORE-NPC` and the
-   v3 git bundle. Those commits are not all present on GitHub `main`.
-3. **Owner-directed requirements** — current decisions recorded in the active Living
-   World workstream. Anything not backed by repository text or saved runtime evidence
-   is labelled `OWNER-DIRECTED`, `OPEN`, `INFERRED`, or `MISSING SOURCE`.
+1. **GitHub `main` design authority** — lore, product boundaries, roster,
+   progression, appearance, mortality, factions and world-companion design.
+2. **GitHub 1.0.x runtime branches** — the approved combat-voice baseline, installed
+   1.0.32.7 state, 1.0.32.8b spacing review build, and parked 1.0.33 work. These are
+   preserved separately and are not merged into `main`.
+3. **Owner-directed requirements** — current decisions recorded in the Living World
+   workstream. Unsupported claims are labelled `OWNER-DIRECTED`, `OPEN`,
+   `INFERRED`, or `MISSING SOURCE`.
 
 ## Read first
 
@@ -28,6 +28,15 @@ This archive reconciles three different evidence sources that must not be confus
 - [Decision log](08-DECISIONS-LOG.md)
 - [Open questions](09-OPEN-QUESTIONS.md)
 - [Claude work order](10-CLAUDE-WORK-ORDER.md)
+- [Claude implementation audit](11-IMPLEMENTATION-AUDIT-2026-10-27.md)
+
+## Published runtime refs
+
+- `lwc-core-1.0/baseline-combat-voice-1.0.32.6` @ `26fd295`
+- tag `combat-voice-approved-1.0.32.6` -> `26fd295`
+- `lwc-core-1.0/installed-1.0.32.7` @ `9933763`
+- `lwc-core-1.0/1.0.32.8b-party-spacing-test` @ `33addad`
+- `lwc-core-1.0/parked-1.0.33` @ `965a2a0`
 
 ## Binding source documents
 
@@ -41,6 +50,5 @@ This archive reconciles three different evidence sources that must not be confus
 - `LivingWorldHumanNPC/COMPETITOR-AUDIT-VIKINGSFORHIRE-1.6.3.md`
 - `research/COMPETITOR-AUDIT-OFFLINE-COMPANIONS.md`
 
-No licensed audio, compiled DLL, private configuration, or third-party asset is
-included in this documentation archive.
-
+No licensed audio, compiled DLL, private configuration, logs, telemetry, videos,
+backups, or third-party assets are included in this archive.
