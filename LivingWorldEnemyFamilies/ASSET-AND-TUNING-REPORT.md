@@ -32,7 +32,7 @@ Validation checks provider-prefab strings in installed MadHatter and RunicPack a
 |---|---|---|---|
 | `RRRN_Neckman` | Swamp Neckman | Fen Draugr | Runtime overlay logs `verified=True` after lookup |
 | `RRRN_Servant` | Corrupted Servant | Myrkvidr Thrall | Runtime overlay logs `verified=True` after lookup |
-| `RRRN_OrcBrute` | Krauguk Legions | Eitrherjar Legionary (working name) | Runtime overlay logs `verified=True` after lookup |
+| `RRRN_OrcBrute` | Krauguk Legions | Eitrherjar Legionary (retained canonical name) | Runtime overlay logs `verified=True` after lookup |
 
 `RRRN_NinoBosque`, `RRRN_WoodsSoul`, and `RRRN_Pillager` are deliberately unchanged.
 The overlay touches only `Character.m_name` on the registered prefab. IDs, factions,

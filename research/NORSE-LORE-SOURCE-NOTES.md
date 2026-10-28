@@ -37,6 +37,10 @@ map, not a claim that medieval Scandinavian religion was one consistent system.
 
 - **Einherjar/einherji:** Odin's chosen battle-dead associated with Valholl; do not
   use as a generic synonym for an elite warrior or unaffiliated war-lieutenant.
+- **Eitrherjar:** established Living World project coinage for its specific
+  corrupted battle-dead enemy lineage. It is a fictional name, not a claim that
+  the historical sources name such a people and not a replacement spelling for
+  *einherjar*.
 - **Draugr:** literary uses vary; “corporeal revenant” is safer than treating it as
   a single standardized species.
 - **Seidr and galdr:** not interchangeable generic spell schools. Any class using

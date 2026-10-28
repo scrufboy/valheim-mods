@@ -44,11 +44,12 @@ is stowed unless danger or work requires it. The group may cook, rest, repair,
 spar, hunt local wildlife, or actively fight a faction it opposes.
 
 Local faction tolerance must be authored rather than inferred from a transitional
-Valheim faction enum. The Souls war-lieutenant currently ignores Fulings because
-both use `PlainsMonsters`; that is implementation history, not a Living World
-alliance. Its replacement relationship is hostile to players, Hearthbound camps,
-Fulings, and other combatants unless a future encounter explicitly creates a
-short-lived battlefield exception.
+Valheim faction enum. The Souls actor used for the **Eitrherjar Legionary**
+currently ignores Fulings because both use `PlainsMonsters`; that is implementation
+history, not a Living World alliance. The Eitrherjar relationship is hostile to
+players, Hearthbound camps, Fulings, draugr, and other combatants unless a specific
+encounter creates a short-lived tactical exception. That exception never rewrites
+the lineage's allegiance.
 
 ## Recruitment context and answer
 

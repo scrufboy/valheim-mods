@@ -61,32 +61,35 @@ Some claim Odin rewards victory; others believe only in the next winter. Their
 humanity matters: they can bargain, flee, boast, betray, or rarely defect. They
 are not generic undead despite the transitional runtime faction value.
 
-### Dark War-Lieutenant (`RRRN_OrcBrute`, final name pending)
+### Eitrherjar Legionary (`RRRN_OrcBrute`)
 
-Replacement role for “Krauguk Legions” and the misleading “Eitrherjar Legionary.”
-This is not a Fuling-aligned people. The installed Souls actor shares the
-`PlainsMonsters` combat faction with Fulings, which accidentally makes them ignore
-one another. Living World treats that as inherited implementation behavior, not
-lore.
+**Eitrherjar Legionary is the retained Living World name.** It is not replaced by
+“Idolbound” or the generic “Dark War-Lieutenant.” *Eitrherjar* is an intentional
+Living World coinage for battle-dead spoiled by venomous, corrupting power; it is
+not being used as another spelling of the einherjar.
 
-The replacement is a solitary or sparsely deployed battlefield lieutenant: a
-war-made destroyer that enters existing conflict, drives pressure, and attacks
-whoever remains. It does not require soldiers, a nation, or lasting allegiance.
-Its heavy armor, mixed brutal weapon loadout, high battlefield presence, and
-lieutenant behavior are preserved from the Souls profile while its relationship
-matrix becomes deliberately hostile to Hearthbound, player, Fuling, Pillager,
-Guardian, and rival hostile forces. Temporary target priority is tactical, never
-proof of friendship.
+The Eitrherjar were warriors Odin believed he could spend in the wars of Valheim.
+Death did not return them cleanly to his purpose. Poison, old bindings, and the
+world's long violence remained in them until command outlived commander and war
+outlived cause. What remains remembers formation, rank, weapons, and the need to
+dominate a battlefield, but owes no living host or dead kingdom lasting loyalty.
+An Eitrherjar Legionary is therefore an undead war-captain, not a Fuling soldier,
+mercenary, or political ally.
 
-Its origin and life-state remain open for final naming: oath-broken Second-Breath
-champion, undead or revenant war-captain, Forsaken-made enforcer, or a person
-hollowed into an office of war. Do not decide that it is living or undead merely
-from the old `PlainsMonsters` value or its model. If the approved origin supports
-both, the core may instantiate a hostile corrupted lieutenant and a distinct
-living/freed counterpart with different identity and allegiance profiles.
+The installed Souls actor shares the `PlainsMonsters` combat faction with Fulings,
+which makes them ignore one another. That is inherited implementation behavior,
+not Living World canon. The Legionary enters existing fights as a solitary or
+sparsely deployed pressure actor and attacks the player, Hearthbound, Fulings,
+Pillagers, Guardians, draugr, and rival hostile forces. Being undead does not make
+all undead one people or one army. Draugr defend their bindings and dead holdings;
+an Eitrherjar imposes its own dead war. They are enemies when their purposes meet.
 
-`Einherjar` remains reserved for Odin's chosen battle-dead and must not be used as
-a generic elite title.
+Its heavy armor, brutal mixed weapon loadout, high battlefield presence, and
+combat-lieutenant behavior are preserved from the Souls profile. Temporary target
+priority is tactical, never proof of friendship. This enemy lineage does not need
+a friendly version. Living allies and hostile living rivals use their own named
+class and people profiles on the shared core rather than rewriting the
+Eitrherjar's identity.
 
 ### Fen Draugr (`RRRN_Neckman`)
 
@@ -132,7 +135,7 @@ elves, and regional peoples when faction and origin permit it.
 ## Relationship matrix rules
 
 Every faction definition must state default relationships to the player,
-Hearthbound, Pillagers, war-lieutenants, Fulings, Guardians, draugr, Rimebound,
+Hearthbound, Pillagers, Eitrherjar, Fulings, Guardians, draugr, Rimebound,
 Emberworn, and Forsaken servants; whether reputation is individual, camp, people,
 or world-wide; what witnessed acts change it; how combat may end; and which
 relationship survives recruitment or village assignment.
@@ -145,7 +148,8 @@ is richer and persists independently.
 
 - Prefer descriptive English when an Old Norse form is uncertain.
 - Use attested terms with their attested sense or label a project coinage.
-- Never use *einherji* merely to mean elite.
+- Never use *einherji* merely to mean elite. **Eitrherjar** is the established
+  project coinage for this specific corrupted battle-dead lineage.
 - Avoid modern fantasy race morality.
 - Titles are earned deeds, offices, conditions, or allegiances.
 - Preserve internal prefab IDs until save migration proves replacement safe.
