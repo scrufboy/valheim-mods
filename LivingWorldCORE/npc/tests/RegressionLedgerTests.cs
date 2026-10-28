@@ -37,6 +37,10 @@ static class RegressionLedgerTests
         Run("1.0.32.10 gait: a companion behind its spot catches up, bounded by its native jog", GaitCatchUpBounded);
         Run("1.0.32.10 gait: the leader's walk toggle always means walk; far away means ordinary pace", GaitToggleAndRange);
         Run("1.0.32.10 gait: noisy leader speed does not flip walk/jog every tick", GaitNoFlicker);
+        Run("1.0.32.11 bombs: a group at mid range with no ally near is bombed; then a 12 s cooldown", BombThrowsAtGroup);
+        Run("1.0.32.11 bombs: never with the leader or a companion inside blast + margin of the target", BombNeverNearAllies);
+        Run("1.0.32.11 bombs: never at its feet, never out of range or out of sight, never while busy", BombRangeSightBusy);
+        Run("1.0.32.11 bombs: finite - none carried means none thrown; a lone weak enemy is not worth one", BombFiniteAndWorth);
         Run("LOCK combat voice 1.0.32.6: every rule constant is the approved value", CombatVoiceConstantsLocked);
         Run("LOCK combat voice: alert only before contact, once per enemy, party cooldown", CombatVoiceAlertsLocked);
         Run("LOCK combat voice: every heavy exertion voiced, ordinary swings 30% / 2.5 s", CombatVoiceExertionLocked);
@@ -1103,6 +1107,49 @@ static class RegressionLedgerTests
             last = g.Walk;
         }
         Assert(flips <= 2, "walk/jog flipped " + flips + " times on a noisy 1.2/2.6 m/s leader");
+    }
+
+
+    // ---- 1.0.32.11 bombs (first shared thrown-area capability)
+    static BombSituation Group() { return new BombSituation { Reserve = 3, TargetDistance = 9f, SelfToTarget = 9f, TargetVisible = true, NearestAllyToTarget = 9f, HostilesNearTarget = 3, TargetMaxHealth = 60f }; }
+
+    static void BombThrowsAtGroup()
+    {
+        var p = new BombPolicy();
+        Assert(p.Decide(10f, Group()), "did not throw at three enemies 9 m away: " + p.LastReason);
+        p.Started(10f);
+        Assert(!p.Decide(15f, Group()) && p.LastReason == "cooldown", "threw again inside the cooldown");
+        Assert(p.Decide(22.1f, Group()), "never threw again after the cooldown");
+        var q = new BombPolicy(); q.Failed(10f);
+        Assert(q.Decide(12.1f, Group()), "a refused throw waited the full cooldown");
+    }
+
+    static void BombNeverNearAllies()
+    {
+        var p = new BombPolicy(); BombSituation s = Group();
+        s.NearestAllyToTarget = BombPolicy.BlastRadius + BombPolicy.SafetyMargin - .1f;
+        Assert(!p.Decide(0f, s) && p.LastReason == "ally near target", "threw with an ally 5.4 m from the target");
+        s.NearestAllyToTarget = 1f;
+        Assert(!p.Decide(0f, s), "threw at an enemy fighting the leader");
+    }
+
+    static void BombRangeSightBusy()
+    {
+        var p = new BombPolicy(); BombSituation s = Group();
+        s.TargetDistance = s.SelfToTarget = 5.9f; Assert(!p.Decide(0f, s) && p.LastReason == "too close", "threw at its feet");
+        s = Group(); s.TargetDistance = s.SelfToTarget = 14.1f; Assert(!p.Decide(0f, s) && p.LastReason == "too far", "threw beyond range");
+        s = Group(); s.TargetVisible = false; Assert(!p.Decide(0f, s), "threw without line of sight");
+        s = Group(); s.Busy = true; Assert(!p.Decide(0f, s), "threw mid-attack or staggered");
+        s = Group(); s.TargetDistance = -1f; Assert(!p.Decide(0f, s), "threw with no target");
+        s = Group(); s.FacingAngle = 60f; Assert(!p.Decide(0f, s) && p.LastReason == "not facing", "threw sideways at a target 60 degrees off");
+    }
+
+    static void BombFiniteAndWorth()
+    {
+        var p = new BombPolicy(); BombSituation s = Group();
+        s.Reserve = 0; Assert(!p.Decide(0f, s) && p.LastReason == "none carried", "threw a bomb it does not carry");
+        s = Group(); s.HostilesNearTarget = 1; s.TargetMaxHealth = 60f; Assert(!p.Decide(0f, s), "wasted a bomb on one weak enemy");
+        s.TargetMaxHealth = 500f; Assert(p.Decide(0f, s), "would not bomb one tough enemy (troll-sized)");
     }
 
     // ---- Combat-voice lock (approved 1.0.32.6, 2026-10-27). Companion combat module, combat voice: COMPLETE.

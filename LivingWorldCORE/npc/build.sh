@@ -22,7 +22,7 @@ CSC="mcs -nologo -target:library -langversion:5 -optimize+ -nostdlib -r:$REFS/ms
 
 echo "== 1/6 Regression ledger (offline policy tests)"
 mcs -nologo -langversion:5 -out:build/ledger.exe tests/RegressionLedgerTests.cs \
-    src/Kernel/Kernel.Pure.cs src/Kernel/GuardCoverage.Pure.cs src/Kernel/PartySpacing.Pure.cs src/Kernel/Gait.Pure.cs src/Identity/NpcIdentityRecord.cs
+    src/Kernel/Kernel.Pure.cs src/Kernel/GuardCoverage.Pure.cs src/Kernel/PartySpacing.Pure.cs src/Kernel/Gait.Pure.cs src/Kernel/Bomb.Pure.cs src/Identity/NpcIdentityRecord.cs
 mono build/ledger.exe | tail -1
 
 echo "== 2/6 Native compatibility gate"

@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.32.10";
+        public const string Version = "1.0.32.11";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -25,12 +25,12 @@ namespace LivingWorld.Core
         internal static CorePlugin Instance;
         bool registered;
         bool partyBusy;
-        Terminal.ConsoleCommand partyCommand, statusCommand, healCommand, summonCommand, gotoCommand, gearCommand;
+        Terminal.ConsoleCommand partyCommand, statusCommand, healCommand, summonCommand, gotoCommand, gearCommand, bombsCommand;
 
         public static bool Registered { get { return Instance != null && Instance.registered; } }
 
         // Feature switches so one change can be live-tested at a time (BepInEx config file).
-        static BepInEx.Configuration.ConfigEntry<bool> shieldBlocking;
+        static BepInEx.Configuration.ConfigEntry<bool> shieldBlocking, companionBombs, devBombLog;
         static BepInEx.Configuration.ConfigEntry<float> foodStamina, companionVoiceGain;
         static BepInEx.Configuration.ConfigEntry<bool> devVoiceLog;
         static BepInEx.Configuration.ConfigEntry<bool> partySpacing, devSpacingLog, matchGait;
@@ -41,6 +41,8 @@ namespace LivingWorld.Core
         public static bool DevVoiceLog { get { return devVoiceLog != null && devVoiceLog.Value; } }
         public static float FoodStamina { get { return foodStamina == null ? 100f : Mathf.Max(0f, foodStamina.Value); } }
         public static bool ShieldBlocking { get { return shieldBlocking != null && shieldBlocking.Value; } }
+        public static bool CompanionBombs { get { return companionBombs == null || companionBombs.Value; } }
+        public static bool DevBombLog { get { return devBombLog != null && devBombLog.Value; } }
 
         void Awake()
         {
@@ -59,6 +61,10 @@ namespace LivingWorld.Core
                 "Heavy-attack stamina a companion gets from food on top of the Player base 50 (only heavy attacks spend it).");
             shieldBlocking = Config.Bind("Combat", "ShieldBlocking", false,
                 "Experimental: companions raise shields against close melee and aimed projectiles.");
+            companionBombs = Config.Bind("Combat", "CompanionBombs", true,
+                "Companions carrying bombs (lab: lwbombs) throw one at a group or a tough enemy 6-14 m away, never with you or another companion within 5.5 m of the target. Finite; one per 12 s. Off = never throw.");
+            devBombLog = Config.Bind("Combat", "DevBombLog", false,
+                "Development only: log why a companion carrying bombs did not throw (BOMB-SKIP), at most every 3 s.");
             // One hook: companions answer native MonsterAI's own "which enemy?" question.
             var harmony = new HarmonyLib.Harmony(Guid);
             harmony.Patch(NativeApi.FindEnemy,
@@ -105,10 +111,12 @@ namespace LivingWorld.Core
                 new Terminal.ConsoleEvent(args => OnSummon()));
             gearCommand = new Terminal.ConsoleCommand("lwgear", "Living World: re-outfit your companions (lwgear iron|plains [quality 1-4])",
                 new Terminal.ConsoleEvent(OnGear));
+            bombsCommand = new Terminal.ConsoleCommand("lwbombs", "Living World (lab): give each companion bombs (lwbombs [count 0-20] [ooze|bile])",
+                new Terminal.ConsoleEvent(OnBombs));
             gotoCommand = new Terminal.ConsoleCommand("lwgoto", "Living World: teleport yourself to your nearest companion",
                 new Terminal.ConsoleEvent(args => OnGoto()));
             string missing = NativeApi.MissingMembers();
-            Report(Version + " loaded. Commands: lwparty, lwparty new, lwparty plains [q], lwparty clean, lwgear iron|plains [q], lwstatus, lwheal, lwsummon, lwgoto." +
+            Report(Version + " loaded. Commands: lwparty, lwparty new, lwparty plains [q], lwparty clean, lwgear iron|plains [q], lwbombs [n] [ooze|bile], lwstatus, lwheal, lwsummon, lwgoto." +
                 (missing.Length == 0 ? "" : " NATIVE API MISSING: " + missing));
         }
 
@@ -319,6 +327,22 @@ namespace LivingWorld.Core
                 if (refused.Length == 0) done++; else refusals.Add(k.Body.Human.GetHoverName() + ": " + refused);
             }
             Report("GEAR: " + done + " companion(s) now in " + args[1].ToLowerInvariant() + " q" + quality + "." +
+                (refusals.Count > 0 ? " Refused: " + String.Join("; ", refusals.ToArray()) : ""));
+        }
+
+        /// <summary>lwbombs [count] [ooze|bile]: lab grant of a finite bomb reserve to each loaded companion.</summary>
+        void OnBombs(Terminal.ConsoleEventArgs args)
+        {
+            int count = 3;
+            if (args.Length > 1 && !int.TryParse(args[1], out count)) { Report("Usage: lwbombs [count 0-20] [ooze|bile]"); return; }
+            string kind = args.Length > 2 && args[2].ToLowerInvariant() == "bile" ? "BombBile" : "BombOoze";
+            int done = 0; var refusals = new List<string>();
+            foreach (NpcKernel k in MyCompanions())
+            {
+                string refused = k.Body.SetBombs(count, kind);
+                if (refused.Length == 0) done++; else refusals.Add(k.Body.Human.GetHoverName() + ": " + refused);
+            }
+            Report("BOMBS: " + done + " companion(s) now carry " + Mathf.Clamp(count, 0, 20) + " " + kind + "." +
                 (refusals.Count > 0 ? " Refused: " + String.Join("; ", refusals.ToArray()) : ""));
         }
 

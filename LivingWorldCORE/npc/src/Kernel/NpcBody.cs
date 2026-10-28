@@ -209,6 +209,94 @@ namespace LivingWorld.Core
             return true;
         }
 
+        // ---------------- 1.0.32.11 bombs: finite reserve on the person, one bomb in hand only while throwing ----------------
+
+        public const string BombsKey = "lw_bombs", BombKindKey = "lw_bomb_kind";
+        ItemDrop.ItemData thrownBomb, bombPrevRight, bombPrevLeft;
+        public bool Throwing { get { return thrownBomb != null; } }
+        public int BombThrows, BombRefused;
+
+        public int BombReserve { get { ZDO z = View == null || !View.IsValid() ? null : View.GetZDO(); return z == null ? 0 : z.GetInt(BombsKey, 0); } }
+        public string BombKind { get { ZDO z = View == null || !View.IsValid() ? null : View.GetZDO(); return z == null ? "BombOoze" : z.GetString(BombKindKey, "BombOoze"); } }
+
+        /// <summary>Lab grant (lwbombs). Owner only; persists on the person.</summary>
+        internal string SetBombs(int count, string kind)
+        {
+            if (!IsOwner) return "not loaded here";
+            if (ObjectDB.instance == null || ObjectDB.instance.GetItemPrefab(kind) == null) return "missing vanilla item " + kind;
+            View.GetZDO().Set(BombsKey, Mathf.Clamp(count, 0, 20));
+            View.GetZDO().Set(BombKindKey, kind);
+            return "";
+        }
+
+        /// <summary>Put one bomb in hand and start the native throw at the current target. False = nothing changed.</summary>
+        public bool ThrowBomb(NpcBehavior caller, Character target)
+        {
+            Require(NpcDomain.Hands, caller);
+            if (thrownBomb != null || target == null || Human.InAttack()) return false;
+            int reserve = BombReserve;
+            if (reserve <= 0 || ObjectDB.instance == null) return false;
+            GameObject prefab = ObjectDB.instance.GetItemPrefab(BombKind);
+            if (prefab == null || prefab.GetComponent<ItemDrop>() == null) return false;
+            Inventory inventory = Human.GetInventory();
+            if (inventory == null) return false;
+            ItemDrop.ItemData bomb = prefab.GetComponent<ItemDrop>().m_itemData.Clone();
+            bomb.m_dropPrefab = prefab; bomb.m_stack = 1; bomb.m_quality = 1;
+            if (!inventory.AddItem(bomb)) { BombRefused++; return false; }
+            bombPrevRight = RightItem; bombPrevLeft = LeftItem;
+            DouseTorchCore();
+            ItemDrop.ItemData backLeft = BackLeft, backRight = BackRight;   // EquipItem wipes the back slots
+            Human.EquipItem(bomb, false);
+            NativeApi.HiddenLeftItem.SetValue(Human, backLeft);
+            NativeApi.HiddenRightItem.SetValue(Human, backRight);
+            if (!Human.IsItemEquiped(bomb) || !Human.StartAttack(target, false))
+            {
+                Human.UnequipItem(bomb, false);
+                inventory.RemoveItem(bomb);
+                RestoreAfterBomb();
+                BombRefused++;
+                return false;
+            }
+            thrownBomb = bomb;
+            View.GetZDO().Set(BombsKey, reserve - 1);   // the throw is committed once the native attack starts
+            BombThrows++;
+            return true;
+        }
+
+        /// <summary>Every tick while throwing: when the attack ends, any bomb still held (interrupted) goes back to
+        /// the reserve and the previous weapons return. Returns true once finished.</summary>
+        public bool FinishBomb(NpcBehavior caller)
+        {
+            Require(NpcDomain.Hands, caller);
+            if (thrownBomb == null) return true;
+            if (Human.InAttack()) return false;
+            Inventory inventory = Human.GetInventory();
+            if (inventory != null && inventory.ContainsItem(thrownBomb))
+            {
+                Human.UnequipItem(thrownBomb, false);
+                inventory.RemoveItem(thrownBomb);
+                View.GetZDO().Set(BombsKey, BombReserve + 1);   // never thrown: refund
+                BombThrows--; BombRefused++;
+            }
+            thrownBomb = null;
+            RestoreAfterBomb();
+            return true;
+        }
+
+        void RestoreAfterBomb()
+        {
+            Inventory inventory = Human.GetInventory();
+            ItemDrop.ItemData backLeft = BackLeft, backRight = BackRight;
+            if (bombPrevRight != null && inventory != null && inventory.ContainsItem(bombPrevRight) && !Human.IsItemEquiped(bombPrevRight))
+                Human.EquipItem(bombPrevRight, false);
+            if (bombPrevLeft != null && inventory != null && inventory.ContainsItem(bombPrevLeft) && !Human.IsItemEquiped(bombPrevLeft))
+                Human.EquipItem(bombPrevLeft, false);
+            NativeApi.HiddenLeftItem.SetValue(Human, backLeft);
+            NativeApi.HiddenRightItem.SetValue(Human, backRight);
+            bombPrevRight = bombPrevLeft = null;
+            Publish(LeftItem, RightItem, BackLeft, BackRight);
+        }
+
         // ---------------- Gear kits (lab: lwparty plains / lwgear; no behavior domain; owner only) ----------------
 
         public const string KitKey = "lw_kit", KitQualityKey = "lw_kit_quality";

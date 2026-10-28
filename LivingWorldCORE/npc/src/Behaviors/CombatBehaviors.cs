@@ -73,8 +73,10 @@ namespace LivingWorld.Core
             }
             // Combos continue while this behavior holds the hands (1.0.17); FallBack taking the hands ends them.
             Body.AllowChains(this, true);
+            // 1.0.32.11: one bounded special action - a finite bomb thrown by the native attack.
+            if (CorePlugin.CompanionBombs) StepBomb(f);
             // Native choice may swap bow -> sword at any time; keep the shield paired.
-            Body.PairShield(this);
+            if (!Body.Throwing) Body.PairShield(this);
             if (CorePlugin.ShieldBlocking) StepBlock(f); else if (block != null && block.Raised) Body.SetBlocking(this, false);
             Body.PublishObserved(this);
             Status = f.Phase == NpcPhase.CombatClear
@@ -85,9 +87,71 @@ namespace LivingWorld.Core
         public override void Exit(NpcFrame f, string reason)
         {
             prepared = null;
+            if (Body.Throwing && Body.IsOwner) Body.FinishBomb(this);
             Body.SetBlocking(this, false);
             blockThreat = null;
             Status = "released: " + reason;
+        }
+
+        // ---- 1.0.32.11 bomb throw: decide with BombPolicy, execute with the native attack, finish and restore.
+        readonly BombPolicy bombs = new BombPolicy();
+        float nextBombCheck, nextBombSkipLog;
+
+        void StepBomb(NpcFrame f)
+        {
+            if (Body.Throwing)
+            {
+                if (Body.FinishBomb(this)) CorePlugin.Report("BOMB-DONE " + Body.Human.GetHoverName() + " left=" + Body.BombReserve + " t=" + f.Now.ToString("0.00"));
+                return;
+            }
+            if (f.Now < nextBombCheck) return;
+            nextBombCheck = f.Now + .25f;
+            Character target = f.Senses.Target;
+            Humanoid me = Body.Human;
+            var sit = new BombSituation
+            {
+                Reserve = Body.BombReserve,
+                TargetDistance = target == null || target.IsDead() ? -1f : Vector3.Distance(me.transform.position, target.transform.position),
+                TargetVisible = target != null && Body.Ai != null && Body.Ai.CanSeeTarget(target),
+                Busy = me.InAttack() || me.IsDrawingBow() || me.IsStaggering() || me.IsBlocking(),
+                NearestAllyToTarget = float.PositiveInfinity,
+                TargetMaxHealth = target == null ? 0f : target.GetMaxHealth(),
+            };
+            sit.SelfToTarget = sit.TargetDistance;
+            if (target != null)
+            {
+                Vector3 to = target.transform.position - me.transform.position; to.y = 0f;
+                sit.FacingAngle = to.sqrMagnitude < 1e-4f ? 0f : Vector3.Angle(new Vector3(me.transform.forward.x, 0f, me.transform.forward.z), to);
+            }
+            if (target != null && sit.Reserve > 0)
+            {
+                Vector3 at = target.transform.position;
+                foreach (Character c in Character.GetAllCharacters())
+                {
+                    if (c == null || c == me || c.IsDead()) continue;
+                    float d = Vector3.Distance(c.transform.position, at);
+                    bool ally = c.IsPlayer() || c.GetComponent<NpcKernel>() != null || (!BaseAI.IsEnemy(me, c) && c.IsTamed());
+                    if (ally) { if (d < sit.NearestAllyToTarget) sit.NearestAllyToTarget = d; }
+                    else if (d <= BombPolicy.BlastRadius && BaseAI.IsEnemy(me, c)) sit.HostilesNearTarget++;
+                }
+            }
+            if (bombs.Decide(f.Now, sit))
+            {
+                if (Body.ThrowBomb(this, target))
+                {
+                    bombs.Started(f.Now);
+                    CorePlugin.Report("BOMB-THROW " + me.GetHoverName() + " at=" + target.GetHoverName() + " dist=" + sit.TargetDistance.ToString("0.0") +
+                        " hostiles=" + sit.HostilesNearTarget + " allyToTarget=" + (float.IsInfinity(sit.NearestAllyToTarget) ? "none" : sit.NearestAllyToTarget.ToString("0.0")) +
+                        " kind=" + Body.BombKind + " left=" + Body.BombReserve + " t=" + f.Now.ToString("0.00"));
+                }
+                else { bombs.Failed(f.Now); CorePlugin.Report("BOMB-REFUSED " + me.GetHoverName() + " native attack did not start t=" + f.Now.ToString("0.00")); }
+            }
+            else if (CorePlugin.DevBombLog && sit.Reserve > 0 && target != null && f.Now >= nextBombSkipLog && bombs.LastReason != "cooldown" && bombs.LastReason != "busy")
+            {
+                nextBombSkipLog = f.Now + 3f;
+                CorePlugin.Report("BOMB-SKIP " + me.GetHoverName() + " reason=" + bombs.LastReason + " dist=" + sit.TargetDistance.ToString("0.0") +
+                    " hostiles=" + sit.HostilesNearTarget + " t=" + f.Now.ToString("0.00"));
+            }
         }
 
         // Shield discipline inside native combat: same owner, same tick, no extra loop.
