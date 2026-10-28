@@ -28,3 +28,24 @@ Brian reported that keeping the ChatGPT and Claude chats current is getting
 harder. Both agents follow `claude-exchange/SYNC.md`: pull and read at session
 start, commit and push at session end, and stop before installing a build from
 a different actor line.
+
+## 2026-10-28 — Nomadic camps, release to camp, memorial token (owner statement)
+
+Brian, as the safe starting version:
+
+- **Nomadic camps.** A recruitable camp may despawn and later reappear somewhere
+  in the same general area where it was first spawned. Returning after time, the
+  player finds it near the old spot, possibly moved. The people in it are the same
+  persisted people and remember the player. This is how the existing rule
+  ("rejected or unresolved camps expire or migrate") is implemented first.
+- **Release goes back the way they were found.** For now, Release from Party
+  returns the companion to their nomadic origin camp. Homes, reclaimed villages
+  and allied camps remain the later destinations in
+  `COMPANION-PROGRESSION-ROSTER-AND-RELEASE.md`.
+- **Pairs.** Brian: "If it's a single from a pair..." (sentence unfinished).
+  Claude's reading, unconfirmed: when one of a camp's pair is recruited, the
+  partner stays and the camp persists around them, and a released companion
+  rejoins that partner. Needs Brian's confirmation.
+- **The end is a token.** On a companion's permanent death the player receives a
+  memorial token and chooses whether to place a tombstone. This is separate from
+  the equipment-recovery transaction and is not a replacement or revival token.
