@@ -5,6 +5,11 @@
    "NpcBody::SetPace",
    "NpcBody::SetRun"
   ],
+  "Character::SetWalk": [
+   "NpcBody::RestorePaceUnchecked",
+   "NpcBody::SetGait",
+   "NpcBody::SetPace"
+  ],
   "MonsterAI::SetFollowTarget": [
    "NpcBody::Follow"
   ],

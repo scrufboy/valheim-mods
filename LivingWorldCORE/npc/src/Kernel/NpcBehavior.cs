@@ -28,6 +28,7 @@ namespace LivingWorld.Core
         public bool LeaderMoving;
         public bool LeaderRunning;
         public bool LeaderCrouching;
+        public bool LeaderWalkToggle;   // 1.0.32.10: the leader's own walk toggle
         public bool LeaderSitting;
         public bool LeaderArmed;
         public bool LeaderBusy;

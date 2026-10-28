@@ -383,6 +383,7 @@ namespace LivingWorld.Core
                 s.LeaderMoving = s.LeaderSpeed > .35f;
                 s.LeaderRunning = s.LeaderMoving && leader.IsRunning();
                 s.LeaderCrouching = leader.IsCrouching();
+                s.LeaderWalkToggle = leader.GetWalk();
                 s.LeaderSitting = leader.IsSitting();
                 s.LeaderArmed = VisibleWeapon(NativeApi.RightItem.GetValue(leader) as ItemDrop.ItemData) ||
                     VisibleWeapon(NativeApi.LeftItem.GetValue(leader) as ItemDrop.ItemData);
@@ -392,7 +393,7 @@ namespace LivingWorld.Core
             }
             else
             {
-                s.LeaderSpeed = 0f; s.LeaderMoving = s.LeaderRunning = s.LeaderCrouching = s.LeaderSitting = false;
+                s.LeaderSpeed = 0f; s.LeaderMoving = s.LeaderRunning = s.LeaderCrouching = s.LeaderSitting = s.LeaderWalkToggle = false;
                 s.LeaderArmed = s.LeaderBusy = false; s.LeaderDistance = -1f;
             }
 

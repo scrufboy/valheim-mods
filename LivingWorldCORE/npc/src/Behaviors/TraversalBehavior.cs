@@ -40,8 +40,12 @@ namespace LivingWorld.Core
                 (f.Phase == NpcPhase.Calm || f.Phase == NpcPhase.Readiness || f.Phase == NpcPhase.Regroup);
         }
 
+        readonly GaitPolicy gait = new GaitPolicy();
+        GaitChoice lastGait;
+
         public override void Enter(NpcFrame f)
         {
+            gait.Reset(); lastGait = new GaitChoice();
             formationFrameReady = false;
             catchingUp = false;
             spacing.Reset();
@@ -76,9 +80,16 @@ namespace LivingWorld.Core
                 ((f.Phase == NpcPhase.Readiness || f.Phase == NpcPhase.Regroup) && (s.LeaderRunning || s.LeaderDistance > 7f)));
             Body.SetPace(this, run, catchingUp || s.LeaderDistance > 12f, s.LeaderSpeed, sneak);
             Body.SetRun(this, run && anchorDistance > NativeFollowArrivalDistance + .15f);
+            // 1.0.32.10 gait: calm walking only; run, catch-up and sneak keep their pace rules
+            if (CorePlugin.MatchGait && !run && !sneak && !settled && !catchingUp)
+            {
+                lastGait = gait.Decide(f.Dt, s.LeaderSpeed, s.LeaderWalkToggle, s.LeaderDistance, slotDistance, Body.NativeJogSpeed);
+                Body.SetGait(this, lastGait);
+            }
+            else { gait.Reset(); lastGait = new GaitChoice(); }
 
             Status = (settled ? "settled guard " + (board.SettledHold ? "hold" : "approach") : "slot " + slot) +
-                (sneak ? "; sneak" : run ? "; run" : "; walk") + (catchingUp ? "; catch-up" : "") +
+                (sneak ? "; sneak" : run ? "; run" : "; walk") + (catchingUp ? "; catch-up" : "") + (lastGait.Matching ? (lastGait.Walk ? "; gait walk " : "; gait jog ") + lastGait.Speed.ToString("0.0") : "") +
                 "; lease " + board.FormationDistance.ToString("0.0") + "m" + SpacingStatus();
         }
 

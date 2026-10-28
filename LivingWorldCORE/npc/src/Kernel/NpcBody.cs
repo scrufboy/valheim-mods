@@ -99,6 +99,7 @@ namespace LivingWorld.Core
         {
             Require(NpcDomain.Movement, caller);
             Human.m_walkSpeed = baseWalkSpeed;
+            Human.SetWalk(false);                              // 1.0.32.10: walk mode only through SetGait, never left on
             if (sneak)
             {
                 // Non-Player humans cannot natively crouch-walk; match the leader's sneak pace.
@@ -118,6 +119,27 @@ namespace LivingWorld.Core
             else Human.m_runSpeed = baseRunSpeed;
         }
 
+        /// <summary>1.0.32.10 gait matching (calm traversal only, after SetPace): native walk mode at the leader's
+        /// slow pace, or a jog no faster than needed. Combat, sneak and run paths go through SetPace / RestorePace,
+        /// which always clear walk mode.</summary>
+        public void SetGait(NpcBehavior caller, GaitChoice g)
+        {
+            Require(NpcDomain.Movement, caller);
+            if (g.Walk)
+            {
+                Human.m_walkSpeed = g.Speed;
+                Human.SetWalk(true);
+            }
+            else
+            {
+                Human.SetWalk(false);
+                Human.m_walkSpeed = baseWalkSpeed;
+                Human.m_speed = Mathf.Min(baseSpeed, g.Speed);
+            }
+        }
+
+        public float NativeJogSpeed { get { return baseSpeed; } }
+
         public void SetRun(NpcBehavior caller, bool run)
         {
             Require(NpcDomain.Movement, caller);
@@ -136,6 +158,7 @@ namespace LivingWorld.Core
             Human.m_speed = baseSpeed;
             Human.m_walkSpeed = baseWalkSpeed;
             Human.m_runSpeed = baseRunSpeed;
+            Human.SetWalk(false);
         }
 
         /// <summary>Complete native encounter abandon (MonsterAI.UpdateTarget's own branch).</summary>

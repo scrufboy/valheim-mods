@@ -32,6 +32,11 @@ static class RegressionLedgerTests
         Run("1.0.32.9 live 2026-10-28: two standing companions pressed together separate; only the yielder moves, no oscillation", SpacingPressedMatesSeparate);
         Run("1.0.32.9 live 2026-10-28: a companion pressed against the leader with a wall behind it still separates sideways", SpacingBackOffAroundWall);
         Run("1.0.32.9 live 2026-10-28: a standing spot against a right-of-way companion moves off it", SpacingGoalOffMate);
+        Run("1.0.32.10 gait (Brian): leader walking slowly, companions walk at his pace", GaitWalksWithSlowLeader);
+        Run("1.0.32.10 gait: a slow jog is matched without the walk animation; a full jog stays native", GaitJogBands);
+        Run("1.0.32.10 gait: a companion behind its spot catches up, bounded by its native jog", GaitCatchUpBounded);
+        Run("1.0.32.10 gait: the leader's walk toggle always means walk; far away means ordinary pace", GaitToggleAndRange);
+        Run("1.0.32.10 gait: noisy leader speed does not flip walk/jog every tick", GaitNoFlicker);
         Run("LOCK combat voice 1.0.32.6: every rule constant is the approved value", CombatVoiceConstantsLocked);
         Run("LOCK combat voice: alert only before contact, once per enemy, party cooldown", CombatVoiceAlertsLocked);
         Run("LOCK combat voice: every heavy exertion voiced, ordinary swings 30% / 2.5 s", CombatVoiceExertionLocked);
@@ -1044,6 +1049,60 @@ static class RegressionLedgerTests
         SpacingResult r = law.Step(0f, .1f, me, 2f, goal, goal, true, false, -1, 2, near, 2, new OpenGround());
         P2 anchor = goal + r.Shift;
         Assert(r.Mode != SpacingMode.Travel || P2.Distance(anchor, near[1].Position) >= PartySpacing.MateClear, "aimed at a spot pressed against the other companion");
+    }
+
+
+    // ---- 1.0.32.10 gait matching (Brian 2026-10-28; live: companions stop-go at 0-4 m/s while he walked 0.8-2.6 m/s)
+    static GaitChoice Settle(GaitPolicy p, float speed, bool toggle, float leaderD, float spotD, float jog)
+    {
+        GaitChoice g = new GaitChoice();
+        for (int i = 0; i < 30; i++) g = p.Decide(.1f, speed, toggle, leaderD, spotD, jog);
+        return g;
+    }
+
+    static void GaitWalksWithSlowLeader()
+    {
+        GaitChoice g = Settle(new GaitPolicy(), 1.5f, false, 3f, 1f, 5f);
+        Assert(g.Walk && g.Matching, "did not walk with a 1.5 m/s leader");
+        Assert(Math.Abs(g.Speed - 1.65f) < .05f, "walk speed " + g.Speed.ToString("0.00") + " instead of leader + 0.15");
+    }
+
+    static void GaitJogBands()
+    {
+        GaitChoice slow = Settle(new GaitPolicy(), 3f, false, 3f, 1f, 5f);
+        Assert(!slow.Walk && slow.Matching && Math.Abs(slow.Speed - 3.15f) < .05f, "slow jog not matched: " + slow.Speed.ToString("0.00"));
+        GaitChoice full = Settle(new GaitPolicy(), 5f, false, 3f, 1f, 5f);
+        Assert(!full.Walk && !full.Matching && full.Speed == 5f, "a full jog was slowed");
+    }
+
+    static void GaitCatchUpBounded()
+    {
+        GaitChoice g = Settle(new GaitPolicy(), 1.5f, false, 7f, 7f, 5f);
+        Assert(g.Speed > 1.65f + 1f, "fell behind its spot and did not speed up: " + g.Speed.ToString("0.00"));
+        GaitChoice far = Settle(new GaitPolicy(), 4.5f, false, 7.5f, 20f, 5f);
+        Assert(far.Speed <= 5f, "catch-up exceeded the native jog");
+    }
+
+    static void GaitToggleAndRange()
+    {
+        GaitChoice t = Settle(new GaitPolicy(), 2.5f, true, 3f, 1f, 5f);
+        Assert(t.Walk, "leader has walk toggled at 2.5 m/s but the companion jogged");
+        GaitChoice far = Settle(new GaitPolicy(), 1.5f, false, 9f, 9f, 5f);
+        Assert(!far.Walk && !far.Matching && far.Speed == 5f, "slowed down while 9 m from the leader");
+        GaitChoice still = Settle(new GaitPolicy(), 0f, false, 3f, 1f, 5f);
+        Assert(still.Speed >= GaitPolicy.MinSpeed, "crawled below the minimum speed");
+    }
+
+    static void GaitNoFlicker()
+    {
+        var p = new GaitPolicy(); int flips = 0; bool last = false;
+        for (int i = 0; i < 100; i++)
+        {
+            GaitChoice g = p.Decide(.1f, i % 2 == 0 ? 1.2f : 2.6f, false, 3f, 1f, 5f);
+            if (i > 5 && g.Walk != last) flips++;
+            last = g.Walk;
+        }
+        Assert(flips <= 2, "walk/jog flipped " + flips + " times on a noisy 1.2/2.6 m/s leader");
     }
 
     // ---- Combat-voice lock (approved 1.0.32.6, 2026-10-27). Companion combat module, combat voice: COMPLETE.

@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.32.9";
+        public const string Version = "1.0.32.10";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -33,9 +33,10 @@ namespace LivingWorld.Core
         static BepInEx.Configuration.ConfigEntry<bool> shieldBlocking;
         static BepInEx.Configuration.ConfigEntry<float> foodStamina, companionVoiceGain;
         static BepInEx.Configuration.ConfigEntry<bool> devVoiceLog;
-        static BepInEx.Configuration.ConfigEntry<bool> partySpacing, devSpacingLog;
+        static BepInEx.Configuration.ConfigEntry<bool> partySpacing, devSpacingLog, matchGait;
         public static bool PartySpacingEnabled { get { return partySpacing == null || partySpacing.Value; } }
         public static bool DevSpacingLog { get { return devSpacingLog != null && devSpacingLog.Value; } }
+        public static bool MatchGait { get { return matchGait == null || matchGait.Value; } }
         public static float CompanionVoiceGain { get { return companionVoiceGain == null ? 1f : Mathf.Clamp(companionVoiceGain.Value, 0f, 2f); } }
         public static bool DevVoiceLog { get { return devVoiceLog != null && devVoiceLog.Value; } }
         public static float FoodStamina { get { return foodStamina == null ? 100f : Mathf.Max(0f, foodStamina.Value); } }
@@ -52,6 +53,8 @@ namespace LivingWorld.Core
                 "Companions keep personal space from the leader and each other: soft standing areas, sidesteps around party members, never pushing the leader (wider clearance while he is in a menu). Off = 1.0.32.7 movement.");
             devSpacingLog = Config.Bind("Movement", "DevSpacingLog", false,
                 "Development only: log SPACE-ENTER/RELEASE/WAIT/BLOCKED/BACKOFF/CONTACT/SUMMARY lines for party spacing.");
+            matchGait = Config.Bind("Movement", "MatchGait", true,
+                "Companions match the leader's walking pace: they walk when he walks slowly (or has walk toggled) and jog no faster than needed, catching up only when they fall behind. Off = 1.0.32.9 pace.");
             foodStamina = Config.Bind("Combat", "CompanionFoodStamina", 100f,
                 "Heavy-attack stamina a companion gets from food on top of the Player base 50 (only heavy attacks spend it).");
             shieldBlocking = Config.Bind("Combat", "ShieldBlocking", false,

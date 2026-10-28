@@ -23,7 +23,7 @@ LOCK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "movement_writer
 WRITERS = {
     "BaseAI::MoveTo", "BaseAI::MoveTowards", "BaseAI::MoveTowardsSwoop", "BaseAI::StopMoving", "BaseAI::Follow",
     "BaseAI::MoveAwayAndDespawn", "BaseAI::RandomMovement", "BaseAI::Flee", "BaseAI::LookAt",
-    "MonsterAI::SetFollowTarget", "Character::SetMoveDir", "Character::SetRun", "Character::SetLookDir",
+    "MonsterAI::SetFollowTarget", "Character::SetMoveDir", "Character::SetRun", "Character::SetWalk", "Character::SetLookDir",
     "Rigidbody::set_velocity", "Rigidbody::set_linearVelocity", "Rigidbody::AddForce", "Rigidbody::MovePosition",
     "Rigidbody::set_position", "Transform::set_position", "Transform::set_rotation", "Transform::SetPositionAndRotation",
 }
