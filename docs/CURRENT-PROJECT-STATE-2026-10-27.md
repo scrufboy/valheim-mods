@@ -22,7 +22,8 @@ approved runtime branches into `main`.
 | `lwc-core-1.0/1.0.32.8b-party-spacing-test` | `33addad` | spacing review build; live-tested 2026-10-28 (contact failures, see CLAUDE-OUTBOX/2026-10-28-spacing-live-result) |
 | `lwc-core-1.0/1.0.32.11-bombs` | `f69f217` | 1.0.32.9 contact + 1.0.32.10 gait + finite bombs; superseded before play |
 | `lwc-core-1.0/1.0.32.12-souls-throw` | `1a7174e` | + Souls Pillager throw, cluster aim, endless test mode; superseded before play |
-| `lwc-core-1.0/1.0.32.13-body-voice` | see branch | + body-reaction voice addon (poison cough); INSTALLED 2026-10-28 (hash `0a44d570…`), live test pending |
+| `lwc-core-1.0/1.0.32.13-body-voice` | `ea13706` | + body-reaction voice addon (poison cough); INSTALLED 2026-10-28 (hash `0a44d570…`), superseded by 1.0.32.14 before play; DLL backed up in `BepInEx/LivingWorldBackups` |
+| `lwc-core-1.0/1.0.32.14-body-states` | `3c7e0da` | + body states (burning, frost, long swim, exhaustion, recovery) from ChatGPT's handoff; INSTALLED 2026-10-28 (hash `206653b4…`), live test and clip audition pending |
 | `lwc-core-1.0/parked-1.0.33` | `965a2a0` | parked hot-path experiment; not installed |
 
 These refs share their complete prerequisite history. They remain separate from
@@ -34,7 +35,8 @@ These refs share their complete prerequisite history. They remain separate from
 2. Install/test 1.0.32.8b only after that proof, with spacing telemetry enabled.
 3. Implement identity-preserving travel: cave/dungeon doors first, then portals with inventory persistence. Design: `claude-exchange/CLAUDE-OUTBOX/2026-10-28-portal-dungeon-gate-design`.
 4. Reconcile the 1.0.x actor line with the Formidable framework boundary.
-5. Continue shared bomb/AOE, heavy weapon, class/role, needs, gear, progression and
+5. Player-parity interior layer (status, skills, aiming model, attack purpose, outputs), staged; design: `claude-exchange/CLAUDE-OUTBOX/2026-10-28-player-parity-layer-design`. Awaiting ChatGPT review.
+6. Continue shared bomb/AOE, heavy weapon, class/role, needs, gear, progression and
    township work through modular gates.
 
 ## Deliberately excluded from GitHub

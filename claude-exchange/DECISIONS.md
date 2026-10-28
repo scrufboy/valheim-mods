@@ -71,3 +71,15 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - At most one newcomer; a camp never grows past two through this rule.
 - Open: does the newcomer count as a recruitment lead under the one-active-lead
   and five-day rules, and how long must the player be away first?
+
+## 2026-10-28 — Body states and the player-parity layer (Brian)
+
+- Brian approved building ChatGPT's body-reactions handoff ("ok Now you can build...."): 1.0.32.14 installed, live
+  test and per-clip audition pending.
+- Weather Cold/Freezing for companions is not to be patched on its own. Brian: the status piece belongs in "a special
+  interior mod that we build to allow things like this and skills to be accounted for... part of how our brain will work."
+- Brian: write that layer now, as one design, instead of later recursive and possibly regressive patching ("we divide
+  here"). Scope in his words: "a real Player set of things", a predictive model "that only allows what naturally would
+  befall a player", "a chance to hit, and not a character always missing", dual-purpose attacks.
+- Design written by Claude (DESIGN, not built): `claude-exchange/CLAUDE-OUTBOX/2026-10-28-player-parity-layer-design`.
+  Brian shares it with ChatGPT before code.
