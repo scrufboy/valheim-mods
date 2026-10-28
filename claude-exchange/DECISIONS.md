@@ -83,3 +83,23 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
   befall a player", "a chance to hit, and not a character always missing", dual-purpose attacks.
 - Design written by Claude (DESIGN, not built): `claude-exchange/CLAUDE-OUTBOX/2026-10-28-player-parity-layer-design`.
   Brian shares it with ChatGPT before code.
+
+## 2026-10-28 18:14 — Player-parity owner decisions (Brian)
+
+- **Starting skills:** ranged by where the companion is recruited, and "worked against the game level and loot control
+  intel... how many days and how many bosses or which boss is defeated". So seed levels scale with world progression
+  (days survived, which bosses are defeated), not with biome alone. ChatGPT's pilot ranges stay as calibration input.
+  Open: what "loot control intel" means exactly (Claude reads it as the world's own difficulty/loot settings; not yet
+  confirmed).
+- **Cold has gameplay consequences, not only voice.** Brian: cold makes companions slow during drake raids, "so other
+  effects matter if armor combats them too". The native effects apply, and armor resistance counters them as for a player.
+  - Claude's evidence (SOURCE-INSPECTED, 1.0.21): the drake slow is the damage **Frost** status (`SE_Frost.ModifySpeed`).
+    It already reaches companions natively.
+  - Frost resistance is read through `Character.GetDamageModifiers`, which includes worn armor for companions through
+    the existing `ArmorParity` patch. Not live-proven.
+  - Weather Cold/Freezing (regen and health effects) need the parity status writer.
+- **Death:** a dead companion is dead, and their skills go with them. If any restoration mechanic ever arises, "let
+  Odin decide that", and a restored companion gets the same reduced skills a player has after death.
+  - Native rule (SOURCE-INSPECTED): `Skills.OnDeath` lowers every skill by `m_DeathLowerFactor × Game.m_skillReductionRate`
+    and resets the accumulator. The code default is 0.25; the Player prefab value is to be read at runtime. The world
+    modifier `SkillReductionRate` applies.
