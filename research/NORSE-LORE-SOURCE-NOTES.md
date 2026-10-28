@@ -54,6 +54,12 @@ map, not a claim that medieval Scandinavian religion was one consistent system.
 
 ## Writing rule
 
+For personal names, orthography, parent-name grammar, research links, and the
+boundary between historical evidence and regional project lore, see
+[Living World naming canon](../LivingWorldCORE/NAMING-CANON.md). The expanded
+runtime catalog is content owned by Living World, currently consumed by the human
+actor package. A generated patronymic does not establish recorded genealogy.
+
 When a source supports atmosphere but not the exact event, write “inspired by,”
 not “according to Norse mythology.” The project's strongest lore will be honest
 about where the old material ends and Living World's story begins.

@@ -10,3 +10,9 @@ not be embedded as its permanent architecture. Package boundaries are defined in
 [Living World Core project boundaries](../LivingWorldCORE/PROJECT-BOUNDARIES.md).
 
 Current lab line: 0.3.x. Historical candidates belong under `archive/`, not beside the canonical source.
+
+Fresh human names use a curated Norse catalog (128 masculine and 138 feminine
+given names) with explicit parent-name grammar and Unicode persistence. Existing
+saved identities keep their names. See [personal names and kinship canon](../LivingWorldCORE/NAMING-CANON.md)
+for sources, examples, name meanings, regional storytelling, and the distinction
+between generated patronymics and future recorded genealogy.

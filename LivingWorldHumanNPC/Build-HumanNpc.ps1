@@ -51,6 +51,7 @@ $relativeSources=@(
     'src\HumanResources.cs',
     'src\HumanEnvironmentStatus.cs',
     'src\HumanProfile.cs',
+    'src\NorseNameCatalog.cs',
     'src\HumanIdentity.cs',
     'src\ConfidencePolicy.cs',
     'src\HumanPartyConfidence.cs',
@@ -114,7 +115,7 @@ $pureSuites=@(
     @{Name='CompanionPresencePolicy';Source='src\CompanionPresencePolicy.cs'},
     @{Name='CompanionPosturePolicy';Source='src\CompanionPosturePolicy.cs'},
     @{Name='HumanResourcePool';Source='src\HumanResourcePool.cs'},
-    @{Name='HumanProfile';Source='src\HumanProfile.cs'},
+    @{Name='HumanProfile';Source='src\HumanProfile.cs';Extra='src\NorseNameCatalog.cs'},
     @{Name='ConfidencePolicy';Source='src\ConfidencePolicy.cs'},
     @{Name='CompanionActivities';Source='src\CompanionActivities.cs';Test='tests\ActivityTests.cs'},
     @{Name='GuardCoveragePolicy';Source='src\GuardCoveragePolicy.cs'},
@@ -126,7 +127,9 @@ $pureSuites=@(
 foreach($suite in $pureSuites){
     $test=Join-Path $build ($suite.Name+'Tests.exe')
     $testSource=if($suite.ContainsKey('Test')){$suite.Test}else{'tests\'+$suite.Name+'Tests.cs'}
-    & $compiler /nologo /optimize+ /target:exe "/out:$test" (Join-Path $PSScriptRoot $suite.Source) (Join-Path $PSScriptRoot $testSource)
+    $suiteSources = @((Join-Path $PSScriptRoot $suite.Source), (Join-Path $PSScriptRoot $testSource))
+    if($suite.ContainsKey('Extra')){$suiteSources += Join-Path $PSScriptRoot $suite.Extra}
+    & $compiler /nologo /optimize+ /target:exe "/out:$test" @suiteSources
     if($LASTEXITCODE -ne 0){throw "$($suite.Name) test compilation failed."}
     $testOutput=@(& $test)
     if($LASTEXITCODE -ne 0){throw "$($suite.Name) checks failed."}
@@ -146,7 +149,7 @@ $confidenceOutput=@(& $confidenceTest)
 if($LASTEXITCODE -ne 0){throw 'Confidence adapter harness failed.'}
 CheckOutput ConfidenceAdapterHarness $confidenceOutput
 $identityTest=Join-Path $build 'IdentityAdapterHarness.exe'
-& $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:exe "/out:$identityTest" (Join-Path $PSScriptRoot 'src\HumanProfile.cs') (Join-Path $PSScriptRoot 'src\HumanIdentity.cs') (Join-Path $PSScriptRoot 'src\HumanAppearance.cs') (Join-Path $PSScriptRoot 'src\HumanRigPolicy.cs') (Join-Path $PSScriptRoot 'migration\HumanMigrationPolicy.cs') (Join-Path $PSScriptRoot 'tests\IdentityAdapterHarness.cs')
+& $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:exe "/out:$identityTest" (Join-Path $PSScriptRoot 'src\NorseNameCatalog.cs') (Join-Path $PSScriptRoot 'src\HumanProfile.cs') (Join-Path $PSScriptRoot 'src\HumanIdentity.cs') (Join-Path $PSScriptRoot 'src\HumanAppearance.cs') (Join-Path $PSScriptRoot 'src\HumanRigPolicy.cs') (Join-Path $PSScriptRoot 'migration\HumanMigrationPolicy.cs') (Join-Path $PSScriptRoot 'tests\IdentityAdapterHarness.cs')
 if($LASTEXITCODE -ne 0){throw 'Identity adapter harness compilation failed.'}
 $identityOutput=@(& $identityTest)
 if($LASTEXITCODE -ne 0){throw 'Identity adapter harness failed.'}

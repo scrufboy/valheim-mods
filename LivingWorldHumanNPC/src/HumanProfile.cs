@@ -29,9 +29,6 @@ namespace LivingWorld.HumanNpc
         public byte InitialSociability { get; private set; }
         public string InitialRole { get; private set; }
 
-        static readonly string[] MaleNames = { "Alden", "Bren", "Corin", "Egan", "Finn", "Galen", "Ivar", "Leif", "Orin", "Rowan", "Soren", "Torin" };
-        static readonly string[] FemaleNames = { "Alva", "Bryn", "Cora", "Eira", "Freya", "Halla", "Iona", "Lina", "Maren", "Nessa", "Runa", "Tova" };
-        static readonly string[] FamilyNames = { "Ashford", "Brook", "Fern", "Field", "Flint", "Grove", "Hearth", "Hill", "Moss", "Reed", "Vale", "Willow" };
         static readonly byte[][] SkinColors = {
             new byte[] { 235, 205, 181 }, new byte[] { 211, 174, 139 }, new byte[] { 177, 133, 96 },
             new byte[] { 143, 99, 65 }, new byte[] { 104, 72, 50 }, new byte[] { 78, 52, 37 }
@@ -55,8 +52,13 @@ namespace LivingWorld.HumanNpc
             foreach (string value in availableBeards) if (!ValidAppearanceName(value)) throw new ArgumentException("Invalid runtime beard choice.", "availableBeards");
             var random = new Sequence(seed);
             var sex = (HumanSex)random.Take(2);
-            var names = sex == HumanSex.Male ? MaleNames : FemaleNames;
-            string name = names[random.Take(names.Length)] + " " + FamilyNames[random.Take(FamilyNames.Length)];
+            var names = sex == HumanSex.Male ? NorseNameCatalog.Masculine : NorseNameCatalog.Feminine;
+            // Keep exactly two name draws: catalog expansion must not reroll
+            // appearance or temperament. The parent name supplies background;
+            // it does not assert a relationship to another spawned individual.
+            string given = names[random.Take(names.Length)].Given;
+            string parent = NorseNameCatalog.Masculine[random.Take(NorseNameCatalog.Masculine.Length)].Genitive;
+            string name = given + " " + parent + (sex == HumanSex.Male ? "son" : "dóttir");
             string hair = availableHair[random.Take(availableHair.Length)];
             string beard = sex == HumanSex.Male ? availableBeards[random.Take(availableBeards.Length)] : "";
             var skin = SkinColors[random.Take(SkinColors.Length)];
@@ -109,7 +111,12 @@ namespace LivingWorld.HumanNpc
         static bool ValidName(string name)
         {
             if (String.IsNullOrEmpty(name) || name.Length > 40 || name[0] == ' ' || name[name.Length - 1] == ' ') return false;
-            foreach (char c in name) if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && c != ' ' && c != '-' && c != '\'') return false;
+            // Explicit letters, rather than arbitrary Unicode, keep rich-text,
+            // record delimiters, controls and invisible formatting out of saves.
+            const string nordicLetters = "ÁáÉéÍíÓóÚúÝýÆæÖöØøÅåÄäÐðÞþǪǫŒœ";
+            foreach (char c in name)
+                if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') &&
+                    nordicLetters.IndexOf(c) < 0 && c != ' ' && c != '-' && c != '\'') return false;
             return true;
         }
 
