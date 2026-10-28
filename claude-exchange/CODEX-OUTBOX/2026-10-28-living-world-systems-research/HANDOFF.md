@@ -1,11 +1,11 @@
-# VikingNPC 0.3.4 reference audit for Living World C.O.R.E.
+# Living World C.O.R.E. living systems research
 
 Date: 2026-10-28. Branch: `work/companion-encounter-world`. Draft PR:
 https://github.com/scrufboy/valheim-mods/pull/4.
 
 ## What the owner wants from this comparison
 
-The owner supplied an Atlas Modwatch transcript and the local
+The owner supplied a video transcript and the local
 `RustyMods-VikingNPC-0.3.4.zip` package. He wants the living-world capabilities
 examined and built into our own modular encounter system: biome-shaped people
 and kit, independent survival/work routines, contextual conversation, ship and
@@ -14,13 +14,13 @@ consent, aid, affinity, and alliance arc remains the authority for relationships
 The owner explicitly rejects taming and hiring modules for these people; no
 relationship state from the reference should be transplanted. These world
 capabilities attach to an independently living, server-owned person.
-Do not treat this audit as authorization to install VikingNPC into the maintained
+Do not treat this audit as authorization to install the reference package into the maintained
 1.0.x profile.
 
-The transcript itself identifies the mod at 0:49 as **VikingNPC by RustyMods**.
-The [Thunderstore page](https://thunderstore.io/c/valheim/p/RustyMods/VikingNPC/)
-and [source repository](https://github.com/RustyMods/Norsemen) agree. No
-Azumatt authorship of this package was established.
+The [package page](https://thunderstore.io/c/valheim/p/RustyMods/VikingNPC/)
+and [source repository](https://github.com/RustyMods/Norsemen) identify the
+reference and its author. These links are source attribution, never Living
+World C.O.R.E. names or package identity.
 
 ## Evidence and scope
 

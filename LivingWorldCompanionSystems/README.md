@@ -11,7 +11,7 @@ Current design authorities:
 - [Encounter personality and dialogue grammar](./ENCOUNTER-PERSONALITY-AND-DIALOGUE.md)
 - [Structured encounter dialogue repository](./data/encounter-dialogue.v1.json)
 - [Specialist combat capability plan](../LivingWorldHumanNPC/SPECIALIST-COMBAT-CAPABILITY-PLAN.md)
-- [Competitor companion capability audit](../research/COMPETITOR-AUDIT-OFFLINE-COMPANIONS.md)
+- [External capability research](../research/EXTERNAL-COMPANION-CAPABILITIES.md)
 - [Human companion behavior-state contract](../LivingWorldHumanNPC/BEHAVIOR-STATE-CONTRACT.md)
 
 Companion encounter implementation (pure policies and authored content; the

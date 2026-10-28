@@ -1,6 +1,6 @@
 # Owner direction
 
-The owner supplied `RustyMods-VikingNPC-0.3.4.zip` and an Atlas video transcript.
+The owner supplied an external reference archive and a video transcript.
 He sees major overlap with the living-world vision and wants the non-relationship
 features examined for full realization in Living World C.O.R.E. His own
 help/consent/affinity/alliance system remains unique. Specifically carry forward

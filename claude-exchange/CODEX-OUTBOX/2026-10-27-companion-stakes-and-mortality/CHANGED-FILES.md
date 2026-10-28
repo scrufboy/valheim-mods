@@ -7,9 +7,9 @@
   Third Breath for dead companions.
 - `LivingWorldCORE/PROJECT-BOUNDARIES.md` — prevents Tooler-spawned actors from
   becoming campaign identities.
-- `research/COMPETITOR-AUDIT-OFFLINE-COMPANIONS.md` — rejects competitor respawn
+- `research/EXTERNAL-COMPANION-CAPABILITIES.md` — rejects copied respawn
   while retaining useful persistence evidence.
-- `LivingWorldHumanNPC/COMPETITOR-AUDIT-VIKINGSFORHIRE-1.6.3.md` — supersedes the
+- `LivingWorldHumanNPC/EXTERNAL-HUMAN-ACTOR-CAPABILITIES.md` — supersedes the
   earlier revive delivery direction with gated permanent mortality.
 - This append-only correction package — exact Claude implementation boundary.
 

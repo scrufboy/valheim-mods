@@ -9,6 +9,15 @@ The framework can ship separately for community creators or as a declared Living
 World dependency. Living World C.O.R.E. owns the lore and the friendly, resident,
 hero, and enemy content built with it; the framework does not require that content.
 
+## Research and naming boundary
+
+Inspect supplied mods deeply to learn their capabilities, methods, and Valheim
+integration points. Keep each source's exact name in citations, package
+provenance, and source-specific evidence. Titles, directories, modules, public
+descriptions, and handoff labels for this project use Living World C.O.R.E. and
+Formidable NPC Framework vocabulary. A reference package's product name never
+becomes the name of our work.
+
 ## Product map
 
 | Deliverable | Responsibility | Installation boundary |

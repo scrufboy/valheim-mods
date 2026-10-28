@@ -5,7 +5,7 @@
 - Read public RustyMods/Norsemen source for spawning, biome loadouts,
   customization, armor, names, talk, work, inventory, ship seats, following,
   attack, block, dodge, faction relations, and network sync.
-- Checked the Atlas transcript's 0:49 author identification against official
-  Thunderstore and GitHub attribution: RustyMods.
+- Checked the transcript's source attribution against the package page and
+  public repository.
 - No DLL installation, game run, performance benchmark, or 1.0.x
   compatibility test was performed. No source or assets copied into our mod.
