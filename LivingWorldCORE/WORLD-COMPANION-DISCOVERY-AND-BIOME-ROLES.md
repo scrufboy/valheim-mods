@@ -15,6 +15,10 @@ A reclaimed village is one destination for survivors, not their origin. The same
 stable person first met at a field camp can later become a companion, guard,
 resident, specialist, or village leader without being replaced by another NPC.
 
+Discovery does not imply unlimited field recruitment. The persistent roster,
+two-slot expedition party, biome/world-key progression, equipment economy, and
+safe release rules are defined in [Companion progression, roster, and release](./COMPANION-PROGRESSION-ROSTER-AND-RELEASE.md).
+
 ## Wilderness encounter grammar
 
 Every encounter is composed from six records:
@@ -102,6 +106,12 @@ The Plains pair is the next new spawnable encounter after the reusable bomb
 capability: a fast spear hunter and a heavy pressure fighter. Together they mirror
 the problem posed by Fulings without copying Fuling identity. The spear hunter
 throws and closes; the heavy actor staggers, bashes, and controls close space.
+
+The first spear-hunter presentation proof is a formidable adult woman on the
+compatible human rig with a mobile padded/Plains silhouette and a finite visible
+throwing reserve. Sex does not define the role: later identity variants may use
+the same capability. No profile may claim a black-metal spear mesh, armor fit, or
+throw animation until the runtime visual and combat proof exists.
 
 ## Raid response as character revelation
 

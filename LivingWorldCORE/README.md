@@ -20,3 +20,4 @@ Owner: Brian (`scrufboy`).
 - [The Second Breath lore bible](./LORE-BIBLE-THE-SECOND-BREATH.md)
 - [Faction and peoples bible](./FACTION-AND-PEOPLES-BIBLE.md)
 - [World companion discovery and biome roles](./WORLD-COMPANION-DISCOVERY-AND-BIOME-ROLES.md)
+- [Companion progression, roster, and release](./COMPANION-PROGRESSION-ROSTER-AND-RELEASE.md)

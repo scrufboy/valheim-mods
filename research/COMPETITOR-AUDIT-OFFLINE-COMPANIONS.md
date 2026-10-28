@@ -53,6 +53,11 @@ recruitment part of exploration. Public descriptions show biome wanderers,
 conversation-based hiring, coin or debt, traits, loyalty, work, settlement life,
 guard posts, patrol routes, raid defense, and biome-influenced appearance.
 
+Its current public design also gates one squad slot per defeated boss and exposes
+a worldwide roster with remote dismissal. This directly demonstrates the balance
+value of separating all owned people from the active squad, but its remote
+dismissal/inventory return is not adopted as Living World fiction.
+
 Living World direction:
 
 - recruitable people exist before the player meets them;
@@ -61,6 +66,10 @@ Living World direction:
 - connect wilderness recruitment to settlement reclamation and faction history;
 - use trust, rescue, proof, shared combat, aid, or a lore-valid contract;
 - never copy dialogue, traits, names, settlement pieces, or package identity.
+- keep a bounded active expedition party even when the persistent world roster is
+  much larger;
+- release a companion into a persistent home, camp, or resident life instead of
+  deleting them or making them run blindly into the wilderness.
 
 ## Living World's differentiator
 
@@ -84,4 +93,3 @@ migrate, or be declined without creating a permanent companion. Once recruited,
 stable identity, equipment, relationship, home, and state survive zone unload,
 server restart, travel, incapacitation, and settlement assignment. World
 encounter logic may never replace a saved person with a fresh roll.
-
