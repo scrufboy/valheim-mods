@@ -48,6 +48,15 @@ forever, preventing the same authored request from becoming a repeatable bounty.
 Applied command IDs make network retries idempotent, and all records serialize
 through `QuestBrokerPersistence`.
 
+Acceptance is followed by an explicit `Arrive` checkpoint at the exact persisted
+site. Ordinary requests simply record authoritative loaded arrival. A verified
+authored miniboss or small raid additionally returns an `EncounterActivation`
+handoff containing the unchanged request, party, world, and site identities. The
+runtime encounter adapter may consume that handoff; the broker never spawns an
+enemy. Verified completion produces an `AidCompletionHandoff` for
+`NeedsAndAffinity`. That layer may evaluate earned respect, while
+`RescueRelease` still owns any later party invitation.
+
 Run the engine-free checks with:
 
 ```powershell

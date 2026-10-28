@@ -7,6 +7,7 @@ namespace LivingWorld.CompanionSystems.NeedsAndAffinity
     public enum RequestStatus { Offered, Accepted, Refused, Completed, Invalidated }
     public enum RememberedChoice { Helped, RefusedWithoutHarm, HonoredBoundary, Griefed }
     public enum RelationshipReading { Wary, Known, Trusting, Unsafe }
+    public enum AidArcPhase { NeedKnown, AidAgreed, EventActivated, ContributionWitnessed, TrustEstablished, InvitationEligible, Closed }
 
     // A candidate is authored content joined to current, adapter-verified world facts.
     // It is not a free-form quest generated from an NPC scan.
@@ -37,6 +38,16 @@ namespace LivingWorld.CompanionSystems.NeedsAndAffinity
         public ChoiceMemory Copy() { return (ChoiceMemory)MemberwiseClone(); }
     }
 
+    // Person-facing evidence only. QuestBroker owns operational quest status;
+    // EncounterActivation owns one claimed event; RescueRelease owns travel assignment.
+    public sealed class AidArcRecord
+    {
+        public string RequestId, PersonId, ActivationId, ContributionEvidenceId;
+        public AidArcPhase Phase;
+        public bool PlayerAgreed, EventActivationVerified, ContributionWitnessed, BoundaryHonored;
+        public AidArcRecord Copy() { return (AidArcRecord)MemberwiseClone(); }
+    }
+
     public sealed class NeedsState
     {
         public const int CurrentSchemaVersion = 1;
@@ -44,6 +55,7 @@ namespace LivingWorld.CompanionSystems.NeedsAndAffinity
         public long Revision;
         public readonly Dictionary<string, RequestRecord> Requests = new Dictionary<string, RequestRecord>(StringComparer.Ordinal);
         public readonly Dictionary<string, ChoiceMemory> Memories = new Dictionary<string, ChoiceMemory>(StringComparer.Ordinal);
+        public readonly Dictionary<string, AidArcRecord> AidArcs = new Dictionary<string, AidArcRecord>(StringComparer.Ordinal);
         public readonly HashSet<string> AppliedCommands = new HashSet<string>(StringComparer.Ordinal);
 
         public NeedsState Copy()
@@ -51,6 +63,7 @@ namespace LivingWorld.CompanionSystems.NeedsAndAffinity
             var copy = new NeedsState { SchemaVersion = SchemaVersion, Revision = Revision };
             foreach (var pair in Requests) copy.Requests.Add(pair.Key, pair.Value.Copy());
             foreach (var pair in Memories) copy.Memories.Add(pair.Key, pair.Value.Copy());
+            foreach (var pair in AidArcs) copy.AidArcs.Add(pair.Key, pair.Value.Copy());
             foreach (var id in AppliedCommands) copy.AppliedCommands.Add(id);
             return copy;
         }
@@ -92,6 +105,29 @@ namespace LivingWorld.CompanionSystems.NeedsAndAffinity
         public bool ConcreteNeedCompleted;
         public bool HonoredBoundary;
         public bool UnresolvedGriefing;
+        public string[] Reasons;
+    }
+
+    public sealed class AidArcResult
+    {
+        public bool Accepted, Replayed;
+        public string Reason;
+        public NeedsState State;
+        public AidArcRecord Arc;
+    }
+
+    public sealed class PersonalInvitationHandoff
+    {
+        public string RequestId, PersonId;
+        public bool MayPresentPersonalOffer;
+        public string[] Reasons;
+    }
+
+    // Evidence for RescueRelease to consider; it neither assigns nor reserves a slot.
+    public sealed class TemporaryTravelEvidenceHandoff
+    {
+        public string RequestId, PersonId;
+        public bool MayRequestTemporaryAssignment;
         public string[] Reasons;
     }
 

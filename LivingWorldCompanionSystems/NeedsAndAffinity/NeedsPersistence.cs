@@ -27,6 +27,14 @@ namespace LivingWorld.CompanionSystems.NeedsAndAffinity
                 b.Append("M|").Append(E(m.MemoryId)).Append('|').Append(E(m.PersonId)).Append('|').Append(E(m.RequestId)).Append('|')
                     .Append(E(m.EvidenceId)).Append('|').Append((int)m.Choice).Append('|').Append(m.WorldTick).AppendLine();
             }
+            foreach (var pair in state.AidArcs)
+            {
+                var a = pair.Value;
+                b.Append("A|").Append(E(a.RequestId)).Append('|').Append(E(a.PersonId)).Append('|').Append(E(a.ActivationId)).Append('|')
+                    .Append(E(a.ContributionEvidenceId)).Append('|').Append((int)a.Phase).Append('|')
+                    .Append(a.PlayerAgreed ? 1 : 0).Append('|').Append(a.EventActivationVerified ? 1 : 0).Append('|')
+                    .Append(a.ContributionWitnessed ? 1 : 0).Append('|').Append(a.BoundaryHonored ? 1 : 0).AppendLine();
+            }
             foreach (var id in state.AppliedCommands) b.Append("C|").Append(E(id)).AppendLine();
             return b.ToString();
         }
@@ -60,6 +68,14 @@ namespace LivingWorld.CompanionSystems.NeedsAndAffinity
                             int choice; long tick; if (!Int32.TryParse(p[5], out choice) || !Int64.TryParse(p[6], out tick) || !Enum.IsDefined(typeof(RememberedChoice), choice)) return false;
                             var m = new ChoiceMemory { MemoryId = D(p[1]), PersonId = D(p[2]), RequestId = D(p[3]), EvidenceId = D(p[4]), Choice = (RememberedChoice)choice, WorldTick = tick };
                             if (String.IsNullOrEmpty(m.MemoryId) || loaded.Memories.ContainsKey(m.MemoryId)) return false; loaded.Memories.Add(m.MemoryId, m);
+                        }
+                        else if (p[0] == "A" && p.Length == 10)
+                        {
+                            int phase; if (!Int32.TryParse(p[5], out phase) || !Enum.IsDefined(typeof(AidArcPhase), phase)) return false;
+                            var a = new AidArcRecord { RequestId = D(p[1]), PersonId = D(p[2]), ActivationId = D(p[3]), ContributionEvidenceId = D(p[4]),
+                                Phase = (AidArcPhase)phase, PlayerAgreed = p[6] == "1", EventActivationVerified = p[7] == "1",
+                                ContributionWitnessed = p[8] == "1", BoundaryHonored = p[9] == "1" };
+                            if (String.IsNullOrEmpty(a.RequestId) || loaded.AidArcs.ContainsKey(a.RequestId)) return false; loaded.AidArcs.Add(a.RequestId, a);
                         }
                         else if (p[0] == "C" && p.Length == 2) { if (!loaded.AppliedCommands.Add(D(p[1]))) return false; }
                         else return false;

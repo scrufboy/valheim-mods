@@ -33,6 +33,15 @@ or mutable inventory references into its state.
    unverified inferred targets back into affinity state. A small-boss request is
    eligible only when its owning encounter supplies progression legality and a
    verified safe authored site; this module neither searches for nor places it.
+9. QuestBroker remains authoritative for operational request status. When the
+   player agrees and reaches the verified site, EncounterActivation alone spawns
+   or activates the event and returns its stable activation ID. Record that fact
+   with `RecordEncounterActivation`; it proves only the claimed event.
+   Record contribution only from an authoritative local witness tied to the same
+   activation. `BuildTemporaryTravelHandoff` may send person agreement evidence
+   to RescueRelease, which alone decides `TemporaryAlly`, return state, and active
+   slot accounting. After the concrete need is completed, use
+   `BuildPersonalInvitationHandoff` to permit later dialogue—not recruitment.
 
 Required live proof: dedicated-server authority, two-player duplicate delivery,
 save/restart, target destroyed before completion, zone unload during an accepted

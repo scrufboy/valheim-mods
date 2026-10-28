@@ -19,6 +19,28 @@ individual life state are separate records. A site may be abandoned while its
 survivors remain in the world; a recruited person never becomes an ambient camp
 spawn again.
 
+## Approaching people whose allegiance is unknown
+
+A one- or two-person group may be met at a camp, on a hunt, or along a patrol.
+From a distance, visible gear and activity give clues without revealing a
+friendly/recruitable tag. Hearthless survivors, Pillagers, and an Eitrherjar
+Legionary use distinct authored allegiances, even when a silhouette is
+uncertain. The player may notice them; they may notice the player. Mutual sight
+can produce a pause, turn, warning, or cautious approach. It does not itself
+authorize an attack or prove friendship. A person's name and allegiance become
+known through witnessed behavior, contact, or a reliable prior fact, never
+through omniscient proximity text.
+
+The server-owned relationship record governs tolerated distance, theft,
+trespass, warnings, aid, and committed hostility. Third-party creature attacks
+remain real combat events. When native combat commits, social signals and camp
+routines yield movement, hands, facing, and attacks. A Pillager may raid or
+bargain; a Legionary remains its hostile lineage unless a separately authored
+exception exists. Faction decisions are not inferred from body, biome, or the
+temporary native `Character.Faction` enum. See the
+[faction bible](./FACTION-AND-PEOPLES-BIBLE.md) and
+[behavior-state contract](../LivingWorldHumanNPC/BEHAVIOR-STATE-CONTRACT.md).
+
 ## The first complete arc: a friend in need
 
 The first playable template is the authored Split-Ash Camp at a Meadows/Black
@@ -126,6 +148,29 @@ and expedition rules; a respected person can still say no, and the player can
 still decline. Short approved voice and emote cues accompany concise text at
 meaningful beats, with one speaker and cooldowns. A voice cue never substitutes
 for the readable need or the actual choice.
+
+An accepted request may ask the player and a person to travel together to a
+known, verified site. This is a temporary aid agreement with the same persistent
+person and equipment, not an instant bonded companion or an extra permanent
+combat slot. Arrival may activate one bounded authored hostile group or a
+small boss only when the player accepted, the site and progression remain valid,
+the participants are loaded, and the server records a single event claim before
+spawning. The event then uses normal faction targeting and native combat. It
+cannot hijack the vanilla raid clock, duplicate on reload, pay out for offscreen
+death, or turn a rumor into a guaranteed fight. A defended route, a shared hunt,
+and a later village reclamation are different authored needs using the same
+request and witness machinery. The person may return home after the task;
+recruitment is a separate later invitation with the usual factual gates.
+
+Travelers arrive with survival-credible, role-specific kit and local knowledge
+that fits their origin and world progress. Their personal gear, wounds, history,
+and relationship stay attached to `PersonId`. A later tier or earned weapon
+improves that same person's record and actor presentation; deleting a named NPC
+and spawning a stronger replacement would break lineage and the no-respawn
+rule. Spear throws, finite bombs, knife lunges, and atgeir/heavy pressure are
+bounded capability requests under native combat ownership. The
+[specialist combat plan](../LivingWorldHumanNPC/SPECIALIST-COMBAT-CAPABILITY-PLAN.md)
+defines prediction, ally safety, ammunition, animation, and live proof gates.
 
 ## Camp routines while the zone is loaded
 

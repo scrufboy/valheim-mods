@@ -6,6 +6,7 @@ namespace LivingWorld.CompanionSystems.FriendInNeed
     public enum FriendInNeedPhase { Dormant, Alerting, YieldedToCombat, Resolved }
     public enum DangerSubject { Camp, KnownFriend }
     public enum ResolutionKind { None, Safe, Defeated, Lost, Expired }
+    public enum DangerObservation { Rumor, VisibleCreature, CommittedAttack, Damage, Casualty }
 
     [Flags]
     public enum ThreatEvidence
@@ -117,6 +118,44 @@ namespace LivingWorld.CompanionSystems.FriendInNeed
                 Command(FriendInNeedCommandKind.PlayExistingSurprisedVoice, next),
                 Command(FriendInNeedCommandKind.ShowDangerSignal, next),
                 Command(FriendInNeedCommandKind.Persist, next));
+        }
+
+        // EncounterActivation owns site execution. This entry point only validates
+        // a locally witnessed accepted-aid incident and publishes warning signals.
+        public static FriendInNeedResult WitnessAcceptedAidSite(
+            FriendInNeedState current, string eventId, string siteId,
+            DangerObservation observation, bool playerAcceptedAid,
+            bool verifiedSiteActivation, bool naturalThirdPartyAttack,
+            bool locallyWitnessed, double now, bool nativeCombatCommitted)
+        {
+            if (!Enum.IsDefined(typeof(DangerObservation), observation) ||
+                !playerAcceptedAid || !locallyWitnessed) return NoChange(current);
+
+            ThreatEvidence evidence;
+            switch (observation)
+            {
+                case DangerObservation.CommittedAttack:
+                    evidence = ThreatEvidence.HostileTargetingProtectedActor;
+                    break;
+                case DangerObservation.Damage:
+                    evidence = ThreatEvidence.AttributedDamage;
+                    break;
+                case DangerObservation.Casualty:
+                    evidence = ThreatEvidence.ProtectedActorIncapacitated;
+                    break;
+                default:
+                    // Rumor and mere visibility are never danger events.
+                    return NoChange(current);
+            }
+
+            // Authored site threats require verified activation. A natural creature
+            // attack may independently become a real witnessed commitment.
+            if (!naturalThirdPartyAttack && !verifiedSiteActivation) return NoChange(current);
+            if (observation == DangerObservation.CommittedAttack && !nativeCombatCommitted)
+                return NoChange(current);
+
+            return Witness(current, eventId, DangerSubject.Camp, siteId, evidence,
+                now, nativeCombatCommitted);
         }
 
         public static FriendInNeedResult Tick(FriendInNeedState current, double now, bool evidenceStillFresh,

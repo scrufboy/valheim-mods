@@ -40,6 +40,8 @@ namespace LivingWorld.CompanionSystems.NeedsAndAffinity
                 OfferedWorldTick = worldTick, ResolvedWorldTick = -1
             };
             next.Requests.Add(record.RequestId, record);
+            next.AidArcs.Add(record.RequestId, new AidArcRecord { RequestId = record.RequestId,
+                PersonId = record.PersonId, Phase = AidArcPhase.NeedKnown });
             Commit(next, commandId);
             return new RequestSelection { Offered = true, Reason = "verified_authored_need_offered", Request = record.Copy(), State = next };
         }
@@ -55,6 +57,11 @@ namespace LivingWorld.CompanionSystems.NeedsAndAffinity
             if (!accept) target.ResolvedWorldTick = worldTick;
             AddMemory(next, "choice:" + requestId, request.PersonId, requestId, "response:" + requestId,
                 accept ? RememberedChoice.HonoredBoundary : RememberedChoice.RefusedWithoutHarm, worldTick);
+            AidArcRecord arc;
+            if (next.AidArcs.TryGetValue(requestId, out arc)) {
+                arc.PlayerAgreed = accept; arc.BoundaryHonored = true;
+                arc.Phase = accept ? AidArcPhase.AidAgreed : AidArcPhase.Closed;
+            }
             Commit(next, commandId);
             return Accepted(next, accept ? "request_accepted" : "refusal_remembered_without_hostility", false);
         }
@@ -74,8 +81,77 @@ namespace LivingWorld.CompanionSystems.NeedsAndAffinity
             next.Requests[request.RequestId].ResolvedWorldTick = evidence.WorldTick;
             AddMemory(next, "help:" + request.RequestId, request.PersonId, request.RequestId,
                 evidence.EvidenceId, RememberedChoice.Helped, evidence.WorldTick);
+            AidArcRecord completedArc;
+            if (next.AidArcs.TryGetValue(request.RequestId, out completedArc) && completedArc.ContributionWitnessed && completedArc.BoundaryHonored)
+                completedArc.Phase = AidArcPhase.TrustEstablished;
             Commit(next, commandId);
             return Accepted(next, "concrete_aid_remembered", true);
+        }
+
+        public static AidArcResult RecordEncounterActivation(NeedsState source, string commandId,
+            string requestId, string activationId, bool encounterActivationVerified)
+        {
+            var replay = ArcReplay(source, commandId, requestId); if (replay != null) return replay;
+            AidArcRecord arc;
+            if (source == null || !source.AidArcs.TryGetValue(requestId, out arc)) return ArcRejected(source, "unknown_aid_arc");
+            if (!arc.PlayerAgreed || arc.Phase != AidArcPhase.AidAgreed) return ArcRejected(source, "aid_not_agreed");
+            if (!encounterActivationVerified || String.IsNullOrEmpty(activationId)) return ArcRejected(source, "encounter_activation_not_verified");
+            var next = source.Copy(); var target = next.AidArcs[requestId];
+            target.EventActivationVerified = true; target.ActivationId = activationId; target.Phase = AidArcPhase.EventActivated;
+            Commit(next, commandId); return ArcAccepted(next, target, "encounter_activation_fact_remembered");
+        }
+
+        public static AidArcResult RecordWitnessedContribution(NeedsState source, string commandId,
+            string requestId, string activationId, string contributionEvidenceId, bool authoritativeWitness)
+        {
+            var replay = ArcReplay(source, commandId, requestId); if (replay != null) return replay;
+            AidArcRecord arc;
+            if (source == null || !source.AidArcs.TryGetValue(requestId, out arc)) return ArcRejected(source, "unknown_aid_arc");
+            if (arc.Phase != AidArcPhase.EventActivated || arc.ActivationId != activationId)
+                return ArcRejected(source, "encounter_activation_mismatch");
+            if (!authoritativeWitness || String.IsNullOrEmpty(contributionEvidenceId)) return ArcRejected(source, "contribution_not_witnessed");
+            var next = source.Copy(); var target = next.AidArcs[requestId];
+            target.ContributionWitnessed = true; target.ContributionEvidenceId = contributionEvidenceId;
+            target.Phase = AidArcPhase.ContributionWitnessed; Commit(next, commandId);
+            return ArcAccepted(next, target, "contribution_fact_remembered");
+        }
+
+        public static PersonalInvitationHandoff BuildPersonalInvitationHandoff(NeedsState state, string requestId)
+        {
+            var reasons = new List<string>(); AidArcRecord arc; RequestRecord request;
+            if (state == null || !state.AidArcs.TryGetValue(requestId, out arc) || !state.Requests.TryGetValue(requestId, out request))
+                return new PersonalInvitationHandoff { RequestId = requestId, MayPresentPersonalOffer = false, Reasons = new[] { "unknown_aid_arc" } };
+            if (request.Status != RequestStatus.Completed) reasons.Add("concrete_need_not_completed");
+            if (!arc.ContributionWitnessed) reasons.Add("contribution_not_witnessed");
+            if (!arc.BoundaryHonored) reasons.Add("boundary_not_honored");
+            if (ReadRelationship(state, arc.PersonId) == RelationshipReading.Unsafe) reasons.Add("unresolved_griefing");
+            return new PersonalInvitationHandoff { RequestId = requestId, PersonId = arc.PersonId,
+                MayPresentPersonalOffer = reasons.Count == 0, Reasons = reasons.ToArray() };
+        }
+
+        public static TemporaryTravelEvidenceHandoff BuildTemporaryTravelHandoff(NeedsState state, string requestId)
+        {
+            AidArcRecord arc;
+            if (state == null || !state.AidArcs.TryGetValue(requestId, out arc))
+                return new TemporaryTravelEvidenceHandoff { RequestId = requestId, MayRequestTemporaryAssignment = false,
+                    Reasons = new[] { "unknown_aid_arc" } };
+            var reasons = new List<string>();
+            if (!arc.PlayerAgreed || arc.Phase != AidArcPhase.AidAgreed) reasons.Add("aid_not_agreed");
+            if (!arc.BoundaryHonored) reasons.Add("boundary_not_honored");
+            if (ReadRelationship(state, arc.PersonId) == RelationshipReading.Unsafe) reasons.Add("unresolved_griefing");
+            return new TemporaryTravelEvidenceHandoff { RequestId = requestId, PersonId = arc.PersonId,
+                MayRequestTemporaryAssignment = reasons.Count == 0, Reasons = reasons.ToArray() };
+        }
+
+        public static AidArcResult RecordInvitationEligibility(NeedsState source, string commandId, string requestId)
+        {
+            var replay = ArcReplay(source, commandId, requestId); if (replay != null) return replay;
+            var handoff = BuildPersonalInvitationHandoff(source, requestId);
+            if (!handoff.MayPresentPersonalOffer) return ArcRejected(source,
+                handoff.Reasons.Length == 0 ? "invitation_not_eligible" : handoff.Reasons[0]);
+            var next = source.Copy(); var arc = next.AidArcs[requestId];
+            arc.Phase = AidArcPhase.InvitationEligible; Commit(next, commandId);
+            return ArcAccepted(next, arc, "personal_invitation_eligible");
         }
 
         public static ChoiceResult RecordGriefing(NeedsState source, string commandId, string personId,
@@ -170,6 +246,14 @@ namespace LivingWorld.CompanionSystems.NeedsAndAffinity
         { return new ChoiceResult { Accepted = false, Reason = reason, State = state, GrantsReward = false }; }
         static RequestSelection Denied(NeedsState state, string reason)
         { return new RequestSelection { Offered = false, Reason = reason, State = state }; }
+        static AidArcResult ArcReplay(NeedsState state, string id, string requestId)
+        { AidArcRecord arc; return state != null && state.AppliedCommands.Contains(id) ? new AidArcResult { Accepted = true,
+            Replayed = true, Reason = "command_already_applied", State = state,
+            Arc = state.AidArcs.TryGetValue(requestId, out arc) ? arc.Copy() : null } : null; }
+        static AidArcResult ArcAccepted(NeedsState state, AidArcRecord arc, string reason)
+        { return new AidArcResult { Accepted = true, Reason = reason, State = state, Arc = arc.Copy() }; }
+        static AidArcResult ArcRejected(NeedsState state, string reason)
+        { return new AidArcResult { Accepted = false, Reason = reason, State = state }; }
         static ulong StableScore(long seed, string text)
         {
             ulong hash = 14695981039346656037UL;

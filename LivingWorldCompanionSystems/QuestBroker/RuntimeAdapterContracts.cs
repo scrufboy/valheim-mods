@@ -31,6 +31,13 @@ namespace LivingWorld.CompanionSystems.QuestBroker
         // Runtime implementation must validate and own spawn, cleanup and outcome.
         // The broker neither creates a prefab nor awards loot.
         bool IsVerifiedSafePlan(string adapterId, string authoredEncounterId, string siteIdentity);
-        bool TryActivate(string requestId, string adapterId, string authoredEncounterId, string siteIdentity);
+        bool TryActivate(EncounterActivation activation);
+    }
+
+    public interface INeedsAndAffinityHandoffSink
+    {
+        // Receipt is supporting evidence only. NeedsAndAffinity decides whether
+        // respect changes; RescueRelease later owns any party invitation.
+        bool TryRecordCompletedAid(AidCompletionHandoff handoff);
     }
 }

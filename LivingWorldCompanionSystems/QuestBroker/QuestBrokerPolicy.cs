@@ -78,20 +78,57 @@ namespace LivingWorld.CompanionSystems.QuestBroker
                 return Reject(state, "unknown_request");
             if (r.Status == RequestStatus.Completed) return Reject(state, "outcome_already_claimed");
             if (r.Status != RequestStatus.Accepted) return Reject(state, "request_not_accepted");
-            if (proof.WorldTick < r.CreatedWorldTick || proof.WorldTick >= r.ExpiresWorldTick) return Reject(state, "request_expired");
+            if (String.IsNullOrEmpty(r.ArrivalEvidenceId) || r.ArrivedWorldTick < r.CreatedWorldTick)
+                return Reject(state, "authoritative_target_arrival_required");
+            if (proof.WorldTick < r.ArrivedWorldTick || proof.WorldTick >= r.ExpiresWorldTick) return Reject(state, "request_expired_or_completion_precedes_arrival");
             if (!proof.ServerAuthority || !proof.TargetLoaded || !proof.PlayerAtTarget || !proof.ObjectiveObservedComplete)
                 return Reject(state, "authoritative_loaded_completion_required");
             if (String.IsNullOrEmpty(proof.EvidenceId) || proof.WorldId != r.WorldId || proof.SiteId != r.SiteId || proof.SiteIdentity != r.SiteIdentity)
                 return Reject(state, "completion_site_identity_mismatch");
             if (!proof.ProgressionLegal) return Reject(state, "progression_gate_failed");
-            if (r.Kind == RequestKind.AuthoredMiniboss && !proof.EncounterAdapterOwnsOutcome)
+            if (IsAuthoredEncounter(r.Kind) && !proof.EncounterAdapterOwnsOutcome)
                 return Reject(state, "verified_encounter_adapter_outcome_required");
             var next = state.Copy(); var n = next.Requests[r.RequestId];
             n.Status = RequestStatus.Completed; n.ResolvedWorldTick = proof.WorldTick;
             n.CompletionEvidenceId = proof.EvidenceId; n.ClaimId = "claim:" + r.RequestId;
             Commit(next, commandId);
             var result = Success(next, n, null, "single_claim_outcome_committed", false, true);
-            result.ClaimId = n.ClaimId; return result;
+            result.ClaimId = n.ClaimId;
+            result.AidHandoff = new AidCompletionHandoff { RequestId=n.RequestId, PartyId=n.PartyId,
+                IssuerPersonId=n.IssuerPersonId, EncounterId=n.EncounterId, WorldId=n.WorldId,
+                SiteId=n.SiteId, SiteIdentity=n.SiteIdentity, CompletionEvidenceId=n.CompletionEvidenceId,
+                ClaimId=n.ClaimId, ReadyForNeedsAndAffinityReview=true };
+            return result;
+        }
+
+        public static BrokerResult Arrive(BrokerState state, string commandId, ArrivalProof proof)
+        {
+            var replay = Replay(state, commandId); if (replay != null) return replay;
+            WorldRequest r;
+            if (state == null || String.IsNullOrEmpty(commandId) || proof == null || !state.Requests.TryGetValue(proof.RequestId, out r))
+                return Reject(state, "unknown_request");
+            if (r.Status != RequestStatus.Accepted) return Reject(state, "request_not_accepted");
+            if (!String.IsNullOrEmpty(r.ArrivalEvidenceId)) return Reject(state, "arrival_already_committed");
+            if (proof.WorldTick < r.CreatedWorldTick || proof.WorldTick >= r.ExpiresWorldTick) return Reject(state, "request_expired");
+            if (!proof.ServerAuthority || !proof.TargetLoaded || !proof.PartyAtTarget || !proof.ProgressionLegal)
+                return Reject(state, "authoritative_loaded_arrival_required");
+            if (String.IsNullOrEmpty(proof.EvidenceId) || proof.PartyId != r.PartyId || proof.WorldId != r.WorldId ||
+                proof.SiteId != r.SiteId || proof.SiteIdentity != r.SiteIdentity) return Reject(state, "arrival_identity_mismatch");
+            if (IsAuthoredEncounter(r.Kind) && !proof.EncounterAdapterReady)
+                return Reject(state, "verified_encounter_adapter_not_ready");
+            var next = state.Copy(); var n = next.Requests[r.RequestId];
+            n.ArrivalEvidenceId = proof.EvidenceId; n.ArrivedWorldTick = proof.WorldTick;
+            EncounterActivation activation = null;
+            if (IsAuthoredEncounter(n.Kind))
+            {
+                n.ActivationId = "activation:" + n.RequestId;
+                activation = new EncounterActivation { ActivationId=n.ActivationId, RequestId=n.RequestId,
+                    PartyId=n.PartyId, WorldId=n.WorldId, SiteId=n.SiteId, SiteIdentity=n.SiteIdentity,
+                    AuthoredEncounterId=n.AuthoredEncounterId, EncounterAdapterId=n.EncounterAdapterId, Kind=n.Kind };
+            }
+            Commit(next, commandId);
+            var result = Success(next, n, null, activation == null ? "target_arrival_committed" : "encounter_activation_handoff_ready", false, false);
+            result.EncounterActivation = activation; return result;
         }
 
         public static BrokerResult Expire(BrokerState state, string commandId, string requestId, bool serverAuthority, long worldTick)
@@ -121,7 +158,7 @@ namespace LivingWorld.CompanionSystems.QuestBroker
                 return "target_outside_bounded_distance";
             if (tick < 0 || cfg.MinimumLifetimeTicks < 1 || c.ExpiresWorldTick < tick + cfg.MinimumLifetimeTicks) return "invalid_expiry";
             if (c.Kind == RequestKind.CompanionNeed && String.IsNullOrEmpty(c.EncounterId)) return "companion_encounter_identity_required";
-            if (c.Kind == RequestKind.AuthoredMiniboss && (!c.AuthoredEncounter || !c.SafeSpawnAdapterVerified ||
+            if (IsAuthoredEncounter(c.Kind) && (!c.AuthoredEncounter || !c.SafeSpawnAdapterVerified ||
                 String.IsNullOrEmpty(c.AuthoredEncounterId) || String.IsNullOrEmpty(c.EncounterAdapterId)))
                 return "verified_authored_encounter_adapter_required";
             return null;
@@ -163,6 +200,8 @@ namespace LivingWorld.CompanionSystems.QuestBroker
             foreach (var r in s.Requests.Values) if (r.PartyId == party && (r.Status == RequestStatus.Offered || r.Status == RequestStatus.Accepted)) count++;
             return count;
         }
+        static bool IsAuthoredEncounter(RequestKind kind)
+        { return kind == RequestKind.AuthoredMiniboss || kind == RequestKind.AuthoredRaid; }
         static void Commit(BrokerState s, string id) { s.AppliedCommands.Add(id); s.Revision++; }
         static BrokerResult Replay(BrokerState s, string id)
         { return s != null && !String.IsNullOrEmpty(id) && s.AppliedCommands.Contains(id) ? new BrokerResult { Applied = true, Replayed = true, Reason = "command_already_applied", State = s } : null; }

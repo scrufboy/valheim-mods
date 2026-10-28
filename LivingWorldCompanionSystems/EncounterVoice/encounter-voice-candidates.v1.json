@@ -45,6 +45,11 @@
   },
   "intentMap": {
     "greeting": {"female":{"asset":"uf_greeting_ack07","emote":"wave"},"male":{"asset":"gm_mb_greeting_release02","emote":"wave"},"confidence":"low","textRequired":true},
+    "cautious_first_contact": {"female":{"asset":"uf_suspicion_investigate01","emote":"halt"},"male":{"asset":"gm_mb_suspicion_snort01","emote":"halt"},"confidence":"low","textRequired":true},
+    "warning": {"female":{"asset":"uf_refusal_annoyed02","emote":"halt"},"male":{"asset":"gm_mb_refusal_snort02","emote":"halt"},"confidence":"medium-low","textRequired":true},
+    "mutual_notice": {"female":{"asset":"uf_suspicion_investigate01","emote":"halt"},"male":{"asset":"gm_mb_suspicion_snort01","emote":"halt"},"confidence":"low","textRequired":true},
+    "accepted_help": {"female":{"asset":"uf_gratitude_ack01","emote":"bow"},"male":{"asset":"gm_mb_gratitude_release09","emote":"bow"},"confidence":"low","textRequired":true},
+    "later_party_offer": {"female":{"asset":"uf_offer_confirm02","emote":"open_hand_or_bow"},"male":{"asset":"gm_mb_offer_release03","emote":"open_hand_or_bow"},"confidence":"low","textRequired":true},
     "suspicion": {"female":{"asset":"uf_suspicion_investigate01","emote":"halt"},"male":{"asset":"gm_mb_suspicion_snort01","emote":"halt"},"confidence":"medium-low","textRequired":true},
     "need": {"female":{"asset":"uf_need_sigh03","emote":"point"},"male":{"asset":"gm_mb_need_sigh06","emote":"point"},"confidence":"medium-low","textRequired":true},
     "asking": {"female":{"asset":"uf_asking_thinking05","emote":"comehere"},"male":{"asset":"gm_mb_asking_sigh09","emote":"comehere"},"confidence":"low","textRequired":true},
@@ -56,13 +61,17 @@
   },
   "lineBindings": [
     {"intent":"greeting","bindingStatus":"candidate_only_unapproved","lineIds":["splitash.contact.hail","splitash.open.runa_warning"]},
+    {"intent":"cautious_first_contact","bindingStatus":"candidate_only_unapproved","lineIds":["contact.friendly.banked_fire"]},
+    {"intent":"warning","bindingStatus":"candidate_only_unapproved","lineIds":["contact.friendly.hunt","contact.friendly.injured","contact.pillager.false_rest","contact.pillager.toll","contact.eitrherjar.advance"]},
+    {"intent":"mutual_notice","bindingStatus":"candidate_only_unapproved","lineIds":["contact.friendly.patrol","contact.friendly.moving","contact.pillager.wounded","contact.eitrherjar.notice"]},
+    {"intent":"accepted_help","bindingStatus":"candidate_only_unapproved","lineIds":["contact.after.friendly","contact.travel.end"]},
+    {"intent":"later_party_offer","bindingStatus":"candidate_only_unapproved","lineIds":["contact.travel.offer","splitash.invitation.npc"]},
     {"intent":"suspicion","bindingStatus":"candidate_only_unapproved","lineIds":["splitash.boundary.far_enough","splitash.violation.runa"]},
     {"intent":"need","bindingStatus":"candidate_only_unapproved","lineIds":["splitash.open.edda_slow","splitash.aid.runa_brace","plains.after.duty"]},
     {"intent":"asking","bindingStatus":"candidate_only_unapproved","lineIds":["splitash.request.meal_offer","splitash.request.boar_offer","splitash.request.threat_offer","splitash.request.core_offer","splitash.request.village_offer","splitash.request.mapped_route_offer","splitash.shock.left_side","splitash.release.runa_question","splitash.reunion.runa","plains.shock.lane","plains.reunion.yrsa"]},
     {"intent":"gratitude","bindingStatus":"candidate_only_unapproved","lineIds":["splitash.request.runa_accept","splitash.request.runa_complete","splitash.request.edda_complete","splitash.aid.runa_relief","plains.after.yrsa"]},
     {"intent":"refusal","bindingStatus":"candidate_only_unapproved","lineIds":["splitash.refuse.runa","splitash.answer.no_home","splitash.answer.no_roster","splitash.answer.no_gate","splitash.answer.no_refusal","splitash.answer.no_harm","splitash.release.no_home","plains.answer.no_duty"]},
     {"intent":"surprise","bindingStatus":"existing_runtime_approved_pool_only","lineIds":["splitash.shock.edda_down","plains.shock.ketil"]},
-    {"intent":"relief","bindingStatus":"candidate_only_unapproved","lineIds":["splitash.request.edda_decline","splitash.request.edda_complete","splitash.invitation.runa_no_ack","splitash.aid.runa_relief","plains.after.yrsa"]},
-    {"intent":"will_you_have_me","bindingStatus":"candidate_only_unapproved","lineIds":["splitash.invitation.npc"]}
+    {"intent":"relief","bindingStatus":"candidate_only_unapproved","lineIds":["splitash.request.edda_decline","splitash.request.edda_complete","splitash.invitation.runa_no_ack","splitash.aid.runa_relief","plains.after.yrsa"]}
   ]
 }

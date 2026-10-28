@@ -21,7 +21,8 @@ namespace LivingWorld.CompanionSystems.QuestBroker
                     .Append(E(r.SiteId)).Append('|').Append(E(r.SiteIdentity)).Append('|').Append(E(r.Biome)).Append('|').Append(E(r.Description)).Append('|')
                     .Append(E(r.RequiredWorldKey)).Append('|').Append(E(r.AuthoredEncounterId)).Append('|').Append(E(r.EncounterAdapterId)).Append('|')
                     .Append((int)r.Kind).Append('|').Append((int)r.Visibility).Append('|').Append((int)r.Status).Append('|').Append(r.CreatedWorldTick).Append('|')
-                    .Append(r.ExpiresWorldTick).Append('|').Append(r.ResolvedWorldTick).Append('|').Append(E(r.CompletionEvidenceId)).Append('|').Append(E(r.ClaimId)).AppendLine();
+                    .Append(r.ExpiresWorldTick).Append('|').Append(r.ResolvedWorldTick).Append('|').Append(E(r.ArrivalEvidenceId)).Append('|')
+                    .Append(r.ArrivedWorldTick).Append('|').Append(E(r.ActivationId)).Append('|').Append(E(r.CompletionEvidenceId)).Append('|').Append(E(r.ClaimId)).AppendLine();
             }
             foreach (var pair in state.Presentations)
             {
@@ -47,17 +48,17 @@ namespace LivingWorld.CompanionSystems.QuestBroker
                     while ((line = reader.ReadLine()) != null)
                     {
                         if (line.Length == 0) continue; var p = line.Split('|');
-                        if (p[0] == "R" && p.Length == 22)
+                        if (p[0] == "R" && p.Length == 25)
                         {
-                            int kind, visibility, status; long created, expires, resolved;
+                            int kind, visibility, status; long created, expires, resolved, arrived;
                             if (!Int32.TryParse(p[14], out kind) || !Int32.TryParse(p[15], out visibility) || !Int32.TryParse(p[16], out status) ||
-                                !Int64.TryParse(p[17], out created) || !Int64.TryParse(p[18], out expires) || !Int64.TryParse(p[19], out resolved) ||
+                                !Int64.TryParse(p[17], out created) || !Int64.TryParse(p[18], out expires) || !Int64.TryParse(p[19], out resolved) || !Int64.TryParse(p[21], out arrived) ||
                                 !Enum.IsDefined(typeof(RequestKind), kind) || !Enum.IsDefined(typeof(RequestVisibility), visibility) || !Enum.IsDefined(typeof(RequestStatus), status)) return false;
                             var r = new WorldRequest { RequestId=D(p[1]), AuthoredRequestId=D(p[2]), PartyId=D(p[3]), IssuerPersonId=D(p[4]),
                                 EncounterId=D(p[5]), WorldId=D(p[6]), SiteId=D(p[7]), SiteIdentity=D(p[8]), Biome=D(p[9]), Description=D(p[10]),
                                 RequiredWorldKey=D(p[11]), AuthoredEncounterId=D(p[12]), EncounterAdapterId=D(p[13]), Kind=(RequestKind)kind,
                                 Visibility=(RequestVisibility)visibility, Status=(RequestStatus)status, CreatedWorldTick=created, ExpiresWorldTick=expires, ResolvedWorldTick=resolved,
-                                CompletionEvidenceId=D(p[20]), ClaimId=D(p[21]) };
+                                ArrivalEvidenceId=D(p[20]), ArrivedWorldTick=arrived, ActivationId=D(p[22]), CompletionEvidenceId=D(p[23]), ClaimId=D(p[24]) };
                             if (!Valid(r) || loaded.Requests.ContainsKey(r.RequestId)) return false; loaded.Requests.Add(r.RequestId, r);
                         }
                         else if (p[0] == "P" && p.Length == 8)
@@ -83,6 +84,11 @@ namespace LivingWorld.CompanionSystems.QuestBroker
                 String.IsNullOrEmpty(r.SiteIdentity) || r.CreatedWorldTick < 0 || r.ExpiresWorldTick <= r.CreatedWorldTick) return false;
             bool closed = r.Status == RequestStatus.Refused || r.Status == RequestStatus.Completed || r.Status == RequestStatus.Expired;
             if (closed != (r.ResolvedWorldTick >= r.CreatedWorldTick)) return false;
+            if (String.IsNullOrEmpty(r.ArrivalEvidenceId) != (r.ArrivedWorldTick < r.CreatedWorldTick)) return false;
+            bool authoredEncounter = r.Kind == RequestKind.AuthoredMiniboss || r.Kind == RequestKind.AuthoredRaid;
+            if (String.IsNullOrEmpty(r.ArrivalEvidenceId) && !String.IsNullOrEmpty(r.ActivationId)) return false;
+            if (!String.IsNullOrEmpty(r.ArrivalEvidenceId) && authoredEncounter && r.ActivationId != "activation:" + r.RequestId) return false;
+            if (!authoredEncounter && !String.IsNullOrEmpty(r.ActivationId)) return false;
             return r.Status != RequestStatus.Completed || (!String.IsNullOrEmpty(r.CompletionEvidenceId) && r.ClaimId == "claim:" + r.RequestId);
         }
         static string E(string value) { return Convert.ToBase64String(Encoding.UTF8.GetBytes(value ?? "")); }

@@ -16,7 +16,11 @@ class EncounterCuePresentationPolicyTests
             { "splitash.invitation.npc", new EncounterCueDefinition { LineId = "splitash.invitation.npc",
                 SafeEmote = "open_hand_or_bow", FemaleCandidateCue = "uf_offer_confirm02", MaleCandidateCue = "gm_mb_offer_release03" } },
             { "splitash.shock.edda_down", new EncounterCueDefinition { LineId = "splitash.shock.edda_down",
-                SafeEmote = "point", UsesApprovedSurprisePool = true } }
+                SafeEmote = "point", UsesApprovedSurprisePool = true } },
+            { "contact.friendly.banked_fire", new EncounterCueDefinition { LineId = "contact.friendly.banked_fire",
+                SafeEmote = "halt", FemaleCandidateCue = "uf_suspicion_investigate01", MaleCandidateCue = "gm_mb_suspicion_snort01" } },
+            { "contact.travel.offer", new EncounterCueDefinition { LineId = "contact.travel.offer",
+                SafeEmote = "open_hand_or_bow", FemaleCandidateCue = "uf_offer_confirm02", MaleCandidateCue = "gm_mb_offer_release03" } }
         };
     }
 
@@ -39,6 +43,12 @@ class EncounterCuePresentationPolicyTests
         Check(normal.VoiceCue == null && normal.Suppression == CueSuppression.ConversationalVoiceUnapproved,
             "normal mode fails closed for unapproved conversation voice");
         Check(!normal.VoiceIsAuditionCandidate, "normal mode never labels a candidate playable");
+        var cautious = Request("contact.friendly.banked_fire", "friendly-watcher", 15);
+        cautious.ReadableText = "Easy there. We saw you. The fire is ours, but the ground need not be.";
+        var cautiousNormal = EncounterCuePresentationPolicy.Present(normal.State, cautious, definitions);
+        Check(cautiousNormal.VoiceCue == null && cautiousNormal.SafeEmote == "halt" &&
+            cautiousNormal.Suppression == CueSuppression.ConversationalVoiceUnapproved,
+            "new cautious contact remains silent in normal mode");
 
         var auditionRequest = Request("splitash.invitation.npc", "runa", 20);
         auditionRequest.ApprovalMode = CueApprovalMode.Audition;
@@ -46,6 +56,12 @@ class EncounterCuePresentationPolicyTests
         Check(audition.VoiceCue == "uf_offer_confirm02" && audition.VoiceIsAuditionCandidate,
             "audition mode exposes female candidate explicitly");
         Check(audition.ReadableText.EndsWith("Will you have me?"), "audition does not replace exact readable choice");
+        var travelRequest = Request("contact.travel.offer", "cautious-survivor", 25);
+        travelRequest.ReadableText = "Our road runs with yours as far as the old stones. Walk it together?";
+        travelRequest.ApprovalMode = CueApprovalMode.Audition;
+        var travel = EncounterCuePresentationPolicy.Present(audition.State, travelRequest, definitions);
+        Check(travel.VoiceCue == "uf_offer_confirm02" && travel.VoiceIsAuditionCandidate &&
+            travel.ReadableText.Contains("old stones"), "temporary travel offer is audition-only and keeps exact text");
 
         var maleRequest = Request("splitash.request.meal_offer", "ketil", 30);
         maleRequest.Gender = PersonaGender.Male; maleRequest.ApprovalMode = CueApprovalMode.Audition;

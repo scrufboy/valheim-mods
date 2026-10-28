@@ -13,6 +13,10 @@ profile is edited, and no conversational candidate is approved by this module.
    `lineBindings` chooses the intent; `intentMap` supplies the safe emote and
    gender candidate. Reject unresolved IDs and unsafe emotes at load time by
    running `validate_line_bindings.py` as a build/content gate.
+   The current map distinguishes cautious first contact, warning, mutual notice,
+   accepted help, temporary travel offer, and later full-party offer. Preserve
+   that distinction: `contact.travel.offer` is not recruitment, while
+   `splitash.invitation.npc` is the gated full-party choice.
 3. Supply authoritative `NativeCombatOwnsPresentation` and
    `AlertOwnsPresentation` flags from the shared behavior owner. Do not infer
    ownership from animation, distance, or a visible enemy.

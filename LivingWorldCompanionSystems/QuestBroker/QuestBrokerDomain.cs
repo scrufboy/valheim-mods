@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LivingWorld.CompanionSystems.QuestBroker
 {
-    public enum RequestKind { CompanionNeed, WorldService, AuthoredMiniboss }
+    public enum RequestKind { CompanionNeed, WorldService, AuthoredMiniboss, AuthoredRaid }
     public enum RequestStatus { Offered, Accepted, Refused, Completed, Expired }
     public enum OfferSourceKind { CampPerson, SettlementBoard, Jarl }
     public enum RequestVisibility { PrivateIssuerOnly, PublicSurfaces }
@@ -58,7 +58,8 @@ namespace LivingWorld.CompanionSystems.QuestBroker
         public RequestVisibility Visibility;
         public RequestStatus Status;
         public long CreatedWorldTick, ExpiresWorldTick, ResolvedWorldTick;
-        public string CompletionEvidenceId, ClaimId;
+        public string ArrivalEvidenceId, ActivationId, CompletionEvidenceId, ClaimId;
+        public long ArrivedWorldTick = -1;
         public WorldRequest Copy() { return (WorldRequest)MemberwiseClone(); }
     }
 
@@ -86,12 +87,39 @@ namespace LivingWorld.CompanionSystems.QuestBroker
         public long WorldTick;
     }
 
+    public sealed class ArrivalProof
+    {
+        public string RequestId, PartyId, WorldId, SiteId, SiteIdentity, EvidenceId;
+        public bool ServerAuthority, TargetLoaded, PartyAtTarget, ProgressionLegal;
+        public bool EncounterAdapterReady;
+        public long WorldTick;
+    }
+
+    // A handoff only. The maintained runtime adapter remains sole owner of spawn,
+    // cleanup, actor identity, outcome and unload/reload behavior.
+    public sealed class EncounterActivation
+    {
+        public string ActivationId, RequestId, PartyId, WorldId, SiteId, SiteIdentity;
+        public string AuthoredEncounterId, EncounterAdapterId;
+        public RequestKind Kind;
+    }
+
+    // Supporting evidence for NeedsAndAffinity; it does not award respect or recruit.
+    public sealed class AidCompletionHandoff
+    {
+        public string RequestId, PartyId, IssuerPersonId, EncounterId;
+        public string WorldId, SiteId, SiteIdentity, CompletionEvidenceId, ClaimId;
+        public bool ReadyForNeedsAndAffinityReview;
+    }
+
     public sealed class BrokerResult
     {
         public bool Applied, Replayed, MayPresent, SingleClaimCommitted;
         public string Reason, ClaimId;
         public WorldRequest Request;
         public OfferPresentation Presentation;
+        public EncounterActivation EncounterActivation;
+        public AidCompletionHandoff AidHandoff;
         public BrokerState State;
     }
 }

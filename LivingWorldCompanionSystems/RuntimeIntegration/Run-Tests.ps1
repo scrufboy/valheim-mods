@@ -8,8 +8,19 @@ try {
         (Join-Path $root 'Discovery\DiscoveryPolicy.cs') `
         (Join-Path $root 'CampLifecycle\CampLifecyclePolicy.cs') `
         (Join-Path $root 'FriendInNeed\FriendInNeedContract.cs') `
+        (Join-Path $root 'EncounterAllegiance\EncounterAllegianceDomain.cs') `
+        (Join-Path $root 'EncounterAllegiance\AllegianceMatrix.cs') `
+        (Join-Path $root 'EncounterAllegiance\EncounterAllegiancePolicy.cs') `
+        (Join-Path $root 'EncounterActivation\EncounterActivationDomain.cs') `
+        (Join-Path $root 'EncounterActivation\EncounterActivationPolicy.cs') `
+        (Join-Path $root 'EncounterLoadouts\EncounterLoadoutDomain.cs') `
+        (Join-Path $root 'EncounterLoadouts\EncounterLoadoutPolicy.cs') `
+        (Join-Path $root 'NeedsAndAffinity\NeedsAndAffinityDomain.cs') `
+        (Join-Path $root 'NeedsAndAffinity\NeedsAndAffinityPolicy.cs') `
         (Join-Path $root 'QuestBroker\QuestBrokerDomain.cs') `
         (Join-Path $root 'QuestBroker\QuestBrokerPolicy.cs') `
+        (Join-Path $root 'SpecialistCombat\PredictionAndThrows\PredictionAndThrowsPolicy.cs') `
+        (Join-Path $root 'SpecialistCombat\MeleeRoles\MeleeRolePolicy.cs') `
         (Join-Path $root 'RescueRelease\RescueReleaseDomain.cs') `
         (Join-Path $root 'RescueRelease\RescueReleasePolicy.cs') `
         (Join-Path $PSScriptRoot 'EncounterArcRuntime.cs') `

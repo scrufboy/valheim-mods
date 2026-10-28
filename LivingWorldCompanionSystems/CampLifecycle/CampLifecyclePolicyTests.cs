@@ -55,6 +55,30 @@ static class CampLifecyclePolicyTests
         Check(CampLifecyclePolicy.ObserveRoutineNeed(awayPerson,cooking,lowFood).Kind==CampFactEventKind.None, "away person freezes ordinary need seam");
         Throws(()=>CampLifecyclePolicy.ObserveRoutineNeed(p,cooking,new CampNeedObservation{EvidenceKey="route",Need=CampNeedKind.PatrolRouteObstructed,Unmet=true}), "routine cannot surface unrelated need");
 
+        var patrolObservation=Seen(1200); patrolObservation.HasCampRoutineAssignment=true; patrolObservation.AssignedCampRoutine=CampRoutine.Patrol;
+        var patrolLife=CampLifecyclePolicy.Observe(p,c,patrolObservation);
+        var playerSeen=new SceneObservation{ActorId="player-1",Activity=CampSceneActivity.Patrol,ActorKind=ObservedActorKind.Player,
+            DistanceFromObserver=18,DistanceFromCampAnchor=24,WorldTick=100,LastVisibleWorldTick=100,HasLineOfSight=true};
+        var cautious=CampLifecyclePolicy.ObserveScene(p,patrolLife,playerSeen);
+        Check(cautious.Kind==SceneNoticeKind.CautiousNotice && !cautious.GrantsAttackAuthority, "patrol notices player cautiously without attack authority");
+        var wildlife=new SceneObservation{ActorId="deer-7",Activity=CampSceneActivity.Hunt,ActorKind=ObservedActorKind.Wildlife,
+            DistanceFromObserver=22,DistanceFromCampAnchor=35,WorldTick=102,LastVisibleWorldTick=100,HasLineOfSight=true};
+        var forwarded=CampLifecyclePolicy.ObserveScene(p,patrolLife,wildlife);
+        Check(forwarded.Kind==SceneNoticeKind.ForwardForThreatEvaluation && !forwarded.GrantsAttackAuthority, "hunt observation forwards wildlife to existing evaluator");
+        wildlife.ExternalThreatAuthorized=true;
+        Check(CampLifecyclePolicy.ObserveScene(p,patrolLife,wildlife).Kind==SceneNoticeKind.RequestReadiness, "external authorization may request readiness but not combat");
+        wildlife.NativeCombatCommitted=true;
+        var nativeCombat=CampLifecyclePolicy.ObserveScene(p,patrolLife,wildlife);
+        Check(nativeCombat.Kind==SceneNoticeKind.YieldToNativeCombat && !nativeCombat.GrantsAttackAuthority, "third-party native combat preempts hunt scene");
+        var otherMod=new SceneObservation{ActorId="mod-creature-3",Activity=CampSceneActivity.CampLife,ActorKind=ObservedActorKind.OtherModCharacter,
+            DistanceFromObserver=12,DistanceFromCampAnchor=12,WorldTick=100,LastVisibleWorldTick=100,HasLineOfSight=true};
+        Check(CampLifecyclePolicy.ObserveScene(p,patrolLife,otherMod).Kind==SceneNoticeKind.ForwardForThreatEvaluation, "other-mod actor is observed without local allegiance inference");
+        playerSeen.DistanceFromCampAnchor=61;
+        Check(CampLifecyclePolicy.ObserveScene(p,patrolLife,playerSeen).Kind==SceneNoticeKind.None, "scene observation is bounded to camp activity radius");
+        playerSeen.DistanceFromCampAnchor=24; playerSeen.WorldTick=106; playerSeen.LastVisibleWorldTick=100;
+        Check(CampLifecyclePolicy.ObserveScene(p,patrolLife,playerSeen).Kind==SceneNoticeKind.None, "stale sighting cannot drive notice");
+        Check(CampLifecyclePolicy.ObserveScene(awayPerson,patrolLife,otherMod).Kind==SceneNoticeKind.None, "away person freezes scene activity");
+
         foreach(var owner in new[]{ActionOwner.Alert,ActionOwner.CombatRegroup,ActionOwner.Combat,ActionOwner.Incapacitated}) {
             var o=Seen(1200); o.AlertActive=owner==ActionOwner.Alert; o.CombatClearRegroup=owner==ActionOwner.CombatRegroup; o.CombatActive=owner==ActionOwner.Combat; o.Incapacitated=owner==ActionOwner.Incapacitated;
             var d=CampLifecyclePolicy.Observe(p,c,o); Check(d.Directive==RuntimeDirective.Yield && d.Owner==owner, "higher owner preempts routine: "+owner);

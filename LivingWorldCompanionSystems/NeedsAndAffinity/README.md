@@ -28,5 +28,16 @@ seed/map-informed location knowledge. This policy never discovers a location or
 decides that a boss site is safe; such a request must arrive as an authored,
 progression-legal candidate backed by verified nearby world facts.
 
+The aid arc separately remembers `AidAgreed`, a claimed event verified by
+EncounterActivation, an authoritative witnessed contribution, completed need,
+and honored boundaries. None of those states adds a temporary or expedition
+follower. `BuildTemporaryTravelHandoff` supplies agreement evidence only;
+RescueRelease owns `TemporaryAlly`/`AwaitingTemporaryReturn`, slot accounting,
+and every temporary travel transition.
+`BuildPersonalInvitationHandoff` only says whether authored personal-offer
+dialogue may be presented later. QuestBroker still owns operational request
+status, EncounterActivation owns the claimed hostile event, and RescueRelease
+owns temporary travel plus the final bond, roster checks, and assignment.
+
 Run `tests/Run-Tests.ps1`. The harness compiles in the temporary directory and
 does not modify a game profile or the maintained 1.0.x runtime.

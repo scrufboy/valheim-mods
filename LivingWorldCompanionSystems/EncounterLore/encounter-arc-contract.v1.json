@@ -16,7 +16,7 @@
     "randomRollAllowed": false,
     "instantRewardAllowed": false,
     "unverifiedAssetClaimAllowed": false,
-    "approvedVoiceCategoriesUsed": ["hail", "warning", "acknowledgment", "question", "alarm", "relief", "laugh", "refusal", "assent"]
+    "approvedVoiceCategoriesUsed": ["hail", "warning", "acknowledgment", "question", "challenge", "alarm", "relief", "laugh", "refusal", "assent"]
   },
   "requestModules": [
     {"id":"meal","selectionFact":"request_module_meal_selected","target":"one suitable progression-legal meal contribution","resolutionFact":"splitash.request.meal_resolved","repeatable":false},
@@ -44,8 +44,33 @@
       "forbidden": ["low_biome_progression_mismatch", "map_marker_gate_bypass", "notice_board_gate_bypass", "jarl_gate_bypass"]
     }
   },
+  "firstContactContract": {
+    "status": "Living World encounter design direction; mechanics owned by EncounterAllegiance and combat modules",
+    "selection": "server may randomly select only among fact-compatible authored variants; persist variant and identities before first sight; no reload reroll",
+    "sequence": ["first_sight", "mutual_notice", "distance_and_kit_read", "warning_or_greeting", "choice_or_interruption", "remembered_outcome"],
+    "allegianceIsNotInferredFrom": ["body", "sex", "biome", "equipment_only"],
+    "lineages": {
+      "cautious_survivor": {"default":"wary_nonhostile","temporaryTravelAllowed":true,"invitationAllowedAfterFacts":true},
+      "pillager": {"default":"predatory_hostile_or_bargaining","temporaryNonaggressionAllowed":true,"defectionRequiresSeparateAuthoredFacts":true,"invitationAllowedBeforeDefection":false},
+      "eitrherjar_legionary": {"default":"hostile","temporaryTargetPriorityIsAlliance":false,"temporaryTravelAllowed":false,"invitationAllowed":false}
+    },
+    "ravenRule": "Huginn may give only the existing general sign-reading lesson when lore and runtime support exist; no allegiance identification, recruit selection, or omniscient marker; Muninn has no encounter role without separate approval and proof"
+  },
+  "firstContactVariants": [
+    {"id":"friendly_banked_fire","castSize":[1,2],"site":"camp","activity":"bank_fire_and_mend","lineId":"contact.friendly.banked_fire"},
+    {"id":"friendly_hunting_pair","castSize":[2],"site":"hunt","activity":"dress_game_and_watch","lineId":"contact.friendly.hunt"},
+    {"id":"friendly_road_patrol","castSize":[2],"site":"patrol","activity":"read_tracks_and_cover_rear","lineId":"contact.friendly.patrol"},
+    {"id":"friendly_injured_single","castSize":[1],"site":"cover","activity":"brace_injury_or_gear","lineId":"contact.friendly.injured"},
+    {"id":"friendly_moving_camp","castSize":[2],"site":"departing_camp","activity":"packs_shouldered_and_watch","lineId":"contact.friendly.moving"},
+    {"id":"pillager_false_rest","castSize":[2],"site":"roadside","activity":"false_rest_and_exit_angle","lineId":"contact.pillager.false_rest"},
+    {"id":"pillager_toll","castSize":[1,2],"site":"patrol","activity":"block_path_with_escape_space","lineId":"contact.pillager.toll"},
+    {"id":"pillager_wounded","castSize":[2],"site":"cover","activity":"bind_wound_and_watch","lineId":"contact.pillager.wounded"},
+    {"id":"eitrherjar_lane","castSize":[1,2],"site":"battle_position","activity":"check_lane_or_hold_abandoned_position","lineId":"contact.eitrherjar.notice"}
+  ],
   "states": [
-    "unseen", "trail_read", "contact_wary", "contact_guarded", "camp_routine",
+    "unseen", "trail_read", "first_sight", "mutual_notice", "contact_wary",
+    "contact_guarded", "cautious_parley", "hostile_contact",
+    "third_party_interrupt", "temporary_travel", "travel_endpoint", "disengaged", "camp_routine",
     "request_offered", "request_active", "request_resolved",
     "shock_active", "shared_defense", "retreating", "safe_fallback", "aid_refused",
     "harm_unresolved", "fire_talk", "invitation_ready", "bonded_homebound",
@@ -55,6 +80,9 @@
     "splitash.discovery.smoke_seen", "splitash.discovery.butcher_sign_seen",
     "splitash.discovery.limp_tracks_seen", "splitash.discovery.route_mark_seen",
     "splitash.contact.signaled", "weapon_lowered_after_warning",
+    "contact_variant_persisted", "mutual_notice_confirmed", "distance_boundary_respected",
+    "third_party_threat_committed", "temporary_nonaggression_declared",
+    "temporary_travel_terms_known", "earned_affinity", "pillager_defection_authored",
     "splitash.request.meal_resolved", "splitash.request.boar_resolved",
     "splitash.request.threat_resolved", "splitash.request.core_resolved",
     "splitash.request.village_resolved", "splitash.request.mapped_route_resolved",
@@ -66,6 +94,10 @@
     "plains_recruitment_gate_met"
   ],
   "signals": [
+    {"id":"contact.first_sight","kind":"visual","from":["unseen","trail_read"],"requires":["contact_variant_persisted","cast_identity_persisted"],"sets":["site_and_activity_seen"],"to":"first_sight","presentation":"one or two people continue a compatible camp, hunt, or patrol activity; kit visible without allegiance icon"},
+    {"id":"contact.mutual_notice","kind":"physical","from":["first_sight"],"requires":["player_visible_to_watcher","watcher_visible_to_player"],"sets":["mutual_notice_confirmed"],"to":"mutual_notice","presentation":"one speaker faces or rises at authored distance while any partner keeps watch"},
+    {"id":"contact.third_party_commit","kind":"combat_fact","from":["contact_wary","contact_guarded","cautious_parley","hostile_contact"],"requires":["locally_witnessed_third_party","third_party_attack_committed"],"sets":["third_party_threat_committed"],"to":"third_party_interrupt","presentation":"one bounded alarm at incident transition; combat module owns action afterward"},
+    {"id":"contact.travel_endpoint","kind":"world_fact","from":["temporary_travel"],"requires":["authored_destination_reached","temporary_travel_terms_known"],"sets":["temporary_travel_completed"],"to":"travel_endpoint","presentation":"shared segment ends at stored destination; no automatic bond"},
     {"id":"splitash.clue.smoke","kind":"visual","from":["unseen","trail_read"],"requires":[],"sets":["splitash.discovery.smoke_seen"],"to":"trail_read","presentation":"low grey smoke broken by pauses"},
     {"id":"splitash.clue.butcher","kind":"world_sign","from":["unseen","trail_read"],"requires":[],"sets":["splitash.discovery.butcher_sign_seen"],"to":"trail_read","presentation":"fresh deer dressing; useful cuts removed"},
     {"id":"splitash.clue.tracks","kind":"world_sign","from":["unseen","trail_read"],"requires":[],"sets":["splitash.discovery.limp_tracks_seen"],"to":"trail_read","presentation":"deep boot trail beside lighter dragging step"},
@@ -85,6 +117,22 @@
     {"id":"plains.shock.lane_break","kind":"physical","from":["camp_routine"],"requires":["yrsa_alive","ketil_alive","both_local","outside_combat"],"sets":["plains.shock_started","ketil_displaced"],"to":"shock_active","presentation":"lox crosses lane; Ketil knocked from entry"}
   ],
   "lines": [
+    {"id":"contact.friendly.banked_fire","speaker":"Friendly watcher","text":"Easy there. We saw you. The fire is ours, but the ground need not be.","intent":"greeting","voice":"hail","from":["mutual_notice"],"requires":["variant_friendly_banked_fire","speaker_owns_contact"],"sets":["speaking_distance_set"],"to":"contact_wary","cue":"open hand visible; partner keeps watch if present"},
+    {"id":"contact.friendly.hunt","speaker":"Friendly watcher","text":"Hold the ridge. We are finishing this hunt, not starting another.","intent":"warning","voice":"warning","from":["mutual_notice"],"requires":["variant_friendly_hunting_pair","speaker_owns_contact"],"sets":["distance_boundary_stated"],"to":"contact_wary","cue":"turns side-on; bow remains lowered"},
+    {"id":"contact.friendly.patrol","speaker":"Friendly lead","text":"You follow this road, or someone upon it?","intent":"asking","voice":"question","from":["mutual_notice"],"requires":["variant_friendly_road_patrol","speaker_owns_contact"],"sets":["player_purpose_questioned"],"to":"cautious_parley","cue":"stops outside weapon reach; partner covers rear"},
+    {"id":"contact.friendly.injured","speaker":"Friendly survivor","text":"I can speak from here. Come no closer with steel out.","intent":"warning","voice":"warning","from":["mutual_notice"],"requires":["variant_friendly_injured_single"],"sets":["distance_boundary_stated"],"to":"contact_guarded","cue":"remains behind partial cover"},
+    {"id":"contact.friendly.moving","speaker":"Friendly rear watcher","text":"You found us while leaving. Say what you need before the light goes.","intent":"asking","voice":"acknowledgment","from":["mutual_notice"],"requires":["variant_friendly_moving_camp","speaker_owns_contact"],"sets":["departure_context_known"],"to":"cautious_parley","cue":"marks player flank; packs remain shouldered"},
+    {"id":"contact.pillager.false_rest","speaker":"Pillager","text":"Leave the pack and take the road. Test us, and you lose both.","intent":"threat","voice":"warning","from":["mutual_notice"],"requires":["variant_pillager_false_rest"],"sets":["pillager_demand_known"],"to":"hostile_contact","cue":"second Pillager holds exit angle"},
+    {"id":"contact.pillager.toll","speaker":"Pillager","text":"This stretch costs food. Pay, turn, or make the price blood.","intent":"threat","voice":"challenge","from":["mutual_notice"],"requires":["variant_pillager_toll"],"sets":["pillager_demand_known"],"to":"hostile_contact","cue":"weapon visible; escape space remains"},
+    {"id":"contact.pillager.wounded","speaker":"Pillager watcher","text":"You want our feud, or only the road?","intent":"asking","voice":"question","from":["mutual_notice"],"requires":["variant_pillager_wounded"],"sets":["bounded_bargain_available"],"to":"contact_guarded","cue":"watches player and tree line"},
+    {"id":"contact.eitrherjar.notice","speaker":"Eitrherjar Legionary","text":"Another line to break.","intent":"challenge","voice":"challenge","from":["mutual_notice"],"requires":["variant_eitrherjar_lane"],"sets":["eitrherjar_hostility_revealed"],"to":"hostile_contact","cue":"squares body; weapon-ready purpose"},
+    {"id":"contact.eitrherjar.advance","speaker":"Eitrherjar Legionary","text":"Hold your ground and be ended.","intent":"challenge","voice":"challenge","from":["hostile_contact"],"requires":["eitrherjar_combat_committed"],"sets":[],"to":"hostile_contact"},
+    {"id":"contact.interrupt.friendly","speaker":"Friendly watcher","text":"Movement left—choose your side!","intent":"alarm","voice":"alarm","from":["third_party_interrupt"],"requires":["friendly_contact","third_party_threat_committed","alert_not_fired"],"sets":["alert_fired"],"to":"third_party_interrupt"},
+    {"id":"contact.interrupt.pillager","speaker":"Pillager","text":"Beast first. Our matter waits.","intent":"temporary_truce","voice":"alarm","from":["third_party_interrupt"],"requires":["pillager_contact","third_party_threat_committed","temporary_nonaggression_declared","alert_not_fired"],"sets":["alert_fired"],"to":"third_party_interrupt"},
+    {"id":"contact.after.friendly","speaker":"Friendly survivor","text":"You kept your word when noise made breaking it easy.","intent":"acknowledgment","voice":"acknowledgment","from":["third_party_interrupt"],"requires":["threat_verified_clear","player_honored_boundary_or_aid"],"sets":["earned_affinity"],"to":"cautious_parley"},
+    {"id":"contact.after.pillager","speaker":"Pillager","text":"The beast is down. Now we finish our own business.","intent":"boundary","voice":"acknowledgment","from":["third_party_interrupt"],"requires":["threat_verified_clear","temporary_nonaggression_honored"],"sets":["pillager_pause_ended"],"to":"contact_guarded"},
+    {"id":"contact.travel.offer","speaker":"Cautious survivor","text":"Our road runs with yours as far as the old stones. Walk it together?","intent":"asking","voice":"question","from":["cautious_parley"],"requires":["compatible_destination_known","safe_route_known","witnessed_need_or_aid","no_unresolved_harm"],"sets":["temporary_travel_terms_known"],"to":"temporary_travel"},
+    {"id":"contact.travel.end","speaker":"Cautious survivor","text":"This is where we part. You made the road lighter.","intent":"acknowledgment","voice":"acknowledgment","from":["travel_endpoint"],"requires":["temporary_travel_completed","travel_terms_honored"],"sets":["earned_affinity"],"to":"disengaged"},
     {"id":"splitash.open.runa_warning","speaker":"Runa","text":"Weapon low, stranger. Ours will follow.","intent":"warning","voice":"warning","from":["contact_wary"],"requires":[],"sets":[],"to":"contact_wary"},
     {"id":"splitash.open.edda_warmth","speaker":"Edda","text":"If you came for warmth, leave room for sense.","intent":"warning","voice":null,"from":["contact_wary"],"requires":[],"sets":[],"to":"contact_wary"},
     {"id":"splitash.open.runa_names","speaker":"Runa","text":"Runa. That is Edda. We are between hearths.","intent":"identity","voice":null,"from":["contact_wary"],"requires":["weapon_lowered_after_warning"],"sets":["runa_name_known","edda_name_known","between_hearths_known"],"to":"camp_routine"},

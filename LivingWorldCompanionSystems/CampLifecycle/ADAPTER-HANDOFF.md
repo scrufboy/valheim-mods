@@ -27,12 +27,21 @@ After the external module/runtime has verified actual aid, feed the same evidenc
 
 Runtime evidence examples are deliberately concrete and routine-scoped: blocked watch visibility, low cooking supplies, damaged rest shelter, low repair materials, or an obstructed patrol route. Station availability remains an earlier assignment gate: an actor is never assigned cook/rest/repair merely to manufacture a need when the corresponding station does not exist.
 
+## Hunt, patrol, and cautious notice seam
+
+`ObserveScene` lets a loaded camp-life, hunt, or patrol presentation report one recent line-of-sight observation inside fixed observer and camp-anchor bounds. A player observation produces `CautiousNotice`; it never implies hostility. Wildlife and other-mod characters produce `ForwardForThreatEvaluation`, which the adapter passes to the existing EncounterAllegiance/native threat path. CampLifecycle does not infer faction from prefab or mod origin, select a target, pursue, or invoke an attack.
+
+Only an authorization returned by that external layer may produce `RequestReadiness`, and readiness still is not combat commitment. Once native `MonsterAI` commits combat—or combat is already the exclusive owner—the result is `YieldToNativeCombat` and the hunt/patrol presentation must synchronously release movement, facing, hands, and animation. Every `SceneNotice` explicitly carries `GrantsAttackAuthority=false`.
+
+Do not run this seam for unloaded/away people. Do not preserve a stale sighting across unload, simulate a hunt offscreen, or convert an absent actor into a casualty. The one-watcher coordinator and station-filtered camp assignments remain authoritative; hunt is a bounded presentation for an otherwise eligible non-watcher, never a reason to remove the camp watch.
+
 ## Adapter acceptance still required
 
 - Dedicated-server and owner-transfer tests for one spawn per `person_id`.
 - Save/reload and zone unload/reload through actual ZDO serialization.
 - Combat preemption of every routine, including native hands, path, facing, and animation cleanup.
 - Live station discovery and loss (fire destroyed, shelter invalidated, work surface removed) followed by deterministic reassignment with one watcher retained.
+- Player cautious-notice presentation, wildlife/other-mod forwarding through EncounterAllegiance, and proof that only native combat receives attack ownership.
 - Interrupted migration at each persistence boundary, destination contention, and server restart.
 - One authoritative casualty callback, memorial persistence, roster slot release, corpse/equipment transaction, and proof that recall/reload cannot revive.
 - Release/return through a lawful camp or home with identity and inventory unchanged.

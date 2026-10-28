@@ -59,6 +59,15 @@ earned-respect candidates are also bound to the current `splitash.request.*`
 offer, acceptance, decline, and completion lines. These additions remain
 candidate-only: a contract voice category does not approve a particular WAV.
 
+The expanded contact contract adds cautious friendly openings, explicit warnings,
+mutual-notice questions, a post-help acknowledgment, and a temporary travel offer.
+Those IDs are now bound separately in the candidate map. In particular,
+`contact.travel.offer` is a bounded temporary road-sharing offer; it must not be
+presented as recruitment. `splitash.invitation.npc` remains the later full-party
+offer and retains its factual consent gates. Pillager and Eitrherjar contact lines
+receive only audition candidates: the voice map does not make them friendly or
+recruitable, and readable lore text continues to carry their actual intent.
+
 ## Suggested presentation bindings
 
 | Intent | Gesture | Text owns | Voice role |

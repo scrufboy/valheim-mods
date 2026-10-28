@@ -676,6 +676,153 @@ marker or compass hint.
 
 ## API and runtime feasibility for 1.0.x
 
+### Addendum: CLLC 5.0.7, custom humans, and faction collisions
+
+This addendum distinguishes current package facts from compatibility inference.
+It does **not** claim that Living World C.O.R.E. is already compatible with
+Creature Level & Loot Control (CLLC).
+
+#### Current 1.0.x source/package facts
+
+Smoothbrain currently publishes CLLC **5.0.7** for Valheim 1.0, updated
+2026-10-12. The author page marks it client-and-server, says it has a public API,
+and warns that the client controlling a spawn determines enemy level when peers
+do not all run consistent CLLC settings. It also warns that disabling/changing
+CLLC does not revert levels already assigned to creatures. Source:
+[Smoothbrain's CLLC 5.0.7 page](https://valheim.hexium.gg/mods/Smoothbrain/CreatureLevelAndLootControl).
+
+The current author package and its
+[5.0.7 decompile](https://valheim.hexium.gg/mods/Smoothbrain/CreatureLevelAndLootControl/versions/5.0.7/decompile)
+were inspected. Its public `CreatureLevelControl.API` exposes world/max-level
+queries and boss-affix, creature-extra-effect, and creature-infusion
+get/set/test methods. It does **not** expose a custom-NPC registration API or a
+“replace this actor prefab” API. The assembly patches the ordinary Valheim
+`Character`, spawn-system, local-spawner, `SpawnArea`, boss, health, damage,
+death, and level paths and attaches its own character data components.
+
+The last publicly indexed Thunderstore decompile (4.6.4, pre-1.0 and therefore
+historical evidence only) shows the configuration builder enumerating every
+registered `ZNetScene` prefab with a `Character` component and excluding only
+`Character.IsPlayer()`. It then groups/configures those non-player characters by
+their prefab/display identity. It also shows level assignment through vanilla
+`Character.SetLevel`, while its API applies affixes/effects to an existing
+`Character`. Source:
+[CLLC 4.6.4 decompiled source](https://old.thunderstore.io/c/valheim/p/Smoothbrain/CreatureLevelAndLootControl/source/).
+
+ASharpPen's maintained Spawn That integration supports CLLC modifiers on the
+spawn entry rather than replacing a creature prefab; its author example adds a
+CLLC infusion to an ordinary Boar world-spawn template. Source:
+[Spawn That README and CLLC integration example](https://github.com/ASharpPen/Valheim.SpawnThat/blob/dc1e7938635ffe19b6c3a889c7d2d268f42f367c/README.md).
+
+#### Design inference — requires live proof
+
+Because a Living World human is a registered non-player `Humanoid`/`Character`,
+CLLC can plausibly see and modify that same actor. **Replacing the actor or
+prefab should not be required merely to assign a vanilla level or a CLLC
+effect.** A replacement would be especially dangerous because it could sever
+Living World's persistent identity, equipment, voice, relationship, and ZDO
+contracts.
+
+That is an inference, not a compatibility guarantee. CLLC's generic creature
+hooks were built for enemies and animals. A friendly persistent human may be
+technically detected yet behave incorrectly under:
+
+- automatic star rolls on first spawn or owner migration;
+- size scaling against a human capsule, equipment, doorways, and formation
+  offsets;
+- aggressive/quick/armored/regenerating effects changing accepted companion
+  combat behavior;
+- splitting or poison-death effects violating permanent mortality and spawning
+  duplicate “people”;
+- loot/trophy multiplication on a human death;
+- boss/sector/world-level logic treating a named person as disposable creature
+  population;
+- a late config change leaving already-persisted levels unchanged.
+
+The safe default is therefore **CLLC-neutral companions**: preserve Living
+World-owned stats and progression, suppress random CLLC affixes/infusions/loot
+scaling for Living World prefab IDs, and add a soft adapter only after a live
+test proves the current exclusion/config surface. If an optional “CLLC-scaled
+hostile human” mode is later wanted, modify the existing actor in place and
+allowlist bounded effects; never swap its prefab or persistent identity.
+
+There is no source-backed guarantee that CLLC 5.0.7 will honor such an exclusion
+for Living World without configuration or an adapter. This must be tested on
+both listen and dedicated servers with the actual installed builds.
+
+#### Vanilla and modded faction collision facts
+
+Valheim's targeting is broader than “predator versus prey.” A current
+assembly-based mechanics audit records that `BaseAI.IsEnemy` treats a tamed
+creature as the enemy of every wild non-player creature—including passive deer—
+except same-group creatures and non-aggravated Dvergr. It also records that AI
+target selection and follow/tame simulation run on the creature's network owner.
+Source:
+[Valheim taming and `BaseAI.IsEnemy` audit](https://github.com/Blaakan/MC_Valheim/blob/main/docs/game/farming-cooking.md#6-taming-tameable-monsterai).
+
+Inspectable mod-author data models confirm the collision surfaces: every
+`Character` has a faction, a same-group override, and an `aiSkipTarget` flag;
+`Humanoid` inherits them. Source:
+[MonsterDB Character reference](https://github.com/RustyMods/MonsterDB/blob/main/MonsterDB/Wiki/Character.md).
+RRR NPC's author-facing configuration likewise describes faction as determining
+who an NPC fights. Source:
+[RRR NPC configuration guide](https://github.com/runolfsonb/GWF_Valheim_Mods/blob/main/ConfigGuide.md).
+
+For Living World this means:
+
+- assigning a custom human to vanilla `Players` makes ordinary hostile factions
+  naturally regard it as an enemy; this is useful in a shared fight but exposes
+  the NPC to ambient attacks whenever it is simulated;
+- vanilla faction is not a wildlife taxonomy—Boars and other apparently passive
+  animals can share monster-faction rules, and tame state changes hostility;
+- same prefab, same faction, same `m_group`, tamed state, Dvergr aggravation,
+  and other mods' `BaseAI.IsEnemy` patches can all override an intuitive result;
+- a mod that reassigns factions globally can make a previously safe hunt target
+  friendly to, or hostile toward, the NPC without changing its prefab name;
+- inventing an out-of-range faction enum is not a safe solution: vanilla and
+  other mods may switch over the known enum and all peers must agree.
+
+Therefore a request must never decide eligibility from prefab or faction alone.
+At offer and again at engagement, evaluate the live actor pair through the
+current relationship/hostility service, then apply Living World's explicit
+protections for players, tames, companions, residents, quest issuers, and
+neutral/surrendered actors. Mission authorization must be narrower than general
+combat authorization.
+
+For wildlife requests specifically, a companion must not auto-acquire every
+Boar or Deer merely because vanilla or a faction mod reports “enemy.” The bound
+request target is the only authorized animal, and even that authorization starts
+after acceptance and player engagement. If runtime faction results change, the
+request fails safely instead of forcing hostility.
+
+For monster requests, natural aggro is real risk rather than free quest drama.
+The requester and target must remain loaded and player-present; no mission may
+place or retain a hostile merely because it can attack a `Players`-faction NPC.
+This reinforces the report's prohibition on offscreen combat/death and its
+preference for natural, already-safe facts over recurring spawn rules.
+
+#### Required compatibility proof additions
+
+- [ ] With CLLC 5.0.7 installed, verify whether each actual Living World human
+  prefab is enumerated/configured, and record its CLLC/vanilla level and attached
+  CLLC components before and after save/reload and owner migration.
+- [ ] Prove that companions/residents receive no random extra effect, infusion,
+  size change, split, boss affix, loot multiplier, or sector bonus under the
+  supported default configuration.
+- [ ] If exclusion needs an adapter, prove it works before first initialization;
+  removing an effect after spawn is insufficient if health, size, loot, or ZDO
+  state already changed.
+- [ ] Prove a CLLC-scaled hostile human, if explicitly enabled, keeps the same
+  Living World persistent ID and prefab and cannot split/duplicate.
+- [ ] Test natural Boar, Deer, tame, Greydwarf, Draugr, Dvergr, raid creature,
+  and at least one faction-reassigned mod creature against companion, resident,
+  and requester states.
+- [ ] Repeat on listen server and dedicated server with ownership migration;
+  verify all peers agree on level, faction result, target authorization, death,
+  and respect credit.
+- [ ] Confirm that CLLC console/admin bulk-creature operations cannot silently
+  become an accepted support path for persistent Living World people.
+
 ### Recommended implementation boundary
 
 Create a dedicated request module behind the existing Living World actor and

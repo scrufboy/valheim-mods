@@ -28,6 +28,10 @@ class QuestBrokerPolicyTests
     { return new CompletionProof { RequestId=r.RequestId, WorldId=r.WorldId, SiteId=r.SiteId, SiteIdentity=r.SiteIdentity,
         EvidenceId=evidence, ServerAuthority=true, TargetLoaded=true, PlayerAtTarget=true, ObjectiveObservedComplete=true,
         ProgressionLegal=true, WorldTick=3000 }; }
+    static ArrivalProof Arrival(WorldRequest r, string evidence)
+    { return new ArrivalProof { RequestId=r.RequestId, PartyId=r.PartyId, WorldId=r.WorldId, SiteId=r.SiteId,
+        SiteIdentity=r.SiteIdentity, EvidenceId=evidence, ServerAuthority=true, TargetLoaded=true, PartyAtTarget=true,
+        ProgressionLegal=true, WorldTick=2000 }; }
 
     static void Main()
     {
@@ -57,9 +61,17 @@ class QuestBrokerPolicyTests
 
         var accepted = QuestBrokerPolicy.Respond(board.State, "accept-1", publicMade.Request.RequestId, true, 1200);
         Check(accepted.Applied && accepted.Request.Status == RequestStatus.Accepted, "acceptance persists on shared request");
+        var tooEarly = QuestBrokerPolicy.Complete(accepted.State, "complete-before-arrival", Completion(accepted.Request, "premature"));
+        Check(!tooEarly.Applied && tooEarly.Reason == "authoritative_target_arrival_required", "completion requires moving to the exact known place");
+        var arrived = QuestBrokerPolicy.Arrive(accepted.State, "arrive-1", Arrival(accepted.Request, "party-entered-site-1"));
+        Check(arrived.Applied && arrived.EncounterActivation == null && arrived.Request.SiteIdentity == accepted.Request.SiteIdentity,
+            "ordinary request commits authoritative loaded arrival without spawning");
         var proof = Completion(accepted.Request, "clear-event-81");
-        var completed = QuestBrokerPolicy.Complete(accepted.State, "complete-1", proof);
+        var completed = QuestBrokerPolicy.Complete(arrived.State, "complete-1", proof);
         Check(completed.SingleClaimCommitted && completed.ClaimId == "claim:" + publicMade.Request.RequestId, "completion creates one stable claim");
+        Check(completed.AidHandoff.ReadyForNeedsAndAffinityReview && completed.AidHandoff.PartyId == accepted.Request.PartyId &&
+            completed.AidHandoff.SiteIdentity == accepted.Request.SiteIdentity,
+            "completion hands exact evidence to NeedsAndAffinity without awarding respect");
         var secondClaim = QuestBrokerPolicy.Complete(completed.State, "complete-2", proof);
         Check(!secondClaim.Applied && secondClaim.Reason == "outcome_already_claimed", "completed request cannot become an infinite bounty farm");
         var replay = QuestBrokerPolicy.Complete(completed.State, "complete-1", proof);
@@ -97,17 +109,42 @@ class QuestBrokerPolicyTests
         mini.AuthoredEncounter=true; mini.SafeSpawnAdapterVerified=true; mini.AuthoredEncounterId="splitash-ashbrute"; mini.EncounterAdapterId="encounter-adapter-v1";
         var miniMade = QuestBrokerPolicy.Create(new BrokerState(), cfg, "mini-good", 77, 1000, mini, Camp(1000));
         var miniAccepted = QuestBrokerPolicy.Respond(miniMade.State, "mini-accept", miniMade.Request.RequestId, true, 1200);
+        var miniArrivalProof = Arrival(miniAccepted.Request, "miniboss-site-arrival"); miniArrivalProof.EncounterAdapterReady=true;
+        var miniArrived = QuestBrokerPolicy.Arrive(miniAccepted.State, "mini-arrive", miniArrivalProof);
+        Check(miniArrived.EncounterActivation != null && miniArrived.EncounterActivation.RequestId == miniAccepted.Request.RequestId,
+            "arrival emits adapter handoff instead of spawning authored miniboss");
         var miniProof = Completion(miniAccepted.Request, "miniboss-death-owned-1");
-        Check(QuestBrokerPolicy.Complete(miniAccepted.State, "mini-complete-bad", miniProof).Reason == "verified_encounter_adapter_outcome_required",
+        Check(QuestBrokerPolicy.Complete(miniArrived.State, "mini-complete-bad", miniProof).Reason == "verified_encounter_adapter_outcome_required",
             "miniboss completion requires adapter-owned outcome");
         miniProof.EncounterAdapterOwnsOutcome=true;
-        Check(QuestBrokerPolicy.Complete(miniAccepted.State, "mini-complete", miniProof).SingleClaimCommitted,
+        Check(QuestBrokerPolicy.Complete(miniArrived.State, "mini-complete", miniProof).SingleClaimCommitted,
             "verified authored miniboss outcome can close once");
+
+        var raid = Candidate(RequestKind.AuthoredRaid); raid.AuthoredRequestId="splitash-small-raid";
+        raid.AuthoredEncounter=true; raid.SafeSpawnAdapterVerified=true; raid.AuthoredEncounterId="splitash-small-raid-v1"; raid.EncounterAdapterId="encounter-adapter-v1";
+        var raidMade = QuestBrokerPolicy.Create(new BrokerState(), cfg, "raid-create", 77, 1000, raid, Camp(1000));
+        var raidAccepted = QuestBrokerPolicy.Respond(raidMade.State, "raid-accept", raidMade.Request.RequestId, true, 1200);
+        var raidArrivalProof = Arrival(raidAccepted.Request, "raid-site-arrival"); raidArrivalProof.EncounterAdapterReady=true;
+        var raidArrived = QuestBrokerPolicy.Arrive(raidAccepted.State, "raid-arrive", raidArrivalProof);
+        Check(raidArrived.EncounterActivation != null && raidArrived.EncounterActivation.Kind == RequestKind.AuthoredRaid &&
+            raidArrived.EncounterActivation.PartyId == raidAccepted.Request.PartyId,
+            "small authored raid activation preserves request, party and site identity");
+        BrokerState raidReloaded;
+        Check(QuestBrokerPersistence.TryRead(QuestBrokerPersistence.Write(raidArrived.State), out raidReloaded) &&
+            raidReloaded.Requests[raidAccepted.Request.RequestId].ActivationId == raidArrived.EncounterActivation.ActivationId,
+            "raid activation identity survives reload for adapter duplicate suppression");
+        Check(QuestBrokerPolicy.Arrive(raidArrived.State, "raid-arrive-again", raidArrivalProof).Reason == "arrival_already_committed",
+            "arrival cannot trigger the authored encounter twice");
+
+        var wrongArrival = Arrival(raidAccepted.Request, "wrong-party-arrival"); wrongArrival.PartyId="party-b";
+        Check(QuestBrokerPolicy.Arrive(raidAccepted.State, "wrong-party-arrive", wrongArrival).Reason == "arrival_identity_mismatch",
+            "another party cannot activate the accepted request");
 
         var wrongSiteMade = QuestBrokerPolicy.Create(new BrokerState(), cfg, "wrongsite-create", 77, 1000, Candidate(RequestKind.WorldService), Camp(1000));
         var wrongSiteAccepted = QuestBrokerPolicy.Respond(wrongSiteMade.State, "wrongsite-accept", wrongSiteMade.Request.RequestId, true, 1200);
+        var wrongSiteArrived = QuestBrokerPolicy.Arrive(wrongSiteAccepted.State, "wrongsite-arrive", Arrival(wrongSiteAccepted.Request, "right-arrival"));
         var wrongSite = Completion(wrongSiteAccepted.Request, "elsewhere"); wrongSite.SiteIdentity="same-name-new-instance";
-        Check(QuestBrokerPolicy.Complete(wrongSiteAccepted.State, "wrongsite-complete", wrongSite).Reason == "completion_site_identity_mismatch",
+        Check(QuestBrokerPolicy.Complete(wrongSiteArrived.State, "wrongsite-complete", wrongSite).Reason == "completion_site_identity_mismatch",
             "completion binds exact persisted site identity");
 
         var cooldownCandidate = Candidate(RequestKind.WorldService); cooldownCandidate.AuthoredRequestId="later-request"; cooldownCandidate.SiteIdentity="site-2:v1"; cooldownCandidate.SiteId="site-2"; cooldownCandidate.ExpiresWorldTick=6000;

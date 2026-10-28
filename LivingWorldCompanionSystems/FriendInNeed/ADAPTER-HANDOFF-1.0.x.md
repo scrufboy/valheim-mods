@@ -34,6 +34,15 @@ implemented and tested; no game-profile files are changed by this module.
 8. On load, restore with `TryRead` before evaluating observations. A malformed or
    future-version record fails closed and must be logged for migration rather
    than overwritten silently.
+9. For accepted-aid sites, call `WitnessAcceptedAidSite` only from local witnessed
+   facts. `EncounterActivation` remains the sole owner of activation, spawning,
+   and hostile commitment; Friend in Need must not start or advance that event.
+   Pass rumor and visibility honestly—they produce no command. Set verified site
+   activation only after the activation owner confirms it, and set natural third-
+   party attack only for an independently committed creature attack. Do not relay
+   an unwitnessed remote camp event into this API. Use the activation episode or
+   natural-attack episode identity in `eventId` so replication/reload cannot replay
+   the warning.
 
 ## Exact integration gaps
 
@@ -52,6 +61,9 @@ implemented and tested; no game-profile files are changed by this module.
   rebuild a current signal without replaying voice.
 - Localized signal copy and accessibility presentation are not yet authored.
   The contract carries subject identity and evidence, not final prose.
+- The 1.0.x adapter still needs a verified `EncounterActivation` receipt and a
+  local-witness/proximity callback for accepted-aid sites. Network receipt alone
+  is not local witness evidence.
 
 Any 1.0.x adapter change that alters these assumptions must update this handoff,
 the pure tests, and the save-schema migration notes together.

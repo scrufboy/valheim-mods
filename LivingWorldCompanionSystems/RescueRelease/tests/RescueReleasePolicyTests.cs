@@ -116,11 +116,67 @@ internal static class RescueReleasePolicyTests
         Check(Policy.ValidateLoadedState(corrupt).Length != 0, "reload validator rejects resurrection-shaped state");
     }
 
+    private static TemporaryAidFacts AidFacts(string person)
+    {
+        return new TemporaryAidFacts { RequestId = "request-1", PersonId = person, EncounterId = "enc-" + person,
+            ReturnDestinationId = "camp", AuthoredRequest = true, RequestAccepted = true,
+            PersonExplicitlyAgreed = true, AllowPortalTravel = false };
+    }
+
+    private static void TemporaryAidIsBoundedAndNeverAutoPromotes()
+    {
+        var s = new WorldState();
+        var p = Person("helper", Assignment.Known);
+        p.Gear.Add(new GearItem { ItemId = "helper-spear", Owner = GearOwner.Companion });
+        s.People.Add("helper", p);
+        s.Destinations.Add("camp", new SafeDestination { DestinationId = "camp", Kind = DestinationKind.OriginCamp, Established = true });
+        s.Destinations.Add("home", new SafeDestination { DestinationId = "home", Kind = DestinationKind.Home, Established = true });
+
+        var started = Policy.StartTemporaryAid(s, "aid-start", AidFacts("helper"));
+        Check(started.Decision == TemporaryAidDecision.Started && started.State.People["helper"].Assignment == Assignment.TemporaryAlly, "accepted request starts temporary ally only");
+        Check(started.State.People["helper"].PersonId == "helper" && started.State.People["helper"].Gear[0].ItemId == "helper-spear", "temporary aid preserves PersonId and personal gear");
+        Check(started.State.People["helper"].TemporaryRequestId == "request-1" && !started.State.People["helper"].TemporaryPortalTravelAllowed, "temporary terms persist request and portal rule");
+        Check(!Policy.CanTemporaryAllyUsePortal(started.State, "helper"), "authored no-portal term is enforceable");
+        Check(s.People["helper"].Assignment == Assignment.Known, "temporary start leaves prior snapshot unchanged");
+        var startReplay = Policy.StartTemporaryAid(started.State, "aid-start", AidFacts("helper"));
+        Check(startReplay.Replayed && startReplay.State.Revision == started.State.Revision, "temporary start is idempotent after reload");
+
+        var inviteDuringAid = Policy.Invite(started.State, "invite-too-soon", "helper", GoodFacts(), 2);
+        Check(inviteDuringAid.Decision == InvitationDecision.No && Array.IndexOf(inviteDuringAid.Reasons, "person_is_already_bonded_or_assigned") >= 0, "aid never auto-promotes or combines with final invite");
+
+        var reloaded = started.State.Copy();
+        Check(Policy.ValidateLoadedState(reloaded).Length == 0 && reloaded.People["helper"].Assignment == Assignment.TemporaryAlly, "zone unload reload retains temporary assignment");
+        var waiting = Policy.RequestTemporaryReturn(reloaded, "aid-end", "helper", TemporaryAidEndReason.RequestCompleted,
+            new ReleaseSafety { InCombat = true });
+        Check(waiting.Decision == TemporaryAidDecision.WaitingForReturn && waiting.State.People["helper"].Assignment == Assignment.AwaitingTemporaryReturn, "combat defers explicit return");
+        var portalWait = Policy.CommitTemporaryReturn(waiting.State, "aid-return-portal", "helper",
+            new ReleaseSafety { PortalTransit = true, DestinationZoneLoaded = true, CompanionPresentAtDestination = true });
+        Check(portalWait.Decision == TemporaryAidDecision.Rejected && waiting.State.People["helper"].Assignment == Assignment.AwaitingTemporaryReturn, "portal transit cannot complete return");
+        var returned = Policy.CommitTemporaryReturn(waiting.State, "aid-return", "helper",
+            new ReleaseSafety { DestinationZoneLoaded = true, CompanionPresentAtDestination = true });
+        Check(returned.Decision == TemporaryAidDecision.Returned && returned.State.People["helper"].Assignment == Assignment.ReleasedKnown, "safe return ends aid without bond");
+        Check(returned.State.People["helper"].TemporaryRequestId == null && returned.State.People["helper"].Gear.Count == 1, "return clears terms but preserves gear");
+
+        var finalInvite = Policy.Invite(returned.State, "later-final-invite", "helper", GoodFacts(), 2);
+        Check(finalInvite.Decision == InvitationDecision.Yes && finalInvite.State.People["helper"].Assignment == Assignment.Expedition, "later factual invitation is separate yes transaction");
+
+        var full = new WorldState();
+        full.People.Add("one", Person("one", Assignment.Expedition));
+        full.People.Add("two", Person("two", Assignment.TemporaryAlly));
+        full.People["two"].TemporaryRequestId = "existing";
+        full.People["two"].TemporaryReturnDestinationId = "camp";
+        full.People.Add("three", Person("three", Assignment.Known));
+        full.Destinations.Add("camp", new SafeDestination { DestinationId = "camp", Kind = DestinationKind.OriginCamp, Established = true });
+        var blocked = Policy.StartTemporaryAid(full, "third-active", AidFacts("three"));
+        Check(blocked.Decision == TemporaryAidDecision.Rejected && blocked.Reason == "active_field_slots_full", "temporary ally cannot bypass two active field positions");
+    }
+
     public static int Main()
     {
         InvitationIsFactualAndBounded();
         ReleaseRequiresWorldProofAndPreservesIdentity();
         LoansAndDeathAreTransactions();
+        TemporaryAidIsBoundedAndNeverAutoPromotes();
         if (failures != 0) Console.Error.WriteLine(failures + " test(s) failed");
         return failures == 0 ? 0 : 1;
     }

@@ -36,3 +36,13 @@ same resolved event ID after load produces no commands, preventing shock, text,
 or marker replay spam.
 
 Run `Test-FriendInNeedContract.ps1` for pure offline coverage.
+
+## Accepted-aid sites
+
+`WitnessAcceptedAidSite` is a signal-only boundary. `EncounterActivation` owns
+site activation, hostile creation, and event execution. Rumor and a merely visible
+creature produce nothing. An authored site incident requires deliberate accepted
+aid, verified site activation, a real committed attack/damage/casualty, and a local
+witness. A naturally arriving third-party creature may independently qualify once
+it commits or causes harm. Remote facts never originate alerts. Existing event-ID
+persistence provides the same no-replay guarantee as other incidents.

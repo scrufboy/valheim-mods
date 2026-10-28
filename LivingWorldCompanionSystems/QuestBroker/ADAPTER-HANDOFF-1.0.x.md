@@ -25,14 +25,23 @@ the maintained Unity line.
 5. Acceptance and refusal mutate the shared request. All surfaces read that
    status. Remove closed UI presentations after persistence succeeds; do not
    delete the history.
-6. Build `CompletionProof` only from a loaded, authoritative observation at the
+6. After acceptance, build `ArrivalProof` only when the same party is loaded at
+   the exact stored site identity. Persist `Arrive` before doing anything else.
+   For ordinary aid this records arrival only. For an authored raid/miniboss it
+   returns `EncounterActivation`; pass that immutable handoff to the named safe
+   encounter adapter. Never turn arrival into a raw prefab spawn call.
+7. Build `CompletionProof` only from a loaded, authoritative observation at the
    exact stored site identity with the player present. Absence after zone unload,
    elapsed time, client RPC claims, or a different regenerated site is not proof.
-7. Save the completed state before performing any downstream acknowledgement.
+8. Save the completed state before performing any downstream acknowledgement.
    `SingleClaimCommitted` and `ClaimId` authorize at most one adapter transaction;
    they do not describe or guarantee loot. The reward adapter must independently
    enforce progression and its own idempotent claim ledger.
-8. Expiry is an explicit server tick transition. It closes bookkeeping only. It
+   Forward `AidCompletionHandoff` to Needs/Affinity only after that save. It is
+   evidence of witnessed aid, not an affinity award. Needs/Affinity decides the
+   qualitative relationship change; RescueRelease remains sole owner of a later
+   mutual party invitation, home, roster, and expedition gates.
+9. Expiry is an explicit server tick transition. It closes bookkeeping only. It
    does not kill enemies, rescue people, move actors, consume supplies, grant
    reputation, or pay rewards offscreen.
 
@@ -53,6 +62,10 @@ the maintained Unity line.
   identity, duplicate suppression, cleanup, death attribution, unload/reload,
   and terminal outcome. Until all checks pass, candidate flags remain false and
   the request cannot be created. The broker itself never calls a raw spawner.
+- **Small authored raid:** use the identical adapter boundary and a bounded
+  authored wave plan. Arrival creates only one activation ID. The adapter must
+  suppress duplicate activation across retries/restart and must not substitute a
+  global Valheim raid or an arbitrary creature scan.
 - **Rewards:** define and verify a separate progression-safe, single-claim game
   transaction. No authored text should promise loot before this adapter exists.
 

@@ -29,4 +29,15 @@ namespace LivingWorld.Companions.RescueRelease
         // A committed record must suppress spawn/recall/revive for this person id.
         DeathRecord ReadConfirmedDeath(string personId);
     }
+
+    public interface ITemporaryAidWorldAdapter
+    {
+        // Zone unload releases only the process actor claim. Persisted assignment,
+        // PersonId, request ID, and gear survive. Reload restores the same person.
+        bool TryRestoreSamePerson(string personId, string requestId);
+
+        // The adapter must check TemporaryPortalTravelAllowed. Portal transit may
+        // neither complete return nor delete/recreate the person as someone new.
+        bool TryTravelPortalAsSamePerson(string personId, bool termsAllowPortal);
+    }
 }

@@ -93,6 +93,35 @@ class NeedsAndAffinityPolicyTests
         Check(openRoster.ReadyForRescueReleaseReview && openRoster.ConcreteNeedCompleted,
             "open roster only hands evidence to RescueRelease review");
 
+        var arcOffer = Offer(new NeedsState(), "arc-offer", "yrsa",
+            Candidate("yrsa.danger.01", "yrsa", NeedKind.NearbyDanger, "verified-watch-danger"));
+        var arcAgree = NeedsAndAffinityPolicy.Respond(arcOffer.State, "arc-agree", arcOffer.Request.RequestId, true, 51);
+        var travelHandoff = NeedsAndAffinityPolicy.BuildTemporaryTravelHandoff(arcAgree.State, arcOffer.Request.RequestId);
+        Check(travelHandoff.MayRequestTemporaryAssignment && travelHandoff.PersonId == "yrsa",
+            "agreement supplies evidence but does not assign temporary travel");
+        Check(!NeedsAndAffinityPolicy.RecordEncounterActivation(arcAgree.State, "arc-live-bad", arcOffer.Request.RequestId, "", false).Accepted,
+            "event record requires EncounterActivation proof");
+        var allied = NeedsAndAffinityPolicy.RecordEncounterActivation(arcAgree.State, "arc-live", arcOffer.Request.RequestId, "activation-77", true);
+        Check(allied.Accepted && allied.Arc.Phase == AidArcPhase.EventActivated, "verified activation proves event, not alliance assignment");
+        Check(!NeedsAndAffinityPolicy.RecordWitnessedContribution(allied.State, "arc-wrong", arcOffer.Request.RequestId,
+            "activation-other", "hit-1", true).Accepted, "contribution must belong to same activated encounter");
+        var contribution = NeedsAndAffinityPolicy.RecordWitnessedContribution(allied.State, "arc-contribution",
+            arcOffer.Request.RequestId, "activation-77", "defended-lane-1", true);
+        Check(contribution.Accepted && contribution.Arc.ContributionWitnessed, "authoritative contribution is remembered once");
+        Check(!NeedsAndAffinityPolicy.BuildPersonalInvitationHandoff(contribution.State, arcOffer.Request.RequestId).MayPresentPersonalOffer,
+            "contribution before completed need cannot unlock personal offer");
+        var arcComplete = NeedsAndAffinityPolicy.Complete(contribution.State, "arc-complete", Evidence(arcOffer.Request, "danger-clear-1"));
+        Check(arcComplete.Accepted && arcComplete.State.AidArcs[arcOffer.Request.RequestId].Phase == AidArcPhase.TrustEstablished,
+            "completed need plus witnessed contribution establishes factual trust");
+        var eligible = NeedsAndAffinityPolicy.RecordInvitationEligibility(arcComplete.State, "arc-eligible", arcOffer.Request.RequestId);
+        Check(eligible.Accepted && eligible.Arc.Phase == AidArcPhase.InvitationEligible,
+            "later personal offer eligibility is recorded without recruiting");
+        NeedsState reloadedArc;
+        Check(NeedsPersistence.TryRead(NeedsPersistence.Write(eligible.State), out reloadedArc) &&
+            reloadedArc.AidArcs[arcOffer.Request.RequestId].Phase == AidArcPhase.InvitationEligible &&
+            reloadedArc.AidArcs[arcOffer.Request.RequestId].ContributionEvidenceId == "defended-lane-1",
+            "aid arc and witnessed contribution survive reload");
+
         QuestRequestFact brokerFact;
         Check(NeedsAndAffinityPolicy.TryBuildQuestRequestFact(completed.State, first.Request.RequestId, out brokerFact) &&
             brokerFact.RequestId == first.Request.RequestId && brokerFact.PersonId == "runa" &&

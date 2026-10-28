@@ -26,6 +26,130 @@ transitions below require implementation and playtest.
   equipment mesh is claimed present merely because it is named here. Only the
   approved short voice categories are requested.
 
+## Uncertain first contact bank
+
+Status: **Living World encounter design direction.** The player first reads a
+one- or two-person camp, hunt, or patrol—not an allegiance icon. Compatible
+variants may be selected randomly by the server, but the chosen variant and
+identities are persisted before first sight. Reload never rerolls friendly people
+into Pillagers or an Eitrherjar Legionary.
+
+The sequence is **first sight → mutual noticing → distance and kit read → warning
+or greeting → choice/interruption → remembered outcome**. Activity and equipment
+suggest capability, never morality by body, sex, or biome.
+
+### Cautious friendly introductions
+
+Use one compatible introduction. One speaker handles contact while a partner, if
+present, keeps watch.
+
+| Variant | Visible life before contact | Mutual noticing and line |
+| --- | --- | --- |
+| Banked-fire camp | One traveller banks a small fire; another mends a strap with weapons stowed | Watcher rises at long speaking distance, open hand visible; **hail**: “Easy there. We saw you. The fire is ours, but the ground need not be.” |
+| Hunting pair | Hunter dresses game while partner watches the tree line; bow remains lowered | Watcher turns side-on rather than closing; **warning**: “Hold the ridge. We are finishing this hunt, not starting another.” |
+| Road patrol | One reads tracks; one checks the rear path and keeps the retreat open | Lead stops outside weapon reach; **question**: “You follow this road, or someone upon it?” |
+| Injured single | Lone survivor braces a cut or worn boot behind partial cover | Survivor does not stand merely to perform confidence; **warning**: “I can speak from here. Come no closer with steel out.” |
+| Moving camp | Two travellers have packs shouldered and a cold fire; no one performs an idle welcome | Rear watcher marks the player's flank; **acknowledgment**: “You found us while leaving. Say what you need before the light goes.” |
+
+If the player lowers the weapon, stops at the stated distance, or answers plainly,
+the speaker may identify the immediate activity and need. A friendly introduction
+does not guarantee trade, aid, travel, or recruitment.
+
+### Pillager presentations
+
+Pillagers are living Second-Breath humans who chose predation. Their humanity
+permits speech, caution, bargains, retreat, betrayal, and rare defection; it does
+not make an armed robbery a recruitment scene.
+
+| Presentation | Visible read | Contact line and boundary |
+| --- | --- | --- |
+| False rest | Packs are travel-ready; one person appears to rest while the second holds the exit angle | **warning**: “Leave the pack and take the road. Test us, and you lose both.” |
+| Toll patrol | Weapons are visible; path is blocked but the Pillagers keep escape space | **challenge**: “This stretch costs food. Pay, turn, or make the price blood.” |
+| Wounded raiders | One binds a real wound while the other watches both player and tree line | **question**: “You want our feud, or only the road?” A bounded bargain is possible; trust is not implied. |
+
+Pillagers record compliance, defiance, mercy, pursuit, and witnessed betrayal.
+They may disengage, accept a temporary nonaggression bargain, or very rarely enter
+a separately authored defection path. A temporary bargain never silently changes
+their faction or opens **“Will you have me?”**
+
+### Eitrherjar Legionary presentation
+
+The Eitrherjar Legionary is a hostile corrupted war-captain whose command outlived
+its commander. It is not a Fuling ally, neutral mercenary, or recruitable variant.
+The player first sees disciplined battlefield behavior: a solitary or sparse
+heavy figure checks a lane, stands over an abandoned position, or turns toward
+other combatants with weapon-ready purpose. On mutual notice it squares its body
+and gives a restrained **challenge**: “Another line to break.” It may call “Hold
+your ground and be ended.” These are **Living World fiction**, not translations
+or claims of a voiced runtime asset.
+
+The Legionary attacks the player, Hearthbound, Pillagers, Fulings, draugr, and
+other canon hostiles when allegiance mechanics commit legal targets. Temporary
+target priority during a third-party fight is not help, peace, affinity, or an
+invitation. There is no surrender, shared travel, or recruitment branch here.
+
+### Third-party interruption and conditional help
+
+A locally witnessed creature or hostile group may interrupt contact only after it
+actually commits. Mere visibility produces watchfulness, not a rescue cry. One
+speaker gives one bounded **alarm**—friendly watcher: “Movement left—choose your
+side!”; Pillager: “Beast first. Our matter waits.” The Eitrherjar gives no truce
+line and simply executes its legal combat priorities.
+
+During the interruption:
+
+- friendly survivors may defend themselves, cover a player who respected their
+  boundary, or retreat with their dependent;
+- the player may help, withdraw, exploit the distraction, or attack the people;
+- Pillagers may honor a declared pause until the verified clear, flee, or betray
+  only when that authored persona permits it and the act is recorded;
+- no actor becomes friendly merely because both attacked the same creature.
+
+After verified clear, a friendly survivor who received or gave meaningful help
+says with **acknowledgment**, “You kept your word when noise made breaking it
+easy.” A Pillager who honors the pause says, “The beast is down. Now we finish our
+own business.” Harm, restraint, aid, and abandonment become facts, not points on
+a visible affection meter.
+
+### Temporary shared travel and later choice
+
+A cautious friendly person may propose bounded shared travel after a witnessed
+need, compatible destination, and safe route are known: **question**: “Our road
+runs with yours as far as the old stones. Walk it together?” The segment stores
+its destination and end condition. It is not a bonded party slot, remote follow,
+portal promise, or permanent escort.
+
+Respecting pace, helping against a committed threat, sharing lawful supplies, and
+honoring the agreed end may record `earned_affinity`. Theft, coercion, attacking a
+dependent, or continuing past a demanded separation records harm. Affinity is
+remembered conduct, not currency; it can support later trust but cannot override
+home, duty, allegiance, world-key, roster, or expedition rules.
+
+At the destination the traveller says, “This is where we part. You made the road
+lighter.” Later, after sufficient aid and every factual gate, that same person may
+ask **“Will you have me?”**, or the player may ask **“Will you come with me?”**
+The two paths remain mutually exclusive presentations of one deterministic
+choice. Pillager defection requires its own authored allegiance facts first. The
+Eitrherjar Legionary can never reach either invitation.
+
+### Ravens and source boundary
+
+**Attested foundation:** *Hávamál* 1–4 and 7 pair caution at an entrance with the
+needs and conduct of a guest; this supports the encounter's wary distance and
+practical hospitality, not any exact dialogue or game rule. See the public-domain
+[Bellows edition of the Poetic Edda](https://archive.sacred-texts.com/neu/poe/poe.pdf).
+*Grímnismál* 20 describes Huginn and Muninn ranging over the world and Odin fearing
+their failure to return; see Mattioli's
+[critical edition and manuscript study](https://research-repository.st-andrews.ac.uk/handle/10023/12219).
+
+**Living World fiction:** uncertain camps, Pillager negotiations, temporary road
+companionship, affinity facts, and every line above are project inventions.
+Huginn may repeat the existing general lesson that signs of habitation can be
+read only if that presentation and runtime support already exist. He never names
+the camp's allegiance, chooses a recruit, or provides an omniscient map marker.
+Muninn receives no encounter role without separate lore approval and runtime
+proof. Ordinary tracks, smoke, activity, and mutual sight must carry this bank.
+
 ## Meadows encounter bank: The Split-Ash Camp
 
 ### Encounter records

@@ -3,7 +3,13 @@ using System.Collections.Generic;
 using LivingWorld.CompanionSystems.CampLifecycle;
 using LivingWorld.CompanionSystems.Discovery;
 using LivingWorld.CompanionSystems.FriendInNeed;
+using LivingWorld.CompanionSystems.EncounterAllegiance;
+using LivingWorld.CompanionSystems.EncounterActivation;
+using LivingWorld.CompanionSystems.EncounterLoadouts;
+using LivingWorld.CompanionSystems.NeedsAndAffinity;
 using LivingWorld.CompanionSystems.QuestBroker;
+using LivingWorld.CompanionSystems.SpecialistCombat.MeleeRoles;
+using LivingWorld.CompanionSystems.SpecialistCombat.PredictionAndThrows;
 using LivingWorld.Companions.RescueRelease;
 
 namespace LivingWorld.CompanionSystems.RuntimeIntegration
@@ -123,7 +129,7 @@ namespace LivingWorld.CompanionSystems.RuntimeIntegration
                 {
                     var death = new DeathRecord { Place=decision.State.DeathPlace, Cause=decision.State.DeathCause,
                         WorldTime=decision.State.DeathWorldTick };
-                    PolicyResult committed = rescue.CommitDeath(next.Roster, transactionId + ":death", next.PersonId, death);
+                    LivingWorld.Companions.RescueRelease.PolicyResult committed = rescue.CommitDeath(next.Roster, transactionId + ":death", next.PersonId, death);
                     if (!committed.Accepted) return committed.Reason;
                     next.Roster = committed.State;
                     if (next.Lead.State == LeadState.Active)
@@ -139,7 +145,7 @@ namespace LivingWorld.CompanionSystems.RuntimeIntegration
             return Change(encounterId, expectedRevision, transactionId, delegate(EncounterArcState next) {
                 if (leadOutcome != LeadState.Resolved && leadOutcome != LeadState.Refused && leadOutcome != LeadState.Abandoned)
                     return "invalid_lead_outcome";
-                PolicyResult result = rescue.ResolveRescue(next.Roster, transactionId + ":rescue", next.PersonId, outcome);
+                LivingWorld.Companions.RescueRelease.PolicyResult result = rescue.ResolveRescue(next.Roster, transactionId + ":rescue", next.PersonId, outcome);
                 if (!result.Accepted) return result.Reason;
                 if (!DiscoveryPolicy.TryClose(next.Lead, leadOutcome, worldDay)) return "lead_close_refused";
                 next.Roster = result.State; return null;
@@ -241,5 +247,127 @@ namespace LivingWorld.CompanionSystems.RuntimeIntegration
 
         public static BrokerResult Present(BrokerState broker, string commandId, string requestId, PresentationProof source)
         { return QuestBrokerPolicy.PresentExisting(broker, commandId, requestId, source); }
+    }
+
+    // Module states remain owned by their modules. These bridges validate the shared arc
+    // identity, then return the module result for its own revisioned store to persist.
+    public static class EncounterAllegianceBridge
+    {
+        public static ContactResult Apply(EncounterArcState arc, PersonContactRecord contact, ContactFact fact)
+        {
+            if (arc == null || contact == null || contact.PersonId != arc.PersonId || contact.CampId != arc.CampId)
+                return new ContactResult { Reason="arc_contact_identity_mismatch", Record=contact };
+            return EncounterAllegiancePolicy.Apply(contact, fact);
+        }
+    }
+
+    public static class NeedsAidBridge
+    {
+        public static RequestSelection Select(EncounterArcState arc, NeedsState needs, string commandId,
+            long worldSeed, long worldTick, IList<NeedCandidate> candidates)
+        {
+            if (arc == null) return new RequestSelection { Reason="missing_arc", State=needs };
+            return NeedsAndAffinityPolicy.SelectRequest(needs, commandId, worldSeed, worldTick, arc.PersonId, candidates);
+        }
+
+        public static ChoiceResult Complete(EncounterArcState arc, NeedsState needs, string commandId, CompletionEvidence evidence)
+        {
+            if (arc == null || evidence == null || evidence.PersonId != arc.PersonId)
+                return new ChoiceResult { Reason="arc_aid_identity_mismatch", State=needs };
+            RequestRecord request;
+            if (needs == null || !needs.Requests.TryGetValue(evidence.RequestId, out request) || request.EncounterId != arc.EncounterId)
+                return new ChoiceResult { Reason="arc_aid_request_mismatch", State=needs };
+            return NeedsAndAffinityPolicy.Complete(needs, commandId, evidence);
+        }
+    }
+
+    public static class SpecialistCombatBridge
+    {
+        public static ThrowDecision Reserve(EncounterArcState arc, ThrowState state, ThrowConfig config, ThrowFacts facts)
+        {
+            if (arc == null || facts == null || facts.ActorId != arc.PersonId ||
+                facts.PersonId != arc.PersonId || facts.EncounterId != arc.EncounterId)
+                return new ThrowDecision { Reason="arc_specialist_identity_mismatch", State=state };
+            return PredictionAndThrowsPolicy.Reserve(state, config, facts);
+        }
+
+        public static MeleeDecision Knife(EncounterArcState arc, string actorPersonId, KnifeLungeContext context)
+        {
+            if (arc == null || actorPersonId != arc.PersonId)
+                return new MeleeDecision { Request=MeleeRequest.None, Refusal=Refusal.TargetNotAuthorized,
+                    Reason="arc_specialist_identity_mismatch" };
+            return MeleeRolePolicy.EvaluateKnifeLunge(context);
+        }
+
+        public static MeleeDecision Heavy(EncounterArcState arc, string actorPersonId, HeavyPressureContext context)
+        {
+            if (arc == null || actorPersonId != arc.PersonId)
+                return new MeleeDecision { Request=MeleeRequest.None, Refusal=Refusal.TargetNotAuthorized,
+                    Reason="arc_specialist_identity_mismatch" };
+            return MeleeRolePolicy.EvaluateHeavyPressure(context);
+        }
+    }
+
+    public static class EncounterActivationBridge
+    {
+        public static ActivationResult Register(EncounterArcState arc, BrokerState broker, ActivationLedger ledger,
+            string commandId, ActivationPlan plan)
+        {
+            WorldRequest request;
+            if (arc == null || broker == null || plan == null || !broker.Requests.TryGetValue(plan.RequestId, out request))
+                return new ActivationResult { Reason="broker_request_required", State=ledger };
+            if (request.Status != LivingWorld.CompanionSystems.QuestBroker.RequestStatus.Accepted ||
+                request.IssuerPersonId != arc.PersonId || request.EncounterId != arc.EncounterId ||
+                plan.IssuerPersonId != request.IssuerPersonId || plan.PartyId != request.PartyId ||
+                plan.WorldId != request.WorldId || plan.SiteId != request.SiteId || plan.SiteIdentity != request.SiteIdentity)
+                return new ActivationResult { Reason="activation_broker_identity_mismatch", State=ledger };
+            return EncounterActivationPolicy.RegisterOffer(ledger,commandId,plan);
+        }
+    }
+
+    public static class TemporaryAidBridge
+    {
+        public static TemporaryAidResult Start(EncounterArcState arc, NeedsState needs, BrokerState broker,
+            ActivationLedger activation, WorldState roster, RescueReleasePolicy policy, string commandId,
+            string needRequestId, string brokerRequestId, string returnDestinationId, bool allowPortalTravel)
+        {
+            RequestRecord need; AidArcRecord aid; WorldRequest request; ActivationEntry execution;
+            if (arc == null || needs == null || broker == null || activation == null || roster == null || policy == null ||
+                !needs.Requests.TryGetValue(needRequestId,out need) || !needs.AidArcs.TryGetValue(needRequestId,out aid) ||
+                !broker.Requests.TryGetValue(brokerRequestId,out request) || !activation.Entries.TryGetValue(brokerRequestId,out execution))
+                return new TemporaryAidResult { Decision=TemporaryAidDecision.Rejected, Reason="complete_aid_chain_required", State=roster };
+            TemporaryTravelEvidenceHandoff travel=NeedsAndAffinityPolicy.BuildTemporaryTravelHandoff(needs,needRequestId);
+            if (need.PersonId!=arc.PersonId || need.EncounterId!=arc.EncounterId || aid.PersonId!=arc.PersonId ||
+                !travel.MayRequestTemporaryAssignment || travel.PersonId!=arc.PersonId ||
+                request.AuthoredRequestId!=need.RequestId || request.Status!=LivingWorld.CompanionSystems.QuestBroker.RequestStatus.Accepted ||
+                execution.Plan.IssuerPersonId!=arc.PersonId ||
+                (execution.Status!=ActivationStatus.Accepted && execution.Status!=ActivationStatus.Arming && execution.Status!=ActivationStatus.Active))
+                return new TemporaryAidResult { Decision=TemporaryAidDecision.Rejected, Reason="aid_chain_identity_or_acceptance_mismatch", State=roster };
+            return policy.StartTemporaryAid(roster,commandId,new TemporaryAidFacts { RequestId=needRequestId,
+                PersonId=arc.PersonId,EncounterId=arc.EncounterId,ReturnDestinationId=returnDestinationId,
+                AuthoredRequest=true,RequestAccepted=true,PersonExplicitlyAgreed=true,AllowPortalTravel=allowPortalTravel });
+        }
+    }
+
+    public static class EncounterLoadoutBridge
+    {
+        public static LivingWorld.CompanionSystems.EncounterLoadouts.PolicyResult Create(EncounterArcState arc,
+            EncounterProfile profile,string variantId,ISet<string> worldKeys)
+        {
+            if (!SameArc(arc,profile)) return new LivingWorld.CompanionSystems.EncounterLoadouts.PolicyResult { Reason="arc_loadout_identity_mismatch" };
+            return EncounterLoadoutPolicy.Create(profile,variantId,worldKeys);
+        }
+
+        public static LivingWorld.CompanionSystems.EncounterLoadouts.PolicyResult Upgrade(EncounterArcState arc,
+            EncounterProfile profile,PersonLoadoutState current,UpgradeRequest request)
+        {
+            if (!SameArc(arc,profile) || current==null || current.PersonId!=arc.PersonId)
+                return new LivingWorld.CompanionSystems.EncounterLoadouts.PolicyResult { Reason="arc_loadout_identity_mismatch",State=current };
+            return EncounterLoadoutPolicy.Upgrade(profile,current,request);
+        }
+
+        static bool SameArc(EncounterArcState arc,EncounterProfile profile)
+        { return arc!=null && profile!=null && profile.PersonId==arc.PersonId &&
+            profile.OriginEncounterId==arc.EncounterId && profile.OriginCampId==arc.CampId; }
     }
 }

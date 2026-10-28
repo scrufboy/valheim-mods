@@ -5,10 +5,12 @@ namespace LivingWorld.Companions.RescueRelease
 {
     public enum LifeState { Alive, Dead }
     public enum RescueOutcome { Unresolved, Rescued, RefusedAid, Abandoned, Died }
-    public enum Assignment { Known, BondedResident, Expedition, AwaitingSafeHandoff, ReleasedKnown, Dead }
+    public enum Assignment { Known, BondedResident, Expedition, AwaitingSafeHandoff, ReleasedKnown, TemporaryAlly, AwaitingTemporaryReturn, Dead }
     public enum DestinationKind { Home, OriginCamp, ReclaimedVillage }
     public enum InvitationDecision { Yes, No }
     public enum ReleaseDecision { Committed, WaitingForSafety, Rejected }
+    public enum TemporaryAidDecision { Started, WaitingForReturn, Returned, Rejected }
+    public enum TemporaryAidEndReason { RequestCompleted, PersonWithdrew, PlayerEnded }
     public enum GearOwner { Companion, PlayerLoan }
 
     public sealed class GearItem
@@ -55,6 +57,9 @@ namespace LivingWorld.Companions.RescueRelease
         public RescueOutcome Rescue = RescueOutcome.Unresolved;
         public Assignment Assignment = Assignment.Known;
         public string PendingDestinationId;
+        public string TemporaryRequestId;
+        public string TemporaryReturnDestinationId;
+        public bool TemporaryPortalTravelAllowed;
         public string LastSafePositionId;
         public string Relationship;
         public string History;
@@ -145,5 +150,27 @@ namespace LivingWorld.Companions.RescueRelease
         public bool DestinationZoneLoaded;
         public bool CompanionPresentAtDestination;
         public bool LoanExchangeComplete;
+    }
+
+    // Translated from committed NeedsAndAffinity/QuestBroker evidence. This
+    // module does not own or complete the request ledger.
+    public sealed class TemporaryAidFacts
+    {
+        public string RequestId;
+        public string PersonId;
+        public string EncounterId;
+        public string ReturnDestinationId;
+        public bool AuthoredRequest;
+        public bool RequestAccepted;
+        public bool PersonExplicitlyAgreed;
+        public bool AllowPortalTravel;
+    }
+
+    public sealed class TemporaryAidResult
+    {
+        public TemporaryAidDecision Decision;
+        public string Reason;
+        public WorldState State;
+        public bool Replayed;
     }
 }

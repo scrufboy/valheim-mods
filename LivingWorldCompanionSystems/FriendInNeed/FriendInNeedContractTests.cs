@@ -68,6 +68,33 @@ class FriendInNeedContractTests
             "friend-9", ThreatEvidence.AttributedDamage, 102, false);
         Check(competing.Commands.Length == 0 && competing.State.EventId == first.State.EventId, "unresolved incident is not silently replaced");
 
+        FriendInNeedResult rumor = FriendInNeedContract.WitnessAcceptedAidSite(null, "site-2:aid-1", "site-2",
+            DangerObservation.Rumor, true, true, false, true, 200, false);
+        FriendInNeedResult arrival = FriendInNeedContract.WitnessAcceptedAidSite(null, "site-2:aid-1", "site-2",
+            DangerObservation.VisibleCreature, true, true, false, true, 200, false);
+        Check(rumor.Commands.Length == 0 && arrival.Commands.Length == 0, "rumor and arrival visibility never trigger site warning");
+        FriendInNeedResult unaccepted = FriendInNeedContract.WitnessAcceptedAidSite(null, "site-2:aid-1", "site-2",
+            DangerObservation.Damage, false, true, false, true, 201, false);
+        FriendInNeedResult unverified = FriendInNeedContract.WitnessAcceptedAidSite(null, "site-2:aid-1", "site-2",
+            DangerObservation.Damage, true, false, false, true, 201, false);
+        FriendInNeedResult remote = FriendInNeedContract.WitnessAcceptedAidSite(null, "site-2:aid-1", "site-2",
+            DangerObservation.Casualty, true, true, false, false, 201, false);
+        Check(unaccepted.Commands.Length == 0 && unverified.Commands.Length == 0 && remote.Commands.Length == 0,
+            "accepted aid, verified activation, and local witness gate authored site facts");
+        FriendInNeedResult activatedCombat = FriendInNeedContract.WitnessAcceptedAidSite(null, "site-2:aid-2", "site-2",
+            DangerObservation.CommittedAttack, true, true, false, true, 202, true);
+        Check(Has(activatedCombat, FriendInNeedCommandKind.ShowDangerSignal) &&
+            Has(activatedCombat, FriendInNeedCommandKind.YieldToNativeCombat) &&
+            !Has(activatedCombat, FriendInNeedCommandKind.PlayExistingSurprisedVoice),
+            "verified site commitment warns then yields without duplicating combat voice");
+        FriendInNeedResult naturalAttack = FriendInNeedContract.WitnessAcceptedAidSite(null, "site-2:natural-1", "site-2",
+            DangerObservation.Damage, true, false, true, true, 203, false);
+        Check(Has(naturalAttack, FriendInNeedCommandKind.PlayExistingSurprisedVoice) &&
+            Has(naturalAttack, FriendInNeedCommandKind.ShowDangerSignal), "natural third-party attack may trigger local warning");
+        FriendInNeedResult naturalReplay = FriendInNeedContract.WitnessAcceptedAidSite(naturalAttack.State,
+            "site-2:natural-1", "site-2", DangerObservation.Damage, true, false, true, true, 204, false);
+        Check(!Has(naturalReplay, FriendInNeedCommandKind.PlayExistingSurprisedVoice), "accepted-aid warning does not replay");
+
         Console.WriteLine("PASS " + checks + " Friend in Need contract checks (pure offline; Unity execution NOT RUN)");
     }
 }

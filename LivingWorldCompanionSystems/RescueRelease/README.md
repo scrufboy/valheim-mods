@@ -22,6 +22,10 @@ runtime and has no Unity, Valheim, BepInEx, profile, or filesystem dependency.
   single-claim corpse gear recovery;
 - terminal death records and idempotent command IDs/revisions suitable for reload,
   duplicate callbacks, zone unload, and server restart;
+- temporary request aid as an explicit non-bonded assignment: it preserves the
+  same person and gear, consumes one of the two active field positions, records
+  authored request/return/portal terms, waits through combat/portal/unsafe return,
+  and ends only at a proven safe handoff without automatic recruitment;
 - optimistic persistence and Unity/world adapter interfaces.
 
 Run `tests/Run-Tests.ps1`. The harness compiles to the temporary directory and
@@ -42,6 +46,15 @@ escort the existing network identity to a safe anchor, complete visible loan
 exchange, and only then call `CommitRelease`. A waiting actor remains party-owned
 for slot counting and must never be destroyed, remotely recalled, or sent toward
 an unloaded position.
+
+Temporary-aid integration translates only committed NeedsAndAffinity/QuestBroker
+facts (stable request/person/encounter IDs, accepted status, and the person's
+explicit agreement). It does not infer agreement from affinity or request
+completion. RuntimeIntegration must retain the temporary assignment on zone
+unload, restore the same `PersonId`, enforce its authored portal permission, and
+count temporary and return-pending allies against the same two active positions.
+Request completion may begin a safe return but never calls `Invite`; full party
+membership remains a later, separate factual yes/no transaction.
 
 Death integration must remain feature-gated until traversal and network ownership
 are live-proven. The server must coalesce death callbacks, commit once with place,

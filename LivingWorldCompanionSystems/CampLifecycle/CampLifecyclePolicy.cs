@@ -11,6 +11,9 @@ namespace LivingWorld.CompanionSystems.CampLifecycle
     public enum RuntimeDirective { None, RunRoutine, Yield, Despawn, Spawn, MoveToDestination, RecordMemorial }
     public enum CampNeedKind { None, WatchVisibilityBlocked, CookingSuppliesLow, RestShelterDamaged, RepairMaterialsLow, PatrolRouteObstructed }
     public enum CampFactEventKind { None, NeedObserved, AidConfirmed }
+    public enum CampSceneActivity { CampLife, Hunt, Patrol }
+    public enum ObservedActorKind { Player, Wildlife, OtherModCharacter }
+    public enum SceneNoticeKind { None, CautiousNotice, ForwardForThreatEvaluation, RequestReadiness, YieldToNativeCombat }
 
     public sealed class CampPersonState
     {
@@ -71,6 +74,26 @@ namespace LivingWorld.CompanionSystems.CampLifecycle
         public bool ResumeOrdinaryLife;
     }
 
+    public sealed class SceneObservation
+    {
+        public string ActorId;
+        public CampSceneActivity Activity;
+        public ObservedActorKind ActorKind;
+        public float DistanceFromObserver, DistanceFromCampAnchor;
+        public long WorldTick, LastVisibleWorldTick;
+        public bool HasLineOfSight, ExternalThreatAuthorized, NativeCombatCommitted;
+    }
+
+    public sealed class SceneNotice
+    {
+        public SceneNoticeKind Kind;
+        public string CampId, ObserverPersonId, ActorId;
+        public CampSceneActivity Activity;
+        public ObservedActorKind ActorKind;
+        public bool GrantsAttackAuthority; // Always false: allegiance/native combat owns authorization.
+        public string Reason;
+    }
+
     public sealed class LifecycleDecision
     {
         public CampPersonState State;
@@ -84,6 +107,9 @@ namespace LivingWorld.CompanionSystems.CampLifecycle
     {
         public const int CurrentSchema = 1;
         public const long RoutinePeriodTicks = 600;
+        public const float MaximumSceneObservationDistance = 40f;
+        public const float MaximumHuntPatrolRadius = 60f;
+        public const long MaximumVisibleEvidenceAgeTicks = 5;
 
         static readonly CampRoutine[] Rotation = {
             CampRoutine.Watch, CampRoutine.Cook, CampRoutine.Rest, CampRoutine.Repair, CampRoutine.Patrol
@@ -163,6 +189,39 @@ namespace LivingWorld.CompanionSystems.CampLifecycle
             return new CampFactEvent { Kind=CampFactEventKind.NeedObserved, FactId=id, CampId=person.CampId,
                 PersonId=person.PersonId, Routine=lifecycle.State.Routine, Need=observation.Need,
                 WorldTick=observation.WorldTick, ResumeOrdinaryLife=false };
+        }
+
+        public static SceneNotice ObserveScene(CampPersonState person,
+            LifecycleDecision lifecycle, SceneObservation observation)
+        {
+            if (person == null) throw new ArgumentNullException("person");
+            if (lifecycle == null) throw new ArgumentNullException("lifecycle");
+            if (observation == null) throw new ArgumentNullException("observation");
+            RequireId(observation.ActorId, "observed actor");
+            if (!Enum.IsDefined(typeof(CampSceneActivity), observation.Activity) ||
+                !Enum.IsDefined(typeof(ObservedActorKind), observation.ActorKind))
+                throw new InvalidOperationException("Unknown scene observation value.");
+            if (person.Life != PersonLife.Living || person.Presence != PersonPresence.AtCamp)
+                return EmptyNotice("away, unloaded, or terminal person is frozen");
+            if (observation.NativeCombatCommitted || lifecycle.Owner == ActionOwner.Combat)
+                return Notice(person, observation, SceneNoticeKind.YieldToNativeCombat, "native combat preempts scene activity");
+            if (lifecycle.Owner != ActionOwner.CampRoutine || lifecycle.Directive != RuntimeDirective.RunRoutine)
+                return EmptyNotice("higher action owner suppresses scene observation");
+            if (!observation.HasLineOfSight || observation.DistanceFromObserver < 0f ||
+                observation.DistanceFromObserver > MaximumSceneObservationDistance ||
+                observation.DistanceFromCampAnchor < 0f || observation.DistanceFromCampAnchor > MaximumHuntPatrolRadius ||
+                observation.LastVisibleWorldTick > observation.WorldTick ||
+                observation.WorldTick - observation.LastVisibleWorldTick > MaximumVisibleEvidenceAgeTicks)
+                return EmptyNotice("observation is stale, obstructed, or outside bounded activity radius");
+
+            if (observation.ActorKind == ObservedActorKind.Player)
+                return Notice(person, observation, SceneNoticeKind.CautiousNotice,
+                    "player noticed without hostility or attack authority");
+            if (observation.ExternalThreatAuthorized)
+                return Notice(person, observation, SceneNoticeKind.RequestReadiness,
+                    "external allegiance/threat layer authorized readiness; native combat still decides commitment");
+            return Notice(person, observation, SceneNoticeKind.ForwardForThreatEvaluation,
+                "visible wildlife or third-party character forwarded to existing allegiance/native threat evaluation");
         }
 
         public static LifecycleDecision Observe(CampPersonState source, CampState camp, Observation o)
@@ -304,6 +363,14 @@ namespace LivingWorld.CompanionSystems.CampLifecycle
                 (routine==CampRoutine.Rest && need==CampNeedKind.RestShelterDamaged) ||
                 (routine==CampRoutine.Repair && need==CampNeedKind.RepairMaterialsLow) ||
                 (routine==CampRoutine.Patrol && need==CampNeedKind.PatrolRouteObstructed);
+        }
+        static SceneNotice EmptyNotice(string reason)
+        { return new SceneNotice { Kind=SceneNoticeKind.None, GrantsAttackAuthority=false, Reason=reason }; }
+        static SceneNotice Notice(CampPersonState person, SceneObservation observation, SceneNoticeKind kind, string reason)
+        {
+            return new SceneNotice { Kind=kind, CampId=person.CampId, ObserverPersonId=person.PersonId,
+                ActorId=observation.ActorId, Activity=observation.Activity, ActorKind=observation.ActorKind,
+                GrantsAttackAuthority=false, Reason=reason };
         }
     }
 }

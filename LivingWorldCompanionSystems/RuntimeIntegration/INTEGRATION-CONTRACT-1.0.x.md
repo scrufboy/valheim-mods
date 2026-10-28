@@ -25,6 +25,8 @@ The store implementation must be server-only and provide real compare-and-swap s
 5. Rescue outcome and discovery lead closure publish in one aggregate revision.
 6. Release may enter `AwaitingSafeHandoff`. It becomes `BondedResident` only after the destination is established and loaded, the same companion is present there, unsafe transitions are false, and player-loan exchange is complete.
 
+The owner-directed aid/event extension is deliberately staged: uncertain witnessed contact, accepted authored aid, temporary same-person travel to a verified site, a pre-spawn single event claim, native-owned combat, one observed outcome, remembered trust, return consequence, and only later a separate invitation. The landed Needs, QuestBroker, RescueRelease, EncounterActivation, and EncounterLoadouts contracts now own those distinct records; RuntimeIntegration validates their shared IDs and delegates without copying their ledgers. Live movement, spawning, equipment application, and specialist execution remain fail-closed until their 1.0.32.7 adapters pass ownership and native proof.
+
 ## Extension seam for affinity, voice, and earned respect
 
 `RecordFacts` accepts stable key/value evidence from independent modules and commits it in the same aggregate revision. Suitable inputs include verified camp/world observations, light-affinity observations, aid outcomes, and remembered earned-respect deeds. The producing module owns the meaning and validation of its vocabulary; this runtime validates only safe stable keys and bounded values.

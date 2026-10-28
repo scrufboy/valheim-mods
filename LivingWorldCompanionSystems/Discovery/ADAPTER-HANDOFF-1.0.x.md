@@ -30,8 +30,19 @@ The 1.0.x server adapter should:
 6. On recruitment, refusal, abandonment, or permanent death, call `TryClose` and
    persist the close day. The default five-day gate is server configuration with
    a production minimum of one day; the authored default remains five.
+7. Compose `EncounterScenePolicy` after the camp instance is committed. It stages
+   only one or two people in hunting, camping, or patrol entry. Its distant read
+   is intentionally an ambiguous human silhouette; pass later faction revelation
+   to `EncounterAllegiance` and all gear decisions to `EncounterLoadouts`.
+8. Feed `SiteKnowledgePolicy` only runtime-validated location IDs returned by the
+   1.0.x zone/location index and independently confirmed inside the authored
+   knowledge radius. The resulting record preserves encounter/site/location
+   provenance but contains no invented coordinates. Resolve its location ID for
+   dialogue or a marker only through the runtime's current authoritative index.
 
 Integration still required: a server-owned world campaign store; authoritative
 structure/boss/lava/path queries; authored camp prefab registration; stable person
 creation linked to encounter/site IDs; clue delivery UI; and multiplayer party-ID
-resolution. These pure tests do not claim live Valheim placement or networking.
+resolution. Scene animation adapters, `EncounterAllegiance`, `EncounterLoadouts`,
+and authoritative nearby-location queries also remain integration work. These
+pure tests do not claim live Valheim placement or networking.
