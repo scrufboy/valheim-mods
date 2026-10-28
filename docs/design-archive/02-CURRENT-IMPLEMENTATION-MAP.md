@@ -1,35 +1,45 @@
 # Current implementation map
 
-## Approved local runtime evidence
+## Published and installed states
 
-- Combat voice baseline: **1.0.32.6**, approved and locked.
-- Saved tag in the v3 bundle: `combat-voice-approved-1.0.32.6`.
-- Approved DLL hash: `4dee75d49c01a32f0250a09595b166e2deac5ad43d8b46aabeb3257b2667cc6e`.
-- Snapshot: `Documents/LivingWorld-CORE-NPC/20261027-APPROVED-COMBAT-VOICE-1.0.32.6/`.
-- 1.0.32.7 is a module/name boundary change over the locked behavior.
-- 1.0.32.8 party spacing exists as a review build/diff, not an approved installed baseline.
+| State | Ref | Status |
+| --- | --- | --- |
+| Combat voice 1.0.32.6 | branch `lwc-core-1.0/baseline-combat-voice-1.0.32.6`, tag `combat-voice-approved-1.0.32.6`, commit `26fd295` | APPROVED, LOCKED, LIVE-PROVEN |
+| Rename boundary 1.0.32.7 | branch `lwc-core-1.0/installed-1.0.32.7`, commit `9933763` | INSTALLED; launch proof still required |
+| Party spacing 1.0.32.8b | branch `lwc-core-1.0/1.0.32.8b-party-spacing-test`, commit `33addad`, DLL hash `7cc46473…` | SOURCE-INSPECTED, 96/96 OFFLINE-TESTED, BUILT; not installed |
+| Hot-path experiment 1.0.33 | branch `lwc-core-1.0/parked-1.0.33`, commit `965a2a0` | PARKED, not installed |
 
-## Proven combat-voice behavior
+The local v4 bundle is the complete offline preservation record. GitHub now
+contains the corresponding source refs. The annotated GitHub tag has a different
+tag-object hash from the local bundle tag, but both peel to the same approved
+commit `26fd295b87d0c1057f7503b64012e165621b3d2c`.
 
-Semantic male/female pools cover alert, exertion, ordinary pain, devastating pain,
-gloat, war cry and death. Timing, priority and gender routing are locked. Death
-voice playback was corrected to survive actor destruction. Later non-combat dialogue
-must use separate modules/pools and may not reopen combat-voice behavior casually.
+## Proven 1.0.x modules
 
-## Spacing review status
+- Identity: stable name, sex, hair, beard and role fields; broader identity is OPEN.
+- Persistence: identity, leader binding and kit tier only; inventory, durability,
+  relationship, home, order, skills and history are OPEN.
+- Traversal: Follow, formation leases, catch-up, regroup and settled guard are
+  live-proven before spacing. Portals/instances have no implementation.
+- Spacing: soft standing regions, leader back-off, sidestep, blocked wait and
+  deterministic right-of-way are offline-tested in 1.0.32.8b. Live doors, slopes,
+  physical contacts and formation feel remain required.
+- Awareness/combat: phase rules, authorized threats, native `MonsterAI` combat,
+  chained melee, heavy openings, armor parity, fallback and war cry are live-proven.
+- Gear: fixed iron/plains kits, ammunition top-up, shield pairing and stowing.
+- Combat voice: semantic gendered pools and detached death playback are locked.
+- Investigation, full needs, progression, worker/resident classes, portal transfer,
+  memorial mortality and inventory persistence remain OPEN.
 
-The review build adds soft standing regions, player back-off, sidestep corridors,
-and a wait state while retaining native Follow as the movement writer. A known
-acceptance concern is that a blocked wait must never expire back into a straight
-collision path while the same obstacle remains. Persistent-blocker, lane-clear,
-right-of-way, oscillation and live door/slope tests remain mandatory.
+## Known ownership debt
 
-## GitHub `main`
+`NpcBody.cs` mixes engine body services with content kits. `Kernel.Pure.cs`
+contains phase rules plus many policies that need module boundaries. Guard and
+spacing terrain checks overlap. Identity keys remain spread across classes instead
+of one versioned character record.
 
-GitHub contains the broader design/framework and an older Human NPC implementation
-line. It does **not** by itself prove that the approved local 1.0.32.x runtime is
-merged. Claude must inspect both histories and report provenance before moving code.
+The full source-level audit is
+[11-IMPLEMENTATION-AUDIT-2026-10-27.md](11-IMPLEMENTATION-AUDIT-2026-10-27.md).
 
-Status vocabulary: `SOURCE-INSPECTED`, `OFFLINE-TESTED`, `BUILT`, `INSTALLED`,
-`LIVE-PROVEN`, `DESIGN-AUTHORITY`, `OPEN`.
-
+Status vocabulary: `SOURCE-INSPECTED`, `OFFLINE-TESTED`, `BUILT`,
+`INSTALLED`, `LIVE-PROVEN`, `DESIGN-AUTHORITY`, `OPEN`.
