@@ -37,6 +37,15 @@ Directives are assigned per companion or to the whole party. This permits one co
 
 Only the current owner may issue movement, facing, hand-equipment, attack, block, or animation decisions. Lower states may observe facts but may not control the actor.
 
+### Mortality boundary
+
+`Dead` is terminal for a legitimate campaign companion. It is not a timed action
+state and may not transition to Follow, Hold, Resident, or incapacitated. Healing,
+recall, reload, beds, cleric support, regroup, and travel recovery apply only to a
+living actor. A separately proven wounded/incapacitated state may precede death;
+once the authoritative death transaction commits, only equipment recovery and the
+immutable memorial record remain.
+
 ## Awareness progression
 
 ### Peaceful awareness

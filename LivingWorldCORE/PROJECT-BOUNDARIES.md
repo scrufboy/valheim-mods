@@ -22,6 +22,11 @@ hero, and enemy content built with it; the framework does not require that conte
 | **Living World Telemetry** | Evidence collection and scoring for development and acceptance tests | Development-only; removable without changing NPC behavior |
 | **Compatibility and migration** | Temporary lab repairs plus future import/migration adapters | Separate from the core; removable when consumers have migrated |
 
+Tooler-created NPCs are repeatable laboratory fixtures, not campaign people.
+Their debug identity may never be promoted into discovery, recruitment, resident,
+bonded-roster, progression, or memorial records. Production acquisition begins at
+a persistent authored world encounter, never at a spawn control.
+
 ## Current dependency truth
 
 The repaired RRRCore, RunicPack, and Souls of the Land installation is a private

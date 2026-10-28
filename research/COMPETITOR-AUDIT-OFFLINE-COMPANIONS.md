@@ -37,9 +37,14 @@ ranged leading with gravity compensation. Reborn also documents combat spacing,
 stamina reservation, melee openings, combinations, blocking, parrying, and
 range-aware bow use.
 
+Its respawn/recovery loop is competitor evidence, not Living World direction.
+Living World companions receive no post-death respawn; only their equipment and
+memorial record remain recoverable.
+
 Living World direction:
 
-- preserve persistent identity, equipment, home, role, and recovery;
+- preserve persistent identity, equipment, home, and role while alive, and retain
+  an immutable memorial identity after permanent death;
 - keep contextual orders and believable domestic activity;
 - adopt projectile prediction as a reusable service with bounded error;
 - do not use a free starter companion or trader catalogue as the main fiction;

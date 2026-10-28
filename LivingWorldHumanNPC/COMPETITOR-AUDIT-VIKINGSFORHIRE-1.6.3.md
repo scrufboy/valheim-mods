@@ -45,7 +45,8 @@ capability behind a narrow state/module contract.
 - settlement route memory that invalidates when doors or structures change;
 - real inventory, equipment comparison, finite ammunition and loot containers;
 - beds, seats, workstation jobs and real tool use;
-- downed/revive/grave recovery;
+- downed/revive/grave behavior as competitor evidence only; Living World adopts
+  recoverable gear and memorials, not post-death revival;
 - radial controller orders with contextual commands;
 - performance tiers and fault containment scoped to an individual NPC.
 
@@ -81,7 +82,7 @@ capability behind a narrow state/module contract.
 | Beds/sleep/furniture | Implemented | `ResidentComfort`; owned dwelling/bed, seat, rest and wake schedules |
 | Settlement navigation | Internal nav map/trails | `SettlementNavigation`; structure/door graph plus native pathfinding executor |
 | Traders/relations/factions | Implemented | `ResidentSocial` and `Faction`; story-owned reputation and lawful transaction adapters |
-| Downed/revive/graves | Implemented | `CompanionRecovery`; healable/savable friends before permanent death policy |
+| Downed/revive/graves | Implemented | `CompanionMortality`; healing before committed death, then permanent death, equipment recovery, memorial, and no resurrection |
 | Wandering recruits/names | Implemented | `PopulationIdentity`; seeded robust names, homes, roles and persistence |
 | Hostile human variants | Supported by role/faction system | `LivingWorldEnemies`; same actor core, enemy faction/state modules and authorized armor packs |
 | Performance controls | Several modes | Central tick scheduler, distance tiers and per-module budgets |
@@ -120,7 +121,8 @@ status effects, not concurrent behavior loops.
 5. Add travel adapters and persistent door/route memory.
 6. Add resident comfort: seats, beds, rest, wake and owned dwelling.
 7. Add resident work and settlement navigation.
-8. Add downed/revive/grave recovery.
+8. Add gated permanent mortality only after traversal/death attribution proof;
+   recover equipment and memorial state, never the dead person.
 9. Add story faction/reputation/trader modules.
 10. Instantiate friendly and hostile Living World populations from the same
     actor core, including climate-specific small forest/northern/desert peoples

@@ -29,6 +29,32 @@ tests balance around two. A full party does not erase a newly discovered person:
 the player may invite them to a safe settlement, remember their camp, or exchange
 an active companion after reaching a lawful transition point.
 
+The default **bonded companion roster limit is six living people**, including the
+two active expedition assignments. Known people and ordinary residents are not
+owned companions and do not consume this bond limit. A seventh person cannot be
+recruited by building another bed or opening a menu: the player must first release
+an existing bond at a safe home/camp or live with the consequences of a permanent
+death. The value may be server-configurable later, but six is the authored balance
+ceiling and two remains the field-combat ceiling.
+
+## Debug spawning is not recruitment
+
+The current pause/console spawner is a development instrument. It can create
+specific tiered test actors on demand precisely because live tests need repeatable
+equipment and behavior. That is cheating if exposed as campaign acquisition.
+
+- every tool-spawned actor is marked as a lab/debug identity;
+- a debug actor cannot enter the campaign roster, satisfy a discovery, unlock a
+  class, become a resident, or survive export as a legitimate recruit;
+- release packages hide or exclude spawn controls unless an explicit developer
+  mode is enabled;
+- no campaign UI offers biome, class, sex, equipment tier, or instant replacement
+  spawning;
+- campaign companions originate only from persistent world encounters.
+
+The test spawner remains useful and unchanged for development. It is never the
+fiction, cost, or delivery system for Living World companions.
+
 ## Progress follows Valheim rather than bypassing it
 
 Companions never manufacture progression the player has not earned. Their spawn
@@ -50,6 +76,30 @@ player has actually established.
 The exact world key for discovering versus recruiting a Plains camp remains a
 balance test item. The principle is fixed: seeing evidence of later people may
 precede recruitment, but hiring them cannot hand the player an unearned biome win.
+
+## Recruitment investment and cadence
+
+The final question remains a plain yes or no; the investment happens in the world
+before that question. A recruitable person must be found at a valid persistent
+encounter. The player must understand and resolve that encounter's concrete need:
+shared defense, rescue, provision, proof of safe shelter, completion of an owed
+task, recovery of a person or possession, or another authored obligation. A valid
+home/bed and an open bonded-roster seat are required before a permanent yes can be
+accepted.
+
+Recruitment does not print endgame equipment. Personal starting gear is part of
+the NPC's identity and is tier-bounded; continued service costs food, ammunition,
+repairs, replacement equipment, safe lodging, and the risk of losing the person
+and what was invested in them.
+
+Only one unresolved recruitable camp lead may be active for a player/party. After
+a recruitment, refusal, abandonment, or companion death, a new lead cannot become
+eligible for **five in-game days**. Eligibility is not delivery: the player must
+then read a new rumor/sign and search an unexplored, biome-valid area. No timer
+spawns a replacement beside the player, and no dead person's class is guaranteed
+to be the next one found. Five days is the initial authored tuning value and must
+be exposed for later balance testing without becoming a zero-cost production
+default.
 
 ## Equipment and power economy
 
@@ -74,6 +124,32 @@ Combat contribution must preserve player agency:
 
 New biome companions provide different answers—throwing lanes, pressure control,
 wards, healing, knife pursuit, heavy stagger—not a vertical stack of followers.
+
+## Mortality: there is no Third Breath
+
+The Second Breath is the lore explanation for embodied life in Valheim, not an
+infinite resurrection service. Companions can be healed while alive. Once actual
+death is committed, it is permanent.
+
+- zero-health/death confirmation ends active and bonded assignment permanently;
+- reload, recall, rest, a bed, a cleric, a console command, or party recovery may
+  not recreate that identity as living;
+- the death record persists with name, deeds, relationship, class, appearance,
+  place, time, and cause so the world may remember the person;
+- carried equipment follows a real corpse/tombstone/recovery transaction; recovery
+  of items is not recovery of the person, and nothing is mailed magically;
+- the open roster/party seat is not an instant replacement token. The five-day
+  lead cooldown and world search still apply;
+- a later NPC with the same role is a new person with a new history, not a reroll
+  or respawn of the dead companion.
+
+No downed/revive system may quietly convert death into a harmless timeout. A
+future **pre-death** wounded state is permissible only if it is clearly timed,
+interruptible, dangerous to rescue, and ends in permanent death when it fails.
+Healing cannot target a committed death. Permanent mortality must remain disabled
+until traversal, lava/water safety, network ownership, and death attribution are
+live-proven; the player must not lose a companion to an uncorrected follow bug or
+duplicate death callback.
 
 ## Release from active service
 
@@ -130,3 +206,10 @@ world position. Changing party status never changes identity or rerolls appearan
    while the player does nothing; tune until passive victory is not dependable.
 6. Verify residents do not count as active expedition strength and cannot be
    recalled remotely to bypass the two-slot limit.
+7. Spawn a lab actor and prove it cannot become a legitimate campaign recruit or
+   satisfy any roster/discovery record.
+8. Kill a campaign companion and verify permanent identity closure, one legal
+   equipment-recovery transaction, memorial persistence, slot release, five-day
+   lead delay, and no reload/recall/revive path.
+9. Fill all six bonded seats and prove a seventh recruitment returns a truthful
+   no until a living bond is safely released or a death is permanently recorded.

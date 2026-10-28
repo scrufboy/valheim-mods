@@ -42,6 +42,12 @@ person an einherji. That word remains reserved for Odin's chosen slain of Valhol
 in the mythic sources. Valheim's people call themselves by homes, bands, trades,
 vows, and earned names—not by a universal divine rank.
 
+The Second Breath is given once. A companion who dies in Valheim is not waiting
+for the player to press recall, pay a timer, or fetch them from a bed. The living
+may recover the dead person's gear, carry their name home, mark the place, and tell
+their deeds; they cannot command a **Third Breath**. This finality is why accepting
+someone's yes creates an obligation rather than a disposable combat resource.
+
 ## Before the player
 
 The opening dreams are memories of a time the player did not witness. Earlier
@@ -163,4 +169,3 @@ defines what happened; dialogue reveals only what a person believes.
 - *Gylfaginning* — Odin as Valfather and the battle-dead gathered to Valholl.
 - *Grettis saga* and related saga tradition — embodied revenants bound to bodies,
   mounds, property, and violent return.
-
