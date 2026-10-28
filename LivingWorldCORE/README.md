@@ -17,7 +17,9 @@ Owner: Brian (`scrufboy`).
 
 ## Story authorities
 
+- [Start with the readable story and world guide](./STORY-AND-WORLD-GUIDE.md)
 - [The Second Breath lore bible](./LORE-BIBLE-THE-SECOND-BREATH.md)
 - [Faction and peoples bible](./FACTION-AND-PEOPLES-BIBLE.md)
 - [World companion discovery and biome roles](./WORLD-COMPANION-DISCOVERY-AND-BIOME-ROLES.md)
 - [Companion progression, roster, and release](./COMPANION-PROGRESSION-ROSTER-AND-RELEASE.md)
+- [Follow the public development chronicle](../docs/LIVING-WORLD-CHRONICLE.md)

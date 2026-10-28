@@ -4,6 +4,13 @@ The GitHub home for Brian's **Living World C.O.R.E.** Valheim work.
 
 **C.O.R.E.** means **Characters, Origins, Roles & Encounters**.
 
+## Enter the living world
+
+- [Read the story and world guide](./LivingWorldCORE/STORY-AND-WORLD-GUIDE.md)
+- [Follow the unfolding project chronicle](./docs/LIVING-WORLD-CHRONICLE.md)
+- [Browse lore authorities](./LivingWorldCORE/README.md)
+- [Browse visual development](./art/README.md)
+
 ## Claude/Codex collaboration
 
 - [Shared Claude exchange](./claude-exchange)
