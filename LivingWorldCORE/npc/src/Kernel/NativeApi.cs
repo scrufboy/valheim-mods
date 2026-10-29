@@ -71,6 +71,13 @@ namespace LivingWorld.Core
         // 1.0.32.6 voice: death-line dev log (observes only).
         internal static readonly MethodInfo CharacterOnDeath = Method(typeof(Character), "OnDeath");
 
+        // 1.0.32.15 party clouds (verified in decompile, Valheim 1.0.21): Aoe.ShouldHit picks targets with the cloud's own
+        // m_hitOwner / m_hitSame / m_hitFriendly; Aoe.OnHit builds the HitData from m_damage; m_owner is the thrower.
+        internal static readonly FieldInfo AoeOwner = Field(typeof(Aoe), "m_owner");
+        internal static readonly MethodInfo AoeAwake = Method(typeof(Aoe), "Awake");
+        internal static readonly MethodInfo AoeShouldHit = Method(typeof(Aoe), "ShouldHit", typeof(Collider));
+        internal static readonly MethodInfo AoeOnHit = Method(typeof(Aoe), "OnHit", typeof(Collider), typeof(Vector3));
+
         // Visual identity.
         internal static readonly FieldInfo HairInstance = Field(typeof(VisEquipment), "m_hairItemInstance");
         internal static readonly FieldInfo BeardInstance = Field(typeof(VisEquipment), "m_beardItemInstance");

@@ -248,6 +248,8 @@ namespace LivingWorld.Core
             bool fighting = phase == NpcPhase.Combat || phase == NpcPhase.CombatClear;
             frame.FallingBack = fallBack.Step(Time.time, fighting, body.Human.GetHealthPercentage(), nearestEngagedDistance);
             frame.FallBackFrom = nearestEngagedPosition;
+            // 1.0.32.15: step out of a known harmful cloud with the same fall-back mover (no new movement writer).
+            if (body.IsOwner && hazard.Step(this, body.Human, Time.time)) { frame.FallingBack = true; frame.FallBackFrom = hazard.From; }
             if (phase != lastPhase)
             {
                 PhaseChanges++;
@@ -337,6 +339,8 @@ namespace LivingWorld.Core
         float nearestEngagedDistance = float.PositiveInfinity;
         Vector3 nearestEngagedPosition;
         readonly FallBackPolicy fallBack = new FallBackPolicy();
+        readonly HazardAwareness hazard = new HazardAwareness();
+        public HazardAwareness Hazard { get { return hazard; } }
         public FallBackPolicy FallBack { get { return fallBack; } }
         public float NearestEngagedDistance { get { return nearestEngagedDistance; } }
 

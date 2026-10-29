@@ -53,6 +53,9 @@ static class RegressionLedgerTests
         Run("1.0.32.14 exhaustion: one breath per event, 45 s cooldown, dropped if it cannot be voiced", ExhaustionEventCooldown);
         Run("1.0.32.14 actor gate: one voice at a time, min gap, exhale at most every 30 s", ActorGateOneVoice);
         Run("1.0.32.14 clip choice: never the same clip twice in a row", ClipPickerNoRepeat);
+        Run("1.0.32.15 party clouds: reduced share for the party, enemies and strangers untouched", PartyCloudFractions);
+        Run("1.0.32.15 party clouds: only lingering poison/fire clouds count", PartyCloudHarmful);
+        Run("1.0.32.15 hazard escape: confirm, leave with margin, give up when pinned, cooldown", HazardEscapeLaw);
         Run("LOCK combat voice 1.0.32.6: every rule constant is the approved value", CombatVoiceConstantsLocked);
         Run("LOCK combat voice: alert only before contact, once per enemy, party cooldown", CombatVoiceAlertsLocked);
         Run("LOCK combat voice: every heavy exertion voiced, ordinary swings 30% / 2.5 s", CombatVoiceExertionLocked);
@@ -1324,6 +1327,47 @@ static class RegressionLedgerTests
         for (int i = 0; i < 200; i++) { int c = p.Pick(4); Assert(c != prev, "same clip twice"); seen[c] = true; prev = c; }
         Assert(seen[0] && seen[1] && seen[2] && seen[3], "a clip never played");
         Assert(p.Pick(1) == 0 && p.Pick(0) == -1, "edge pools wrong");
+    }
+
+    // ---- 1.0.32.15 party clouds and hazard escape
+    static void PartyCloudFractions()
+    {
+        const float f = .35f;
+        Assert(CloudExposure.Fraction(CloudActor.Companion, CloudActor.Companion, true, false, true, true, f) == f, "own cloud on a companion");
+        Assert(CloudExposure.Fraction(CloudActor.Companion, CloudActor.Companion, false, false, true, true, f) == f, "partner's cloud");
+        Assert(CloudExposure.Fraction(CloudActor.Player, CloudActor.Companion, false, false, true, true, f) == f, "leader's cloud on a companion");
+        Assert(CloudExposure.Fraction(CloudActor.Companion, CloudActor.Player, false, true, true, true, f) == f, "companion cloud on the leader");
+        Assert(CloudExposure.Fraction(CloudActor.Player, CloudActor.Player, true, true, true, true, f) == f, "leader's own cloud");
+        Assert(CloudExposure.Fraction(CloudActor.Player, CloudActor.Player, false, false, true, true, f) == 0f, "another network player must stay vanilla");
+        Assert(CloudExposure.Fraction(CloudActor.Other, CloudActor.Companion, false, false, true, true, f) == 0f, "enemy cloud is native, not ours");
+        Assert(CloudExposure.Fraction(CloudActor.Companion, CloudActor.Other, false, false, true, true, f) == 0f, "enemy target is native");
+        Assert(CloudExposure.Fraction(CloudActor.Companion, CloudActor.Companion, true, false, false, true, f) == 0f, "companions switch off");
+        Assert(CloudExposure.Fraction(CloudActor.Player, CloudActor.Player, true, true, true, false, f) == 0f, "player switch off");
+        Assert(CloudExposure.Fraction(CloudActor.Companion, CloudActor.Companion, true, false, true, true, 0f) == 0f, "fraction 0 = vanilla");
+        Assert(CloudExposure.Fraction(CloudActor.Companion, CloudActor.Companion, true, false, true, true, 3f) == 1f, "fraction capped at 1");
+    }
+
+    static void PartyCloudHarmful()
+    {
+        Assert(CloudExposure.Harmful(40f, 0f, 10f), "ooze cloud");
+        Assert(CloudExposure.Harmful(30f, 15f, 10f), "bile cloud");
+        Assert(!CloudExposure.Harmful(0f, 0f, 10f), "no poison/fire");
+        Assert(!CloudExposure.Harmful(40f, 0f, .5f), "an instant blast is not a cloud");
+    }
+
+    static void HazardEscapeLaw()
+    {
+        var p = new HazardEscapePolicy(); const float r = 4f;
+        Assert(!p.Step(0f, 3f, r, false), "escaped without confirming");
+        Assert(p.Step(.3f, 3f, r, false), "did not escape after confirm");
+        Assert(p.Step(.6f, 4.8f, r, false), "stopped at the edge (needs margin)");
+        Assert(!p.Step(.9f, 5.6f, r, false) && p.Outcome == "clear", "did not stop when clear");
+        Assert(!p.Step(1f, 3f, r, false) && !p.Step(1.3f, 3f, r, false), "re-escaped inside the cooldown");
+        Assert(p.Step(2.5f, 3f, r, false), "no escape after the cooldown");
+        Assert(!p.Step(7.6f, 3f, r, false) && p.Outcome == "time", "pinned escape never gave up");
+        var q = new HazardEscapePolicy();
+        Assert(!q.Step(0f, 1f, r, true) && !q.Step(1f, 1f, r, true), "escaped while dead");
+        Assert(!q.Step(2f, float.PositiveInfinity, r, false), "escaped with no cloud");
     }
 
     // ---- Combat-voice lock (approved 1.0.32.6, 2026-10-27). Companion combat module, combat voice: COMPLETE.

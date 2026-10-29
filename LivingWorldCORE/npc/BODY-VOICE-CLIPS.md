@@ -95,3 +95,7 @@ Not wired (no native signal reaches a companion; would need a new status writer 
 | female | frost | `voice_female_a_breath_quick_01.wav` | 0.71 | `f318040cc8cf2b3a` |
 | female | swim | `voice_female_a_breath_deep_01.wav` | 1.09 | `3d90c64c5f067402` |
 | female | swim | `voice_female_a_breath_out_of_air_01.wav` | 1.96 | `29479e4d2751dbf7` |
+
+## 1.0.32.15 party clouds (no new clips)
+Own and party bomb clouds now reach the party at `[Hazards] PartyCloudFraction` (0.35) through native `SE_Poison`, so
+the installed poison pools cough on self-exposure too. Enemy clouds are unchanged (full, native).

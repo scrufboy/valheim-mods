@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.32.14";
+        public const string Version = "1.0.32.15";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -34,6 +34,13 @@ namespace LivingWorld.Core
         static BepInEx.Configuration.ConfigEntry<float> bombCooldown;
         static BepInEx.Configuration.ConfigEntry<bool> bodyBurning, bodyFrost, bodySwim, bodyExhaustion, bodyEnvRecover;
         static BepInEx.Configuration.ConfigEntry<float> bodySwimSeconds;
+        static BepInEx.Configuration.ConfigEntry<bool> partyCloudCompanions, partyCloudPlayer, hazardAwareness, devHazardLog;
+        static BepInEx.Configuration.ConfigEntry<float> partyCloudFraction;
+        public static bool PartyCloudCompanions { get { return partyCloudCompanions == null || partyCloudCompanions.Value; } }
+        public static bool PartyCloudPlayer { get { return partyCloudPlayer == null || partyCloudPlayer.Value; } }
+        public static float PartyCloudFraction { get { return partyCloudFraction == null ? .35f : Mathf.Clamp01(partyCloudFraction.Value); } }
+        public static bool HazardAwareness { get { return hazardAwareness == null || hazardAwareness.Value; } }
+        public static bool DevHazardLog { get { return devHazardLog != null && devHazardLog.Value; } }
         public static bool BodyBurning { get { return bodyBurning == null || bodyBurning.Value; } }
         public static bool BodyFrost { get { return bodyFrost == null || bodyFrost.Value; } }
         public static bool BodySwim { get { return bodySwim == null || bodySwim.Value; } }
@@ -89,6 +96,16 @@ namespace LivingWorld.Core
                 "1.0.32.14 candidate: one strained breath when a companion's heavy-attack stamina runs out, at most every 45 s. Clips: voices/body/<g>/exhaustion.");
             bodyEnvRecover = Config.Bind("BodyVoice", "EnvironmentRecover", true,
                 "1.0.32.14 candidate: one quiet exhale when burning or frost ends after at least 3 s, at most one per 30 s. Clips: voices/body/<g>/env_recover. Poison keeps its own recovery pool.");
+            partyCloudCompanions = Config.Bind("Hazards", "PartyCloudCompanions", true,
+                "1.0.32.15: a lingering bomb cloud (poison/fire) thrown by you or a companion also reaches companions, at PartyCloudFraction of its damage, through the game's own poison/burning. Off = the game's rule (the thrower and same-named characters are never hit).");
+            partyCloudPlayer = Config.Bind("Hazards", "PartyCloudPlayer", true,
+                "1.0.32.15: your own bomb cloud and your companions' clouds also reach you, at PartyCloudFraction. Off = the game's rule (your own Ooze/Bile cloud never hurts you).");
+            partyCloudFraction = Config.Bind("Hazards", "PartyCloudFraction", .35f,
+                "Share of a party cloud's damage a party member takes (0-1). Enemy clouds always do full damage.");
+            hazardAwareness = Config.Bind("Hazards", "HazardAwareness", true,
+                "1.0.32.15: companions know where the party's clouds are and see enemy clouds like a player would; one who ends up inside a harmful cloud steps out (the fall-back mover), then fights on.");
+            devHazardLog = Config.Bind("Hazards", "DevHazardLog", true,
+                "Development: log CLOUD-EXPOSE (a party member hit by a party cloud) and HAZARD-ESCAPE begin/end.");
             bombsEndless = Config.Bind("Combat", "BombsEndless", true,
                 "Test mode: bombs never run out (lwbombs is not needed). False = each companion carries the lwbombs reserve.");
             bombCooldown = Config.Bind("Combat", "BombCooldown", 10f,
@@ -125,6 +142,12 @@ namespace LivingWorld.Core
                 prefix: new HarmonyLib.HarmonyMethod(typeof(ThrowAimHook).GetMethod("FirePrefix")));
             harmony.Patch(NativeApi.GetProjectileSpawnPoint,
                 postfix: new HarmonyLib.HarmonyMethod(typeof(ThrowAimHook).GetMethod("SpawnPostfix")));
+            // 1.0.32.15 party clouds: reduced own/party exposure and the live cloud list for hazard awareness.
+            harmony.Patch(NativeApi.AoeAwake, postfix: new HarmonyLib.HarmonyMethod(typeof(PartyClouds).GetMethod("AwakePostfix")));
+            harmony.Patch(NativeApi.AoeShouldHit, prefix: new HarmonyLib.HarmonyMethod(typeof(PartyClouds).GetMethod("ShouldHitPrefix")),
+                finalizer: new HarmonyLib.HarmonyMethod(typeof(PartyClouds).GetMethod("ShouldHitFinalizer")));
+            harmony.Patch(NativeApi.AoeOnHit, prefix: new HarmonyLib.HarmonyMethod(typeof(PartyClouds).GetMethod("OnHitPrefix")),
+                finalizer: new HarmonyLib.HarmonyMethod(typeof(PartyClouds).GetMethod("OnHitFinalizer")));
             harmony.Patch(NativeApi.RpcStagger,
                 prefix: new HarmonyLib.HarmonyMethod(typeof(CompanionCombatVoice).GetMethod("RpcStaggerPrefix")));
             harmony.Patch(NativeApi.CharacterOnDeath,
@@ -408,7 +431,12 @@ namespace LivingWorld.Core
                 (refusals.Count > 0 ? " Refused: " + String.Join("; ", refusals.ToArray()) : ""));
         }
 
-        void Update() { BodyReactionVoice.Tick(); }
+        float nextCloudPrune;
+        void Update()
+        {
+            BodyReactionVoice.Tick();
+            if (Time.time >= nextCloudPrune) { nextCloudPrune = Time.time + 2f; PartyClouds.Prune(); }
+        }
 
         void OnHeal()
         {
