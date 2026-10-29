@@ -37,6 +37,7 @@ static class RegressionLedgerTests
         Run("1.0.32.10 gait: a companion behind its spot catches up, bounded by its native jog", GaitCatchUpBounded);
         Run("1.0.32.10 gait: the leader's walk toggle always means walk; far away means ordinary pace", GaitToggleAndRange);
         Run("1.0.32.10 gait: noisy leader speed does not flip walk/jog every tick", GaitNoFlicker);
+        Run("1.0.32.16 gait (Brian live): a standing leader never slows the party; walking-to-stopping returns native pace at once", GaitStandingLeaderNative);
         Run("1.0.32.12 throw: an incoming cluster farther off is chosen over a closer pair standing still", ThrowPrefersIncomingCluster);
         Run("1.0.32.12 throw (Brian hard rule): never lands near the leader or a companion, now or when it lands", ThrowNeverNearFriends);
         Run("1.0.32.12 throw: aims ahead of a moving group, inside reach, not at its feet", ThrowLeadsAndRange);
@@ -1109,7 +1110,17 @@ static class RegressionLedgerTests
         GaitChoice far = Settle(new GaitPolicy(), 1.5f, false, 9f, 9f, 5f);
         Assert(!far.Walk && !far.Matching && far.Speed == 5f, "slowed down while 9 m from the leader");
         GaitChoice still = Settle(new GaitPolicy(), 0f, false, 3f, 1f, 5f);
-        Assert(still.Speed >= GaitPolicy.MinSpeed, "crawled below the minimum speed");
+        Assert(!still.Matching && !still.Walk && still.Speed == 5f, "a standing leader slowed the companion (1.0.32.16)");
+    }
+
+    static void GaitStandingLeaderNative()
+    {
+        var p = new GaitPolicy();
+        for (int i = 0; i < 30; i++) p.Decide(.1f, 1.2f, false, 3f, 1f, 5f);          // walking slowly together
+        GaitChoice stop = p.Decide(.1f, 0f, false, 3f, 4f, 5f);                       // leader stops; companion 4 m from its spot
+        Assert(!stop.Matching && !stop.Walk && stop.Speed == 5f, "kept crawling after the leader stopped: " + stop.Speed.ToString("0.00"));
+        GaitChoice toggled = p.Decide(.1f, 0f, true, 3f, 4f, 5f);
+        Assert(!toggled.Walk, "walk toggle on a standing leader slowed the companion");
     }
 
     static void GaitNoFlicker()
