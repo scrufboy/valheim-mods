@@ -59,6 +59,7 @@ static class RegressionLedgerTests
         Run("1.0.32.15 hazard escape: confirm, leave with margin, give up when pinned, cooldown", HazardEscapeLaw);
         Run("1.0.32.18 ready watch: looks stay in its own outside half and really turn", ReadyWatchLooks);
         Run("1.0.32.18 ready watch: partners split the circle; footing shifts stay near home", ReadyWatchSidesAndSteps);
+        Run("1.0.32.19 ready watch (Brian live): never starts away from its leased spot; far or out of the spot ends it", ReadyWatchOnlyAtSpot);
         Run("LOCK combat voice 1.0.32.6: every rule constant is the approved value", CombatVoiceConstantsLocked);
         Run("LOCK combat voice: alert only before contact, once per enemy, party cooldown", CombatVoiceAlertsLocked);
         Run("LOCK combat voice: every heavy exertion voiced, ordinary swings 30% / 2.5 s", CombatVoiceExertionLocked);
@@ -1401,6 +1402,17 @@ static class RegressionLedgerTests
         Assert(sweeps > 40 && sweeps < 150, "sweep share off: " + sweeps);
         var w = new WatchLook { From = 30f, To = 90f, Seconds = 4f };
         Assert(Math.Abs(ReadyWatchPolicy.At(w, 2f) - 60f) < .01f && ReadyWatchPolicy.At(w, 9f) == 90f, "sweep interpolation");
+    }
+
+    static void ReadyWatchOnlyAtSpot()
+    {
+        Assert(!ReadyWatchPolicy.ShouldWatch(false, 25f, 0f, 30f), "started miles away");
+        Assert(!ReadyWatchPolicy.ShouldWatch(false, 2f, 3.5f, 4f), "started while still running in");
+        Assert(ReadyWatchPolicy.ShouldWatch(false, 2f, .2f, 4f), "did not start at its spot");
+        Assert(ReadyWatchPolicy.ShouldWatch(true, 4f, 1f, 5f), "a short shift of footing ended the watch");
+        Assert(!ReadyWatchPolicy.ShouldWatch(true, 5f, 0f, 5f), "kept watching away from its spot");
+        Assert(!ReadyWatchPolicy.ShouldWatch(true, 2f, 0f, 9f), "kept watching with the leader far off");
+        Assert(!ReadyWatchPolicy.ShouldWatch(false, -1f, 0f, 3f), "no lease yet");
     }
 
     static void ReadyWatchSidesAndSteps()

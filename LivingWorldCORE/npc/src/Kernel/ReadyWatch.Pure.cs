@@ -78,6 +78,19 @@ namespace LivingWorld.Core
             return look.From + (look.To - look.From) * k;
         }
 
+        public const float StartSlotDistance = 3.35f, StartSpeed = .8f, KeepSlotDistance = 4.5f, MaxLeaderDistance = 8f;
+
+        /// <summary>
+        /// 1.0.32.19 (Brian live: "when I stop, they just stop dead... even if they're miles away"): the watch starts only
+        /// once the companion has re-acquired its leased spot near the leader and settled; it ends as soon as it is no
+        /// longer near that spot or the leader, so traversal takes it back.
+        /// </summary>
+        public static bool ShouldWatch(bool active, float slotDistance, float ownSpeed, float leaderDistance)
+        {
+            if (slotDistance < 0f || leaderDistance < 0f || leaderDistance > MaxLeaderDistance) return false;
+            return active ? slotDistance <= KeepSlotDistance : slotDistance <= StartSlotDistance && ownSpeed <= StartSpeed;
+        }
+
         /// <summary>Which half to watch: own side of the leader, unless the partner already holds it.</summary>
         public static int ChooseSide(float lateral, int partnerSide)
         {

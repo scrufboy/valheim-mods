@@ -72,6 +72,7 @@ namespace LivingWorld.Core
 
             float slotDistance = Vector3.Distance(Body.Root.transform.position, slotPosition);
             board.FormationDistance = settled ? Vector3.Distance(Body.Root.transform.position, destination) : slotDistance;
+            board.SlotDistance = slotDistance;
             board.FormationSlot = slot;
 
             catchingUp = s.LeaderDistance >= Tuning.CatchUpEnter || (catchingUp && s.LeaderDistance > Tuning.CatchUpRelease);

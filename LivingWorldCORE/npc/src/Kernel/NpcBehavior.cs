@@ -58,6 +58,8 @@ namespace LivingWorld.Core
 
         // Traversal -> everyone: distance to the current formation destination.
         public float FormationDistance = -1f;
+        // Traversal -> everyone (1.0.32.19): distance to the leased formation slot itself, even while a settled request holds.
+        public float SlotDistance = -1f;
         public int FormationSlot = -1;
 
         // Hands -> diagnostics.

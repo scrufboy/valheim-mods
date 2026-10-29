@@ -28,7 +28,7 @@ namespace LivingWorld.Core
         ReadyWatchPolicy policy;
         WatchLook look;
         float lookStarted, nextStep, stepStarted;
-        bool stepping;
+        bool stepping, reacquiring;
         int side;
         Vector3 home, spot, leaderAtStart;
         Player leader;
@@ -42,7 +42,7 @@ namespace LivingWorld.Core
             NpcSenses s = f.Senses;
             return CorePlugin.ReadyWatch && f.Phase == NpcPhase.Readiness && s.HasLeader && s.Leader != null &&
                 !s.LeaderMoving && !s.LeaderSitting && !s.LeaderCrouching && s.Target == null && !s.HasStaticTarget &&
-                !s.Swimming;
+                !s.Swimming && ReadyWatchPolicy.ShouldWatch(Active, f.Board.SlotDistance, s.OwnSpeed, s.LeaderDistance);
         }
 
         public override void Enter(NpcFrame f)
@@ -72,7 +72,19 @@ namespace LivingWorld.Core
             board = f.Board;
             if (leader == null) return;
             Humanoid human = Body.Human;
-            if (Vector3.Distance(leader.transform.position, leaderAtStart) > LeaderMovedReset) { Begin(f); return; }
+            if (reacquiring)
+            {   // traversal is taking it back to its leased spot; resume the watch once settled there
+                if (f.Board.SlotDistance >= 0f && f.Board.SlotDistance <= ReadyWatchPolicy.StartSlotDistance &&
+                    f.Senses.OwnSpeed <= ReadyWatchPolicy.StartSpeed) { reacquiring = false; Begin(f); }
+                else { Status = "re-acquiring leased spot"; return; }
+            }
+            if (Vector3.Distance(leader.transform.position, leaderAtStart) > LeaderMovedReset)
+            {   // the leader shifted: give the spot back to traversal; the watch resumes once re-settled near him
+                if (board != null) board.ClearSettled(this);
+                reacquiring = true; stepping = false;
+                Status = "leader moved; re-acquiring leased spot";
+                return;
+            }
 
             if (f.Now - lookStarted >= look.Seconds)
             {
@@ -128,7 +140,7 @@ namespace LivingWorld.Core
         {
             Sides.Remove(this);
             if (board != null) board.ClearSettled(this);
-            stepping = false;
+            stepping = false; reacquiring = false;
             Status = "released: " + reason;
         }
 
