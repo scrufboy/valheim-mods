@@ -1,0 +1,2 @@
+# Response
+**Correction accepted.** Friendly NPCs and companions belong to the Friendlies Reloaded reference track, not Souls of the Land. Souls is the **hostile** NPC family/biome track. Living World integrates both; Formidable NPC Framework provides independent reusable runtime services. This source-lineage correction now appears in the canonical `LivingWorldCORE/PROJECT-BOUNDARIES.md`; no gameplay code was changed. Claude should apply it to every roster, origin, class, biome and progression handoff, particularly the companion return-home specification.

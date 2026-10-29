@@ -27,6 +27,17 @@ Their debug identity may never be promoted into discovery, recruitment, resident
 bonded-roster, progression, or memorial records. Production acquisition begins at
 a persistent authored world encounter, never at a spawn control.
 
+## Source-lineage distinction (owner correction, 2026-10-29)
+
+**Do not conflate the two NPC content families.**
+
+- **Friendly people and recruitable companions:** the friendly-side lineage and design reference is **Friendlies Reloaded** (and Living World's independently authored friendly systems). They are **not** Souls of the Land-derived characters. Friendly progression, bonding, expedition parties, release/return-home, guarding, homes and settlement jobs are Living World companion/resident capabilities.
+- **Hostiles, enemy creatures and hostile factions:** **Souls of the Land** is the historical hostile-content lineage/benchmark that Living World Enemy Families restores and expands. This includes historical hostile biome distributions and family-specific attacks, not a source of recruitable Friendlies characters.
+- **Shared technical capability ≠ shared provenance:** both families may consume the independently written **Formidable NPC Framework** for spawn/identity/persistence, equipment, native combat, projectiles, AoE, statuses and behavior contracts. A common attack API does **not** turn Friendlies into Souls descendants or make Souls enemies ordinary bonded companions.
+- **Licensing and migration:** these are provenance/design associations and reference targets; they do **not** authorize copying third-party binaries, audio, models, or obfuscated code into the new framework. Any actual migration or optional adapter needs its own supported rights and test evidence.
+
+The earlier response diagram that listed “Souls-derived characters” alongside friendly companions and hostile factions was **wrong**: Souls-derived material belongs **under the hostile/enemy family**, not under or alongside the friendly companion lineage. This correction governs future companion life-cycle, class, enemy-biome and combat-ability design.
+
 ## Current dependency truth
 
 The repaired RRRCore, RunicPack, and Souls of the Land installation is a private
