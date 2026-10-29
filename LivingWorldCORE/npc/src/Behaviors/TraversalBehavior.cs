@@ -123,12 +123,12 @@ namespace LivingWorld.Core
             bool inMenu = PartySpacingProbe.LeaderInMenu(leader);
             bool standing = !settled && !f.Senses.LeaderMoving;
             P2 leaderFlat = PartySpacingProbe.Flat(leader.transform.position);
-            if (standing)
-            {
-                P2 goalFlat = PartySpacing.KeepGoalOffLeader(PartySpacingProbe.Flat(destination), leaderFlat, inMenu);
-                destination = new Vector3(goalFlat.X, destination.y, goalFlat.Z);
-                followAnchor = Beyond(self, destination);
-            }
+            // 1.0.32.17 (Brian live 2026-10-29: weapon drawn and standing, they "freeze ... like a generic NPC"): a standing
+            // companion keeps the 1.0.32.7 anchor (its spot; native Follow settles inside 3 m and re-adjusts as the leader
+            // shifts). Only the contact rules below may override it. The 1.0.32.8 exact-arrival anchor and soft-region Hold
+            // parked them on the spot directly behind the leader (telemetry: 0.7 m from the spot at 2.8 m from the leader,
+            // against 2.7 m from the spot at 6.5 m from the leader under 1.0.32.7).
+            Vector3 standingAnchor = followAnchor;
             NpcKernel kernel = Body.Root.GetComponent<NpcKernel>();
             if (kernel != null) spacing.SelfId = kernel.GetInstanceID();
             probe.Gather(kernel, leader);
@@ -137,6 +137,8 @@ namespace LivingWorld.Core
                 PartySpacingProbe.SlotSide(slot), slot, probe.Near, probe.Count, probe);
             lastSpacing = r;
             spacingLog.Write(kernel, probe, r, slot, f.Now);
+            if (standing && r.Mode != SpacingMode.BackOff && !(r.Mode == SpacingMode.Wait && r.AvoidedId >= 0))
+                return standingAnchor;                             // 1.0.32.7 standing behavior unless backing off a contact
             switch (r.Mode)
             {
                 case SpacingMode.Hold:
