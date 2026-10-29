@@ -174,16 +174,13 @@ a straight line into unloaded wilderness. Permanent exile or severing the
 relationship, if ever added, is a separate serious dialogue choice with explicit
 consequences; it is not the normal way to free a party slot.
 
-## Lessons from other companion projects
+## Living World roster and home rule
 
-Vikings for Hire uses boss-gated squad slots and a worldwide roster. Its public
-description allows remote dismissal and returns the NPC's bag to the player.
-Offline Companions emphasizes persistent home, Follow on/off, jobs, beds, and
-identity rather than a clear removal ritual. These are useful evidence, not
-Living World behavior to copy.
-
-Living World keeps the useful roster and home concepts but rejects disappearance
-as the fiction. A person leaves active service by going somewhere meaningful.
+A person keeps a stable identity and home while changing expedition status. A
+party slot opens when that person returns to a meaningful place and their
+assignment is recorded. Their inventory, relationships, and history remain with
+them. Evidence from external systems is kept in the separate capability
+research; no outside package name defines this rule.
 
 ## Persistence record
 

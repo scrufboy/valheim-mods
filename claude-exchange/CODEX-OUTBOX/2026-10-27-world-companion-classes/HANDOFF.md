@@ -31,7 +31,7 @@ contract.
 
 - `LivingWorldCORE/WORLD-COMPANION-DISCOVERY-AND-BIOME-ROLES.md`
 - `LivingWorldHumanNPC/SPECIALIST-COMBAT-CAPABILITY-PLAN.md`
-- `research/COMPETITOR-AUDIT-OFFLINE-COMPANIONS.md`
+- `research/EXTERNAL-COMPANION-CAPABILITIES.md`
 - `LivingWorldCompanionSystems/README.md`
 
 ## Art included

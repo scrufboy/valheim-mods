@@ -1,4 +1,4 @@
-# Offline Companions and Vikings for Hire: discovery and capability audit
+# External companion capability research
 
 Date: 2026-10-27
 
@@ -13,7 +13,7 @@ Sources reviewed:
 - [Offline Companions 1.2.0](https://thunderstore.io/c/valheim/p/ProfMags/Offline_Companions/v/1.2.0/)
 - [Offline Companions Reborn](https://github.com/MaddhattrRocks/Offline-Companions-Reborn)
 - [Vikings for Hire](https://www.nexusmods.com/valheim/mods/4057)
-- `LivingWorldHumanNPC/COMPETITOR-AUDIT-VIKINGSFORHIRE-1.6.3.md`
+- `LivingWorldHumanNPC/EXTERNAL-HUMAN-ACTOR-CAPABILITIES.md`
 
 Offline Companions Reborn is public under MIT at the reviewed repository.
 Vikings for Hire was reviewed from its public feature description and the
@@ -23,7 +23,7 @@ contracts.
 
 ## What each project teaches
 
-### Offline Companions
+### Persistent ally reference
 
 Offline Companions proves that an ally can feel like a second player when
 identity, inventory, equipment, food, stamina, skills, voice, home, work, rest,
@@ -51,7 +51,7 @@ Living World direction:
 - do not replace accepted native `MonsterAI` combat ownership with another full
   movement/attack controller.
 
-### Vikings for Hire
+### Wilderness roster reference
 
 Vikings for Hire proves that peaceful wanderers and foreign settlements can make
 recruitment part of exploration. Public descriptions show biome wanderers,

@@ -1,5 +1,45 @@
 # Living World C.O.R.E. project boundaries
 
+## Owner goal
+
+> The goal of Living World Core is to make the best NPCs Valheim can have. Period.
+
+Build one modular, cohesive world of capable people: friendly and hostile
+characters with their own origins, names, homes, needs, routines, equipment,
+combat roles, and histories. A player can stumble upon a camp without knowing
+whether its people will welcome, warn, avoid, or fight them. Biome and world
+progression shape their appearance, clothes, armor, tools, weapons, knowledge,
+and threats. They can change or exchange equipment and act competently in combat
+without taking the game away from the player.
+
+The package should support fully lore-friendly, adventurous, well-written and
+well-scripted encounters. Dialogue, voice, work, travel, enemy relations, and
+quest flags respond to a person's situation and to what the player has actually
+done. At a camp, a person may ask for food because they are hungry, ask for a
+nearby threat to be cleared, or ask for help reclaiming a village. The player
+may agree, decline, or leave. If the player helps, the person remembers the
+specific act and may choose to help in return or travel together for that
+purpose. Shared events can deepen affinity. Later, either person may invite the
+other into the expedition, and the other may accept or decline. Friendship,
+story partnership, and family-like bonds grow from those continuing choices.
+Friendly people and enemy families belong to the same living world and use
+shared actor capabilities with different allegiances, roles, and stories.
+
+Study every relevant mod the owner supplies in depth. Identify useful methods,
+Valheim hooks, and working capabilities; test what applies; improve what falls
+short; and implement the Living World version through our own modular contracts.
+Use combat and behavior telemetry to refine decisions. Reference systems are
+research inputs, never the ceiling or the identity of Living World C.O.R.E.
+
+### Continuity when instructions change
+
+A correction to a name, test interpretation, feature, or document applies to
+that stated subject. It does not cancel the established goal or reverse other
+accepted decisions. Before removing or reversing existing work, identify the
+owner's exact instruction requiring that change. If the new instruction could
+mean more than one thing, clarify the affected scope before changing it. Keep
+working on the unaffected project objectives.
+
 Living World C.O.R.E. is the story, character, settlement, faction, and encounter
 system for **Characters, Origins, Roles & Encounters**. It uses the independently
 implemented **Formidable NPC Framework** for the reusable NPC creation/runtime
@@ -8,6 +48,15 @@ services that the current lab stack temporarily obtains from RRRCore.
 The framework can ship separately for community creators or as a declared Living
 World dependency. Living World C.O.R.E. owns the lore and the friendly, resident,
 hero, and enemy content built with it; the framework does not require that content.
+
+## Research and naming boundary
+
+Inspect supplied mods deeply to learn their capabilities, methods, and Valheim
+integration points. Keep each source's exact name in citations, package
+provenance, and source-specific evidence. Titles, directories, modules, public
+descriptions, and handoff labels for this project use Living World C.O.R.E. and
+Formidable NPC Framework vocabulary. A reference package's product name never
+becomes the name of our work.
 
 ## Product map
 

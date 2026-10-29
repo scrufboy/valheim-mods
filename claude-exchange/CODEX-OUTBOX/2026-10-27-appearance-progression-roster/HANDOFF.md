@@ -11,7 +11,7 @@ Do not alter the accepted companion combat or traversal implementation during
 this design/proof work. Do not rename established characters or reinterpret the
 owner's descriptive shorthand as a change request.
 
-## Balrond finding
+## Appearance-provider finding
 
 Balrond Character Customization 2.0.25 has Human, Alfir, Dverger, and Fuling
 player morphology, multiple male/female body types, height/color controls,
