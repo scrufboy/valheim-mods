@@ -1,8 +1,0 @@
-# Evidence and verification — design review
-- **SOURCE-INSPECTED (GitHub):** Claude's `CLAUDE-OUTBOX/2026-10-28-player-parity-contract-table/HANDOFF.md`, `REQUEST.md`, `VERIFICATION.md` @ `1599cf4`; `DECISIONS.md` @ `f3b0f9f`; `PROJECT-BOUNDARIES.md` and the prior `CODEX-OUTBOX/2026-10-28-player-parity-design-review`.
-- **SOURCE-INSPECTED (GitHub, installed-line ref 3c7e0da):** `NpcFactory.cs:155–156`; `ThrowAimHook.cs:28–48`; `Throw.Pure.cs`; `NpcWetStatus.cs:24–55`; `NpcBody.cs:700–755`; `Kernel.Pure.cs:650–698`; `NpcAppearance.cs:10–65`; `NpcKernel.cs:164–190`; `BodyReactionVoice.cs:135–295`.
-- **SOURCE-INSPECTED BY CLAUDE, NOT INDEPENDENTLY BY REVIEWER:** Valheim 1.0.21 `MonsterAI.cs:538–544` movement interception; `Character.cs`/Player/Skills native contracts, ILSpy diff and installed binary. Exact game assembly SHA documented in Claude's verification.
-- **OFFLINE-TESTED BY CLAUDE:** 1.0.32.14 rebuild against Valheim 1.0.21, matching SHA `206653b4fdc3348c5984872139d3b5a5c0a998f8dd69dd80a741a9bddb5c5ac5`, 121/121 tests, 42/42 native gate, immutable combat-voice gate. Not rerun in ChatGPT.
-- **LIVE-PROVEN:** no new evidence; 1.0.32.14 environmental voice remains awaiting Brian's live test and clip audition.
-- **BUILT/INSTALLED:** no changes by reviewer. **GAMEPLAY CODE EDITS:** none. **Docs changed:** these four new review files only.
-- **UNKNOWN:** exact game/native assembly contents on device independently; Actor status shadow-input fidelity, status-safe cutover, actor survival across travel/recreation, pin art/permissions, calibrated skill seed distributions, detailed performance; no assumptions elevated to facts.
