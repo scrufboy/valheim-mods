@@ -103,3 +103,13 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
   - Native rule (SOURCE-INSPECTED): `Skills.OnDeath` lowers every skill by `m_DeathLowerFactor × Game.m_skillReductionRate`
     and resets the accumulator. The code default is 0.25; the Player prefab value is to be read at runtime. The world
     modifier `SkillReductionRate` applies.
+
+## 2026-10-29 — Bomb cloud exposure direction (Brian)
+
+- Bombs work as Brian wants for now; no change scheduled.
+- Direction, not yet a build order: a **reduced effect** from one's own or the party's clouds, for the player class and
+  non-player characters, together with **heightened awareness** of clouds (area, avoidance).
+  - Hostile NPCs must be affected by poison, as we are by theirs.
+  - Leaving a cloud is a tactical decision.
+  - A party knows where its poison is; being pushed in by combat is the realistic exception.
+- A test arena is needed for this. R&D record: `research/BOMBS-CLOUDS-AND-STATUS-EXPOSURE-RND.md`.
