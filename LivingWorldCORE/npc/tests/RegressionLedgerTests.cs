@@ -57,6 +57,8 @@ static class RegressionLedgerTests
         Run("1.0.32.15 party clouds: reduced share for the party, enemies and strangers untouched", PartyCloudFractions);
         Run("1.0.32.15 party clouds: only lingering poison/fire clouds count", PartyCloudHarmful);
         Run("1.0.32.15 hazard escape: confirm, leave with margin, give up when pinned, cooldown", HazardEscapeLaw);
+        Run("1.0.32.18 ready watch: looks stay in its own outside half and really turn", ReadyWatchLooks);
+        Run("1.0.32.18 ready watch: partners split the circle; footing shifts stay near home", ReadyWatchSidesAndSteps);
         Run("LOCK combat voice 1.0.32.6: every rule constant is the approved value", CombatVoiceConstantsLocked);
         Run("LOCK combat voice: alert only before contact, once per enemy, party cooldown", CombatVoiceAlertsLocked);
         Run("LOCK combat voice: every heavy exertion voiced, ordinary swings 30% / 2.5 s", CombatVoiceExertionLocked);
@@ -1379,6 +1381,48 @@ static class RegressionLedgerTests
         var q = new HazardEscapePolicy();
         Assert(!q.Step(0f, 1f, r, true) && !q.Step(1f, 1f, r, true), "escaped while dead");
         Assert(!q.Step(2f, float.PositiveInfinity, r, false), "escaped with no cloud");
+    }
+
+    // ---- 1.0.32.18 ready watch
+    static void ReadyWatchLooks()
+    {
+        var p = new ReadyWatchPolicy(11); float last = float.NaN; int sweeps = 0;
+        for (int i = 0; i < 300; i++)
+        {
+            WatchLook l = p.NextLook(i % 2 == 0 ? 1 : -1 + 0 * i);
+            int s = i % 2 == 0 ? 1 : -1;
+            foreach (float b in new[] { l.From, l.To })
+                Assert(s * b >= ReadyWatchPolicy.HalfMin - .01f && s * b <= ReadyWatchPolicy.HalfMax + .01f, "look outside its half: " + b);
+            Assert(l.Seconds >= ReadyWatchPolicy.DwellMin && l.Seconds <= ReadyWatchPolicy.DwellMax, "dwell out of range");
+            if (l.From != l.To) sweeps++;
+        }
+        var q = new ReadyWatchPolicy(3); float prev = q.NextLook(1).To;
+        for (int i = 0; i < 100; i++) { WatchLook l = q.NextLook(1); Assert(Math.Abs(l.From - prev) >= ReadyWatchPolicy.MinChange - .01f, "a new look barely turned"); prev = l.To; }
+        Assert(sweeps > 40 && sweeps < 150, "sweep share off: " + sweeps);
+        var w = new WatchLook { From = 30f, To = 90f, Seconds = 4f };
+        Assert(Math.Abs(ReadyWatchPolicy.At(w, 2f) - 60f) < .01f && ReadyWatchPolicy.At(w, 9f) == 90f, "sweep interpolation");
+    }
+
+    static void ReadyWatchSidesAndSteps()
+    {
+        Assert(ReadyWatchPolicy.ChooseSide(1f, 0) == 1 && ReadyWatchPolicy.ChooseSide(-1f, 0) == -1, "own side first");
+        Assert(ReadyWatchPolicy.ChooseSide(1f, 1) == -1 && ReadyWatchPolicy.ChooseSide(-1f, -1) == 1, "partner holds it: take the other half");
+        var p = new ReadyWatchPolicy(5); P2 home = new P2(0f, 0f), self = home; int steps = 0;
+        for (int i = 0; i < 200; i++)
+        {
+            P2 to;
+            if (p.Step(self, home, out to))
+            {
+                steps++;
+                float d = P2.Distance(self, to);
+                Assert(d >= ReadyWatchPolicy.StepMin - .01f && d <= ReadyWatchPolicy.StepMax + .01f, "step length " + d);
+                Assert(P2.Distance(to, home) <= ReadyWatchPolicy.MaxDrift + .01f, "drifted from home");
+                self = to;
+            }
+            float delay = p.NextStepDelay();
+            Assert(delay >= ReadyWatchPolicy.StepEveryMin && delay <= ReadyWatchPolicy.StepEveryMax, "step interval");
+        }
+        Assert(steps > 50 && steps < 150, "step chance off: " + steps);
     }
 
     // ---- Combat-voice lock (approved 1.0.32.6, 2026-10-27). Companion combat module, combat voice: COMPLETE.

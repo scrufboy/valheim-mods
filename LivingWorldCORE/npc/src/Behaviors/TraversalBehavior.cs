@@ -59,7 +59,8 @@ namespace LivingWorld.Core
             EnsureSlot(leader);
 
             NpcBlackboard board = f.Board;
-            bool settled = board.SettledRequester != null && f.Phase == NpcPhase.Calm && !s.LeaderMoving;
+            // Settled request: the settled guard (Calm) or, 1.0.32.18, the ready watch (Readiness) says where to stand.
+            bool settled = board.SettledRequester != null && (f.Phase == NpcPhase.Calm || f.Phase == NpcPhase.Readiness) && !s.LeaderMoving;
             Vector3 slotPosition = FormationLeases.Position(leader, slot, formationForward);
             Vector3 destination = settled ? board.SettledDestination : slotPosition;
             Vector3 followAnchor = settled ? board.SettledFollowAnchor : FollowAnchorPosition(leader, destination);

@@ -81,6 +81,7 @@ namespace LivingWorld.Core
             Add(new SitWithLeaderBehavior());
             Add(new SettledGuardBehavior());
             Add(new AwarenessLookBehavior());
+            Add(new ReadyWatchBehavior());      // 1.0.32.18: after awareness (an alerted hostile takes the look first)
             Add(new TraversalBehavior());
             Add(new HandsBehavior());
 

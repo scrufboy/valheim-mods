@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.32.17";
+        public const string Version = "1.0.32.18";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -49,7 +49,8 @@ namespace LivingWorld.Core
         public static float BodySwimSeconds { get { return bodySwimSeconds == null ? 20f : Mathf.Clamp(bodySwimSeconds.Value, 5f, 120f); } }
         static BepInEx.Configuration.ConfigEntry<float> foodStamina, companionVoiceGain;
         static BepInEx.Configuration.ConfigEntry<bool> devVoiceLog;
-        static BepInEx.Configuration.ConfigEntry<bool> partySpacing, devSpacingLog, matchGait;
+        static BepInEx.Configuration.ConfigEntry<bool> partySpacing, devSpacingLog, matchGait, readyWatch;
+        public static bool ReadyWatch { get { return readyWatch == null || readyWatch.Value; } }
         public static bool PartySpacingEnabled { get { return partySpacing == null || partySpacing.Value; } }
         public static bool DevSpacingLog { get { return devSpacingLog != null && devSpacingLog.Value; } }
         public static bool MatchGait { get { return matchGait == null || matchGait.Value; } }
@@ -76,6 +77,8 @@ namespace LivingWorld.Core
                 "Development only: log SPACE-ENTER/RELEASE/WAIT/BLOCKED/BACKOFF/CONTACT/SUMMARY lines for party spacing.");
             matchGait = Config.Bind("Movement", "MatchGait", true,
                 "Companions match the leader's walking pace: they walk when he walks slowly (or has walk toggled) and jog no faster than needed, catching up only when they fall behind. Off = 1.0.32.9 pace.");
+            readyWatch = Config.Bind("Movement", "ReadyWatch", true,
+                "1.0.32.18: weapon drawn and you standing still, companions stand their ground at the ready: each watches the outside half on its side of you, turns head and shoulders to new bearings or sweeps slowly, and now and then shifts its footing a short way. Off = they hold their spot.");
             foodStamina = Config.Bind("Combat", "CompanionFoodStamina", 100f,
                 "Heavy-attack stamina a companion gets from food on top of the Player base 50 (only heavy attacks spend it).");
             shieldBlocking = Config.Bind("Combat", "ShieldBlocking", false,
