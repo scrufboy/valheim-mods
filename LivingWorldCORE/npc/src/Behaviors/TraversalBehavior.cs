@@ -41,11 +41,12 @@ namespace LivingWorld.Core
         }
 
         readonly GaitPolicy gait = new GaitPolicy();
+        readonly SneakApproach sneakApproach = new SneakApproach();
         GaitChoice lastGait;
 
         public override void Enter(NpcFrame f)
         {
-            gait.Reset(); lastGait = new GaitChoice();
+            gait.Reset(); lastGait = new GaitChoice(); sneakApproach.Reset();
             formationFrameReady = false;
             catchingUp = false;
             spacing.Reset();
@@ -76,7 +77,8 @@ namespace LivingWorld.Core
             board.FormationSlot = slot;
 
             catchingUp = s.LeaderDistance >= Tuning.CatchUpEnter || (catchingUp && s.LeaderDistance > Tuning.CatchUpRelease);
-            bool sneak = s.LeaderCrouching && !s.Swimming && f.Phase != NpcPhase.Regroup;
+            // 1.0.32.20: far companions come up at the ordinary pace; they sneak only the last stretch near the leader
+            bool sneak = sneakApproach.Step(s.LeaderCrouching && !s.Swimming && f.Phase != NpcPhase.Regroup, s.LeaderDistance);
             float anchorDistance = Vector3.Distance(Body.Root.transform.position, followAnchor);
             bool run = !settled && !sneak && (s.LeaderRunning || catchingUp ||
                 ((f.Phase == NpcPhase.Readiness || f.Phase == NpcPhase.Regroup) && (s.LeaderRunning || s.LeaderDistance > 7f)));

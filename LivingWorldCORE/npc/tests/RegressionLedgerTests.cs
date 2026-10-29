@@ -60,6 +60,7 @@ static class RegressionLedgerTests
         Run("1.0.32.18 ready watch: looks stay in its own outside half and really turn", ReadyWatchLooks);
         Run("1.0.32.18 ready watch: partners split the circle; footing shifts stay near home", ReadyWatchSidesAndSteps);
         Run("1.0.32.19 ready watch (Brian live): never starts away from its leased spot; far or out of the spot ends it", ReadyWatchOnlyAtSpot);
+        Run("1.0.32.20 sneak approach (Brian): far behind a crouching leader = come up at pace, sneak only the last stretch", SneakApproachDistance);
         Run("LOCK combat voice 1.0.32.6: every rule constant is the approved value", CombatVoiceConstantsLocked);
         Run("LOCK combat voice: alert only before contact, once per enemy, party cooldown", CombatVoiceAlertsLocked);
         Run("LOCK combat voice: every heavy exertion voiced, ordinary swings 30% / 2.5 s", CombatVoiceExertionLocked);
@@ -1402,6 +1403,18 @@ static class RegressionLedgerTests
         Assert(sweeps > 40 && sweeps < 150, "sweep share off: " + sweeps);
         var w = new WatchLook { From = 30f, To = 90f, Seconds = 4f };
         Assert(Math.Abs(ReadyWatchPolicy.At(w, 2f) - 60f) < .01f && ReadyWatchPolicy.At(w, 9f) == 90f, "sweep interpolation");
+    }
+
+    static void SneakApproachDistance()
+    {
+        var p = new SneakApproach();
+        Assert(!p.Step(true, 60f), "crept from 60 m");
+        Assert(!p.Step(true, 12f), "crept from 12 m");
+        Assert(p.Step(true, 5.5f), "did not sneak near the leader");
+        Assert(p.Step(true, 8f), "flickered out of sneak at 8 m (hysteresis)");
+        Assert(!p.Step(true, 10f), "kept sneaking at 10 m");
+        Assert(!p.Step(false, 3f), "sneaked with the leader standing up");
+        Assert(!p.Step(true, -1f), "sneaked with no leader distance");
     }
 
     static void ReadyWatchOnlyAtSpot()

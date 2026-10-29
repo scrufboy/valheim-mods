@@ -14,6 +14,26 @@ namespace LivingWorld.Core
         public bool Matching;  // slower than the native jog because the leader is
     }
 
+    /// <summary>
+    /// 1.0.32.20 (Brian 2026-10-29): when the leader crouches, a companion far behind does not creep the whole way. It
+    /// runs or jogs up (the ordinary pace and catch-up rules), and only near him does it sneak the last stretch.
+    /// </summary>
+    public sealed class SneakApproach
+    {
+        public const float SneakWithin = 6f, SneakRelease = 9f;
+        bool sneaking;
+        public bool Sneaking { get { return sneaking; } }
+
+        public bool Step(bool leaderCrouching, float leaderDistance)
+        {
+            if (!leaderCrouching || leaderDistance < 0f) { sneaking = false; return false; }
+            sneaking = sneaking ? leaderDistance <= SneakRelease : leaderDistance <= SneakWithin;
+            return sneaking;
+        }
+
+        public void Reset() { sneaking = false; }
+    }
+
     public sealed class GaitPolicy
     {
         public const float Margin = .15f;          // a touch faster than the leader so the party does not drift apart
