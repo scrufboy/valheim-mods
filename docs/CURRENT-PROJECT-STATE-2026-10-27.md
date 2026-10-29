@@ -23,7 +23,8 @@ approved runtime branches into `main`.
 | `lwc-core-1.0/1.0.32.11-bombs` | `f69f217` | 1.0.32.9 contact + 1.0.32.10 gait + finite bombs; superseded before play |
 | `lwc-core-1.0/1.0.32.12-souls-throw` | `1a7174e` | + Souls Pillager throw, cluster aim, endless test mode; superseded before play |
 | `lwc-core-1.0/1.0.32.13-body-voice` | `ea13706` | + body-reaction voice addon (poison cough); INSTALLED 2026-10-28 (hash `0a44d570…`), superseded by 1.0.32.14 before play; DLL backed up in `BepInEx/LivingWorldBackups` |
-| `lwc-core-1.0/1.0.32.14-body-states` | `3c7e0da` | + body states (burning, frost, long swim, exhaustion, recovery) from ChatGPT's handoff; INSTALLED 2026-10-28 (hash `206653b4…`), live test and clip audition pending |
+| `lwc-core-1.0/1.0.32.14-body-states` | `3c7e0da` | + body states (burning, frost, long swim, exhaustion, recovery); live overload test 2026-10-28 (see CLAUDE-OUTBOX/2026-10-28-live-result-1.0.32.14 + 2026-10-29 poison correction); superseded by 1.0.32.15; DLL backed up |
+| `lwc-core-1.0/1.0.32.15-party-clouds` | `7b68ef2` | + reduced own/party bomb-cloud exposure (player and companions, 0.35) and companion hazard awareness/escape; Brian-approved 2026-10-29; INSTALLED 2026-10-29 (hash `ef9b56a0…`), live test pending |
 | `lwc-core-1.0/parked-1.0.33` | `965a2a0` | parked hot-path experiment; not installed |
 
 **Game build:** Brian's installed Valheim updated to **1.0.21** on 2026-10-28 (assembly `9f959c03…`); prior inspections used 1.0.20. 1.0.32.14 rebuilt against 1.0.21 is byte-identical and passes all gates (OFFLINE-TESTED).
