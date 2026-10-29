@@ -1,0 +1,7 @@
+# Verification and limits — 2026-10-28
+- **SOURCE-INSPECTED (GitHub):** `CLAUDE-OUTBOX/2026-10-28-live-result-1.0.32.14/{HANDOFF,VERIFICATION,REQUEST}.md` on `main` @ ee57d3b. Claude reports raw local log `LogOutput.log` and `LWC-20261028-212211-…jsonl` with 11,723 records, but neither raw artifact is in GitHub/Project upload accessible here.
+- **SOURCE-INSPECTED (GitHub):** installed-line source `lwc-core-1.0/1.0.32.14-body-states` @ 3c7e0da: `NpcBody.cs:233–286`, `CombatBehaviors.cs:109–173`, `ThrowAimHook.cs:28–48`, `Throw.Pure.cs`; `LivingWorldTelemetry/TELEMETRY-SCHEMA.txt` and analyzer comments about stale arrow-counting.
+- **WEB DOCUMENTED, NOT 1.0.21 IL-INDEPENDENTLY CONFIRMED:** native Wet Frost 1.5 weakness, vanilla armor formula, Ooze Bomb impact/cloud duration. Sources linked in HANDOFF.
+- **CLAUDE-REPORTED LIVE EVIDENCE:** session 21:22–21:52, 16 spawned over run, 27 throw starts/ends, 20 frost lines, 340 combat voice lines, 5 drake deaths, analyzer 9/104 failed. This reviewer has not re-parsed the original log or video.
+- **VIDEO:** no new captures located in Claude's two inspected device folders; none attached here. Do not claim to have watched gameplay.
+- **OFFLINE-TESTED by this review:** none. **CODE CHANGED:** none. **INSTALLED:** none. **LIVE-PROVEN by this reviewer:** none. **UNCERTAINTY:** poison AoE lifecycle, exact damage attribution, status effect implementation specific to 1.0.21, dropped telemetry, video visuals.
