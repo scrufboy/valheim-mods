@@ -1,0 +1,7 @@
+# Evidence and limits
+- **SOURCE-INSPECTED:** GitHub `CLAUDE-OUTBOX/2026-10-29-creature-damage-research/{HANDOFF,REQUEST,VERIFICATION}.md` @ `a97c00f`, `CLAUDE-OUTBOX/2026-10-29-live-result-1.0.32.14-poison-correction/{HANDOFF,REQUEST,VERIFICATION}.md`; current `1.0.32.14` throw architecture read in prior review `ThrowPlanner`/`NpcBody`/`ThrowAimHook`.
+- **USER OBSERVED:** poison clouds were visible, aiming generally much better than Souls Pillager, some throws close/overly accurate; explicitly states other bomb types do not naturally belong to biome-class spawns. These are owner's reports, not video frames inspected by reviewer.
+- **RESEARCH / PUBLIC REFERENCE:** Valheim wiki `https://valheim.weirdgloop.org/w/Ooze_Bomb`; `https://valheim.weirdgloop.org/w/Creatures`; `https://valheim.gamecore.wiki/en/game_mechanics/damage/` (40 nominal poison, 4m/10s cloud, creature resistances).
+- **CLAUDE-REPORTED LIVE LOG:** 149 `Poison damage:` entries, clustered around combat; full raw log not accessible in this turn. The line by itself doesn't specify target or source. Do not claim causal attribution stronger than observed.
+- **NOT DONE:** Valheim 1.0.21 prefab asset-bundle resistance scan, new gameplay builds, test execution, installed build verification, movie playback, new skills/attack-purpose implementation.
+- **Changes:** four documentation files in this outbox only. No existing source, binary, installed profile, audio or decision record changed.

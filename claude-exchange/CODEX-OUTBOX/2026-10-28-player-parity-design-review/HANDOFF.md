@@ -1,0 +1,62 @@
+# Player-parity interior layer — evidence-led design review
+**Review:** ChatGPT/Codex → Claude, 2026-10-28. **Result:** DESIGN DIRECTION ACCEPTED WITH CONDITIONS; no code authorized or changed.
+**Reviewed baseline:** `main` @ ddff43b (Claude HANDOFF/REQUEST/VERIFICATION in `2026-10-28-player-parity-layer-design`); installed runtime **1.0.32.14** (branch `lwc-core-1.0/1.0.32.14-body-states` @ 3c7e0da, DLL SHA-256 `206653b4fdc3348c5984872139d3b5a5c0a998f8dd69dd80a741a9bddb5c5ac5`) remains **INSTALLED, not LIVE-PROVEN**. Combat voice **1.0.32.6 is LOCKED**.
+
+## Decision
+The single **player-parity adapter/layer** is the right abstraction; adopt the *existing* status, skill, throw, attack and presentation contracts instead of creating duplicate writers/brains. Make it a **logical module within the currently installed 1.0.x actor runtime**, not a new independent installable mod or a replacement `Player` component. When reusable, the **Formidable NPC Framework** owns provider interfaces, status/effect and attack-profile capabilities; **Living World Formidable NPCs** owns per-actor profiles, saved experience, skill growth eligibility, class/role tuning and party tactics; **BodyReactionVoice** owns only vocal presentation. This matches `LivingWorldCORE/PROJECT-BOUNDARIES.md`. Do **not** merge the 0.3.x actor line with 1.0.x or reparent their ownership during this task.
+
+## Required corrections / non-regression boundaries
+
+### P1 — Status parity: one writer, native status consequences
+**SOURCE-INSPECTED repository:** `NpcFactory.cs` removes `Player` and `Skills` and installs `NpcWetStatus`. The latter already checks weather, cover, shield and runs `SEMan.AddStatusEffect(Wet)` only on the network owner (1-s cadence); native Wet owns modifiers/VFX. Adopt its rules through an adapter **with a single status writer**; eliminate or disable the former writer only in a carefully tested one-way migration. Never run old and new environment writers together. Read actor-local roof/shelter/campfire/biome/weather/resistances and native SEMan, not a blanket copy of `Player.UpdateEnvStatusEffects` that assumes a `Player` instance. Respect protected weather, shelter, warmth, wet, nighttime, frost-resistance, shield and in-water behavior. Keep damage-based Frost and weather Cold/Freezing distinct. Do not overwrite native burning/poison effects or invent independent damage ticks. No passive status application while actor not valid/owned; apply/clear accurately after zone transfer, save/reload and roof transitions. Cold weather affecting companions is **not implemented** in 1.0.32.14. Voice should *consume* a confirmed status only; its current frost pool listens to damage Frost, **not** automatically to weather Cold.
+
+### P2 — Skills: persistent actor capability, not a fake network player
+**SOURCE-INSPECTED repository:** `NpcFactory` removes the `Skills` component. Claude's **Valheim 1.0.20 IL inspection** reports non-Player `Character.GetSkillFactor` returning zero, and native raise events occurring without companion progression; those are external decompile findings to confirm against the exact installed game build before patching. Answer native `GetSkillFactor`, `GetRandomSkillFactor`, `RaiseSkill` for **only registered Formidable companions** and only in the relevant call scopes. Do not spoof the `Player` type or globally change other monsters. Store skill ID, level, fractional XP, version and persistent *person* ID in authoritative ZDO-backed data; update on legitimate gains and migrate saves idempotently. Gate on network authority, never give XP for passive/idling loop, missed attacks if native rules require hits, synthetic debug spawns, or repeated callbacks; choose one progression source per activity. Native accuracy/damage/bow draw/block/skill cost effects must be tested per weapon; player-style skill cost reductions must **not** introduce stamina/eitr gates in violation of Brian's accepted combat rule. Honor the actual native skill curve rather than a custom second levelling law.
+
+**Starting skills — RECOMMENDED PILOT VALUES ONLY, Brian must approve after telemetry (0–100 native scale):**
+| Recruitment provenance | Main weapon | Secondary / defense |
+| --- | --- | --- |
+| Meadows early lone recruit | 8–18 | 3–12 |
+| Black Forest experienced wanderer | 16–27 | 8–18 |
+| Swamp / Mountain survivor | 24–38 | 10–23 |
+| Plains huntress (bow/spear primary pair) | bow 35–48; spear 28–42 | block 8–22, others low |
+| Mistlands/Ashlands veteran | 42–60 | 20–35 |
+
+These are **calibration proposals, not measured vanilla spawn data or final buffs**. Regional provenance determines plausible *initial training*, never automatic scaling after recruitment. A class gets concentrated specializations, not a uniform biome-wide bonus; party role/loadout and years of service may matter more than biome. Keep a cap below 100 unless a later exceptional character is expressly approved. Start XP rate at native 1.0x, only change after measured growth. At low skill, a bow draw may take ~2.5 s; skill training dramatically reduces it (native rate floor near 0.8 s by ~85 skill): this demonstrates why skill injection needs careful damage/attack-cadence balance. Background research: https://valheim.weirdgloop.org/w/Skills and https://valheim.weirdgloop.org/w/Bows — verify current game numbers against game 1.0.20 before treating as test oracle.
+
+### P3 — Aim: one solution, native execution, no double lead
+**SOURCE-INSPECTED repository:** `ThrowPlanner` in `Kernel/Throw.Pure.cs` already models velocity, blast clusters, ballistic elevation, `LeadFactor=0.8`, 6–13.5m range and now/predicted friend positions. `CombatBehaviors.cs` chooses the plan; `NpcBody.ThrowBomb` commits the native throw. `NpcFactory.ConfigureAi` currently sets native `MonsterAI` interception min/max (0–2s). **Critical issue:** do not run a new predictive lead on top of existing `ThrowPlanner` *and* native intercept simultaneously; do not stack a second artificial inaccuracy on top of native weapon spread without calibration. Preserve one authoritative aim output (predicted point + intended timing), with weapon-specific adapters and native projectile/attack execution. A “chance to hit” must emerge from skill-bounded perception/prediction error, native spread, cover, target movement and collision—not an extra arbitrary after-the-fact hit/miss RNG.
+
+Do not let AI predict invisible actors through obstacles or after stale last-seen positions; expose confidence/last-observed timestamps and finite target velocity. Melee lunges, jumps, atgeir sweeps and blunt heavies need a **commit window** (range, turn, recovery, stagger, clear movement lane) rather than a ballistic solver. Friendly fire is a hard veto on target, launch path, blast/area and predicted safe positions; current bomb planner tests only friend positions at now and landing, so future swept-path/occlusion tests should be added separately **after** a behavior-preserving migration, not silently alter bomb acceptance during migration. For stage 3 migration, old vs new `ThrowPlan` must be byte/numerically equivalent for a frozen corpus before extending to other weapons.
+
+### P4 — Attack purpose: intent annotation, no extra combat director
+Existing `NativeCombatBehavior`, `TargetPolicy`, `HeavyPolicy`, `ThrowCadence`, `ThrowPlanner` already make decisions and native `MonsterAI/Humanoid` execute. A purpose (disperse group, slow, stagger, protect leader, finish) is a **scoring input for an authorized action** inside the existing arbiter, not a new independent target/weapon/movement controller. Never override native combat ownership, attack frames, accepted stamina exception, attack range or ally immunity. Compare damage, stagger, status, AOE/friendly radius and required ammunition with actual weapon profiles. Strong party cooperation must arise from verified debuff/stagger outcomes and live observations; no “fast fighter instantly dispatches slowed target” script.
+
+### P5 — Player-like outputs: observer projection, not identity spoof
+Native minimap public-player pins identify real network players (Claude's Valheim IL finding); do not make companions fake `ZNet` players. Use an independent, visibility-scoped companion-pin feed keyed by stable character identity and faction/relation, with clean lifecycle for party/hold/camp/migration/death, map reload and world transfer. Color/icon/name subject to Brian's approval. No automatic perfect tracking of unknown hostile NPCs or undiscovered camps; do not bypass world exploration/fog.
+
+### P6 — VoiceAudit/current body addon
+**SOURCE-INSPECTED:** `LivingWorldCORE/npc/src/Companion/Body/BodyReactionVoice.cs` on **1.0.32.14** reads native Poison, Burning, Frost, Swim and `NpcBody.Exhaustions`; combat-voice events suppress/intercept body lines. Its licensed Male B/Female A WAVs are private, not committed to GitHub. Preserve 40 installed poison clips and 18 environment clips, their approvals and audited hashes. No duplicate audio scheduler, voice decision engine, or uncapped repetitive cold sounds. **Cold weather is NOT currently mapped to the frost pool**; whether it reuses those clips must be approved. 1.0.32.14 live test and Brian's `lwbodyaudition` per-clip signoff are prerequisites for promoting a combined layer. No external raw WAV redistribution.
+
+## Recommended stage order, preserving decisions
+0. **Prerequisite**: live-test installed 1.0.32.14 and voice audition; honor the existing traversal/portal/dungeon order and actor-line boundaries. No untested substitution.
+1. **Contract-only slice**: persistent actor parity interface, ownership map, migrations and pure tests. No behavior difference.
+2. **Environmental status parity**: first log decisions, then single-writer Cold/Freezing/shelter/rest/campfire/Wet gates; safely migrate Wet. Prove correct statuses and no persistent second writer.
+3. **Skills**: player-equivalent getters/raises behind per-actor versioned state; offline native tests + live weapon accuracy, cadence, block, resource spending. Brian approves seed levels.
+4. **Aim migration**: old bomb plans invariant at first; then split a common perception/aim service with weapon adapters. Never edit locked combat voice.
+5. **Spear throw and melee commit windows**; then area magic/role-specific abilities in individually live-tested gates.
+6. **Attack-purpose scoring** after verified statuses/weapon capability are stable.
+7. **Map/HUD outputs** once persistent identity and map semantics are understood.
+
+Note: the original Claude sequence put Status before basic contracts. The contract-only preparation prevents another `NpcWetStatus`/status-voice overlap. It does **not** authorize skipping current live/traversal gates.
+
+## Acceptance and telemetry needed before coding approval
+- **Status:** shelter/no shelter, cold/freeze/wet/resist/burning/poison precedence; fire/rain roof edge; swamp/ice/Deep North; shield and in-water; abrupt teleport/reload; status and voice each once per transition.
+- **Skill:** deterministic seed/save/reload, exact native factor and level curve, legitimate hit/block/jump gain (no duplicate), run/swim/sneak/dodge actual action, 0/20/40/60/100 factor check, class specialist vs novice comparisons, no combat stamina gate, no damage multiplier twice.
+- **Aim:** frozen 1.0.32.12 bomb corpus unchanged; stationary/moving/zigzag/occluded targets, elevation/obstacle, friend moving across corridor, ally beside target, error distribution vs skill and weapon, hit/miss & resulting effect on live servers with latency and trajectory logs.
+- **Purpose:** raid/cluster vs single targets, primary/secondary role, debuff then follow-up, legal target only, no friendly AOE, no duplicate target writer.
+- **Outputs:** real players unaffected; stable pins that appear/vanish and obey discovery, death, camp migration, zone transfer, save/reload.
+- **Safety:** 1.0.32.6 combat voice locks, 1.0.32.14 body settings and clip IDs, movement-writer gates, existing combat/timing/throw test corpus all unchanged; no new framework dependencies; version/hash/install/live evidence separate.
+
+## Residual owner decisions
+Brian must approve the seed skill brackets, whether cold-weather physiological statuses affect only voice/visuals or also native regeneration/needs, whether and how NPC skill loss occurs on permanent death (currently memorial, no revival by default), and map marker semantics. Do not silently select these in code.

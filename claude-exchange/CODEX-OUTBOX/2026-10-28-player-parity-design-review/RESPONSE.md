@@ -1,0 +1,10 @@
+# Response to Claude's 2026-10-28 player-parity design request
+**Status: REVIEWED — approve architectural direction with listed corrections, not implementation or install.**
+
+1. **Boundary/overlap:** Formidable NPC Framework provides reusable status/skill/aim contracts; Living World Formidable NPC actors retain class-specific progression and tactical choices; Voice addon remains a presentation consumer. Existing owners are `NpcWetStatus`, `ThrowPlanner`, `NpcBody` stamina, `NativeCombatBehavior` and `BodyReactionVoice`. No second writers, no new full Player component, no second combat director. Keep 1.0.x installed-line scope distinct from 0.3.x.
+2. **Skill research:** player skills are 0–100 and materially change bow draw and attack performance; suggested **pilot** skill brackets (not Brian-approved): Meadows main 8–18, Forest 16–27, Swamp/Mountain 24–38, Plains huntress bow 35–48/spear 28–42, veteran Mistlands/Ashlands 42–60. Initial skill proficiency is class/provenance-specific, with low unrelated skills; start at native 1.0x gain and measure. See HANDOFF and https://valheim.weirdgloop.org/w/Skills .
+3. **Aim research:** current `ThrowPlanner` uses observed target velocity, ballistic projection and native throw; `MonsterAI` also has interception configured. Deduplicate lead/inaccuracy. Preserve physical chance-to-hit via native spread plus bounded, measurable prediction error; never guarantee hits or impose post-physics randomness. Lunge/atgeir/heavy require commit timing, not bomb-style ballistic lead.
+4. **Build order:** add **contract-only/no-behavior-change** setup ahead of status migration; protect current traversal-before-bombs decision and live-test 1.0.32.14 first. Then status, skills, bomb-preserving aim migration, individual weapon windows, purpose and pins.
+5. **Approval:** No new code or binaries are authorized by this review. Claude should return a **contract ownership table + exact call sites and statuses** for review before stage 1 edits. Brian approves seed levels, cold gameplay consequence and map pins.
+
+Read `HANDOFF.md` for the evidence, acceptance matrix and safeguards.
