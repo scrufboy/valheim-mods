@@ -1,0 +1,50 @@
+Tove Halfdansdottir (archer) t=1239 kit=ironq1 armor=29 maxhp=250; companions alive 2; leader hp 202-203
+   30s: dmg 287 in 8 hits, biggest 83, by {'tick': 4, 'Seeker': 4}; hits taken while blocking 0
+   hostiles named [('Seeker', 47), ('', 11), ('Seeker Brood', 1)]; targetsWho [('me', 30), ('', 20), ('leader', 5)]
+   shield in hand 69%; weapon [('SwordIron', 37), ('none', 18)]; fallbacks 2 [('FallBackStart', '', 57), ('FallBackEnd', 'caught: stand and fight', 62)]; below 35% hp for 4s; min stam 131
+   partyDist 1-17 leaderDist 2-21; phases [('Combat', 48), ('Calm', 11)]; targets [('Seeker', 38), ('', 20), ('Seeker Brood', 1)]
+Stig Leifsson (guard) t=1247 kit=ironq1 armor=29 maxhp=250; companions alive 1; leader hp 202-203
+   30s: dmg 305 in 5 hits, biggest 88, by {'Seeker Brood': 1, 'Seeker': 4}; hits taken while blocking 0
+   hostiles named [('Seeker', 41), ('Seeker Brood', 18), ('', 1)]; targetsWho [('me', 28), ('partner', 23), ('', 9)]
+   shield in hand 70%; weapon [('SwordIron', 38), ('none', 14)]; fallbacks 2 [('FallBackStart', '', 62), ('FallBackEnd', 'caught: stand and fight', 62)]; below 35% hp for 2s; min stam 150
+   partyDist -1-17 leaderDist 3-21; phases [('Combat', 54), ('CombatClear', 6)]; targets [('Seeker', 37), ('Seeker Brood', 14), ('', 9)]
+Astrid Asgotsdottir (guard) t=1388 kit=ironq1 armor=63 maxhp=250; companions alive 2; leader hp 198-199
+   30s: dmg 247 in 9 hits, biggest 66, by {'tick': 3, 'Fuling': 3, 'Fuling Berserker': 3}; hits taken while blocking 0
+   hostiles named [('Fuling', 48), ('Fuling Berserker', 11)]; targetsWho [('me', 34), ('partner', 16), ('', 8)]
+   shield in hand 56%; weapon [('SwordBlackmetal', 33), ('none', 23)]; fallbacks 4 [('FallBackStart', '', 46), ('FallBackEnd', 'caught: stand and fight', 49), ('FallBackStart', '', 54), ('FallBackEnd', 'caught: stand and fight', 7)]; below 35% hp for 8s; min stam 150
+   partyDist 1-56 leaderDist 4-37; phases [('Combat', 58), ('CombatClear', 1)]; targets [('Fuling', 48), ('', 8), ('Fuling Berserker', 3)]
+Aslak Finnsson (archer) t=1390 kit=ironq1 armor=63 maxhp=250; companions alive 1; leader hp 198-199
+   30s: dmg 183 in 7 hits, biggest 28, by {'Fuling': 7}; hits taken while blocking 0
+   hostiles named [('Fuling', 59), ('Fuling Berserker', 1)]; targetsWho [('', 18), ('me', 18), ('partner', 15)]
+   shield in hand 28%; weapon [('none', 40), ('SwordBlackmetal', 17)]; fallbacks 4 [('FallBackStart', '', 67), ('FallBackEnd', 'clear: fight from range', 73), ('FallBackStart', '', 26), ('FallBackEnd', 'time: stand and fight', 9)]; below 35% hp for 16s; min stam 150
+   partyDist -1-56 leaderDist 6-37; phases [('Combat', 58), ('CombatClear', 2)]; targets [('Fuling', 38), ('', 18), ('Fuling Berserker', 4)]
+Geirlaug Sigurdsdottir (archer) t=1438 kit=plainsq3 armor=63 maxhp=250; companions alive 2; leader hp 111-196
+   30s: dmg 295 in 15 hits, biggest 63, by {'tick': 7, 'Fuling': 4, 'Fuling Berserker': 3, 'Bat': 1}; hits taken while blocking 0
+   hostiles named [('Fuling', 17), ('Fuling Berserker', 8), ('Bat', 5)]; targetsWho [('me', 14), ('', 11), ('leader', 5)]
+   shield in hand 63%; weapon [('SwordBlackmetal', 15), ('LWC_BombThrow', 8)]; fallbacks 3 [('FallBackStart', '', 75), ('FallBackEnd', 'caught: stand and fight', 80), ('FallBackStart', '', 30)]; below 35% hp for 8s; min stam 150
+   partyDist 1-18 leaderDist 3-16; phases [('Combat', 27), ('Calm', 3)]; targets [('', 11), ('Fuling', 9), ('Fuling Berserker', 5)]
+Frode Haraldsson (guard) t=1443 kit=plainsq3 armor=63 maxhp=250; companions alive 1; leader hp 116-196
+   30s: dmg 278 in 14 hits, biggest 61, by {'tick': 7, 'Fuling': 4, 'Fuling Berserker': 3}; hits taken while blocking 0
+   hostiles named [('Fuling', 31), ('Bat', 6), ('Fuling Berserker', 3)]; targetsWho [('me', 16), ('', 9), ('leader', 7)]
+   shield in hand 55%; weapon [('SwordBlackmetal', 22), ('LWC_BombThrow', 10)]; fallbacks 1 [('FallBackStart', '', 0)]; below 35% hp for 0s; min stam 125
+   partyDist -1-18 leaderDist 3-30; phases [('Combat', 33), ('CombatClear', 5), ('Calm', 2)]; targets [('Fuling', 20), ('', 9), ('Fuling Berserker', 6)]
+Jorunn Leifsdottir (archer) t=1481 kit=plainsq3 armor=63 maxhp=250; companions alive 2; leader hp 163-195
+   30s: dmg 298 in 8 hits, biggest 65, by {'Fuling Berserker': 4, 'Fuling': 2, 'tick': 2}; hits taken while blocking 0
+   hostiles named [('Fuling', 33), ('Fuling Berserker', 19)]; targetsWho [('me', 21), ('', 15), ('partner', 14)]
+   shield in hand 56%; weapon [('SwordBlackmetal', 25), ('none', 14)]; fallbacks 4 [('FallBackStart', '', 77), ('FallBackEnd', 'clear: fight from range', 79), ('FallBackStart', '', 60), ('FallBackEnd', 'caught: stand and fight', 62)]; below 35% hp for 9s; min stam 150
+   partyDist 1-23 leaderDist 4-30; phases [('Combat', 50), ('Calm', 2)]; targets [('Fuling', 19), ('Fuling Berserker', 18), ('', 15)]
+Helge Arnesson (guard) t=1492 kit=plainsq3 armor=63 maxhp=250; companions alive 1; leader hp 194-195
+   30s: dmg 343 in 11 hits, biggest 67, by {'Fuling': 4, 'tick': 3, 'Fuling Berserker': 4}; hits taken while blocking 0
+   hostiles named [('Fuling', 40), ('Fuling Berserker', 17), ('', 2)]; targetsWho [('me', 33), ('', 17), ('partner', 7)]
+   shield in hand 93%; weapon [('SwordBlackmetal', 47), ('LWC_BombThrow', 8)]; fallbacks 2 [('FallBackStart', '', 29), ('FallBackEnd', 'caught: stand and fight', 34)]; below 35% hp for 4s; min stam 122
+   partyDist -1-23 leaderDist 1-22; phases [('Combat', 50), ('CombatClear', 9)]; targets [('Fuling', 38), ('', 17), ('Fuling Berserker', 4)]
+Sigurd Ingvarsson (guard) t=1795 kit=plainsq3 armor=63 maxhp=250; companions alive 2; leader hp 180-181
+   30s: dmg 271 in 14 hits, biggest 61, by {'tick': 9, 'Fuling Berserker': 4, 'Fuling': 1}; hits taken while blocking 0
+   hostiles named [('Fuling', 34), ('Fuling Berserker', 24), ('', 1)]; targetsWho [('partner', 24), ('', 18), ('me', 13)]
+   shield in hand 66%; weapon [('SwordBlackmetal', 40), ('none', 16)]; fallbacks 4 [('FallBackStart', '', 40), ('FallBackEnd', 'clear: fight from range', 45), ('FallBackStart', '', 52), ('FallBackEnd', 'caught: stand and fight', 52)]; below 35% hp for 12s; min stam 150
+   partyDist 1-17 leaderDist 2-15; phases [('Combat', 59)]; targets [('Fuling', 28), ('', 18), ('Fuling Berserker', 13)]
+Gerlaug Svensdottir (archer) t=1805 kit=plainsq3 armor=63 maxhp=250; companions alive 1; leader hp 180-181
+   30s: dmg 260 in 19 hits, biggest 64, by {'tick': 13, 'Fuling': 3, 'Fuling Berserker': 3}; hits taken while blocking 0
+   hostiles named [('Fuling', 32), ('Fuling Berserker', 25), ('', 1)]; targetsWho [('', 23), ('me', 18), ('leader', 8)]
+   shield in hand 71%; weapon [('SwordBlackmetal', 43), ('LWC_BombThrow', 8)]; fallbacks 4 [('FallBackStart', '', 40), ('FallBackEnd', 'clear: fight from range', 45), ('FallBackStart', '', 50), ('FallBackEnd', 'caught: stand and fight', 52)]; below 35% hp for 15s; min stam 150
+   partyDist -1-17 leaderDist 1-16; phases [('Combat', 52), ('CombatClear', 6)]; targets [('', 23), ('Fuling Berserker', 20), ('Fuling', 15)]
