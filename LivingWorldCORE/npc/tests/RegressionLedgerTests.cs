@@ -43,6 +43,7 @@ static class RegressionLedgerTests
         Run("1.0.32.12 throw: aims ahead of a moving group, inside reach, not at its feet", ThrowLeadsAndRange);
         Run("1.0.32.12 throw: ballistic elevation lands at the planned distance for the Souls throw speed", ThrowBallistics);
         Run("1.0.32.12 throw: a lone weak enemy is not worth it; a lone tough one is; cooldown holds", ThrowWorthAndCadence);
+        Run("1.0.32.21 throw (Brian live): never poison an all-immune group; mixed groups count only who it can hurt", ThrowSkipsPoisonImmune);
         Run("1.0.32.13 body voice: one onset cough, bounded repeats, one recovery breath", BodyVoiceOnsetRepeatRecover);
         Run("1.0.32.13 body voice: combat lines win; an onset is deferred then dropped, never stacked", BodyVoiceYieldsToCombat);
         Run("1.0.32.13 body voice: nothing after death; a one-tick flicker is not an exposure", BodyVoiceDeathAndFlicker);
@@ -1185,6 +1186,24 @@ static class RegressionLedgerTests
             Assert(Math.Abs(range - d) < .05f, "elevation lands at " + range.ToString("0.00") + " m instead of " + d);
         }
         Assert(float.IsNaN(ThrowPlanner.Elevation(16f, 0f)), "claimed a solution beyond 14.4 m");
+    }
+
+    static ThrowBody Undead(float x, float z, float vx = 0f, float vz = 0f) { var b = Foe(x, z, vx, vz); b.Immune = true; return b; }
+
+    static void ThrowSkipsPoisonImmune()
+    {
+        var skeletons = new[] { Undead(0f, 10f), Undead(.8f, 10.4f), Undead(-.8f, 10.3f) };
+        ThrowPlan p = PlanAt(skeletons, new[] { Friend(0f, -2f) });
+        Assert(!p.Throw && p.Reason == "immune to poison", "threw poison at three skeletons (" + p.Reason + ")");
+        var mixed = new[] { Undead(0f, 10f), Undead(.8f, 10.4f), Foe(-.8f, 10.3f), Foe(.4f, 9.6f) };
+        ThrowPlan m = PlanAt(mixed, new[] { Friend(0f, -2f) });
+        Assert(m.Throw && m.Members == 4 && m.Susceptible == 2, "mixed group not thrown at, or miscounted (" + m.Members + "/" + m.Susceptible + ")");
+        var mostlyUndead = new[] { Undead(0f, 10f), Undead(.8f, 10.4f), Foe(-.8f, 10.3f) };
+        ThrowPlan u = PlanAt(mostlyUndead, new[] { Friend(0f, -2f) });
+        Assert(!u.Throw, "a cloud wasted on two skeletons and one weak greyling");
+        var greylings = new[] { Foe(0f, 10f), Foe(.8f, 10.4f) };
+        ThrowPlan g = PlanAt(greylings, new[] { Friend(0f, -2f) });
+        Assert(g.Throw && g.Susceptible == 2, "default (not immune) behaviour changed");
     }
 
     static void ThrowWorthAndCadence()

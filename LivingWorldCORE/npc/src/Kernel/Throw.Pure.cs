@@ -12,6 +12,9 @@ namespace LivingWorld.Core
         public P2 Velocity;
         public float Height;       // ground height (metres), for the ballistic solution
         public float MaxHealth;
+        // 1.0.32.21 (Brian live: "they still toss poison at the undead"): the creature's own native poison modifier is
+        // Immune (undead, slimes, Wraith, Abomination, Growth, Stone Golem, Charred...). The cloud does nothing to it.
+        public bool Immune;
     }
 
     public struct ThrowPlan
@@ -21,6 +24,7 @@ namespace LivingWorld.Core
         public float AimHeight;
         public float Elevation;    // launch elevation, radians, for the fixed throw speed
         public int Members;        // enemies in the chosen cluster
+        public int Susceptible;    // 1.0.32.21: of them, ones the bomb's poison can hurt
         public int Incoming;       // of them, closing on the party
         public float Distance;     // to the aim point
         public float Lead;         // metres the aim is ahead of the cluster centre
@@ -64,18 +68,21 @@ namespace LivingWorld.Core
                 float seedD = P2.Distance(self, hostiles[s].Position);
                 if (seedD < MinRange - ClusterRadius || seedD > MaxRange + ClusterRadius) continue;
                 // cluster around this seed
-                P2 sum = new P2(0f, 0f), vel = new P2(0f, 0f); float h = 0f, score = 0f, tough = 0f; int n = 0, incoming = 0;
+                P2 sum = new P2(0f, 0f), vel = new P2(0f, 0f); float h = 0f, score = 0f, tough = 0f; int n = 0, incoming = 0, hurt = 0;
                 for (int i = 0; i < hostileCount; i++)
                 {
                     if (P2.Distance(hostiles[i].Position, hostiles[s].Position) > ClusterRadius) continue;
                     n++; sum = sum + hostiles[i].Position; vel = vel + hostiles[i].Velocity; h += hostiles[i].Height;
+                    if (hostiles[i].Immune) continue;            // in the cloud but untouched by it: no value, no toughness
+                    hurt++;
                     tough = Math.Max(tough, hostiles[i].MaxHealth);
                     P2 toParty = (partyCentre - hostiles[i].Position).Normalized;
                     bool closing = P2.Dot(hostiles[i].Velocity, toParty) > .5f;
                     if (closing) incoming++;
                     score += closing ? IncomingWeight : 1f;
                 }
-                if (n < 2 && tough < ToughAtLeast) { lastReason = "not worth it (single weak)"; continue; }
+                if (hurt == 0) { lastReason = "immune to poison"; continue; }
+                if (hurt < 2 && tough < ToughAtLeast) { lastReason = "not worth it (single weak)"; continue; }
                 P2 centre = sum * (1f / n); vel = vel * (1f / n); h /= n;
                 float d0 = P2.Distance(self, centre);
                 float e0 = Elevation(d0, h - selfHeight);
@@ -102,7 +109,7 @@ namespace LivingWorld.Core
                 bestScore = score;
                 best = new ThrowPlan
                 {
-                    Throw = true, Aim = aim, AimHeight = h, Elevation = e, Members = n, Incoming = incoming, Distance = d,
+                    Throw = true, Aim = aim, AimHeight = h, Elevation = e, Members = n, Susceptible = hurt, Incoming = incoming, Distance = d,
                     Lead = P2.Distance(aim, centre), FriendClearance = clear, TurnNeeded = turn, Reason = "throw"
                 };
             }

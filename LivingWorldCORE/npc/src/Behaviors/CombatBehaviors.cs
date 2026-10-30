@@ -103,7 +103,10 @@ namespace LivingWorld.Core
         static ThrowBody BodyOf(Character c)
         {
             Vector3 p = c.transform.position, v = c.GetVelocity();
-            return new ThrowBody { Position = new P2(p.x, p.z), Velocity = new P2(v.x, v.z), Height = p.y, MaxHealth = c.GetMaxHealth() };
+            // 1.0.32.21: the creature's own native poison modifier (the thrown bomb's cloud is ooze poison)
+            HitData.DamageModifier poison = c.GetDamageModifiers().m_poison;
+            bool immune = poison == HitData.DamageModifier.Immune || poison == HitData.DamageModifier.Ignore;
+            return new ThrowBody { Position = new P2(p.x, p.z), Velocity = new P2(v.x, v.z), Height = p.y, MaxHealth = c.GetMaxHealth(), Immune = immune };
         }
 
         void StepBomb(NpcFrame f)
@@ -164,7 +167,7 @@ namespace LivingWorld.Core
             if (Body.ThrowBomb(this, target, aimPoint))
             {
                 cadence.Started(f.Now);
-                CorePlugin.Report("BOMB-THROW " + me.GetHoverName() + " cluster=" + plan.Members + " incoming=" + plan.Incoming +
+                CorePlugin.Report("BOMB-THROW " + me.GetHoverName() + " cluster=" + plan.Members + " poisonable=" + plan.Susceptible + " incoming=" + plan.Incoming +
                     " dist=" + plan.Distance.ToString("0.0") + " lead=" + plan.Lead.ToString("0.0") + " elev=" + (plan.Elevation * Mathf.Rad2Deg).ToString("0") +
                     " friendClear=" + (float.IsInfinity(plan.FriendClearance) ? "none" : plan.FriendClearance.ToString("0.0")) +
                     (CorePlugin.BombsEndless ? " endless" : " left=" + Body.BombReserve) + " t=" + f.Now.ToString("0.00"));
