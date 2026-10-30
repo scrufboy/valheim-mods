@@ -1,6 +1,7 @@
 # FormidableAI shadow observer and telemetry
 
-Status: offline read-only contracts. Not runtime-wired, installed or live-proven.
+Status: wired as a disabled-by-default, zero-domain behavior in the 1.0.32.22 candidate.
+Offline build, installation and live proof are still pending.
 
 ## Purpose
 
@@ -48,10 +49,18 @@ Offline tests cover match, ownership, target, attack, action and timing classifi
 deltas; missing sides; deterministic ring eviction/order; immutable snapshots; and absence of an
 execution-command surface.
 
-## Required adapter work
+## 1.0.x adapter boundary
 
-- observe native target/action/attack identity without changing them;
-- feed predictions from the same immutable combat frame used by policy;
+- `LivingWorldCORE/npc/src/Behaviors/FormidableShadowBehavior.cs` reads the `NpcFrame` already
+  sampled by `NpcKernel` and declares `NpcDomain.None`;
+- it observes native target/action identity without changing them;
+- it feeds class predictions from the same sampled frame used by the 1.0.x kernel;
+- it is off unless `FormidableAI/ShadowObserver=true`;
+- each actor retains only 64 comparisons;
+- no 0.3.x component or prefab participates in this candidate.
+
+## Remaining adapter work
+
 - define stable physical attack IDs and authoritative timestamps;
 - cap sampling/export cost and redact no personal/game paths into Git;
 - expose aggregate mismatch counts plus a short trace for Brian's A/B review;

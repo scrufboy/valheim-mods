@@ -23,13 +23,19 @@ $refs += Join-Path $Profile 'BepInEx\core\0Harmony.dll'
 $refs += Join-Path $Profile 'BepInEx\plugins\ValheimModding-Jotunn\Jotunn.dll'
 foreach ($r in $refs) { if (-not (Test-Path -LiteralPath $r)) { throw "Missing reference: $r" } }
 $refArgs = $refs | ForEach-Object { '/r:' + $_ }
+$formidableRoot = Resolve-Path (Join-Path $root '..\..\LivingWorldCompanionSystems\FormidableAI')
+$formidableSources = @(
+    Get-ChildItem -Recurse -Filter *.cs $formidableRoot |
+        Where-Object { $_.Name -notmatch 'Tests\.cs$|Benchmark\.cs$' } |
+        ForEach-Object FullName
+)
 
 function Step($text) { Write-Host "== $text" -ForegroundColor Cyan }
 function Check($code, $what) { if ($code -ne 0) { throw "$what failed" } }
 
 Step '1/6 Regression ledger'
 & $csc /nologo /langversion:5 /out:"$build\ledger.exe" "$root\tests\RegressionLedgerTests.cs" `
-    "$root\src\Kernel\Kernel.Pure.cs" "$root\src\Kernel\GuardCoverage.Pure.cs" "$root\src\Kernel\PartySpacing.Pure.cs" "$root\src\Kernel\Gait.Pure.cs" "$root\src\Kernel\Bomb.Pure.cs" "$root\src\Kernel\Throw.Pure.cs" "$root\src\Kernel\BodyVoice.Pure.cs" "$root\src\Identity\NpcIdentityRecord.cs"
+    "$root\src\Kernel\Kernel.Pure.cs" "$root\src\Kernel\GuardCoverage.Pure.cs" "$root\src\Kernel\PartySpacing.Pure.cs" "$root\src\Kernel\Gait.Pure.cs" "$root\src\Kernel\Bomb.Pure.cs" "$root\src\Kernel\Throw.Pure.cs" "$root\src\Kernel\BodyVoice.Pure.cs" "$root\src\Kernel\BodyState.Pure.cs" "$root\src\Kernel\Hazard.Pure.cs" "$root\src\Kernel\ReadyWatch.Pure.cs" "$root\src\Identity\NpcIdentityRecord.cs"
 Check $LASTEXITCODE 'ledger compile'
 & "$build\ledger.exe"; Check $LASTEXITCODE 'regression ledger'
 
@@ -38,9 +44,9 @@ Step '2/6 Native compatibility gate'
 Check $LASTEXITCODE 'native gate'
 
 Step '3/6 Compile core'
-$coreSources = Get-ChildItem -Recurse -Filter *.cs "$root\src" | Where-Object { $_.FullName -notmatch '\\Telemetry\\' } | ForEach-Object FullName
-& $csc /nologo /target:library /optimize+ /langversion:5 /nostdlib+ /r:"$Managed\mscorlib.dll" /r:"$Managed\System.dll" `
-    /r:"$Managed\System.Core.dll" @refArgs /out:"$build\LivingWorld.HumanNpc.dll" @coreSources
+$coreSources = Get-ChildItem -Recurse -Filter *.cs "$root\src" | Where-Object { $_.FullName -notmatch '\\Telemetry\\' } | Sort-Object FullName | ForEach-Object FullName
+& $csc /noconfig /nologo /target:library /optimize+ /langversion:5 /nostdlib+ /r:"$Managed\mscorlib.dll" /r:"$Managed\System.dll" `
+    /r:"$Managed\System.Core.dll" @refArgs /out:"$build\LivingWorld.HumanNpc.dll" @coreSources @formidableSources
 Check $LASTEXITCODE 'core compile'
 
 Step '4/6 Ownership gate'
@@ -53,7 +59,7 @@ Step 'Movement-writer gate (native Follow is the only calm-movement writer)'
 & $Python -I "$root\tools\movement_writer_gate.py" "$build\LivingWorld.HumanNpc.dll"; Check $LASTEXITCODE 'movement-writer gate'
 
 Step '5/6 Compile telemetry'
-& $csc /nologo /target:library /optimize+ /langversion:5 /nostdlib+ /r:"$Managed\mscorlib.dll" /r:"$Managed\System.dll" `
+& $csc /noconfig /nologo /target:library /optimize+ /langversion:5 /nostdlib+ /r:"$Managed\mscorlib.dll" /r:"$Managed\System.dll" `
     /r:"$Managed\System.Core.dll" @refArgs /r:"$build\LivingWorld.HumanNpc.dll" /out:"$build\LivingWorld.Telemetry.dll" `
     "$root\src\Telemetry\CoreTelemetry.cs"
 Check $LASTEXITCODE 'telemetry compile'

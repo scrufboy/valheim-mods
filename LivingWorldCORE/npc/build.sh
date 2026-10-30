@@ -29,7 +29,10 @@ echo "== 2/6 Native compatibility gate"
 python3 -I tools/native_gate.py "$REFS/assembly_valheim.dll" src/Kernel/NativeApi.cs
 
 echo "== 3/6 Compile core (C# 5, matches the Windows .NET Framework compiler)"
-$CSC -out:build/LivingWorld.HumanNpc.dll $(find src -name '*.cs' ! -path 'src/Telemetry/*' | sort) 2>&1 | grep -E "error|succeeded" || true
+$CSC -out:build/LivingWorld.HumanNpc.dll \
+    $(find src -name '*.cs' ! -path 'src/Telemetry/*' | sort) \
+    $(find ../../LivingWorldCompanionSystems/FormidableAI -name '*.cs' ! -name '*Tests.cs' ! -name '*Benchmark.cs' | sort) \
+    2>&1 | grep -E "error|succeeded" || true
 test -f build/LivingWorld.HumanNpc.dll || { echo "CORE COMPILE FAILED"; exit 1; }
 
 echo "== 4/6 Ownership gate (no native writes outside NpcBody)"

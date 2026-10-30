@@ -56,7 +56,8 @@ prototype. Live actor-count timing and allocation profiling remain required.
 
 ## What this does not prove
 
-- No Unity component constructs a combat frame yet.
+- The 1.0.32.22 candidate now constructs a read-only combat frame in a disabled-by-default,
+  zero-domain observer; that adapter is not installed or live-proven.
 - No class action writes movement, facing, defense, attack or support in Valheim.
 - No network-owner migration or dedicated-server behavior has run.
 - No allocation/timing benchmark has run against live actor counts.
@@ -65,7 +66,7 @@ prototype. Live actor-count timing and allocation profiling remain required.
 
 ## Safe next sequence
 
-1. Build a read-only `HumanFormidableObserver` that produces frame/decision telemetry in shadow mode.
+1. Offline-verify the read-only 1.0.x `FormidableShadowBehavior` frame/decision adapter.
 2. Compare predicted target, defense, class action and ownership against native actions without
    changing them.
 3. Benchmark 1/10/50/100 actors and enforce a bounded observation/arbitration budget.
@@ -73,5 +74,6 @@ prototype. Live actor-count timing and allocation profiling remain required.
 5. Transfer the Defense domain first behind a disabled feature flag and immediate native rollback.
 6. Only then evaluate Facing, Targeting, Movement and Attack transfers individually.
 
-The accepted voice, spacing/right-of-way, identity, portal and persistence contracts remain
-unchanged throughout this work.
+The approved 1.0.32.21 voice, movement, identity and persistence boundaries remain unchanged.
+The rejected 1.0.32.8b spacing behavior is not a compatibility target; 1.0.32.17 restored the
+standing anchor while retaining only contact back-off.

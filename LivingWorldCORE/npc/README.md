@@ -33,6 +33,7 @@ NpcKernel (one per NPC, 10 Hz)
       6 awareness         Look     readiness: watch the nearest alerted hostile
       7 traversal         Movement formation leases + native Follow (only path writer)
       8 hands             Hands    stow / draw / torch
+      9 formidable-shadow None    optional read-only FormidableAI comparison (off by default)
 NpcBody              the ONLY writer of native state; refuses a caller that
                      doesn't hold the domain (runtime check + build-time IL gate)
 NpcWetStatus         embodiment (native Wet + drip), holds no domain

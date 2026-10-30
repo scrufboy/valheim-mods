@@ -84,6 +84,7 @@ namespace LivingWorld.Core
             Add(new ReadyWatchBehavior());      // 1.0.32.18: after awareness (an alerted hostile takes the look first)
             Add(new TraversalBehavior());
             Add(new HandsBehavior());
+            Add(new FormidableShadowBehavior()); // 1.0.32.22: disabled-by-default, read-only, NpcDomain.None
 
             wants = new bool[behaviors.Count];
             granted = new bool[behaviors.Count];
