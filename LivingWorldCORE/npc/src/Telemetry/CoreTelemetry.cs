@@ -106,6 +106,14 @@ namespace LivingWorld.Telemetry
         {
             if (writer != null)
             {
+                // Session stop / world exit: publish open initiative timelines (target-only and still-active included) and
+                // drain them before the file closes. A size rotation keeps timelines open for the next segment.
+                try
+                {
+                    if (reason != "rotation") AwarenessGroup.FlushAll("session stop: " + reason);
+                    ObserveAwareness();
+                }
+                catch (Exception e) { Logger.LogWarning("awareness flush at stop: " + e.Message); }
                 Begin("RunStop"); Str("reason", reason); Num("records", records); End();
                 writer.Flush();
                 writer.Dispose();
@@ -254,9 +262,15 @@ namespace LivingWorld.Telemetry
         readonly Dictionary<long, long> lastInitiativeSeq = new Dictionary<long, long>();
         readonly InitiativeRecord[] initiativeBuf = new InitiativeRecord[32];
         static readonly string[,] MilestoneKeys = {
-            { "tEnvelope", "dEnvelope", "ttcEnvelope" }, { "tEvidence", "dEvidence", "ttcEvidence" }, { "tNoticed", "dNoticed", "ttcNoticed" },
-            { "tAlerted", "dAlerted", "ttcAlerted" }, { "tCommitted", "dCommitted", "ttcCommitted" }, { "tMemberTarget", "dMemberTarget", "ttcMemberTarget" },
-            { "tResponseReady", "dResponseReady", "ttcResponseReady" }, { "tMemberAction", "dMemberAction", "ttcMemberAction" } };
+            { "tEnvelope", "dEnvelope", "ttcEnvelope", "ubEnvelope", "byEnvelope" },
+            { "tEvidence", "dEvidence", "ttcEvidence", "ubEvidence", "byEvidence" },
+            { "tNoticed", "dNoticed", "ttcNoticed", "ubNoticed", "byNoticed" },
+            { "tAlerted", "dAlerted", "ttcAlerted", "ubAlerted", "byAlerted" },
+            { "tCommitted", "dCommitted", "ttcCommitted", "ubCommitted", "byCommitted" },
+            { "tMemberTarget", "dMemberTarget", "ttcMemberTarget", "ubMemberTarget", "byMemberTarget" },
+            { "tResponseReady", "dResponseReady", "ttcResponseReady", "ubResponseReady", "byResponseReady" },
+            { "tMemberAction", "dMemberAction", "ttcMemberAction", "ubMemberAction", "byMemberAction" } };
+
 
         void ObserveAwareness()
         {
@@ -264,7 +278,9 @@ namespace LivingWorld.Telemetry
             {
                 long seen;
                 if (!lastContactSeq.TryGetValue(party.AwarenessGroupId, out seen)) seen = -1;
-                int n = party.Book.TransitionsAfter(seen, transitionBuf);
+                long tlost;
+                int n = party.Book.TransitionsAfter(seen, transitionBuf, out tlost);
+                if (tlost > 0) { Begin("ContactGap"); Str("group", party.Kind); Num("lost", tlost); End(); if (n == 0) seen += tlost; }
                 for (int i = 0; i < n; i++)
                 {
                     ContactTransition t = transitionBuf[i];
@@ -296,20 +312,25 @@ namespace LivingWorld.Telemetry
 
                 long iseen;
                 if (!lastInitiativeSeq.TryGetValue(party.AwarenessGroupId, out iseen)) iseen = -1;
-                int ni = party.Book.InitiativeAfter(iseen, initiativeBuf);
+                long ilost;
+                int ni = party.Initiative.After(iseen, initiativeBuf, out ilost);
+                if (ilost > 0) { Begin("InitiativeGap"); Str("group", party.Kind); Num("lost", ilost); End(); }
                 for (int i = 0; i < ni; i++)
                 {
                     InitiativeRecord rec = initiativeBuf[i];
-                    Begin("Initiative"); Str("group", party.Kind); Num("id", rec.Id); Str("family", rec.Family); Str("outcome", rec.Outcome);
-                    for (int m = 0; m < InitiativeTrace.Count; m++)
+                    Begin("Initiative"); Str("group", party.Kind); Num("seq", rec.Sequence); Num("id", rec.Id); Str("family", rec.Family); Str("outcome", rec.Outcome);
+                    for (int m = 0; m < InitiativeRecord.Count; m++)
                     {
-                        MilestoneMark mk = rec.Trace.Marks[m];
+                        MilestoneMark mk = rec.Marks[m];
                         if (!mk.Set) continue;
                         Num(MilestoneKeys[m, 0], mk.Time); Num(MilestoneKeys[m, 1], mk.Distance); Num(MilestoneKeys[m, 2], mk.TimeToContact);
+                        if (mk.UpperBound) Bool(MilestoneKeys[m, 3], true);
+                        if (!string.IsNullOrEmpty(mk.By)) Str(MilestoneKeys[m, 4], mk.By);
                     }
                     End();
                     iseen = rec.Sequence;
                 }
+                if (ilost > 0 && ni == 0) iseen += ilost;
                 lastInitiativeSeq[party.AwarenessGroupId] = iseen;
 
                 long bseen;
@@ -324,6 +345,7 @@ namespace LivingWorld.Telemetry
                     Num("stepsPerSec", party.StepsPerSecond); Num("evicted", party.Book.Evicted); Num("refused", party.Book.Refused);
                     Num("readerFormidable", party.ReaderFormidable); Num("readerMonsterAI", party.ReaderMonster);
                     Num("readerBaseAI", party.ReaderBaseAI); Num("readerVisibleOnly", party.ReaderVisible);
+                    Num("initiativeOpen", party.Initiative.Open); Num("initiativePublished", party.Initiative.Published); Num("initiativeEvicted", party.Initiative.Evicted);
                     Num("candidatesDropped", party.CandidatesDropped); Num("groupOverflow", party.Groups.Overflow); Num("faults", party.Faults);
                     Str("posture", party.Posture.ToString()); Num("noticeRange", party.NoticeRange); Bool("dark", party.Dark);
                     Str("weather", party.Weather); Str("biome", party.Biome);

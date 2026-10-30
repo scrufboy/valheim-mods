@@ -524,33 +524,62 @@ def main(paths):
                 len(groups), max(g.get("members", 0) for g in groups), sum(1 for g in groups if g.get("committed")),
                 100 * sum(g.get("poisonUnknown", 0) for g in groups) // max(1, sum(g.get("members", 0) for g in groups))))
         inits = [r for r in rows if r.get("type") == "Initiative"]
+        ilost = sum(r.get("lost", 0) for r in rows if r.get("type") == "InitiativeGap")
+        clost = sum(r.get("lost", 0) for r in rows if r.get("type") == "ContactGap")
+        if inits or ilost or clost:
+            add("PASS" if ilost == 0 and clost == 0 else "FAIL", "Initiative/contact records complete (no ring overwrite)",
+                "initiative lost %d, contact transitions lost %d" % (ilost, clost))
         if inits:
+            def t(r, m):
+                return r.get("t" + m)
             def med(v):
                 v = sorted(x for x in v if x is not None)
-                return v[len(v) // 2] if v else float("nan")
-            def delta(r, a, b):
-                return r["t" + b] - r["t" + a] if ("t" + a) in r and ("t" + b) in r and r["t" + a] is not None and r["t" + b] is not None else None
-            steps = [("Envelope", "Evidence"), ("Evidence", "Noticed"), ("Noticed", "Committed"), ("Committed", "MemberTarget"),
-                     ("Committed", "MemberAction"), ("Evidence", "MemberAction")]
-            add("INFO", "Initiative: latency (median s)", "; ".join("%s->%s %.2f" % (a, b, med([delta(r, a, b) for r in inits])) for a, b in steps))
-            add("INFO", "Initiative: distance (median m)", "; ".join("%s %.0f" % (m, med([r.get("d" + m) for r in inits if ("d" + m) in r]))
-                                                                       for m in ("Envelope", "Noticed", "Committed", "MemberTarget", "MemberAction")))
-            # Native ahead of awareness: a member targeted/acted on the contact before awareness committed it.
-            ahead = [r for r in inits if "tMemberTarget" in r and ("tCommitted" not in r or r["tMemberTarget"] < r["tCommitted"])]
-            lags = []
-            for r in ahead:
-                if "tCommitted" in r and r.get("ttcCommitted") not in (None, 0):
-                    closing = (r.get("dCommitted") or 0) / r["ttcCommitted"]
-                    lags.append((r["tCommitted"] - r["tMemberTarget"], closing))
-            lead = med([lag * closing for lag, closing in lags])
-            n = len([r for r in inits if "tMemberTarget" in r])
-            add("INFO", "Initiative: native targeting ahead of awareness commitment",
-                "%d of %d contacts a member targeted; median lag %.2f s; perception lead that would cover it = %.1f m (closing x lag)" % (
-                    len(ahead), n, med([l for l, _ in lags]), lead))
+                if not v:
+                    return None
+                h = len(v) // 2
+                return v[h] if len(v) % 2 else (v[h - 1] + v[h]) / 2.0
+            def fmt(x, unit="s"):
+                return "n/a" if x is None else ("%.2f %s" % (x, unit))
+            native_only = [r for r in inits if t(r, "Noticed") is None and (t(r, "MemberTarget") is not None or t(r, "MemberAction") is not None)]
+            upper = [r for r in inits if r.get("ubMemberTarget") or r.get("ubMemberAction")]
             outcomes = defaultdict(int)
             for r in inits:
                 outcomes[r.get("outcome", "?")] += 1
-            add("INFO", "Initiative: records", "%d (%s)" % (len(inits), ", ".join("%s=%d" % kv for kv in sorted(outcomes.items()))))
+            add("INFO", "Initiative: records", "%d total; native-only (awareness never noticed) %d; with upper-bound native marks %d; outcomes %s" % (
+                len(inits), len(native_only), len(upper), ", ".join("%s=%d" % kv for kv in sorted(outcomes.items()))))
+            # Ordering: native target/action versus each awareness milestone. Absent awareness is counted apart from true order.
+            for native in ("MemberTarget", "MemberAction"):
+                parts = []
+                for aw in ("Evidence", "Noticed", "Committed"):
+                    have = [r for r in inits if t(r, native) is not None]
+                    before = sum(1 for r in have if t(r, aw) is not None and t(r, native) < t(r, aw))
+                    after = sum(1 for r in have if t(r, aw) is not None and t(r, native) >= t(r, aw))
+                    missing = sum(1 for r in have if t(r, aw) is None)
+                    parts.append("before %s %d / after %d / %s absent %d" % (aw, before, after, aw, missing))
+                add("INFO", "Initiative: native %s vs awareness" % ("target" if native == "MemberTarget" else "action"), "; ".join(parts))
+            # Signed latencies (negative = native first); kept in the distribution, never discarded.
+            for a2, b2 in (("Noticed", "MemberTarget"), ("Committed", "MemberTarget"), ("Noticed", "MemberAction"), ("Evidence", "MemberAction")):
+                d = [t(r, b2) - t(r, a2) for r in inits if t(r, a2) is not None and t(r, b2) is not None]
+                exact = [t(r, b2) - t(r, a2) for r in inits if t(r, a2) is not None and t(r, b2) is not None and not r.get("ub" + b2)]
+                add("INFO", "Initiative: %s->%s (s, negative = native first)" % (a2, b2),
+                    "n=%d median %s min %s negatives %d; exact-start only (no upper bound) n=%d median %s" % (
+                        len(d), fmt(med(d)), fmt(min(d) if d else None), sum(1 for x in d if x < 0), len(exact), fmt(med(exact))))
+            add("INFO", "Initiative: awareness latency (median s)", "; ".join("%s->%s %s" % (a2, b2, fmt(med([t(r, b2) - t(r, a2) for r in inits if t(r, a2) is not None and t(r, b2) is not None]))) for a2, b2 in
+                (("Envelope", "Evidence"), ("Evidence", "Noticed"), ("Noticed", "Alerted"), ("Alerted", "Committed"), ("Committed", "ResponseReady"))))
+            add("INFO", "Initiative: distance (median m)", "; ".join("%s %s" % (m, fmt(med([r.get("d" + m) for r in inits if r.get("d" + m) is not None]), "m"))
+                                                                       for m in ("Envelope", "Evidence", "Noticed", "Committed", "MemberTarget", "MemberAction")))
+            # Calibration: where native targeting led awareness, the lead that would cover it = closing x lag.
+            for aw in ("Noticed", "Committed"):
+                leads, lags = [], []
+                for r in inits:
+                    if t(r, "MemberTarget") is None or t(r, aw) is None or t(r, "MemberTarget") >= t(r, aw):
+                        continue
+                    lag = t(r, aw) - t(r, "MemberTarget")
+                    ttc_ = r.get("ttcMemberTarget"); d_ = r.get("dMemberTarget")
+                    closing = d_ / ttc_ if ttc_ not in (None, 0) and d_ is not None else 0.0
+                    lags.append(lag); leads.append(closing * lag)
+                add("INFO", "Initiative: lead to cover native-first %s" % aw.lower(),
+                    "%d cases; median lag %s; perception lead (closing x lag) %s" % (len(lags), fmt(med(lags)), fmt(med(leads), "m")))
     elif start.get("schema") == 13:
         add("NOT EXERCISED", "Awareness shadow", "no awareness records (AwarenessShadow off?)")
 

@@ -76,41 +76,181 @@ namespace LivingWorld.Core
         public P2 Position; public float Height; public P2 Velocity; public float Radius;
         public bool NativeAlerted;          // its own alert state; counts only when sighted (visible stance/run)
         public int NativeTargetMember;      // group member index it targets (reader or visible), -1 none
-        public float EnvelopeSince, EnvelopeDistance;   // first time inside the candidate envelope (NaN = unknown)
         public bool TargetPerceptible;      // facing that member within 30 deg, charging it, or attacking
         public bool HurtParty;              // hurt a party member within the hurt memory
     }
 
-    /// <summary>Initiative milestones (90b08e2): how long the path from presence to action takes, and where.</summary>
+    /// <summary>Initiative milestones (90b08e2, cebfcd0): presence to action, measured independently of awareness state.</summary>
     public enum Milestone { InEnvelope, FirstEvidence, Noticed, Alerted, Committed, MemberTarget, ResponseReady, MemberAction }
 
-    public struct MilestoneMark { public bool Set; public float Time, Distance, TimeToContact; }
-
-    public sealed class InitiativeTrace
-    {
-        public const int Count = 8;
-        public readonly MilestoneMark[] Marks = new MilestoneMark[Count];
-        public bool Emitted;
-        public bool Mark(Milestone m, float now, float distance, float ttc)
-        {
-            int i = (int)m;
-            if (Marks[i].Set) return false;            // first occurrence only; independent checks mark concurrently
-            Marks[i] = new MilestoneMark { Set = true, Time = now, Distance = distance, TimeToContact = ttc };
-            return true;
-        }
-        public void Reset() { for (int i = 0; i < Count; i++) Marks[i] = new MilestoneMark(); Emitted = false; }
-        public void CopyFrom(InitiativeTrace o) { for (int i = 0; i < Count; i++) Marks[i] = o.Marks[i]; Emitted = o.Emitted; }
-    }
+    /// <summary>UpperBound: first sampled while already active, so Time is an upper bound on the true start, not the start.</summary>
+    public struct MilestoneMark { public bool Set, UpperBound; public float Time, Distance, TimeToContact; public string By; }
 
     public sealed class InitiativeRecord
     {
+        public const int Count = 8;
         public long Sequence; public int Id; public string Family = ""; public string Outcome = "";
-        public readonly InitiativeTrace Trace = new InitiativeTrace();
+        public readonly MilestoneMark[] Marks = new MilestoneMark[Count];
+    }
+
+    public sealed class InitiativeEntry
+    {
+        public bool Used; public int Id; public string Family = ""; public float LastPresent;
+        public readonly MilestoneMark[] Marks = new MilestoneMark[InitiativeRecord.Count];
+        public bool Has(Milestone m) { return Marks[(int)m].Set; }
+    }
+
+    /// <summary>
+    /// Per-actor initiative timelines, kept apart from ContactBook so native observations never depend on, and never feed,
+    /// awareness state. Awareness milestones (evidence, notice, alert, commit, response-ready) and native milestones
+    /// (a member's own target, a member's attack/draw/throw) are marked here independently, first occurrence only.
+    /// A timeline is published once, when the actor has been absent RetireAfter seconds, when its slot is evicted, or on
+    /// Flush (session stop). It is published if it holds Noticed or any native mark; awareness milestones may be absent.
+    /// Bounded: Capacity entries, RingCapacity published records; lost records are counted by the reader (After).
+    /// </summary>
+    public sealed class InitiativeLedger
+    {
+        public const int Capacity = 64, RingCapacity = 64;
+        public const float RetireAfter = 5f;
+        readonly InitiativeEntry[] entries = new InitiativeEntry[Capacity];
+        readonly InitiativeRecord[] ring = new InitiativeRecord[RingCapacity];
+        long published;
+        public long Published { get { return published; } }
+        public int Evicted { get; private set; }
+        public int Open { get { int n = 0; for (int i = 0; i < entries.Length; i++) if (entries[i].Used) n++; return n; } }
+
+        public InitiativeLedger()
+        {
+            for (int i = 0; i < entries.Length; i++) entries[i] = new InitiativeEntry();
+            for (int i = 0; i < ring.Length; i++) ring[i] = new InitiativeRecord();
+        }
+
+        public InitiativeEntry Find(int id)
+        {
+            for (int i = 0; i < entries.Length; i++) if (entries[i].Used && entries[i].Id == id) return entries[i];
+            return null;
+        }
+
+        public static bool Worthy(InitiativeEntry e)
+        {
+            return e.Has(Milestone.Noticed) || e.Has(Milestone.MemberTarget) || e.Has(Milestone.MemberAction);
+        }
+
+        InitiativeEntry Acquire(int id, float now)
+        {
+            InitiativeEntry free = null, idle = null, any = null;
+            for (int i = 0; i < entries.Length; i++)
+            {
+                InitiativeEntry e = entries[i];
+                if (!e.Used) { if (free == null) free = e; continue; }
+                if (!Worthy(e) && (idle == null || e.LastPresent < idle.LastPresent)) idle = e;
+                if (any == null || e.LastPresent < any.LastPresent) any = e;
+            }
+            InitiativeEntry slot = free ?? idle ?? any;
+            if (slot != free) { Evicted++; Publish(slot, "evicted"); }
+            slot.Used = true; slot.Id = id; slot.Family = ""; slot.LastPresent = now;
+            for (int i = 0; i < slot.Marks.Length; i++) slot.Marks[i] = new MilestoneMark();
+            return slot;
+        }
+
+        /// <summary>The actor is still around (in the candidate pass or someone's target). Never creates a timeline.</summary>
+        public void Present(int id, float now) { InitiativeEntry e = Find(id); if (e != null) e.LastPresent = now; }
+
+        public bool Mark(int id, string family, Milestone m, float now, float distance, float ttc, bool upperBound, string by)
+        {
+            InitiativeEntry e = Find(id) ?? Acquire(id, now);
+            if (!string.IsNullOrEmpty(family)) e.Family = family;
+            e.LastPresent = now;
+            int i = (int)m;
+            if (e.Marks[i].Set) return false;
+            e.Marks[i] = new MilestoneMark { Set = true, UpperBound = upperBound, Time = now, Distance = distance, TimeToContact = ttc, By = by };
+            return true;
+        }
+
+        public bool Mark(int id, string family, Milestone m, float now, float distance, float ttc) { return Mark(id, family, m, now, distance, ttc, false, null); }
+
+        public void Retire(float now)
+        {
+            for (int i = 0; i < entries.Length; i++)
+            {
+                InitiativeEntry e = entries[i];
+                if (e.Used && now - e.LastPresent >= RetireAfter) { Publish(e, "retired"); e.Used = false; }
+            }
+        }
+
+        /// <summary>Publish every open timeline that has anything to say (session stop / world exit) and clear.</summary>
+        public void Flush(string outcome)
+        {
+            for (int i = 0; i < entries.Length; i++)
+                if (entries[i].Used) { Publish(entries[i], outcome); entries[i].Used = false; }
+        }
+
+        void Publish(InitiativeEntry e, string outcome)
+        {
+            if (!Worthy(e)) return;
+            InitiativeRecord r = ring[published % ring.Length];
+            r.Sequence = published++; r.Id = e.Id; r.Family = e.Family; r.Outcome = outcome;
+            for (int i = 0; i < e.Marks.Length; i++) r.Marks[i] = e.Marks[i];
+        }
+
+        /// <summary>Records with Sequence > after, oldest first. lost = records overwritten before this reader saw them.</summary>
+        public int After(long after, InitiativeRecord[] output, out long lost)
+        {
+            long start = Math.Max(after + 1, published - ring.Length);
+            lost = start - (after + 1);
+            int n = 0;
+            for (long q = start; q < published && n < output.Length; q++) output[n++] = ring[q % ring.Length];
+            return n;
+        }
+    }
+
+    /// <summary>
+    /// Edge detection for each member's own native target and action (cebfcd0). A target change or an action start between
+    /// two consecutive samples is a real edge. The first sample of a member (or after a sampling gap) that finds a target or
+    /// an action already active is an observed upper bound, not a claimed start.
+    /// </summary>
+    public sealed class MemberEdges
+    {
+        public const int Capacity = 16;
+        public const float Gap = 1f;
+        readonly int[] member = new int[Capacity]; readonly int[] target = new int[Capacity];
+        readonly bool[] acting = new bool[Capacity]; readonly float[] seen = new float[Capacity]; readonly bool[] used = new bool[Capacity];
+
+        public struct Edge { public bool Target, TargetUpper, Action, ActionUpper; }
+
+        /// <param name="targetId">0 = no target</param>
+        public Edge Observe(int memberId, int targetId, bool isActing, float now)
+        {
+            int slot = -1;
+            for (int i = 0; i < Capacity; i++) if (used[i] && member[i] == memberId) { slot = i; break; }
+            int victim = 0;
+            if (slot < 0)
+                for (int i = 0; i < Capacity; i++)
+                {
+                    if (!used[i]) { victim = i; break; }
+                    if (seen[i] < seen[victim]) victim = i;     // least recently seen member
+                }
+            bool first = slot < 0 || now - seen[slot] > Gap;
+            if (slot < 0) { slot = victim; used[slot] = true; member[slot] = memberId; }
+            Edge e = new Edge();
+            if (targetId != 0)
+            {
+                if (first) { e.Target = true; e.TargetUpper = true; if (isActing) { e.Action = true; e.ActionUpper = true; } }
+                else
+                {
+                    bool changed = targetId != target[slot];
+                    if (changed) e.Target = true;
+                    if (isActing && !acting[slot]) e.Action = true;                       // action start seen between samples
+                    else if (isActing && changed) { e.Action = true; e.ActionUpper = true; }  // already acting when the target switched
+                }
+            }
+            target[slot] = targetId; acting[slot] = isActing; seen[slot] = now;
+            return e;
+        }
     }
 
     public sealed class ContactRecord
     {
-        public readonly InitiativeTrace Trace = new InitiativeTrace();
         public bool Used;
         public int Id; public string Family; public bool Wildlife, Sleeping, Boss;
         public ContactState State, LostFrom;
@@ -137,7 +277,6 @@ namespace LivingWorld.Core
             AlertedObserved = false; TargetsWhomObserved = -1; TargetEvidenceAt = float.NegativeInfinity; HurtParty = false;
             CommitEvidence = 0f; ApproachSeenAt = LastCommitReasonAt = float.NegativeInfinity; CommitReason = "";
             Confidence = 0f; GroupId = -1;
-            Trace.Reset();
         }
     }
 
@@ -213,9 +352,7 @@ namespace LivingWorld.Core
                 r.ClosingSpeed = P2.Dot(r.Velocity, toC.Normalized);
                 r.TimeToContact = r.ClosingSpeed > .2f ? r.Distance / r.ClosingSpeed : float.PositiveInfinity;
             }
-            if (!r.Trace.Marks[(int)Milestone.InEnvelope].Set && !float.IsNaN(o.EnvelopeSince) && o.EnvelopeSince > 0f)
-                r.Trace.Mark(Milestone.InEnvelope, o.EnvelopeSince, o.EnvelopeDistance, float.PositiveInfinity);
-            r.Trace.Mark(Milestone.FirstEvidence, now, r.Distance, r.TimeToContact);
+            if (Ledger != null) Ledger.Mark(r.Id, r.Family, Milestone.FirstEvidence, now, r.Distance, r.TimeToContact);
             r.LastSeen = now; r.LastSource = source; r.LastObserver = observer;
             if (r.Samples == 0 || now - r.LastSampleAt >= AwarenessTuning.NoticeSpacing) { r.Samples++; r.LastSampleAt = now; }
             if (source == ContactSource.Sight)
@@ -296,53 +433,26 @@ namespace LivingWorld.Core
                 }
                 else if (r.State == ContactState.Noticed && r.AlertedObserved)
                     Emit(r, ContactState.Noticed, r.State = ContactState.Alerted, now, "alert behavior seen");
-                if (r.State == ContactState.Committed && r.Distance <= AwarenessTuning.ResponseRange)
-                    r.Trace.Mark(Milestone.ResponseReady, now, r.Distance, r.TimeToContact);
+                if (r.State == ContactState.Committed && r.Distance <= AwarenessTuning.ResponseRange && Ledger != null)
+                    Ledger.Mark(r.Id, r.Family, Milestone.ResponseReady, now, r.Distance, r.TimeToContact);
             }
         }
 
-        readonly InitiativeRecord[] initiative = new InitiativeRecord[32];
-        long initiativeSequence;
-        public long InitiativeCount { get { return initiativeSequence; } }
-
-        /// <summary>A group member's own observable step on this contact (its native target, its attack/shot/throw).</summary>
-        public void MarkMember(int id, Milestone m, float now)
-        {
-            ContactRecord r = Find(id);
-            if (r == null || r.State == ContactState.None) return;
-            if (r.Trace.Mark(m, now, r.Distance, r.TimeToContact) && m == Milestone.MemberAction) PublishInitiative(r, "member action");
-        }
-
-        void PublishInitiative(ContactRecord r, string outcome)
-        {
-            if (r.Trace.Emitted || !r.Trace.Marks[(int)Milestone.Noticed].Set) return;
-            r.Trace.Emitted = true;
-            int slot = (int)(initiativeSequence % initiative.Length);
-            if (initiative[slot] == null) initiative[slot] = new InitiativeRecord();
-            InitiativeRecord rec = initiative[slot];
-            rec.Sequence = initiativeSequence++; rec.Id = r.Id; rec.Family = r.Family; rec.Outcome = outcome;
-            rec.Trace.CopyFrom(r.Trace);
-        }
-
-        /// <summary>Initiative records with Sequence greater than after, oldest first. Returns count.</summary>
-        public int InitiativeAfter(long after, InitiativeRecord[] output)
-        {
-            long start = Math.Max(after + 1, initiativeSequence - initiative.Length);
-            int n = 0;
-            for (long q = start; q < initiativeSequence && n < output.Length; q++) output[n++] = initiative[q % initiative.Length];
-            return n;
-        }
+        /// <summary>Where awareness milestones are recorded (observational only; never read back by awareness).</summary>
+        public InitiativeLedger Ledger;
 
         void Emit(ContactRecord r, ContactState from, ContactState to, float now, string evidence)
         {
-            if (to == ContactState.Noticed) r.Trace.Mark(Milestone.Noticed, now, r.Distance, r.TimeToContact);
-            else if (to == ContactState.Alerted) r.Trace.Mark(Milestone.Alerted, now, r.Distance, r.TimeToContact);
-            else if (to == ContactState.Committed)
+            if (Ledger != null)
             {
-                if (!r.Trace.Marks[(int)Milestone.Alerted].Set && r.AlertedObserved) r.Trace.Mark(Milestone.Alerted, now, r.Distance, r.TimeToContact);
-                r.Trace.Mark(Milestone.Committed, now, r.Distance, r.TimeToContact);
+                if (to == ContactState.Noticed) Ledger.Mark(r.Id, r.Family, Milestone.Noticed, now, r.Distance, r.TimeToContact);
+                else if (to == ContactState.Alerted) Ledger.Mark(r.Id, r.Family, Milestone.Alerted, now, r.Distance, r.TimeToContact);
+                else if (to == ContactState.Committed)
+                {
+                    if (r.AlertedObserved) Ledger.Mark(r.Id, r.Family, Milestone.Alerted, now, r.Distance, r.TimeToContact);
+                    Ledger.Mark(r.Id, r.Family, Milestone.Committed, now, r.Distance, r.TimeToContact);
+                }
             }
-            else if (to == ContactState.None) PublishInitiative(r, evidence);   // dropped or evicted: publish what was reached
             ContactTransition t = new ContactTransition
             {
                 Sequence = sequence, Time = now, Id = r.Id, Family = r.Family, From = from, To = to, Source = r.LastSource,
@@ -354,9 +464,13 @@ namespace LivingWorld.Core
         }
 
         /// <summary>Transitions with Sequence greater than after, oldest first, into out (bounded). Returns count.</summary>
-        public int TransitionsAfter(long after, ContactTransition[] output)
+        public int TransitionsAfter(long after, ContactTransition[] output) { long lost; return TransitionsAfter(after, output, out lost); }
+
+        /// <summary>As above; lost = transitions overwritten before this reader saw them.</summary>
+        public int TransitionsAfter(long after, ContactTransition[] output, out long lost)
         {
             long start = Math.Max(after + 1, sequence - ring.Length);
+            lost = start - (after + 1);
             int n = 0;
             for (long s = start; s < sequence && n < output.Length; s++) output[n++] = ring[s % ring.Length];
             return n;

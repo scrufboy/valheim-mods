@@ -111,6 +111,8 @@ namespace LivingWorld.Core
         public readonly ContactBook Book = new ContactBook();
         public readonly GroupBook Groups = new GroupBook();
         public readonly KnowledgeBook Knowledge = new KnowledgeBook();   // A1: empty (no legitimate source wired yet)
+        public readonly InitiativeLedger Initiative = new InitiativeLedger();   // observational; awareness never reads it
+        readonly MemberEdges edges = new MemberEdges();
         readonly RayScheduler rays = new RayScheduler();
         IAwarenessGroupAdapter adapter;
 
@@ -136,8 +138,6 @@ namespace LivingWorld.Core
         int candidateCount;
         public int CandidatesDropped { get; private set; }
 
-        // First time each actor entered the candidate envelope (initiative milestone InEnvelope). Fixed ring.
-        readonly int[] envId = new int[64]; readonly float[] envAt = new float[64]; readonly float[] envDist = new float[64]; int envNext;
 
         int lastFrame = -1;
         float lastStep, nextEnumeration, nextBudget;
@@ -170,7 +170,10 @@ namespace LivingWorld.Core
         public long GroupSequence { get; private set; }
         public long BudgetSequence { get; private set; }
 
-        AwarenessGroup(IAwarenessGroupAdapter a) { AwarenessGroupId = a.AwarenessGroupId; Kind = a.Kind; Weather = ""; Biome = ""; }
+        AwarenessGroup(IAwarenessGroupAdapter a) { AwarenessGroupId = a.AwarenessGroupId; Kind = a.Kind; Weather = ""; Biome = ""; Book.Ledger = Initiative; }
+
+        /// <summary>Session stop / world exit: publish every open timeline that has native or notice marks.</summary>
+        public static void FlushAll(string outcome) { foreach (AwarenessGroup g in groups.Values) g.Initiative.Flush(outcome); }
 
         /// <summary>Drive one step per frame for this adapter's group (any member may call it; owner-side only).</summary>
         internal static void Tick(IAwarenessGroupAdapter a)
@@ -212,6 +215,7 @@ namespace LivingWorld.Core
             Book.Step(now, dt, centroid);
             Groups.Build(Book, centroid, Knowledge);
             ObserveMemberActions(now);
+            Initiative.Retire(now);
             UpdatePosture();
             RecordGroups(now);
 
@@ -269,7 +273,9 @@ namespace LivingWorld.Core
                 if (nearest > reach) continue;
                 if (count >= CandidateCapacity) { CandidatesDropped++; continue; }
                 candidates[count] = c;
-                observed[count] = Observe(c, now, P2.Distance(centroid, c2));
+                observed[count] = Observe(c);
+                Initiative.Mark(observed[count].Id, c.m_name, Milestone.InEnvelope, now, P2.Distance(centroid, c2), float.PositiveInfinity);
+                Initiative.Present(observed[count].Id, now);
                 count++;
             }
             candidateCount = count;
@@ -297,14 +303,7 @@ namespace LivingWorld.Core
             return -1;
         }
 
-        void EnvelopeFirst(int id, float now, float distance, out float since, out float at)
-        {
-            for (int i = 0; i < envId.Length; i++) if (envId[i] == id) { since = envAt[i]; at = envDist[i]; return; }
-            envId[envNext] = id; envAt[envNext] = now; envDist[envNext] = distance; envNext = (envNext + 1) % envId.Length;
-            since = now; at = distance;
-        }
-
-        ContactObservation Observe(Character c, float now, float centroidDistance)
+        ContactObservation Observe(Character c)
         {
             Vector3 p = c.transform.position, v = c.GetVelocity();
             BaseAI ai = c.GetBaseAI();
@@ -335,16 +334,13 @@ namespace LivingWorld.Core
                 if (reader == IntentReader.VisibleOnly || reader == IntentReader.NativeBaseAI) alerted = alerted || VisibleIntent.Alerted(vel, seen);
             }
             int id = c.GetInstanceID();
-            float since, at;
-            EnvelopeFirst(id, now, centroidDistance, out since, out at);
             return new ContactObservation
             {
                 Id = id, Family = c.m_name,
                 Wildlife = c.GetFaction() == Character.Faction.AnimalsVeg, Sleeping = ai != null && ai.IsSleeping(), Boss = c.IsBoss(),
                 Position = pos, Height = p.y, Velocity = vel, Radius = c.GetRadius(),
                 NativeAlerted = alerted, NativeTargetMember = member, TargetPerceptible = perceptible,
-                HurtParty = HurtMember(c) >= 0,
-                EnvelopeSince = since, EnvelopeDistance = at
+                HurtParty = HurtMember(c) >= 0
             };
         }
 
@@ -400,7 +396,11 @@ namespace LivingWorld.Core
             }
         }
 
-        /// <summary>Initiative: each member's own native target and attack/shot/throw on a contact, as observable facts.</summary>
+        /// <summary>
+        /// Initiative, native side (cebfcd0): every member's own native target and attack/draw/throw, observed as edges and
+        /// recorded in the ledger whatever awareness thinks of that actor (no record, State None, Lost - all the same).
+        /// Nothing here touches the ContactBook: native observations never become samples, alerts, notices or commitments.
+        /// </summary>
         void ObserveMemberActions(float now)
         {
             for (int m = 0; m < memberCount; m++)
@@ -409,11 +409,19 @@ namespace LivingWorld.Core
                 if (k == null || k.Body == null || k.Body.Human == null) continue;
                 MonsterAI ai = k.Body.Ai as MonsterAI;
                 Character t = ai == null ? null : ai.GetTargetCreature();
-                if (t == null) continue;
-                int id = t.GetInstanceID();
-                Book.MarkMember(id, Milestone.MemberTarget, now);
                 Humanoid h = k.Body.Human;
-                if (h.InAttack() || h.IsDrawingBow() || k.Body.Throwing) Book.MarkMember(id, Milestone.MemberAction, now);
+                bool acting = h.InAttack() || h.IsDrawingBow() || k.Body.Throwing;
+                int tid = t == null || t.IsDead() ? 0 : t.GetInstanceID();
+                MemberEdges.Edge e = edges.Observe(h.GetInstanceID(), tid, acting, now);
+                if (tid == 0) continue;
+                Initiative.Present(tid, now);
+                if (!e.Target && !e.Action) continue;
+                Vector3 tp = t.transform.position, tv = t.GetVelocity();
+                P2 to = centroid - new P2(tp.x, tp.z);
+                float d = to.Length, closing = P2.Dot(new P2(tv.x, tv.z), to.Normalized);
+                float ttcNow = closing > .2f ? d / closing : float.PositiveInfinity;
+                if (e.Target) Initiative.Mark(tid, t.m_name, Milestone.MemberTarget, now, d, ttcNow, e.TargetUpper, members[m].Name);
+                if (e.Action) Initiative.Mark(tid, t.m_name, Milestone.MemberAction, now, d, ttcNow, e.ActionUpper, members[m].Name);
             }
         }
 

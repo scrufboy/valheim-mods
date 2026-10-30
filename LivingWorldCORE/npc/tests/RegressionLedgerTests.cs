@@ -57,9 +57,16 @@ static class RegressionLedgerTests
         Run("A1 awareness: susceptibility is Unknown unless learned; native modifiers are never knowledge", AwUnknownResistance);
         Run("A1 awareness: wildlife never commits by approach, only by targeting or harm", AwWildlife);
         Run("A1 awareness (Brian: aggro is aggro): any actor without an AI reader is judged by visible facing, charge and attack", AwVisibleIntent);
-        Run("A1 initiative (90b08e2): milestones recorded once, in order, with distance and time to contact; published on member action", AwInitiativeTrace);
-        Run("A1 initiative: a contact dropped or evicted publishes the milestones it reached; never-noticed publishes nothing", AwInitiativePartial);
+        Run("A1 initiative: normal path - every milestone once, in order, with distance and time to contact", AwInitiativeNormalPath);
         Run("A1 initiative: response-ready only once committed inside the 30 m engagement rule", AwInitiativeResponseReady);
+        Run("A1 initiative (cebfcd0): a native target seen before any awareness evidence is kept", AwTargetBeforeEvidence);
+        Run("A1 initiative (cebfcd0): a native target seen while awareness is still None is kept; later notice joins the same timeline", AwTargetBeforeNotice);
+        Run("A1 initiative (cebfcd0): a native action before notice is kept and published", AwActionBeforeNotice);
+        Run("A1 initiative (cebfcd0): an actor awareness never noticed is published from native marks alone; plain unnoticed passers-by are not", AwNeverNoticedNativeOnly);
+        Run("A1 initiative (cebfcd0): native observations never change awareness samples, state or posture", AwNativeDoesNotFeedAwareness);
+        Run("A1 initiative (cebfcd0): a target/action already active at first sample is an upper bound; real edges are not", AwAlreadyActiveUpperBound);
+        Run("A1 initiative (cebfcd0): session stop flushes open native-marked timelines (target-only, still active)", AwSessionStopFlush);
+        Run("A1 initiative (cebfcd0): a bounded ring never loses records silently - the reader sees the overwrite count", AwRingGapObservable);
         Run("1.0.32.21 throw (Brian live): never poison an all-immune group; mixed groups count only who it can hurt", ThrowSkipsPoisonImmune);
         Run("1.0.32.24 throw (Brian live direction): bombs acquire groups as ranged area control, never a close panic throw", ThrowUsesRangedBand);
         Run("1.0.32.13 body voice: one onset cough, bounded repeats, one recovery breath", BodyVoiceOnsetRepeatRecover);
@@ -384,64 +391,176 @@ static class RegressionLedgerTests
         Assert(StepTo(b, o, 0f, .5f, c) == ContactState.Committed, "a visibly charging modded/unknown actor commits like any other");
     }
 
-    static void AwInitiativeTrace()
+    // --- A1 initiative (native side independent of awareness state; cebfcd0) ---
+
+    static ContactBook LedgerBook(out InitiativeLedger l)
     {
-        var b = new ContactBook(); P2 c = new P2(0f, 0f); b.SetCentroid(c);
-        ContactObservation o = Ob(1, 0f, 50f, 0f, 0f, false); o.EnvelopeSince = .01f; o.EnvelopeDistance = 55f;
-        ContactRecord r = null;
-        for (float t = .1f; t <= 12f; t += .1f)
-        {
-            bool alert = t >= 2f, charging = t >= 3f;
-            o.NativeAlerted = alert; o.Velocity = charging ? new P2(0f, -4f) : new P2(0f, 0f);
-            o.Position = o.Position + o.Velocity * .1f;
-            r = b.Perceive(o, ContactSource.Sight, 0, t); b.Step(t, .1f, c);
-            if (t >= 7f) b.MarkMember(1, Milestone.MemberTarget, t);
-            if (t >= 8f) b.MarkMember(1, Milestone.MemberAction, t);
-        }
-        MilestoneMark[] m = r.Trace.Marks;
-        Assert(m[(int)Milestone.InEnvelope].Set && Math.Abs(m[(int)Milestone.InEnvelope].Time - .01f) < 1e-4f && m[(int)Milestone.InEnvelope].Distance == 55f, "envelope time/distance carried");
-        float prev = -1f;
-        foreach (Milestone x in new[] { Milestone.InEnvelope, Milestone.FirstEvidence, Milestone.Noticed, Milestone.Alerted, Milestone.Committed, Milestone.MemberTarget, Milestone.MemberAction })
-        {
-            Assert(m[(int)x].Set, x + " set");
-            Assert(m[(int)x].Time >= prev, x + " in order");
-            prev = m[(int)x].Time;
-        }
-        Assert(!float.IsInfinity(m[(int)Milestone.FirstEvidence].Distance), "distance known at first evidence");
-        Assert(m[(int)Milestone.Committed].Distance > m[(int)Milestone.MemberAction].Distance, "distance shrinks toward action");
-        Assert(!float.IsInfinity(m[(int)Milestone.Committed].TimeToContact), "time to contact at commitment");
-        float noticed = m[(int)Milestone.Noticed].Time;
-        b.MarkMember(1, Milestone.MemberAction, 20f);
-        Assert(r.Trace.Marks[(int)Milestone.MemberAction].Time < 20f && r.Trace.Marks[(int)Milestone.Noticed].Time == noticed, "first occurrence only");
-        var buf = new InitiativeRecord[4];
-        Assert(b.InitiativeAfter(-1, buf) == 1 && buf[0].Id == 1 && buf[0].Outcome == "member action", "published once on member action");
-        Assert(b.InitiativeAfter(buf[0].Sequence, buf) == 0, "not republished");
+        l = new InitiativeLedger();
+        var b = new ContactBook { Ledger = l };
+        b.SetCentroid(new P2(0f, 0f));
+        return b;
     }
 
-    static void AwInitiativePartial()
+    static void Native(InitiativeLedger l, int id, Milestone m, float t, float d, bool upper = false)
     {
-        var b = new ContactBook(); P2 c = new P2(0f, 0f);
-        StepTo(b, Ob(1, 40f, 0f, 0f, 0f, true), 0f, 1f, c);
-        for (float t = 1.1f; t < 15f; t += .1f) b.Step(t, .1f, c);
-        var buf = new InitiativeRecord[4];
-        Assert(b.InitiativeAfter(-1, buf) == 1 && buf[0].Outcome == "dropped" && buf[0].Trace.Marks[(int)Milestone.Alerted].Set
-            && !buf[0].Trace.Marks[(int)Milestone.Committed].Set, "dropped contact publishes the milestones it reached");
-        var e = new ContactBook();
-        e.Perceive(Ob(2, 40f, 0f), ContactSource.Sight, 0, 0f);       // one sample, never noticed
-        for (float t = .1f; t < 5f; t += .1f) e.Step(t, .1f, c);
-        Assert(e.InitiativeAfter(-1, buf) == 0, "never-noticed contacts publish nothing");
+        l.Present(id, t);
+        l.Mark(id, "$enemy_test", m, t, d, float.PositiveInfinity, upper, "Stig");
+    }
+
+    static InitiativeRecord[] Drain(InitiativeLedger l)
+    {
+        var buf = new InitiativeRecord[InitiativeLedger.RingCapacity]; long lost;
+        int n = l.After(-1, buf, out lost);
+        Assert(lost == 0, "nothing lost");
+        var r = new InitiativeRecord[n]; Array.Copy(buf, r, n); return r;
+    }
+
+    static void AwInitiativeNormalPath()
+    {
+        InitiativeLedger l; var b = LedgerBook(out l); P2 c = new P2(0f, 0f);
+        ContactObservation o = Ob(1, 0f, 50f);
+        l.Mark(1, "$enemy_test", Milestone.InEnvelope, 0f, 55f, float.PositiveInfinity);
+        for (float t = .1f; t <= 10f; t += .1f)
+        {
+            o.NativeAlerted = t >= 2f; o.Velocity = t >= 3f ? new P2(0f, -4f) : new P2(0f, 0f);
+            o.Position = o.Position + o.Velocity * .1f;
+            b.Perceive(o, ContactSource.Sight, 0, t); b.Step(t, .1f, c); l.Present(1, t);
+            if (t >= 7f) Native(l, 1, Milestone.MemberTarget, t, o.Position.Length);
+            if (t >= 8f) Native(l, 1, Milestone.MemberAction, t, o.Position.Length);
+        }
+        l.Retire(30f);
+        InitiativeRecord[] r = Drain(l);
+        Assert(r.Length == 1 && r[0].Outcome == "retired", "one timeline published on retirement");
+        MilestoneMark[] m = r[0].Marks; float prev = -1f;
+        foreach (Milestone x in new[] { Milestone.InEnvelope, Milestone.FirstEvidence, Milestone.Noticed, Milestone.Alerted, Milestone.Committed, Milestone.MemberTarget, Milestone.MemberAction })
+        {
+            Assert(m[(int)x].Set, x + " set"); Assert(m[(int)x].Time >= prev, x + " in order"); prev = m[(int)x].Time;
+        }
+        Assert(!float.IsInfinity(m[(int)Milestone.FirstEvidence].Distance) && !float.IsInfinity(m[(int)Milestone.Committed].TimeToContact), "distance and time to contact recorded");
+        Assert(m[(int)Milestone.MemberTarget].Time == 7f || Math.Abs(m[(int)Milestone.MemberTarget].Time - 7f) < .11f, "first occurrence kept, not overwritten by later samples");
     }
 
     static void AwInitiativeResponseReady()
     {
-        var b = new ContactBook(); P2 c = new P2(0f, 0f);
+        InitiativeLedger l; var b = LedgerBook(out l); P2 c = new P2(0f, 0f);
         ContactObservation q = Ob(1, 0f, 45f, 0f, 0f, true); q.NativeTargetMember = 0; q.TargetPerceptible = true;
         StepTo(b, q, 0f, 1f, c);
-        Assert(b.Find(1).State == ContactState.Committed && !b.Find(1).Trace.Marks[(int)Milestone.ResponseReady].Set, "committed at 45 m is not response-ready");
+        Assert(b.Find(1).State == ContactState.Committed && !l.Find(1).Has(Milestone.ResponseReady), "committed at 45 m is not response-ready");
         q.Velocity = new P2(0f, -5f);
         StepTo(b, q, 1.1f, 5f, c);
-        MilestoneMark rr = b.Find(1).Trace.Marks[(int)Milestone.ResponseReady];
+        MilestoneMark rr = l.Find(1).Marks[(int)Milestone.ResponseReady];
         Assert(rr.Set && rr.Distance <= AwarenessTuning.ResponseRange + .5f, "response-ready once inside 30 m: " + rr.Distance);
+    }
+
+    static void AwTargetBeforeEvidence()
+    {
+        InitiativeLedger l; var b = LedgerBook(out l); P2 c = new P2(0f, 0f);
+        Native(l, 1, Milestone.MemberTarget, 1f, 25f);                         // native AI targets it; awareness has nothing yet
+        Assert(b.Find(1) == null, "no awareness record created by a native observation");
+        StepTo(b, Ob(1, 25f, 0f, 0f, 0f, true), 2f, 3f, c); l.Present(1, 3f);
+        l.Retire(20f);
+        MilestoneMark[] m = Drain(l)[0].Marks;
+        Assert(m[(int)Milestone.MemberTarget].Time < m[(int)Milestone.FirstEvidence].Time, "target precedes evidence and is kept");
+        Assert(m[(int)Milestone.Noticed].Set, "later notice joins the same timeline");
+    }
+
+    static void AwTargetBeforeNotice()
+    {
+        InitiativeLedger l; var b = LedgerBook(out l); P2 c = new P2(0f, 0f);
+        b.Perceive(Ob(1, 25f, 0f), ContactSource.Sight, 0, 0f); b.Step(0f, .1f, c);   // one sample: State None
+        Assert(b.Find(1).State == ContactState.None, "awareness still None");
+        Native(l, 1, Milestone.MemberTarget, .1f, 25f);
+        b.Perceive(Ob(1, 25f, 0f), ContactSource.Sight, 0, .4f); b.Step(.4f, .1f, c); l.Present(1, .4f);
+        l.Retire(20f);
+        MilestoneMark[] m = Drain(l)[0].Marks;
+        Assert(m[(int)Milestone.FirstEvidence].Time < m[(int)Milestone.MemberTarget].Time && m[(int)Milestone.MemberTarget].Time < m[(int)Milestone.Noticed].Time,
+            "evidence < native target < notice: negative Noticed->Target latency preserved");
+    }
+
+    static void AwActionBeforeNotice()
+    {
+        InitiativeLedger l; var b = LedgerBook(out l); P2 c = new P2(0f, 0f);
+        Native(l, 1, Milestone.MemberTarget, 0f, 3f);
+        Native(l, 1, Milestone.MemberAction, .2f, 3f);                          // swings before awareness has any sample
+        StepTo(b, Ob(1, 3f, 0f, 0f, 0f, true), .5f, 1f, c); l.Present(1, 1f);
+        l.Retire(20f);
+        MilestoneMark[] m = Drain(l)[0].Marks;
+        Assert(m[(int)Milestone.MemberAction].Set && m[(int)Milestone.MemberAction].Time < m[(int)Milestone.Noticed].Time, "action before notice kept");
+    }
+
+    static void AwNeverNoticedNativeOnly()
+    {
+        InitiativeLedger l; var b = LedgerBook(out l); P2 c = new P2(0f, 0f);
+        Native(l, 1, Milestone.MemberTarget, 0f, 12f);
+        Native(l, 1, Milestone.MemberAction, 1f, 10f);
+        l.Mark(2, "$enemy_test", Milestone.InEnvelope, 0f, 60f, float.PositiveInfinity);   // passer-by: envelope only
+        b.Perceive(Ob(2, 60f, 0f), ContactSource.Sight, 0, .5f);                            // one sample, never noticed
+        l.Retire(20f);
+        InitiativeRecord[] r = Drain(l);
+        Assert(r.Length == 1 && r[0].Id == 1, "native-only timeline published; plain unnoticed passer-by (no notice, no native mark) is not");
+        Assert(!r[0].Marks[(int)Milestone.Noticed].Set && !r[0].Marks[(int)Milestone.FirstEvidence].Set, "awareness milestones absent, not invented");
+    }
+
+    static void AwNativeDoesNotFeedAwareness()
+    {
+        InitiativeLedger l; var b = LedgerBook(out l); P2 c = new P2(0f, 0f);
+        b.Perceive(Ob(1, 20f, 0f), ContactSource.Sight, 0, 0f); b.Step(0f, .1f, c);
+        int samples = b.Find(1).Samples;
+        for (float t = .1f; t < 2f; t += .1f) { Native(l, 1, Milestone.MemberTarget, t, 20f); Native(l, 1, Milestone.MemberAction, t, 20f); b.Step(t, .1f, c); }
+        ContactRecord r = b.Find(1);
+        Assert(r == null || (r.Samples == samples && r.State == ContactState.None && !r.AlertedObserved), "native marks add no samples, alerts, notices or commitments");
+        Assert(StealthDoctrine.Posture(ContactState.None, false, false) == ShadowPosture.Calm, "posture unaffected");
+        Native(l, 7, Milestone.MemberTarget, 3f, 10f);
+        Assert(b.Find(7) == null, "a native target never creates a contact");
+    }
+
+    static void AwAlreadyActiveUpperBound()
+    {
+        var e = new MemberEdges();
+        MemberEdges.Edge x = e.Observe(100, 5, true, 0f);                       // first sample: already targeting and swinging
+        Assert(x.Target && x.TargetUpper && x.Action && x.ActionUpper, "first sample of active state is an upper bound");
+        x = e.Observe(100, 5, true, .1f);
+        Assert(!x.Target && !x.Action, "steady state: no new edges");
+        x = e.Observe(100, 5, false, .2f); x = e.Observe(100, 5, true, .3f);
+        Assert(x.Action && !x.ActionUpper && !x.Target, "action start between samples is a real edge");
+        x = e.Observe(100, 6, false, .4f);
+        Assert(x.Target && !x.TargetUpper, "target change between samples is a real edge");
+        x = e.Observe(100, 6, false, 3f);                                       // sampling gap > 1 s
+        Assert(x.Target && x.TargetUpper, "after a gap the state is an upper bound again");
+        x = e.Observe(200, 0, false, 3f); x = e.Observe(200, 9, false, 3.1f);
+        Assert(x.Target && !x.TargetUpper, "a member seen with no target, then a target: real edge");
+        InitiativeLedger l = new InitiativeLedger();
+        l.Mark(5, "$enemy_test", Milestone.MemberTarget, 0f, 4f, 1f, true, "Stig");
+        l.Flush("stop");
+        Assert(Drain(l)[0].Marks[(int)Milestone.MemberTarget].UpperBound, "upper-bound flag exported");
+    }
+
+    static void AwSessionStopFlush()
+    {
+        InitiativeLedger l = new InitiativeLedger();
+        Native(l, 1, Milestone.MemberTarget, 0f, 20f);                          // target-only, still open
+        Native(l, 2, Milestone.MemberTarget, 0f, 5f); Native(l, 2, Milestone.MemberAction, .5f, 4f);   // still active
+        l.Retire(1f);
+        Assert(Drain(l).Length == 0, "not retired yet (present within 5 s)");
+        l.Flush("session stop: world-exit");
+        InitiativeRecord[] r = Drain(l);
+        Assert(r.Length == 2 && r[0].Outcome.StartsWith("session stop") && l.Open == 0, "both open timelines flushed at stop");
+    }
+
+    static void AwRingGapObservable()
+    {
+        InitiativeLedger l = new InitiativeLedger();
+        int total = InitiativeLedger.RingCapacity + 10;
+        for (int i = 0; i < total; i++) { Native(l, 1000 + i, Milestone.MemberTarget, i * .01f, 10f); l.Flush("x"); }
+        var buf = new InitiativeRecord[InitiativeLedger.RingCapacity]; long lost;
+        int n = l.After(-1, buf, out lost);
+        Assert(lost == 10 && n == InitiativeLedger.RingCapacity && buf[0].Sequence == 10, "overwrites reported to the reader: lost=" + lost);
+        n = l.After(buf[n - 1].Sequence, buf, out lost);
+        Assert(n == 0 && lost == 0, "caught up: nothing lost");
+        long seq = l.Published;
+        Native(l, 5000, Milestone.MemberTarget, 9f, 10f); l.Flush("x");
+        n = l.After(seq - 1, buf, out lost);
+        Assert(n == 1 && lost == 0, "regular drain loses nothing");
     }
 
     static void AwWildlife()
