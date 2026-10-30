@@ -19,6 +19,15 @@ namespace LivingWorld.FormidableAI.Kernel
             public IEnumerable<CombatProposal> Evaluate(CombatFrame frame) { throw new InvalidOperationException("isolated failure"); }
         }
 
+        private sealed class BufferedModule : IBufferedFormidableCombatModule
+        {
+            private readonly CombatProposal _proposal;
+            public string Id { get; private set; }
+            public BufferedModule(string id, CombatProposal proposal) { Id = id; _proposal = proposal; }
+            public IEnumerable<CombatProposal> Evaluate(CombatFrame frame) { throw new Exception("allocating path used"); }
+            public void Collect(CombatFrame frame, IList<CombatProposal> output) { output.Add(_proposal); }
+        }
+
         private static int _passed;
         public static int Main()
         {
@@ -32,6 +41,9 @@ namespace LivingWorld.FormidableAI.Kernel
             Run("module failure is isolated and disabled", FaultIsolated);
             Run("cancellation hands domains to native", CancellationHandsBack);
             Run("remote owner cannot grant module leases", RemoteFallsBack);
+            Run("reused buffer matches compatibility winners", ReusedBufferMatches);
+            Run("reused buffer contains isolated faults", ReusedBufferFaultIsolation);
+            Run("reused buffer observes cancellation handback", ReusedBufferCancellation);
             Console.WriteLine("PASS: " + _passed + " FormidableAI kernel tests");
             return 0;
         }
@@ -132,6 +144,47 @@ namespace LivingWorld.FormidableAI.Kernel
         {
             var modules = new List<IFormidableCombatModule> { new Module("warden", Proposal("block", DecisionDomain.Defense, 100)) };
             Assert(new CombatArbitrator().Evaluate(Frame(false), modules).LeaseFor(DecisionDomain.Defense).IsNativeFallback, "remote instance gained action ownership");
+        }
+
+        private static void ReusedBufferMatches()
+        {
+            var modules = new List<IFormidableCombatModule> {
+                new BufferedModule("warden", Proposal("block", DecisionDomain.Defense, 50)),
+                new BufferedModule("archer", Proposal("aim", DecisionDomain.Facing | DecisionDomain.Attack, 40)) };
+            CombatArbitrator compatibility = new CombatArbitrator();
+            ArbitrationResult expected = compatibility.Evaluate(Frame(), modules);
+            CombatArbitrator reused = new CombatArbitrator();
+            ArbitrationBuffer buffer = new ArbitrationBuffer();
+            reused.EvaluateInto(Frame(), modules, buffer);
+            for (int i = 0; i < expected.LeaseCount; i++)
+            {
+                DomainLease a = expected.GetLease(i); DomainLease b = buffer.GetLease(i);
+                Assert(a.Domain == b.Domain && a.OwnerId == b.OwnerId && a.ActionId == b.ActionId, "buffer winner mismatch");
+            }
+            DomainLease sameObject = buffer.LeaseFor(DecisionDomain.Defense);
+            reused.EvaluateInto(Frame(), modules, buffer);
+            Assert(object.ReferenceEquals(sameObject, buffer.LeaseFor(DecisionDomain.Defense)), "buffer lease object was replaced");
+        }
+
+        private static void ReusedBufferFaultIsolation()
+        {
+            CombatArbitrator arbiter = new CombatArbitrator(); ArbitrationBuffer buffer = new ArbitrationBuffer();
+            var modules = new List<IFormidableCombatModule> { new BrokenModule(), new BufferedModule("safe", Proposal("block", DecisionDomain.Defense, 5)) };
+            arbiter.EvaluateInto(Frame(), modules, buffer);
+            Assert(buffer.FaultCount == 1 && buffer.GetFault(0).ModuleId == "broken", "buffer fault missing");
+            Assert(buffer.LeaseFor(DecisionDomain.Defense).OwnerId == "safe", "buffer fault damaged safe winner");
+            arbiter.EvaluateInto(Frame(), modules, buffer);
+            Assert(buffer.FaultCount == 0, "disabled fault retried in buffer path");
+        }
+
+        private static void ReusedBufferCancellation()
+        {
+            CombatArbitrator arbiter = new CombatArbitrator(); ArbitrationBuffer buffer = new ArbitrationBuffer();
+            var modules = new List<IFormidableCombatModule> { new BufferedModule("archer", Proposal("aim", DecisionDomain.Facing | DecisionDomain.Attack, 5)) };
+            arbiter.EvaluateInto(Frame(), modules, buffer);
+            Assert(arbiter.CancelOwner("archer", "lost"), "buffer owner cancel failed");
+            arbiter.EvaluateInto(Frame(), new List<IFormidableCombatModule>(), buffer);
+            Assert(buffer.LeaseFor(DecisionDomain.Facing).IsNativeFallback && buffer.LeaseFor(DecisionDomain.Attack).IsNativeFallback, "buffer did not hand back");
         }
 
         private static void Run(string name, Action test) { test(); _passed++; Console.WriteLine("ok - " + name); }
