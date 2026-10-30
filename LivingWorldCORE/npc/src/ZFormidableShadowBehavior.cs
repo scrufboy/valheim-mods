@@ -150,7 +150,7 @@ namespace LivingWorld.Core
                     if(type==ItemDrop.ItemData.ItemType.TwoHandedWeapon||type==ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft) heavy=true;
                     if(item.m_shared.m_skillType==Skills.SkillType.Spears) spear=true;
                     if(item.m_shared.m_skillType==Skills.SkillType.ElementalMagic||item.m_shared.m_skillType==Skills.SkillType.BloodMagic) magic=true;
-                    if(item.IsWeapon()&&type!=ItemDrop.ItemData.ItemType.Bow&&type!=ItemDrop.ItemData.ItemType.TwoHandedWeapon&&type!=ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft) oneHanded=true;
+                    if(item.IsWeapon()&&type!=ItemDrop.ItemData.ItemType.Torch&&type!=ItemDrop.ItemData.ItemType.Bow&&type!=ItemDrop.ItemData.ItemType.TwoHandedWeapon&&type!=ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft) oneHanded=true;
                 }
             }
             string key=savedRole+"|"+oneHanded+shield+bow+spear+heavy+magic;

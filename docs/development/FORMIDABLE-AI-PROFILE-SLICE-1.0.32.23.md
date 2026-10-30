@@ -16,6 +16,9 @@ doctrine. An eligible one-handed weapon plus shield enables shield/block/protect
 enable spear and throwing doctrine. Heavy and magic equipment are recorded without inventing live
 behavior that is not yet implemented.
 
+Utility torches are explicitly excluded from one-handed combat-weapon detection. A torch plus shield
+cannot manufacture shield-and-blade training.
+
 All profiles share survival doctrine for dodge, cohesion, disengage/rally and biome-hazard awareness.
 The profile declares endless utility torches as a quality-of-life invariant.
 
@@ -24,6 +27,9 @@ The profile declares endless utility torches as a quality-of-life invariant.
 This slice does not choose numeric skills, ranges or reaction timing. Those remain stress-test tuning.
 It does not yet persist origin biome, culture, starting food/stats or individual skill progression;
 those fields remain explicit and unknown instead of being fabricated for existing companions.
+`TrainingBand.Trained` is a visible placeholder until rollup/progression supplies the persisted value.
+The Pathfinder mapping is defined for migration and tests, but no scout role is spawned by the current
+1.0.x guard/archer factory.
 
 The telemetry now records profile job, Formidable class, weapon doctrine and survival doctrine beside
 each shadow comparison. The observer remains off by default, read-only and owns no behavior domain.
