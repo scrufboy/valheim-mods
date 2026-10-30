@@ -254,3 +254,26 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - The current 1.0.x torch rule (torch removed from the hands in combat/readiness) and the analyzer's
   "no torch in combat" checks reflect an older light-only assumption; they change only through a
   reviewed build that implements this doctrine. Until then the runtime is unchanged.
+
+## 2026-10-30 — Learned world knowledge belongs to persisted companions (Brian)
+
+- A companion should know what the party has legitimately learned. When the player reads a lore stone
+  or unlocks compendium information while companions are present, the corresponding facts may become
+  shared party knowledge and later inform their decisions.
+- Persist compact knowledge identifiers and provenance, not copied prose or an ever-growing event log.
+  Canonical definitions live once; world/party/person records store bounded references such as learned
+  enemy, resistance, immunity, hazard or tactic facts.
+- Knowledge is not omniscience. A companion may use learned resistance and defense information only
+  after a fair learning source (lore, witnessed combat, training, biome origin or direct experience),
+  and still has to perceive the current enemy and successfully execute the chosen response.
+- Persistent memory must be lightweight: stable facts and meaningful consequences survive saves;
+  transient frames, candidate actions and sensory observations remain bounded runtime state.
+
+## 2026-10-30 — A bomb opportunity may initiate combat arbitration (Brian)
+
+- Merely increasing projectile speed and maximum range is insufficient. A trained companion must be
+  able to recognize a visible, incoming, bomb-worthy group before native melee target acquisition.
+- A safe ranged area-control opportunity may claim the combat action, select a real visible enemy near
+  the planned impact point and open the encounter by poisoning, weakening and scattering the group.
+- Existing friend safety, visibility, susceptibility, value, trajectory and range tests remain hard
+  prerequisites. This creates an opportunity to act; it does not guarantee a hit or reveal enemies.
