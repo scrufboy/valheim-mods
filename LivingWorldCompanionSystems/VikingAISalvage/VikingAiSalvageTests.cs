@@ -16,6 +16,10 @@ namespace LivingWorld.Companions.VikingAISalvage
             Run("equipment ties ignore inventory order", EquipmentTieIsDeterministic);
             Run("portal rejects duplicates and illegal transfers", PortalRejectsUnsafeRequests);
             Run("portal requires readiness before one commit", PortalRequiresReadiness);
+            Run("perception is target isolated", PerceptionIsTargetIsolated);
+            Run("perception is frame-rate invariant", PerceptionIsFrameRateInvariant);
+            Run("work requires travel action and one commit", WorkRequiresVisibleTransaction);
+            Run("work yields to combat before commit", WorkYieldsToCombat);
             Console.WriteLine("PASS: " + _passed + " VikingAI salvage contract tests");
             return 0;
         }
@@ -90,6 +94,53 @@ namespace LivingWorld.Companions.VikingAISalvage
             Assert(!gate.Commit(ready), "duplicate commit succeeded");
             Assert(gate.Complete(ready), "completion failed");
             Assert(!gate.RollBack(ready), "completed transfer rolled back");
+        }
+
+        private static void PerceptionIsTargetIsolated()
+        {
+            PerceptionEvidencePolicy policy = new PerceptionEvidencePolicy();
+            policy.Observe("target-a", 1f, 0.7f, false);
+            Assert(policy.Stage == PerceptionStage.Alerted, "first target did not accumulate evidence");
+            policy.Observe("target-b", 1f, 0.1f, false);
+            Assert(policy.TargetId == "target-b", "target did not switch");
+            Assert(policy.Stage == PerceptionStage.Unaware, "evidence leaked between targets");
+        }
+
+        private static void PerceptionIsFrameRateInvariant()
+        {
+            Assert(SimulatePerception(30) == SimulatePerception(60), "30/60 Hz mismatch");
+            Assert(SimulatePerception(60) == SimulatePerception(120), "60/120 Hz mismatch");
+            Assert(SimulatePerception(120) == PerceptionStage.Alerted, "unexpected one-second stage");
+        }
+
+        private static PerceptionStage SimulatePerception(int hz)
+        {
+            PerceptionEvidencePolicy policy = new PerceptionEvidencePolicy();
+            for (int i = 0; i < hz; i++) policy.Observe("target", 0.8f, 1f / hz, false);
+            return policy.Stage;
+        }
+
+        private static void WorkRequiresVisibleTransaction()
+        {
+            WorkTransaction work = WorkTransactionPolicy.Begin("npc-42", "tree-7", "lease-1");
+            Assert(WorkTransactionPolicy.Reserve(work, true, true), "reservation failed");
+            Assert(!WorkTransactionPolicy.Commit(work, true, true, true), "work committed before travel/action");
+            Assert(WorkTransactionPolicy.StartTravel(work), "travel did not start");
+            Assert(WorkTransactionPolicy.Arrive(work), "arrival failed");
+            Assert(WorkTransactionPolicy.StartAction(work), "action did not start");
+            Assert(WorkTransactionPolicy.Commit(work, true, true, true), "valid work commit failed");
+            Assert(!WorkTransactionPolicy.Commit(work, true, true, true), "work committed twice");
+            Assert(WorkTransactionPolicy.Complete(work), "work completion failed");
+        }
+
+        private static void WorkYieldsToCombat()
+        {
+            WorkTransaction work = WorkTransactionPolicy.Begin("npc-42", "ore-3", "lease-2");
+            Assert(WorkTransactionPolicy.Reserve(work, true, true), "reservation failed");
+            Assert(WorkTransactionPolicy.StartTravel(work), "travel did not start");
+            Assert(WorkTransactionPolicy.InterruptForCombat(work), "combat interrupt failed");
+            Assert(work.State == WorkState.Cancelled && work.Failure == "combat-handoff", "work did not yield to combat");
+            Assert(!WorkTransactionPolicy.Commit(work, true, true, true), "cancelled work committed resources");
         }
 
         private static EquipmentCandidate Item(string id, EquipmentSlot slot, float power, bool twoHanded, bool shield, bool allowed = true)

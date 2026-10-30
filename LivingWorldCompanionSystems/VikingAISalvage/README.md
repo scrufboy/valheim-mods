@@ -9,6 +9,8 @@ combat.
 
 - explicit, default-off feature flags and an ownership gate;
 - coherent equipment loadout scoring rather than sequential equip side effects;
+- target-isolated, time-based precombat perception stages;
+- reserved travel/action/commit work transactions that yield before native combat;
 - an identity-preserving portal transaction policy with legal, readiness, nonce, one-commit,
   completion, rejection, and rollback states;
 - deterministic offline tests and a small policy microbenchmark.

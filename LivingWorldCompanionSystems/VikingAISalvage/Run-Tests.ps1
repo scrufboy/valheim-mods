@@ -7,6 +7,8 @@ try {
         (Join-Path $PSScriptRoot 'VikingAiSalvageContracts.cs') `
         (Join-Path $PSScriptRoot 'EquipmentLoadoutPolicy.cs') `
         (Join-Path $PSScriptRoot 'PortalTransactionPolicy.cs') `
+        (Join-Path $PSScriptRoot 'PerceptionEvidencePolicy.cs') `
+        (Join-Path $PSScriptRoot 'WorkTransactionPolicy.cs') `
         (Join-Path $PSScriptRoot 'VikingAiSalvageTests.cs')
     if ($LASTEXITCODE -ne 0) { throw "VikingAI salvage test compilation failed: $LASTEXITCODE" }
     & $output
