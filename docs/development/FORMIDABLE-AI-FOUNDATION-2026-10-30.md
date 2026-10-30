@@ -27,8 +27,9 @@ an explicit fallback. This is the `who / what / where / when / why / how` founda
 
 1. The kernel owns arbitration; class modules do not directly perform actions.
 2. Class profiles describe capability and tactical priority, not separate brains.
-3. `DefensePolicy` alone decides the exact block/dodge reaction. A Warden's generic defense request
-   is deliberately not mapped into a second defense owner.
+3. `DefensePolicy` alone decides the exact block/dodge reaction. A Warden may express generic
+   defense intent, but the exact strike policy has decisive priority and arbitration emits only one
+   surviving Defense lease.
 4. Actions that require coupled domains receive atomic leases. A class weapon action currently
    requires Attack + Facing; a movement intent requires Movement + Facing.
 5. A module exception disables that module without preventing other proposals or native fallback.
@@ -37,20 +38,21 @@ an explicit fallback. This is the `who / what / where / when / why / how` founda
 
 ## Offline proof
 
-- Kernel: 10 tests.
+- Kernel: 13 tests.
 - Perception/defense: 10 tests.
-- Six class profiles: 8 tests.
+- Six class profiles: 10 tests.
 - Cross-layer integration: 6 tests.
+- Read-only shadow telemetry: 8 tests.
 - Existing LWC specialist baselines also remain green: 21 melee-role checks, 14 prediction/throw
   checks and 11 comparative ownership/perception/transaction checks.
 
-New Formidable total: **34 passing checks**.
+New Formidable total: **47 passing checks**.
 
-An audit-host smoke benchmark of 100,000 one-module arbitration evaluations measured 46.139 ms
-total (0.461 microseconds/evaluation), 20 generation-0 collections and a 960,264-byte retained-memory
-delta. This is not a Unity/frame benchmark. It confirms the algorithm is fast in isolation but also
-confirms allocation churn; working lists, dictionaries, proposal enumerators and result arrays must
-be pooled or caller-owned before high-frequency runtime use.
+After adding reusable arbitration/proposal/winner/lease/fault buffers, an audit-host smoke benchmark
+of 500,000 two-module evaluations measured 205.587 ms total with a 90,152-byte retained-memory delta.
+Winner identities remained `warden` for Defense and `archer` for Attack. This coarse GC measurement
+is not a Unity/frame benchmark, but it substantially reduces the allocation warning from the first
+prototype. Live actor-count timing and allocation profiling remain required.
 
 ## What this does not prove
 
