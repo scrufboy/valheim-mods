@@ -125,3 +125,26 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
   weapons). Lack of progression makes better combat more urgent, not less.
 - Permanent death remains meaningful. FormidableAI must improve the odds honestly rather than grant
   invulnerability, hidden stat cheats or guaranteed victory.
+
+## 2026-10-30 — What “Formidable” means: trained combat competence (Brian)
+
+- Valheim is a survival game. Surviving combat by making the proper choice at the proper time is the
+  core meaning of combat intelligence and therefore the core meaning of FormidableAI.
+- Each NPC type must be trained for its actual weapons, combat role and home biome. A class name is
+  not enough, and one generic attack policy with different labels is not a replacement AI.
+- Every companion needs a shared survival foundation: read threats, preserve stamina and health,
+  choose safe timing, avoid being surrounded, use cover/space, protect allies, disengage when the
+  current exchange cannot be won, and re-engage when conditions improve.
+- On top of that foundation, each type needs distinct doctrine:
+  - weapon competence: reach, timing, recovery, stamina cost, block/parry/dodge options, projectile
+    flight, firing lanes, minimum/maximum effective range and weapon switching;
+  - biome competence: terrain, visibility, hazards, common enemy combinations, resistances,
+    vulnerabilities and escape routes found in the biome where that type belongs;
+  - enemy competence: recognize attack tells, dangerous windups, ranged pressure, area attacks,
+    stagger opportunities, priority threats and when an enemy is baiting an unsafe chase;
+  - party competence: know its position and responsibility relative to the other class and leader.
+- Training means encoded and testable combat knowledge plus progression through lived experience;
+  it does not mean omniscience. An NPC may begin with its class/biome fundamentals and learn or
+  improve beyond them through skills, equipment and survival.
+- FormidableAI is successful when the NPC's choices are legible as those of a trained survivor using
+  that body, weapon, role and environment—not merely when its attack flag matches native AI.
