@@ -1,6 +1,6 @@
 # A1 shared awareness (shadow): implementation and verification
 
-**Branch** `work/awareness-a1` · **commit** `d56c2c0` · **version** 1.0.32.26 · base `17edec6` (combat behavior = `5f54db8`)
+**Branch** `work/awareness-a1` · **commit** `d56c2c0` + actor-agnostic intent (see §9) · **version** 1.0.32.26 · base `17edec6` (combat behavior = `5f54db8`)
 **Status:** OFFLINE-TESTED. Not installed. Gameplay unchanged. A2 not started.
 
 ## 1. What runs
@@ -179,3 +179,22 @@ and telemetry.
 - consistent noticing more than 5 s after a creature is plainly visible in clear day (range or regard too
   narrow);
 - CPU above 2 ms per second.
+
+## 9. Update: aggro is aggro (Brian, after presentation)
+
+Intent is now read the same way whoever generates the aggro, and the service is keyed by **side**:
+
+| Actor | Reader | Target / alert from |
+|---|---|---|
+| Our FormidableAI actors (companions now; camp NPCs later) | `FormidableActor` | its kernel's target and phase |
+| Vanilla creatures and mod creatures using `MonsterAI` | `NativeMonsterAI` | native target, native alert |
+| Other `BaseAI` actors | `NativeBaseAI` | native alert; target by visible behavior |
+| Anything without a reader | `VisibleOnly` | **visible behavior only**: facing a member and charging ≥ 1.5 m/s, or attacking one within 4 m facing it; running ≥ 3 m/s reads as alert |
+
+A reported target still counts as evidence only when perceptible, so no reader grants hidden knowledge. Hostile actors of
+another side, including other FormidableAI actors, are ordinary contacts; only this side's own members are skipped.
+Today the only wired side is a player's companion party. Camps of our hostile and friendly NPCs use the same core,
+rules and readers under their own side key. `AwarenessBudget` reports how many judgments each reader made.
+
+Ledger 145/145 (+1 visible-intent test). Gates unchanged (ownership 76, voice LOCKED, movement-writer OK).
+DLLs: core `6310a7f76e3dd4dc69ebcfcc765bb19b8772dd18598341eaccd75186390cf59e`, telemetry `1632867e90184efb78c7d63fe01bfc6a96ad3484ee1ded65a0132b5eedcdec91`.

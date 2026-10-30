@@ -1,6 +1,6 @@
 # A1 shared awareness shadow: built, verified offline, not installed
 
-Branch `work/awareness-a1`, commit `d56c2c0`, version 1.0.32.26, base `17edec6`.
+Branch `work/awareness-a1`, commit `82388fd` (was d56c2c0; + actor-agnostic intent), version 1.0.32.26, base `17edec6`.
 Full presentation: `docs/development/A1-AWARENESS-SHADOW-PRESENTATION.md`.
 
 - Implemented per build order 45f18c4: one PartyAwareness per leader; companion-owned sight (Linecast), hearing and
