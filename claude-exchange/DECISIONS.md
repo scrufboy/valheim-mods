@@ -233,3 +233,13 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
   intent. The original purpose remains in memory rather than being lost on every target change.
 - Survival is the objective, not a guarantee. Failure remains possible because perception, execution,
   terrain, enemy pressure, equipment and timing are real constraints.
+
+## 2026-10-30 — Bombs are ranged area control and require video evidence (Brian)
+
+- The live cluster/throw decision is promising, but companions acquire and release bombs too close.
+  Bomb use must read as a trained ranged attack: earlier group acquisition and farther release, not a
+  close panic throw.
+- Numeric range/velocity changes are stress-test candidates until telemetry and video show acquisition,
+  arc, timing, safety and visual plausibility together.
+- Brian will provide video for spatial/animation judgments that telemetry cannot establish. Missing
+  video does not erase telemetry evidence, but visual acceptance requires it.
