@@ -14,8 +14,10 @@ not built into its DLL, not installed and not live-proven.
 - `Classes`: capability compositions for Warden, Huntress, Mystic, Skirmisher, Commander and
   Pathfinder.
 - `Integration`: the first shared mapping from class/defense decisions into one kernel. The exact
-  strike policy is the only current defense-domain claimant; a generic class request cannot become
-  a second defense brain.
+  strike policy has decisive priority over a class capability's generic defense intent, so only one
+  defense lease survives arbitration.
+- `Shadow`: bounded read-only comparison of native observations and Formidable predictions, including
+  owner/action/target/attack/timing mismatch classification. It exposes no execution commands.
 
 ## Ownership model
 
