@@ -1,4 +1,4 @@
-LIVING WORLD HUMAN NPC 0.3.58 — MOVING-ANCHOR DEFENSE
+LIVING WORLD HUMAN NPC 0.3.59 — FORMIDABLE SHADOW OBSERVER
 
 This archive replaces the prior Human NPC lab candidate. Extract it inside the
 profile's BepInEx folder so the active DLL lands at:
@@ -7,6 +7,11 @@ plugins\LivingWorldHumanNpc\LivingWorld.HumanNpc.dll
 
 This build preserves the 0.3.56 native combat authority, the 0.3.57 fire-team
 cohesion repair, and corrects the meaning of native chase distance:
+- adds a default-off FormidableAI shadow observer; when explicitly enabled it
+  samples locally owned actors at 10 Hz, runs read-only class arbitration and
+  records bounded native-versus-predicted Attack-domain telemetry;
+- the shadow observer cannot move, face, target, block, attack, write ZDO state,
+  claim ownership or transfer a combat domain;
 - Valheim measures m_maxChaseDistance from the NPC's original spawn point, not
   from the moving leader, defended formation or current enemy;
 - that stale spawn-point fence is disabled; the live 18-metre leader/nearest-

@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace LivingWorld.ManualTest
 {
-    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.58")]
+    [BepInPlugin("local.livingworld.humannpc", "Living World Human NPC Lab", "0.3.59")]
     [BepInIncompatibility("local.livingworld.manualtest")]
     [BepInDependency(Jotunn.Main.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     public sealed class ManualTestPlugin : BaseUnityPlugin
@@ -50,6 +50,10 @@ namespace LivingWorld.ManualTest
         void Awake()
         {
             Instance = this;
+            var shadow = Config.Bind("FormidableAI", "ShadowTelemetry", false,
+                "Read-only FormidableAI prediction telemetry. Never transfers action ownership.");
+            HumanFormidableShadow.Enabled = shadow.Value;
+            shadow.SettingChanged += delegate { HumanFormidableShadow.Enabled = shadow.Value; };
             harmony = new Harmony("local.livingworld.humannpc.companion");
             HumanCompanion.InstallPatches(harmony);
             HumanDoorTraversal.InstallPatches(harmony);
@@ -674,6 +678,7 @@ namespace LivingWorld.ManualTest
                 Report("Party confidence: " + npc.GetComponent<HumanPartyConfidence>().Describe());
                 Report("Companion activity: " + npc.GetComponent<HumanCompanionAmbient>().Status);
                 Report("Utility torch: " + npc.GetComponent<HumanUtilityTorch>().Describe());
+                Report("Formidable: " + npc.GetComponent<HumanFormidableShadow>().Describe());
                 Report("Scout health=" + humanoid.GetHealth() + "; grounded=" + humanoid.IsOnGround() + "; weapon=" +
                     (humanoid.GetCurrentWeapon() == null ? "none" : humanoid.GetCurrentWeapon().m_shared.m_name) + "; expectedNativeWeaponEquipped=" + HasExpectedWeapon() + ".");
             }

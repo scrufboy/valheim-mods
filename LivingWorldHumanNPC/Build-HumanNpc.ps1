@@ -14,7 +14,7 @@ if($PSVersionTable.PSEdition -ne 'Core'){
 $compiler='C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $build=Join-Path $PSScriptRoot 'build'
 $null=New-Item -ItemType Directory -Force -Path $build
-[ordered]@{Version='0.3.58';Status='INCOMPLETE';Reason='Current build has not completed all checks';UnityRuntime='NOT RUN';ProfileInstalled=$false;GameLaunched=$false} |
+[ordered]@{Version='0.3.59';Status='INCOMPLETE';Reason='Current build has not completed all checks';UnityRuntime='NOT RUN';ProfileInstalled=$false;GameLaunched=$false} |
     ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
 $nativeBuild=Join-Path $SharedProjectRoot 'independent-core\build'
 $runtimeCore=Join-Path $SharedProjectRoot 'runtime\BepInEx\core'
@@ -69,10 +69,18 @@ $relativeSources=@(
     'src\HumanCleric.cs',
     'src\ClericPresentation.cs',
     'src\HumanUtilityTorch.cs',
+    'src\HumanFormidableShadow.cs',
     'src\ManualPartyLab.cs',
     'migration\HumanMigrationPolicy.cs'
 )
 $sources=@($relativeSources | ForEach-Object {Join-Path $PSScriptRoot $_})
+$formidableRoot=Join-Path (Split-Path $PSScriptRoot -Parent) 'LivingWorldCompanionSystems\FormidableAI'
+$formidableSources=@(
+    'Kernel\CombatFrame.cs', 'Kernel\CombatContracts.cs', 'Kernel\CombatArbitrator.cs',
+    'Defense\DefensePolicy.cs', 'Classes\ClassCapabilities.cs', 'Classes\ClassTacticalPolicy.cs',
+    'Integration\FormidableIntegration.cs', 'Shadow\ShadowTelemetry.cs'
+) | ForEach-Object {Join-Path $formidableRoot $_}
+$sources += $formidableSources
 foreach($source in $sources){if(-not (Test-Path -LiteralPath $source -PathType Leaf)){throw "Allowlisted source missing: $source"}}
 $actualSources=@(Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'src') -Filter '*.cs' -File | ForEach-Object FullName)
 if(@($actualSources | Where-Object {$sources -notcontains $_}).Count){throw 'Unreviewed C# source found outside build allowlist.'}
@@ -83,8 +91,8 @@ foreach($source in $sources){
     }
 }
 $pluginSource=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'src\ManualTestPlugin.cs') -Raw
-if($pluginSource -notmatch '\[BepInPlugin\("local\.livingworld\.humannpc",\s*"[^"]+",\s*"0\.3\.58"\)\]'){
-    throw 'Expected new 0.3.58 human NPC plugin declaration; never reuse frozen version.'
+if($pluginSource -notmatch '\[BepInPlugin\("local\.livingworld\.humannpc",\s*"[^"]+",\s*"0\.3\.59"\)\]'){
+    throw 'Expected new 0.3.59 human NPC plugin declaration; never reuse frozen version.'
 }
 $sourceManifest=@($sources | ForEach-Object {
     [ordered]@{Path=$_;RelativePath=[IO.Path]::GetRelativePath($PSScriptRoot,$_).Replace('\','/');Sha256=(Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash}
@@ -208,6 +216,7 @@ CheckOutput PartyIntegration @(& (Join-Path $PSScriptRoot 'tests\Verify-PartyInt
 CheckOutput ResourceIntegration @(& (Join-Path $PSScriptRoot 'contracts\Test-ResourceIntegration.ps1') -AssemblyPath $dll -NativeAssemblyPath $nativeAssembly -CecilPath $cecil)
 CheckOutput ConfidenceIntegration @(& (Join-Path $PSScriptRoot 'tests\Verify-ConfidenceIntegration.ps1') -AssemblyPath $dll -CecilPath $cecil)
 CheckOutput HumanCompanionBinary @(& (Join-Path $PSScriptRoot 'tests\Verify-HumanCompanionBinary.ps1') -AssemblyPath $dll -CecilPath $cecil)
+CheckOutput FormidableShadowBoundary @(& (Join-Path $PSScriptRoot 'contracts\Test-FormidableShadowBoundary.ps1') -AssemblyPath $dll -CecilPath $cecil)
 CheckOutput DoorIntegration @(& (Join-Path $PSScriptRoot 'tests\Verify-DoorIntegration.ps1') -AssemblyPath $dll -NativeAssemblyPath $nativeAssembly -CecilPath $cecil -BaselinePath (Join-Path $SharedProjectRoot 'human-npc-0.3.0-native\build\LivingWorld.HumanNpc.dll'))
 CheckOutput PresenceIntegration @(& (Join-Path $PSScriptRoot 'tests\Verify-PresenceIntegration.ps1') -AssemblyPath $dll -NativeAssemblyPath $nativeAssembly -CecilPath $cecil -BaselinePath (Join-Path $SharedProjectRoot 'human-npc-0.3.2-navigation\build\LivingWorld.HumanNpc.dll'))
 CheckOutput AmbientIntegration @(& (Join-Path $PSScriptRoot 'tests\Verify-AmbientIntegration.ps1') -AssemblyPath $dll -NativeAssemblyPath $nativeAssembly -CecilPath $cecil -BaselinePath (Join-Path $SharedProjectRoot 'human-npc-0.3.3-companion\build\LivingWorld.HumanNpc.dll'))
@@ -222,10 +231,10 @@ $referenceManifest=@($referencePaths | ForEach-Object {[ordered]@{Path=$_;Sha256
 $referenceManifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $build 'reference-manifest.json') -Encoding utf8
 $dllHash=(Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash
 [ordered]@{
-    Version='0.3.58'; Status='PASS'; DllPath=$dll; DllSha256=$dllHash;
+    Version='0.3.59'; Status='PASS'; DllPath=$dll; DllSha256=$dllHash;
     Scope='Offline compilation, pure managed policies, container isolation and read-only native IL/asset checks only';
     UnityRuntime='NOT RUN'; ProfileInstalled=$false; GameLaunched=$false;
     Sources=$sourceManifest; Suites=@($suiteResults.ToArray())
 } | ConvertTo-Json -Depth 7 | Set-Content -LiteralPath (Join-Path $build 'build-verification.json') -Encoding utf8
-Write-Output "HumanNpc 0.3.58 offline build PASS. DLL SHA256: $dllHash"
+Write-Output "HumanNpc 0.3.59 offline build PASS. DLL SHA256: $dllHash"
 Write-Output 'Unity load, migration, animation, movement/combat and save/reload NOT RUN. No game or live profile touched.'

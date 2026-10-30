@@ -64,6 +64,7 @@ namespace LivingWorld.HumanNpc
                 root.AddComponent<HumanPartyEquipment>();
                 root.AddComponent<HumanCleric>();
                 root.AddComponent<HumanUtilityTorch>();
+                root.AddComponent<HumanFormidableShadow>();
                 Validate(root, false);
                 root.SetActive(true); // Inactive parent: native Awake still has NOT run.
                 return root;
