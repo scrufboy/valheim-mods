@@ -283,3 +283,17 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - Companions decide from their own perception whether or not Brian's weapon is drawn. The leader's weapon may
   shape formation and readiness posture; it is never a prerequisite for a companion to recognize and act on a
   combat opportunity.
+
+## 2026-10-30 — Awareness owns discovery; combat skills never search for excuses (Brian)
+
+- The pre-1.0 behavior contract already separated native alert, committed threat, combat readiness and
+  native combat. FormidableAI preserves and completes that ordering; it does not replace it with a
+  weapon-specific world poll.
+- One shared awareness service discovers and maintains fair contacts. Bomb, bow, defense, voice and
+  formation modules consume the same contact/group facts and may propose responses; none may independently
+  scan the entire world to manufacture the condition that makes its own action eligible.
+- An action module may perform narrow execution validation (trajectory, lane, range, friendly clearance,
+  stamina, equipment and current obstruction). It does not decide whether the contact exists, is alerted,
+  is committed, threatens the party or deserves engagement.
+- Awareness is continuous evidence gathering, not a repeating action timer: perception samples update a
+  bounded contact record; state changes only when evidence changes enough to cross explicit thresholds.
