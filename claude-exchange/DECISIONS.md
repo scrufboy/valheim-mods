@@ -25,3 +25,14 @@ explicitly granted decisions or bounded actions, but may not become stacked comp
 simultaneous movement writers. Native combat remains the fallback executor for every decision not
 yet deliberately replaced and live-proven. Brian's in-game judgment of timing, cadence, realism,
 spacing and class identity is the final acceptance authority.
+
+## 2026-10-30 — FormidableAI's destination is full replacement
+
+Brian clarified that FormidableAI is intended to become LWC's own **full replacement combat AI**.
+Native `MonsterAI` is a protected migration fallback, not the permanent architectural ceiling.
+
+Replacement remains evidence-driven and domain-by-domain: perception, target selection, movement,
+spacing, facing, defense, class tactics, weapon selection, attack cadence, execution, disengagement
+and recovery transfer to FormidableAI only after their ownership contract, deterministic tests,
+telemetry, fault containment and live behavior outperform the retained baseline. During migration,
+each frame/domain still has one owner; native and FormidableAI may not issue competing commands.
