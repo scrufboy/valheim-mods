@@ -41,8 +41,8 @@ def main(paths):
     def add(status, name, detail):
         results.append((status, name, detail))
 
-    if start.get("schema") not in (10, 11):
-        print("Not a Living World C.O.R.E. schema-10/11 session (core %s)." % start.get("core"))
+    if start.get("schema") not in (10, 11, 12):
+        print("Not a Living World C.O.R.E. schema-10/11/12 session (core %s)." % start.get("core"))
         return 2
     names = sorted({r["npc"] for r in npc})
     duration = max((r["t"] for r in rows), default=0)
@@ -454,6 +454,28 @@ def main(paths):
             ("disappeared (cause not recorded): %s" % ", ".join(gone)) if gone else "all present")
     elif not deaths:
         add("PASS", "No companion deaths", "%d removal(s), none by death" % len(removed))
+
+    # FormidableAI shadow (schema 12, 1.0.32.22+): read-only comparison, informational only
+    shadow = [r for r in rows if r.get("type") == "FormidableShadow"]
+    if shadow:
+        by_npc = defaultdict(list)
+        for r in shadow:
+            by_npc[r.get("npc", "?")].append(r)
+        for n in sorted(by_npc):
+            rs = by_npc[n]
+            kinds = defaultdict(int)
+            pairs = defaultdict(int)
+            for r in rs:
+                kinds[r.get("mismatch", "?")] += 1
+                pairs["%s->%s" % (r.get("nativeAction", "?"), r.get("predictedAction", "?"))] += 1
+            seqs = [r.get("shadowSeq", 0) for r in rs]
+            gaps = sum(1 for a, b in zip(seqs, seqs[1:]) if b != a + 1)
+            add("INFO", "FormidableAI shadow: " + n,
+                "%d comparisons, seq gaps %d; mismatch %s; native->predicted %s" % (
+                    len(rs), gaps, ", ".join("%s=%d" % kv for kv in sorted(kinds.items())),
+                    ", ".join("%s=%d" % kv for kv in sorted(pairs.items(), key=lambda kv: -kv[1])[:6])))
+    elif start.get("schema") == 12:
+        add("NOT EXERCISED", "FormidableAI shadow", "no comparisons (ShadowObserver off?)")
 
     report(results)
     return 1 if any(s == "FAIL" for s, _, _ in results) else 0
