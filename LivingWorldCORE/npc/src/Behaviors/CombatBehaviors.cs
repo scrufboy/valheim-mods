@@ -47,7 +47,7 @@ namespace LivingWorld.Core
                     if (c.IsPlayer() || c.GetComponent<NpcKernel>() != null) { party = party + new P2(c.transform.position.x, c.transform.position.z); partyN++; }
                     if (nf < friendBuf.Length) friendBuf[nf++] = BodyOf(c);
                 }
-                else if (nh < hostileBuf.Length && Body.Ai.CanSeeTarget(c)) { hostileActors[nh] = c; hostileBuf[nh++] = BodyOf(c); }
+                else if (nh < hostileBuf.Length && Body.Ai != null && Body.Ai.CanSeeTarget(c)) { hostileActors[nh] = c; hostileBuf[nh++] = BodyOf(c); }
             }
             party = party * (1f / partyN);
             Vector3 fw = me.transform.forward;
@@ -177,7 +177,7 @@ namespace LivingWorld.Core
                         if (c.IsPlayer() || c.GetComponent<NpcKernel>() != null) { party = party + new P2(c.transform.position.x, c.transform.position.z); partyN++; }
                         if (nf < friendBuf.Length) friendBuf[nf++] = BodyOf(c);
                     }
-                    else if (nh < hostileBuf.Length && Body.Ai.CanSeeTarget(c)) { hostileActors[nh] = c; hostileBuf[nh++] = BodyOf(c); }
+                    else if (nh < hostileBuf.Length && Body.Ai != null && Body.Ai.CanSeeTarget(c)) { hostileActors[nh] = c; hostileBuf[nh++] = BodyOf(c); }
                 }
                 party = party * (1f / partyN);
                 Vector3 fw = me.transform.forward;
@@ -215,7 +215,7 @@ namespace LivingWorld.Core
             if (Body.ThrowBomb(this, target, aimPoint))
             {
                 cadence.Started(f.Now);
-                CorePlugin.Report("BOMB-THROW " + me.GetHoverName() + " cluster=" + plan.Members + " poisonable=" + plan.Susceptible + " incoming=" + plan.Incoming +
+                CorePlugin.Report("BOMB-THROW " + me.GetHoverName() + " mode=" + (f.Phase == NpcPhase.Readiness ? "opening-area-control" : "in-combat-area-control") + " cluster=" + plan.Members + " poisonable=" + plan.Susceptible + " incoming=" + plan.Incoming +
                     " dist=" + plan.Distance.ToString("0.0") + " lead=" + plan.Lead.ToString("0.0") + " elev=" + (plan.Elevation * Mathf.Rad2Deg).ToString("0") +
                     " friendClear=" + (float.IsInfinity(plan.FriendClearance) ? "none" : plan.FriendClearance.ToString("0.0")) +
                     (CorePlugin.BombsEndless ? " endless" : " left=" + Body.BombReserve) + " t=" + f.Now.ToString("0.00"));
