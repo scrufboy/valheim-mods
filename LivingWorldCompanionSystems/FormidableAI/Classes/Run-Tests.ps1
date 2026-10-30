@@ -4,6 +4,9 @@ if (-not (Test-Path -LiteralPath $compiler)) { throw "C# compiler not found: $co
 $output = Join-Path ([System.IO.Path]::GetTempPath()) 'LivingWorld.FormidableAI.Classes.Tests.exe'
 try {
     & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:exe "/out:$output" `
+        (Join-Path $PSScriptRoot '..\Kernel\CombatContracts.cs') `
+        (Join-Path $PSScriptRoot '..\Kernel\CombatFrame.cs') `
+        (Join-Path $PSScriptRoot '..\Kernel\CombatArbitrator.cs') `
         (Join-Path $PSScriptRoot 'ClassCapabilities.cs') `
         (Join-Path $PSScriptRoot 'ClassTacticalPolicy.cs') `
         (Join-Path $PSScriptRoot 'ClassTacticalPolicyTests.cs')

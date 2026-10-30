@@ -9,7 +9,7 @@ namespace LivingWorld.FormidableAI.Integration
     public sealed class FormidableIntegrationInput
     {
         public CombatFrame Frame;
-        public ClassActionRequest ClassRequest;
+        public IFormidableCombatModule ClassModule;
         public DefenseDecision DefenseDecision;
     }
 
@@ -17,7 +17,7 @@ namespace LivingWorld.FormidableAI.Integration
     {
         public ArbitrationResult Arbitration;
         public string DefenseAction;
-        public string ClassAction;
+        public ClassDecision ClassDecision;
     }
 
     internal sealed class FixedProposalModule : IFormidableCombatModule
@@ -47,14 +47,15 @@ namespace LivingWorld.FormidableAI.Integration
             CombatProposal defense = DefenseProposal(input.DefenseDecision, input.Frame.Time);
             if (defense != null) modules.Add(new FixedProposalModule("formidable.defense", defense));
 
-            CombatProposal role = ClassProposal(input.ClassRequest, input.Frame.Time,
-                input.Frame.AuthorizedTargetIdentity);
-            if (role != null) modules.Add(new FixedProposalModule("formidable.class", role));
+            if (input.ClassModule != null) modules.Add(input.ClassModule);
+
+            ArbitrationResult arbitration = _arbitrator.Evaluate(input.Frame, modules);
+            ClassProposalModule classModule = input.ClassModule as ClassProposalModule;
 
             return new FormidableIntegrationResult {
-                Arbitration = _arbitrator.Evaluate(input.Frame, modules),
+                Arbitration = arbitration,
                 DefenseAction = input.DefenseDecision == null ? null : input.DefenseDecision.Action.ToString(),
-                ClassAction = input.ClassRequest == null ? null : input.ClassRequest.Kind.ToString()
+                ClassDecision = classModule == null ? null : classModule.LastDecision
             };
         }
 
@@ -66,28 +67,5 @@ namespace LivingWorld.FormidableAI.Integration
                 DecisionDomain.Defense, 1000, decision.ThreatIdentity, now + .1f);
         }
 
-        private static CombatProposal ClassProposal(ClassActionRequest request, float now, string target)
-        {
-            if (request == null || request.Kind == ClassActionKind.Yield) return null;
-            // A class profile grants capability and priority; it does not duplicate the exact
-            // action-moment defense policy. Only DefensePolicy may claim the Defense domain.
-            if (request.Domain == ClassActionDomain.Defense) return null;
-            DecisionDomain domain = Map(request.Domain);
-            if (domain == DecisionDomain.None) return null;
-            return new CombatProposal("class:" + request.Kind.ToString().ToLowerInvariant(), domain,
-                request.Priority, target, now + .1f);
-        }
-
-        private static DecisionDomain Map(ClassActionDomain domain)
-        {
-            switch (domain)
-            {
-                case ClassActionDomain.Awareness: return DecisionDomain.Perception | DecisionDomain.Targeting;
-                case ClassActionDomain.MovementIntent: return DecisionDomain.Movement | DecisionDomain.Facing;
-                case ClassActionDomain.Support: return DecisionDomain.Support | DecisionDomain.Facing;
-                case ClassActionDomain.WeaponAction: return DecisionDomain.Attack | DecisionDomain.Facing;
-                default: return DecisionDomain.None;
-            }
-        }
     }
 }

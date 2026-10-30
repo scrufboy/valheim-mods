@@ -1,165 +1,122 @@
 using System;
+using System.Collections.Generic;
+using LivingWorld.FormidableAI.Kernel;
 
 namespace LivingWorld.Companions.FormidableAI.Classes
 {
-    public enum ClassActionKind
-    {
-        Yield,
-        Investigate,
-        CommunicateThreat,
-        Defend,
-        ProtectAlly,
-        Reposition,
-        HealAlly,
-        CastSupport,
-        RangedAttack,
-        ReachAttack,
-        ThrowWeapon,
-        PressureTarget
-    }
-
-    public enum ClassActionDomain
-    {
-        None,
-        Awareness,
-        Defense,
-        MovementIntent,
-        Support,
-        WeaponAction
-    }
+    public enum ClassActionKind { Yield, Investigate, CommunicateThreat, Defend, ProtectAlly, Reposition, HealAlly, CastSupport, RangedAttack, ReachAttack, ThrowWeapon, PressureTarget, ContinueAction, RecoverAction }
+    public enum ActionLifecyclePhase { Idle, Started, Confirmed, Recovering, Cancelled }
 
     public sealed class ClassCombatFacts
     {
-        public bool OwnerAuthorized;
-        public bool ActorReady;
-        public bool CommittedCombat;
-        public bool TargetAuthorized;
-        public bool IncomingStrike;
-        public bool ShieldReady;
-        public bool PersonalThreat;
-        public bool AllyThreatened;
-        public bool AllyCritical;
-        public bool SupportSafe;
-        public bool LineOfFireClear;
-        public bool AllyInLineOfFire;
-        public bool TooCloseForWeapon;
-        public bool PreferredRange;
-        public bool TargetInReach;
-        public bool ThrowReady;
-        public bool ThrowRecoverySafe;
-        public bool EvidenceToInvestigate;
-        public bool ThreatAlreadyCommunicated;
-        public bool AbilityReady;
+        public bool OwnerAuthorized, ActorReady, CommittedCombat, TargetAuthorized;
+        public bool IncomingStrike, ShieldReady, PersonalThreat, AllyThreatened, AllyCritical, SupportSafe;
+        public bool LineOfFireClear, AllyInLineOfFire, BelowPreferredRange, AbovePreferredRange, TargetInReach;
+        public bool ThrowReady, ThrowRecoverySafe, EvidenceToInvestigate, ThreatAlreadyCommunicated, AbilityReady;
+        public ActionLifecyclePhase Lifecycle;
+        public string CurrentActionId, CurrentTargetIdentity;
+        public DecisionDomain CurrentDomains;
+        public bool ActionCommitObserved, RecoveryComplete;
     }
 
-    public sealed class ClassActionRequest
+    public sealed class ClassDecision
     {
         public ClassActionKind Kind;
-        public ClassActionDomain Domain;
+        public DecisionDomain Domains;
         public int Priority;
-        public string Reason;
+        public string ActionId, TargetIdentity, Reason;
+        public bool ProposesOwnership;
+        public static ClassDecision Yield(string reason) { return new ClassDecision { Kind=ClassActionKind.Yield, Domains=DecisionDomain.None, ActionId="yield", Reason=reason }; }
+    }
 
-        public static ClassActionRequest Yield(string reason)
+    public interface IClassCombatFactSource { ClassCombatFacts Observe(CombatFrame frame); }
+
+    public sealed class ClassProposalModule : IFormidableCombatModule
+    {
+        private readonly ClassProfile _profile;
+        private readonly IClassCombatFactSource _facts;
+        public string Id { get; private set; }
+        public ClassDecision LastDecision { get; private set; }
+        public ClassProposalModule(string id, ClassProfile profile, IClassCombatFactSource facts)
         {
-            return new ClassActionRequest { Kind = ClassActionKind.Yield, Domain = ClassActionDomain.None, Priority = 0, Reason = reason };
+            if(string.IsNullOrEmpty(id)) throw new ArgumentException("module identity is required","id");
+            if(profile==null) throw new ArgumentNullException("profile"); if(facts==null) throw new ArgumentNullException("facts");
+            Id=id; _profile=profile; _facts=facts;
+        }
+        public IEnumerable<CombatProposal> Evaluate(CombatFrame frame)
+        {
+            LastDecision=ClassTacticalPolicy.Decide(_profile,_facts.Observe(frame),frame.AuthorizedTargetIdentity);
+            if(!LastDecision.ProposesOwnership) return new CombatProposal[0];
+            return new[]{new CombatProposal(LastDecision.ActionId,LastDecision.Domains,LastDecision.Priority,LastDecision.TargetIdentity,frame.Time+.15f)};
         }
     }
 
     public static class ClassTacticalPolicy
     {
-        public static ClassActionRequest Decide(ClassProfile profile, ClassCombatFacts facts)
+        public static ClassDecision Decide(ClassProfile profile, ClassCombatFacts facts, string target)
         {
-            if (profile == null) throw new ArgumentNullException("profile");
-            if (facts == null) throw new ArgumentNullException("facts");
-            if (!facts.OwnerAuthorized || !facts.ActorReady) return ClassActionRequest.Yield("owner-or-actor-not-ready");
-
-            // An imminent personal strike preempts support, positioning and attack.
-            if (facts.CommittedCombat && facts.IncomingStrike && facts.ShieldReady &&
-                profile.Has(ClassCapability.ShieldDefense))
-                return Request(ClassActionKind.Defend, ClassActionDomain.Defense, 100, "observed-incoming-strike");
-
-            if (!facts.CommittedCombat)
-                return DecidePrecombat(profile, facts);
-            if (!facts.TargetAuthorized)
-                return ClassActionRequest.Yield("combat-target-not-authorized");
-
-            switch (profile.Class)
-            {
-                case FormidableClass.Warden: return Warden(profile, facts);
-                case FormidableClass.Huntress: return Huntress(profile, facts);
-                case FormidableClass.Mystic: return Mystic(profile, facts);
-                case FormidableClass.Skirmisher: return Skirmisher(profile, facts);
-                case FormidableClass.Commander: return Commander(profile, facts);
-                case FormidableClass.Pathfinder: return Pathfinder(profile, facts);
-                default: return ClassActionRequest.Yield("unknown-class");
-            }
+            if(profile==null) throw new ArgumentNullException("profile"); if(facts==null) throw new ArgumentNullException("facts");
+            if(!facts.OwnerAuthorized||!facts.ActorReady) return ClassDecision.Yield("owner-or-actor-not-ready");
+            ClassDecision lifecycle=Lifecycle(facts,target); if(lifecycle!=null) return lifecycle;
+            if(facts.CommittedCombat&&facts.IncomingStrike&&facts.ShieldReady&&profile.Has(ClassCapability.ShieldDefense))
+                return Request(ClassActionKind.Defend,"defend:observed-strike",DecisionDomain.Defense,100,target,"observed-incoming-strike");
+            if(!facts.CommittedCombat) return Precombat(profile,facts,target);
+            if(!facts.TargetAuthorized||string.IsNullOrEmpty(target)) return ClassDecision.Yield("combat-target-not-authorized");
+            switch(profile.Class){
+                case FormidableClass.Warden:return Warden(profile,facts,target);
+                case FormidableClass.Huntress:return Huntress(profile,facts,target);
+                case FormidableClass.Mystic:return Mystic(profile,facts,target);
+                case FormidableClass.Skirmisher:return Skirmisher(profile,facts,target);
+                case FormidableClass.Commander:return Commander(profile,facts,target);
+                case FormidableClass.Pathfinder:return Pathfinder(profile,facts,target);
+                default:return ClassDecision.Yield("unknown-class");}
         }
 
-        private static ClassActionRequest DecidePrecombat(ClassProfile profile, ClassCombatFacts facts)
+        private static ClassDecision Lifecycle(ClassCombatFacts f,string target)
         {
-            if (facts.EvidenceToInvestigate && profile.Has(ClassCapability.Investigation))
-                return Request(ClassActionKind.Investigate, ClassActionDomain.Awareness, 30, "target-isolated-evidence");
-            if (facts.EvidenceToInvestigate && !facts.ThreatAlreadyCommunicated &&
-                profile.Has(ClassCapability.ThreatCommunication))
-                return Request(ClassActionKind.CommunicateThreat, ClassActionDomain.Awareness, 25, "new-threat-evidence");
-            return ClassActionRequest.Yield("no-precombat-class-action");
+            if(f.Lifecycle==ActionLifecyclePhase.Cancelled) return ClassDecision.Yield("action-cancelled-await-handback");
+            if(f.Lifecycle==ActionLifecyclePhase.Idle) return null;
+            if(f.CommittedCombat&&(!f.TargetAuthorized||string.IsNullOrEmpty(target))) return ClassDecision.Yield("cancel-current-action:target-lost-or-unauthorized");
+            if((f.CurrentDomains&DecisionDomain.Support)!=0&&f.PersonalThreat) return ClassDecision.Yield("cancel-current-support:personal-threat");
+            if(string.IsNullOrEmpty(f.CurrentActionId)||f.CurrentDomains==DecisionDomain.None) return ClassDecision.Yield("cancel-current-action:invalid-lifecycle-facts");
+            if(f.Lifecycle==ActionLifecyclePhase.Started&&!f.ActionCommitObserved)
+                return Request(ClassActionKind.ContinueAction,f.CurrentActionId,f.CurrentDomains,110,f.CurrentTargetIdentity,"await-action-commit-confirmation");
+            if((f.Lifecycle==ActionLifecyclePhase.Confirmed||f.Lifecycle==ActionLifecyclePhase.Recovering)&&!f.RecoveryComplete)
+                return Request(ClassActionKind.RecoverAction,"recover:"+f.CurrentActionId,f.CurrentDomains,105,f.CurrentTargetIdentity,"confirmed-action-recovery-not-complete");
+            return null;
         }
-
-        private static ClassActionRequest Warden(ClassProfile profile, ClassCombatFacts facts)
+        private static ClassDecision Precombat(ClassProfile p,ClassCombatFacts f,string t)
         {
-            if (facts.AllyThreatened && profile.Has(ClassCapability.ProtectAlly))
-                return Request(ClassActionKind.ProtectAlly, ClassActionDomain.MovementIntent, 80, "ally-protection-window");
-            return Request(ClassActionKind.PressureTarget, ClassActionDomain.WeaponAction, 40, "hold-defensive-pressure");
+            if(f.EvidenceToInvestigate&&p.Has(ClassCapability.Investigation)) return Request(ClassActionKind.Investigate,"investigate:evidence",DecisionDomain.Perception|DecisionDomain.Movement,30,t,"target-isolated-evidence");
+            if(f.EvidenceToInvestigate&&!f.ThreatAlreadyCommunicated&&p.Has(ClassCapability.ThreatCommunication)) return Request(ClassActionKind.CommunicateThreat,"communicate:threat",DecisionDomain.Perception,25,t,"new-threat-evidence");
+            return ClassDecision.Yield("no-precombat-class-action");
         }
-
-        private static ClassActionRequest Huntress(ClassProfile profile, ClassCombatFacts facts)
+        private static ClassDecision Warden(ClassProfile p,ClassCombatFacts f,string t)
+        { return f.AllyThreatened&&p.Has(ClassCapability.ProtectAlly)?Request(ClassActionKind.ProtectAlly,"protect:ally",DecisionDomain.Movement|DecisionDomain.Facing,80,t,"ally-protection-window"):Request(ClassActionKind.PressureTarget,"pressure:defensive",DecisionDomain.Attack,40,t,"hold-defensive-pressure"); }
+        private static ClassDecision Huntress(ClassProfile p,ClassCombatFacts f,string t)
         {
-            if (facts.TooCloseForWeapon || !facts.LineOfFireClear || facts.AllyInLineOfFire)
-                return Request(ClassActionKind.Reposition, ClassActionDomain.MovementIntent, 75,
-                    facts.AllyInLineOfFire ? "ally-in-firing-lane" : "unsafe-range-or-lane");
-            if (facts.PreferredRange && profile.Has(ClassCapability.RangedPressure))
-                return Request(ClassActionKind.RangedAttack, ClassActionDomain.WeaponAction, 55, "safe-ranged-window");
-            return ClassActionRequest.Yield("no-safe-huntress-action");
+            if(f.BelowPreferredRange||!f.LineOfFireClear||f.AllyInLineOfFire) return Request(ClassActionKind.Reposition,"reposition:ranged-lane",DecisionDomain.Movement|DecisionDomain.Facing,75,t,f.AllyInLineOfFire?"ally-in-firing-lane":"unsafe-range-or-lane");
+            if(f.AbovePreferredRange) return Request(ClassActionKind.Reposition,"reposition:close-range",DecisionDomain.Movement,65,t,"outside-effective-range");
+            return p.Has(ClassCapability.RangedPressure)?Request(ClassActionKind.RangedAttack,"attack:ranged",DecisionDomain.Facing|DecisionDomain.Attack,55,t,"safe-ranged-window"):ClassDecision.Yield("no-safe-huntress-action");
         }
-
-        private static ClassActionRequest Mystic(ClassProfile profile, ClassCombatFacts facts)
+        private static ClassDecision Mystic(ClassProfile p,ClassCombatFacts f,string t)
         {
-            if (facts.PersonalThreat) return ClassActionRequest.Yield("personal-threat-preempts-support");
-            if (facts.AllyCritical && facts.SupportSafe && facts.AbilityReady && profile.Has(ClassCapability.HealSupport))
-                return Request(ClassActionKind.HealAlly, ClassActionDomain.Support, 90, "critical-ally-safe-heal");
-            if (facts.SupportSafe && facts.AbilityReady && profile.Has(ClassCapability.CastSupport))
-                return Request(ClassActionKind.CastSupport, ClassActionDomain.Support, 60, "safe-support-window");
-            return ClassActionRequest.Yield("support-not-safe-or-ready");
+            if(f.PersonalThreat) return ClassDecision.Yield("personal-threat-preempts-support");
+            if(f.AllyCritical&&f.SupportSafe&&f.AbilityReady&&p.Has(ClassCapability.HealSupport)) return Request(ClassActionKind.HealAlly,"support:heal-critical",DecisionDomain.Facing|DecisionDomain.Support,90,t,"critical-ally-safe-heal");
+            if(f.SupportSafe&&f.AbilityReady&&p.Has(ClassCapability.CastSupport)) return Request(ClassActionKind.CastSupport,"support:cast",DecisionDomain.Facing|DecisionDomain.Support,60,t,"safe-support-window");
+            return ClassDecision.Yield("support-not-safe-or-ready");
         }
-
-        private static ClassActionRequest Skirmisher(ClassProfile profile, ClassCombatFacts facts)
+        private static ClassDecision Skirmisher(ClassProfile p,ClassCombatFacts f,string t)
         {
-            if (facts.ThrowReady && facts.ThrowRecoverySafe && !facts.AllyInLineOfFire &&
-                profile.Has(ClassCapability.BoundedThrow))
-                return Request(ClassActionKind.ThrowWeapon, ClassActionDomain.WeaponAction, 70, "bounded-throw-window");
-            if (facts.TargetInReach && profile.Has(ClassCapability.ReachControl))
-                return Request(ClassActionKind.ReachAttack, ClassActionDomain.WeaponAction, 50, "target-in-reach-band");
-            return Request(ClassActionKind.Reposition, ClassActionDomain.MovementIntent, 45, "recover-reach-band");
+            if(f.ThrowReady&&f.ThrowRecoverySafe&&!f.AllyInLineOfFire&&p.Has(ClassCapability.BoundedThrow)) return Request(ClassActionKind.ThrowWeapon,"attack:bounded-throw",DecisionDomain.Equipment|DecisionDomain.Facing|DecisionDomain.Attack,70,t,"bounded-throw-window");
+            if(f.TargetInReach&&p.Has(ClassCapability.ReachControl)) return Request(ClassActionKind.ReachAttack,"attack:reach",DecisionDomain.Facing|DecisionDomain.Attack,50,t,"target-in-reach-band");
+            return Request(ClassActionKind.Reposition,"reposition:reach-band",DecisionDomain.Movement|DecisionDomain.Facing,45,t,"recover-reach-band");
         }
-
-        private static ClassActionRequest Commander(ClassProfile profile, ClassCombatFacts facts)
-        {
-            if (facts.AllyThreatened && profile.Has(ClassCapability.ProtectAlly))
-                return Request(ClassActionKind.ProtectAlly, ClassActionDomain.MovementIntent, 85, "command-protection-priority");
-            return Request(ClassActionKind.PressureTarget, ClassActionDomain.WeaponAction, 60, "anchor-threat-without-chasing");
-        }
-
-        private static ClassActionRequest Pathfinder(ClassProfile profile, ClassCombatFacts facts)
-        {
-            // Investigation never survives committed combat.
-            if (facts.TooCloseForWeapon || !facts.LineOfFireClear || facts.AllyInLineOfFire)
-                return Request(ClassActionKind.Reposition, ClassActionDomain.MovementIntent, 65, "scout-combat-lane");
-            return Request(ClassActionKind.RangedAttack, ClassActionDomain.WeaponAction, 50, "scout-yields-awareness-to-combat");
-        }
-
-        private static ClassActionRequest Request(ClassActionKind kind, ClassActionDomain domain, int priority, string reason)
-        {
-            return new ClassActionRequest { Kind = kind, Domain = domain, Priority = priority, Reason = reason };
-        }
+        private static ClassDecision Commander(ClassProfile p,ClassCombatFacts f,string t)
+        { return f.AllyThreatened&&p.Has(ClassCapability.ProtectAlly)?Request(ClassActionKind.ProtectAlly,"protect:command",DecisionDomain.Movement|DecisionDomain.Facing,85,t,"command-protection-priority"):Request(ClassActionKind.PressureTarget,"pressure:anchor",DecisionDomain.Movement|DecisionDomain.Facing|DecisionDomain.Attack,60,t,"anchor-threat-without-chasing"); }
+        private static ClassDecision Pathfinder(ClassProfile p,ClassCombatFacts f,string t)
+        { return f.BelowPreferredRange||!f.LineOfFireClear||f.AllyInLineOfFire?Request(ClassActionKind.Reposition,"reposition:scout-lane",DecisionDomain.Movement|DecisionDomain.Facing,65,t,"scout-combat-lane"):Request(ClassActionKind.RangedAttack,"attack:scout-ranged",DecisionDomain.Facing|DecisionDomain.Attack,50,t,"scout-yields-awareness-to-combat"); }
+        private static ClassDecision Request(ClassActionKind k,string id,DecisionDomain d,int p,string t,string r)
+        { return new ClassDecision{Kind=k,ActionId=id,Domains=d,Priority=p,TargetIdentity=t,Reason=r,ProposesOwnership=true}; }
     }
 }

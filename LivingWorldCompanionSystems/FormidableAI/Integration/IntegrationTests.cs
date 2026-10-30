@@ -7,12 +7,17 @@ namespace LivingWorld.FormidableAI.Integration
 {
     internal static class IntegrationTests
     {
+        private sealed class Facts : IClassCombatFactSource
+        {
+            public ClassCombatFacts Value;
+            public ClassCombatFacts Observe(CombatFrame frame) { return Value; }
+        }
         private static int _passed;
 
         public static int Main()
         {
             Run("exact defense owns defense domain", ExactDefenseOwnsDomain);
-            Run("class defense does not duplicate strike policy", ClassDefenseDoesNotDuplicate);
+            Run("exact defense preempts generic class defense", ExactDefensePreemptsClassDefense);
             Run("defense and class movement compose", DefenseAndMovementCompose);
             Run("class weapon action owns attack and facing", WeaponActionMapsDomains);
             Run("native owns every unrequested domain", NativeOwnsRemainder);
@@ -35,15 +40,23 @@ namespace LivingWorld.FormidableAI.Integration
             return DefensePolicy.Decide(DefenseMemory.Empty(), strike);
         }
 
-        private static ClassActionRequest Request(ClassActionKind kind, ClassActionDomain domain, int priority)
+        private static ClassProposalModule Class(FormidableClass role, ClassCombatFacts facts)
         {
-            return new ClassActionRequest { Kind = kind, Domain = domain, Priority = priority, Reason = "test" };
+            return new ClassProposalModule("formidable.class", ClassProfile.Create(role), new Facts { Value = facts });
         }
 
-        private static FormidableIntegrationResult Evaluate(bool owner, ClassActionRequest role, DefenseDecision defense)
+        private static ClassCombatFacts BaseFacts()
+        {
+            return new ClassCombatFacts { OwnerAuthorized = true, ActorReady = true,
+                CommittedCombat = true, TargetAuthorized = true, LineOfFireClear = true,
+                SupportSafe = true, AbilityReady = true, ThrowReady = true,
+                ThrowRecoverySafe = true, TargetInReach = true, Lifecycle = ActionLifecyclePhase.Idle };
+        }
+
+        private static FormidableIntegrationResult Evaluate(bool owner, IFormidableCombatModule role, DefenseDecision defense)
         {
             return new FormidableIntegration().Evaluate(new FormidableIntegrationInput {
-                Frame = Frame(owner), ClassRequest = role, DefenseDecision = defense
+                Frame = Frame(owner), ClassModule = role, DefenseDecision = defense
             });
         }
 
@@ -54,18 +67,20 @@ namespace LivingWorld.FormidableAI.Integration
             Assert(lease.OwnerId == "formidable.defense" && lease.ActionId == "defense:block", "defense lease missing");
         }
 
-        private static void ClassDefenseDoesNotDuplicate()
+        private static void ExactDefensePreemptsClassDefense()
         {
-            FormidableIntegrationResult x = Evaluate(true,
-                Request(ClassActionKind.Defend, ClassActionDomain.Defense, 100), null);
-            Assert(x.Arbitration.LeaseFor(DecisionDomain.Defense).IsNativeFallback,
-                "generic class request became a second defense brain");
+            ClassCombatFacts facts = BaseFacts(); facts.IncomingStrike = true; facts.ShieldReady = true;
+            FormidableIntegrationResult x = Evaluate(true, Class(FormidableClass.Warden, facts), Block());
+            Assert(x.Arbitration.LeaseFor(DecisionDomain.Defense).OwnerId == "formidable.defense",
+                "generic class defense displaced exact strike policy");
+            Assert(x.ClassDecision != null && x.ClassDecision.Kind == ClassActionKind.Defend,
+                "class capability context was not observable");
         }
 
         private static void DefenseAndMovementCompose()
         {
-            FormidableIntegrationResult x = Evaluate(true,
-                Request(ClassActionKind.ProtectAlly, ClassActionDomain.MovementIntent, 80), Block());
+            ClassCombatFacts facts = BaseFacts(); facts.AllyThreatened = true;
+            FormidableIntegrationResult x = Evaluate(true, Class(FormidableClass.Warden, facts), Block());
             Assert(x.Arbitration.LeaseFor(DecisionDomain.Defense).OwnerId == "formidable.defense", "defense lost");
             Assert(x.Arbitration.LeaseFor(DecisionDomain.Movement).OwnerId == "formidable.class", "movement intent lost");
             Assert(x.Arbitration.LeaseFor(DecisionDomain.Facing).OwnerId == "formidable.class", "atomic facing lease lost");
@@ -73,8 +88,7 @@ namespace LivingWorld.FormidableAI.Integration
 
         private static void WeaponActionMapsDomains()
         {
-            FormidableIntegrationResult x = Evaluate(true,
-                Request(ClassActionKind.RangedAttack, ClassActionDomain.WeaponAction, 55), null);
+            FormidableIntegrationResult x = Evaluate(true, Class(FormidableClass.Huntress, BaseFacts()), null);
             Assert(x.Arbitration.LeaseFor(DecisionDomain.Attack).OwnerId == "formidable.class", "attack not owned");
             Assert(x.Arbitration.LeaseFor(DecisionDomain.Facing).OwnerId == "formidable.class", "facing not owned");
         }
@@ -90,8 +104,8 @@ namespace LivingWorld.FormidableAI.Integration
 
         private static void RemoteActorCannotAct()
         {
-            FormidableIntegrationResult x = Evaluate(false,
-                Request(ClassActionKind.PressureTarget, ClassActionDomain.WeaponAction, 99), Block());
+            ClassCombatFacts facts = BaseFacts();
+            FormidableIntegrationResult x = Evaluate(false, Class(FormidableClass.Commander, facts), Block());
             Assert(x.Arbitration.LeaseFor(DecisionDomain.Attack).IsNativeFallback, "remote class acted");
             Assert(x.Arbitration.LeaseFor(DecisionDomain.Defense).IsNativeFallback, "remote defense acted");
         }
