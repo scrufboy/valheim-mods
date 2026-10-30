@@ -148,3 +148,31 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
   improve beyond them through skills, equipment and survival.
 - FormidableAI is successful when the NPC's choices are legible as those of a trained survivor using
   that body, weapon, role and environment—not merely when its attack flag matches native AI.
+
+## 2026-10-30 — Character rollup owns training and loadout (Brian)
+
+- An NPC's combat training is part of the character rollup and weapon loadout, not a later AI label.
+  The rollup is one coherent starting package: identity, origin biome, people/culture, gender
+  expression, job/class, starting attributes, skills, armor, food state, weapons, ammunition,
+  equipment and the doctrine for using them.
+- Biome and job jointly determine plausible starting competence and kit. World progression (days,
+  bosses and loot/difficulty state) scales the package so a newly found companion belongs in the
+  current world rather than spawning as a fixed weak template.
+- Weapon doctrine must be generated from the actual equipped loadout. If the loadout changes, the
+  usable doctrine changes with it; an NPC cannot claim bow competence without a bow/arrows or use
+  shield doctrine without an eligible shield/weapon pairing.
+- People/culture and gender provide identity, appearance, voice, names and believable variation.
+  They may influence culturally plausible equipment or background where established by Living World
+  lore, but they do not impose arbitrary competence penalties or biological stereotypes.
+- Starting skills and attributes have bounded individual variance so two companions of the same job
+  are recognizable as that job without being clones. Progression then belongs to the persisted
+  person and is never rerolled on reload, release or recruitment.
+- Food is part of readiness and the starting stat budget, not a hidden unlimited pool. The rollup
+  names what food effects or equivalent companion budget justify health and stamina.
+- Explicit quality-of-life invariants belong in the package contract. Example: companions have an
+  endless utility-torch supply (or equivalent non-depleting torch service) so routine light does not
+  become inventory chores, while combat ammunition and special consumables follow their own stated
+  balance rules.
+- Character generation must emit one inspectable profile explaining why this NPC has these stats,
+  skills, gear, food budget and combat doctrine. FormidableAI reads that profile; it does not infer a
+  generic class from prefab name alone.
