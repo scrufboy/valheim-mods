@@ -57,11 +57,13 @@ execution-command surface.
 - it feeds class predictions from the same sampled frame used by the 1.0.x kernel;
 - it is off unless `FormidableAI/ShadowObserver=true`;
 - each actor retains only 64 comparisons;
+- comparison sampling is capped at 2 Hz per actor and every retained comparison is exported as a
+  `FormidableShadow` JSONL record by the existing session telemetry;
 - no 0.3.x component or prefab participates in this candidate.
 
 ## Remaining adapter work
 
 - define stable physical attack IDs and authoritative timestamps;
-- cap sampling/export cost and redact no personal/game paths into Git;
-- expose aggregate mismatch counts plus a short trace for Brian's A/B review;
+- measure sampling/export cost at 1/10/50/100 actors;
+- add analyzer aggregates for mismatch counts after the first wiring session establishes the schema;
 - never let shadow exceptions or missing reflection affect native combat.

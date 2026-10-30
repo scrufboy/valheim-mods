@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using BepInEx;
 using LivingWorld.Core;
+using LivingWorld.FormidableAI.Shadow;
 using UnityEngine;
 
 namespace LivingWorld.Telemetry
@@ -20,13 +21,14 @@ namespace LivingWorld.Telemetry
     {
         public const string Guid = "local.livingworld.telemetry";
         public const string Version = CorePlugin.Version;
-        const int Schema = 11; // 1.0.1 adds fields only; schema-10 readers still parse it
+        const int Schema = 12; // adds rate-limited FormidableShadow comparison records
         const float SampleSeconds = .5f;
         const long MaxBytes = 64L * 1024L * 1024L;
 
         readonly Dictionary<NpcKernel, NpcPhase> lastPhase = new Dictionary<NpcKernel, NpcPhase>();
         readonly Dictionary<NpcKernel, int> lastViolations = new Dictionary<NpcKernel, int>();
         readonly Dictionary<NpcKernel, bool> lastTorch = new Dictionary<NpcKernel, bool>();
+        readonly Dictionary<NpcKernel, long> lastFormidableSequence = new Dictionary<NpcKernel, long>();
         readonly StringBuilder line = new StringBuilder(1024);
         StreamWriter writer;
         float started, nextSample, nextFlush;
@@ -81,6 +83,7 @@ namespace LivingWorld.Telemetry
             lastPhase.Clear();
             lastViolations.Clear();
             lastTorch.Clear();
+            lastFormidableSequence.Clear();
             lastBlock.Clear();
             lastSwitches.Clear();
             lastFallBack.Clear();
@@ -238,7 +241,46 @@ namespace LivingWorld.Telemetry
                 Str("weaponPick", body.LastWeaponPick ?? ""); Num("weaponSwaps", body.WeaponSwaps);
                 Num("targetPicks", kernel.Targeting == null ? 0 : kernel.Targeting.Picks);
                 End();
+                ObserveFormidable(kernel);
             }
+        }
+
+        void ObserveFormidable(NpcKernel kernel)
+        {
+            FormidableShadowBehavior observer = null;
+            foreach (NpcBehavior behavior in kernel.Behaviors)
+            {
+                observer = behavior as FormidableShadowBehavior;
+                if (observer != null) break;
+            }
+            if (observer == null || !observer.Active) return;
+
+            long seen;
+            if (!lastFormidableSequence.TryGetValue(kernel, out seen)) seen = -1;
+            IList<ShadowTraceEntry> entries = observer.Snapshot();
+            for (int i = 0; i < entries.Count; i++)
+            {
+                ShadowTraceEntry entry = entries[i];
+                if (entry.Sequence <= seen) continue;
+                ShadowComparison comparison = entry.Comparison;
+                NativeObservation native = comparison.Native;
+                FormidablePrediction prediction = comparison.Prediction;
+                Begin("FormidableShadow"); Actor(kernel);
+                Num("shadowSeq", entry.Sequence);
+                Str("mismatch", comparison.Mismatch.ToString());
+                Num("timingDelta", comparison.TimingDeltaSeconds);
+                Str("domain", native == null ? (prediction == null ? "" : prediction.Domain.ToString()) : native.Domain.ToString());
+                Str("nativeOwner", native == null ? "" : native.Owner.ToString());
+                Str("predictedOwner", prediction == null ? "" : prediction.ExpectedOwner.ToString());
+                Str("nativeAction", native == null ? "" : native.Action.ToString());
+                Str("predictedAction", prediction == null ? "" : prediction.Action.ToString());
+                Str("target", prediction == null ? (native == null ? "" : native.TargetIdentity) : prediction.TargetIdentity);
+                Str("attack", prediction == null ? (native == null ? "" : native.AttackIdentity) : prediction.AttackIdentity);
+                Str("predictionReason", prediction == null ? "" : prediction.Reason);
+                End();
+                seen = entry.Sequence;
+            }
+            lastFormidableSequence[kernel] = seen;
         }
 
         static bool TargetIsRanged(Character c)

@@ -16,6 +16,7 @@ namespace LivingWorld.Core
     public sealed class FormidableShadowBehavior : NpcBehavior, IClassCombatFactSource
     {
         const int TraceCapacity = 64;
+        const float SampleInterval = .5f;
         readonly BoundedShadowTrace trace = new BoundedShadowTrace(TraceCapacity);
         readonly FormidableIntegration integration = new FormidableIntegration();
         static ConfigEntry<bool> enabled;
@@ -23,10 +24,16 @@ namespace LivingWorld.Core
         ClassProposalModule classModule;
         FormidableClass role;
         long sequence;
+        float nextSample;
 
         public override string Name { get { return "formidable-shadow"; } }
         public override NpcDomain Claims { get { return NpcDomain.None; } }
         public int TraceCount { get { return trace.Count; } }
+
+        public System.Collections.Generic.IList<ShadowTraceEntry> Snapshot()
+        {
+            return trace.Snapshot();
+        }
 
         internal static void Bind(ConfigFile config)
         {
@@ -46,6 +53,8 @@ namespace LivingWorld.Core
 
         public override void Tick(NpcFrame nativeFrame)
         {
+            if (nativeFrame.Now < nextSample) return;
+            nextSample = nativeFrame.Now + SampleInterval;
             Character target = nativeFrame.Senses.Target;
             string actorId = Identity(Body.Human);
             string targetId = Identity(target);
