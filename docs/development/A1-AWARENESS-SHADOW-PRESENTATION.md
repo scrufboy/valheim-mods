@@ -1,6 +1,6 @@
 # A1 shared awareness (shadow): implementation and verification
 
-**Branch** `work/awareness-a1` · **commit** `d989514` (revision 3: §9 actor-agnostic intent, §10 tactical-group boundary and initiative) · **version** 1.0.32.26 · base `17edec6` (combat behavior = `5f54db8`)
+**Branch** `work/awareness-a1` · **commit** `eb28f1c` (revision 4: §10 corrected - native initiative measured independently, see §10.5) · **version** 1.0.32.26 · base `17edec6` (combat behavior = `5f54db8`)
 **Status:** OFFLINE-TESTED. Not installed. Gameplay unchanged. A2 not started.
 
 ## 1. What runs
@@ -241,7 +241,7 @@ interface IAwarenessGroupAdapter {
 | `ResponseReady` | shadow only: committed and inside the current 30 m engagement rule |
 | `MemberAction` | a member's attack, bow draw or throw while targeting it |
 
-- Each milestone records time, distance and time to contact. A contact publishes one `Initiative` record on member action, or on drop/eviction with whatever it reached. Never-noticed contacts publish nothing.
+- ~~A contact publishes one `Initiative` record on member action, or on drop/eviction with whatever it reached. Never-noticed contacts publish nothing.~~ **Retracted (review `cebfcd0`):** this discarded native observations until awareness had noticed the actor. Replaced by §10.5.
 - Independent checks mark concurrently, so duplicated or serial delay shows up directly in the deltas.
 
 **The analyzer reports:**
@@ -281,5 +281,64 @@ In addition to §8:
 - every combat contact a member targeted has an `Initiative` record;
 - **native targeting is never routinely ahead of awareness commitment**: report the count and median lag;
 - any lag gives a measured lead (closing × lag), to be applied only after redundant latency is removed;
-- `Noticed` precedes the member's native target on day encounters that start beyond 30 m;
+- ~~`Noticed` precedes the member's native target on day encounters that start beyond 30 m;~~ **Retracted:** the recorder made this self-fulfilling. Replaced by §10.5's measured ordering counts;
 - evidence-to-action latency is no worse than the native reaction seen in the video.
+
+### 10.5 Revision 4: native initiative measured independently (review `cebfcd0`)
+
+**What was wrong at `d989514`:** native target and action marks were written only into a contact that awareness
+had already noticed, and only noticed contacts were published. The recorder could not show the native AI acting
+first, so "Noticed precedes native target" was guaranteed by construction. Both claims are retracted above.
+
+**Now (`eb28f1c`):**
+- **`InitiativeLedger`** holds per-actor timelines, separate from the `ContactBook`.
+  - Native `MemberTarget` and `MemberAction` are recorded whatever awareness thinks: no record, `None` or `Lost`.
+  - They never change samples, alert, notice, commitment, posture or anything in play (tested).
+  - Awareness milestones join the same timeline later. First occurrence only.
+- **`MemberEdges`** detects real per-member edges: a target change, or an action starting between two consecutive samples.
+- **Publication** happens once, on:
+  - the actor being absent for 5 s;
+  - eviction;
+  - telemetry RunStop or world exit (flushed and drained before the file closes; a size rotation keeps timelines open).
+- **What gets published:**
+  - Any timeline with `Noticed` or any native mark is published, so a **native-only timeline** (awareness never noticed) is published with its awareness milestones absent, not invented.
+  - An unnoticed passer-by with no native mark is not published; it carries no initiative information.
+- **No silent loss:** the bounded rings report overwrites as `InitiativeGap` / `ContactGap` records, and the analyzer **FAILs** the session on any loss.
+
+**Measured versus upper-bounded:**
+
+| Mark | What it is |
+|---|---|
+| `Evidence`, `Noticed`, `Alerted`, `Committed`, `ResponseReady` | measured exactly, when the awareness core takes the step |
+| `MemberTarget` / `MemberAction` from a real edge | measured to within one awareness frame of the change |
+| `MemberTarget` / `MemberAction` with `ub…: true` | **upper bound**: already active at the member's first sample, or after a sampling gap over 1 s; the true start is earlier and unknown |
+| `Envelope` | first candidate pass that found it (4 Hz): within 0.25 s |
+
+**The analyzer reports:**
+- native target and native action **before / after / awareness-absent**, separately against `Evidence`, `Noticed` and `Committed`;
+- native-only records and upper-bound records;
+- signed latencies (`Noticed→MemberTarget`, `Committed→MemberTarget`, `Noticed→MemberAction`, `Evidence→MemberAction`) with median, minimum and **count of negatives** (negative = native first), plus the exact-start-only median;
+- true medians;
+- lead needed to cover native-first notice and commit (closing × lag).
+
+**Tests (ledger 155/155):**
+- normal path and response-ready (kept);
+- target before evidence, target before notice, action before notice;
+- never-noticed native-only (and the passer-by rule);
+- native does not feed awareness;
+- already-active upper bound;
+- session-stop flush;
+- ring-gap observability.
+
+**Gates:** native 46; ownership 76 (unchanged); voice LOCKED unchanged; movement-writer OK; analyzer self-test OK.
+
+**DLLs:** core `c95d9ef7b11dfb7b6cbd94ae44e7e814866c96780e50b5a89d0ecd383a61a8e5`, telemetry
+`da82cdca165e2c8edcfc30844c6b89225be5f9254d42b1c0c3ba3ea5b08c03da`.
+
+**Live acceptance (replaces the retracted line):**
+- zero initiative and contact loss;
+- report counts of native target/action before `Evidence`, `Noticed` and `Committed`, with awareness-absent cases counted apart and upper-bound cases flagged;
+- A1 is acceptable as a measurement instrument if those counts and the negative latencies are visible and consistent with the video.
+
+Whether awareness is *fast enough* is the result being measured, not a precondition. Any native-first lag becomes a
+measured lead (closing × lag), applied only after redundant latency is removed.
