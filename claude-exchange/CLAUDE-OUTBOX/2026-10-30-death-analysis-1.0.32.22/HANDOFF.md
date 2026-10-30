@@ -15,7 +15,7 @@ Each companion has 250 max HP. Each died to 183-343 damage within 30 s, from 5-1
 
 ## Patterns across all 10 (LIVE-PROVEN from the data)
 
-1. **No hit was blocked. 0 of the 102 hits in the death windows.** `cfgShieldBlocking=false`: the experimental shield
+1. **No hit was blocked. 0 of the 110 hits in the death windows.** `cfgShieldBlocking=false`: the experimental shield
    blocking is off, so companions carry the shield (shield in hand 28-93% of the final 30 s) but never raise it.
    Stamina was never the limit (minimum 122-150 in every window). **This is the largest single lever** and is exactly the
    Defense domain FormidableAI is meant to take over first.
