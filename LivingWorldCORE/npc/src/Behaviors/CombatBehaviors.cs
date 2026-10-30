@@ -26,13 +26,18 @@ namespace LivingWorld.Core
         public override bool Wants(NpcFrame f)
         {
             if (f.Phase == NpcPhase.Combat || f.Phase == NpcPhase.CombatClear) return true;
-            if (!CorePlugin.CompanionBombs || f.Phase != NpcPhase.Readiness || Body == null || Body.Human == null) return false;
+            // Brian 2026-10-30: the companion's own sight decides, not the leader's weapon. A visible, valid group may
+            // be opened on from Calm or Readiness alike; only the leader's sneak (stealth intent) holds the throw.
+            if (!CorePlugin.CompanionBombs || (f.Phase != NpcPhase.Readiness && f.Phase != NpcPhase.Calm) ||
+                f.Senses.LeaderCrouching || Body == null || Body.Human == null) return false;
             // Keep ownership until the native throw animation has delivered and
             // FinishBomb has restored the real loadout.
             if (Body.Throwing) return true;
             if (Body.Human.InAttack() || Body.Human.IsDrawingBow() || Body.Human.IsStaggering() || Body.Human.IsBlocking()) return false;
             cadence.Cooldown = CorePlugin.BombCooldown;
             if (!cadence.Ready(f.Now) || (!CorePlugin.BombsEndless && Body.BombReserve <= 0)) return false;
+            // Not yet granted: look for an opening at the same 0.2 s cadence StepBomb uses (bounded raycasts).
+            if (!Active) { if (f.Now < nextOpeningScan) return false; nextOpeningScan = f.Now + .2f; }
             Humanoid me = Body.Human;
             Vector3 at = me.transform.position;
             int nh = 0, nf = 0;
@@ -131,7 +136,7 @@ namespace LivingWorld.Core
 
         // ---- 1.0.32.12 bomb throw: Souls Pillager throw, player-like decision (ThrowPlanner), native execution.
         readonly ThrowCadence cadence = new ThrowCadence();
-        float nextBombCheck, nextBombSkipLog;
+        float nextBombCheck, nextBombSkipLog, nextOpeningScan;
         bool aiming; Vector3 aimPoint; float aimSince; ThrowPlan aimPlan;
         readonly ThrowBody[] hostileBuf = new ThrowBody[24];
         readonly Character[] hostileActors = new Character[24];
@@ -215,7 +220,7 @@ namespace LivingWorld.Core
             if (Body.ThrowBomb(this, target, aimPoint))
             {
                 cadence.Started(f.Now);
-                CorePlugin.Report("BOMB-THROW " + me.GetHoverName() + " mode=" + (f.Phase == NpcPhase.Readiness ? "opening-area-control" : "in-combat-area-control") + " cluster=" + plan.Members + " poisonable=" + plan.Susceptible + " incoming=" + plan.Incoming +
+                CorePlugin.Report("BOMB-THROW " + me.GetHoverName() + " mode=" + (f.Phase == NpcPhase.Readiness || f.Phase == NpcPhase.Calm ? "opening-area-control phase=" + f.Phase : "in-combat-area-control") + " cluster=" + plan.Members + " poisonable=" + plan.Susceptible + " incoming=" + plan.Incoming +
                     " dist=" + plan.Distance.ToString("0.0") + " lead=" + plan.Lead.ToString("0.0") + " elev=" + (plan.Elevation * Mathf.Rad2Deg).ToString("0") +
                     " friendClear=" + (float.IsInfinity(plan.FriendClearance) ? "none" : plan.FriendClearance.ToString("0.0")) +
                     (CorePlugin.BombsEndless ? " endless" : " left=" + Body.BombReserve) + " t=" + f.Now.ToString("0.00"));
