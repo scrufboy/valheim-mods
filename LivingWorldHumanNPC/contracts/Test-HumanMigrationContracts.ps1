@@ -14,7 +14,10 @@ function Body([string]$type,[string]$method){
     ($methods[0].Body.Instructions | ForEach-Object ToString) -join "`n"
 }
 try {
-    Require ((Get-FileHash -LiteralPath $AssemblyPath -Algorithm SHA256).Hash -eq '94998885B103D6E5F5480123EAEE0A093E82AF2DDEEEE37536C15BF555F24F3A') 'Reviewed native assembly changed; reinspection required'
+    # Re-inspected 2026-10-30 after the 2026-10-28 native update. All lifecycle,
+    # follow, patrol, health, inventory and combat method bodies below retained
+    # their required unique methods and IL evidence.
+    Require ((Get-FileHash -LiteralPath $AssemblyPath -Algorithm SHA256).Hash -eq '9F959C0396EC4240D47FCBE5D0D062C428CC627244506DB5EA567F9D77B2B769') 'Reviewed native assembly changed; reinspection required'
     $create=Body ZNetScene CreateObject
     foreach($target in @('ZDO::GetPrefab()','ZDO::GetPosition()','ZDO::GetRotation()','ZNetView::m_initZDO','UnityEngine.Object::Instantiate')){
         Require ($create.Contains($target)) "CreateObject retains native route through $target"
