@@ -277,3 +277,9 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
   the planned impact point and open the encounter by poisoning, weakening and scattering the group.
 - Existing friend safety, visibility, susceptibility, value, trajectory and range tests remain hard
   prerequisites. This creates an opportunity to act; it does not guarantee a hit or reveal enemies.
+
+## 2026-10-30 — Companion combat decisions do not wait for the leader's weapon (Brian)
+
+- Companions decide from their own perception whether or not Brian's weapon is drawn. The leader's weapon may
+  shape formation and readiness posture; it is never a prerequisite for a companion to recognize and act on a
+  combat opportunity.

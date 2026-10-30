@@ -31,3 +31,11 @@ analyzer OK. Core `fd09dd0d…`, telemetry `dbe9f2d8…`.
 - Learned-knowledge decision noted as a core-memory requirement; no runtime change.
 
 Ready for install on the new go.
+
+## Update: opening throw no longer depends on the leader's weapon (Brian correction)
+
+Head is now `e7a6a86`. 7919a34 gated the opening path on `NpcPhase.Readiness`, which is entered only by
+leader armed or the companion's native alert. Brian: companions make combat decisions whether or not his weapon
+is out. The opening path now runs in Calm as well as Readiness, from the companion's own `CanSeeTarget` sight. It is
+held only while the leader sneaks, to preserve the stealth behavior. The ungranted scan is throttled to 0.2 s.
+`BOMB-THROW` logs `phase=`. All gates pass (voice LOCKED, unchanged); core `5a9e656e…`, telemetry `dbe9f2d8…`.
