@@ -243,3 +243,14 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
   arc, timing, safety and visual plausibility together.
 - Brian will provide video for spatial/animation judgments that telemetry cannot establish. Missing
   video does not erase telemetry evidence, but visual acceptance requires it.
+
+## 2026-10-30 — Torches are a tactical tool, not light only (Brian)
+
+- In normal play a player uses the torch as an off-hand combat option (sword and torch), not only for
+  light. The AI must not dismiss torches arbitrarily as useless in combat.
+- Doctrine: off-hand torch is its own capability, separate from shield-and-blade. Choosing torch vs
+  shield is a situational decision (darkness, fire use against the enemy, shield availability, the
+  cost of giving up block against heavy hitters), made by the same profile/arbitration as other choices.
+- The current 1.0.x torch rule (torch removed from the hands in combat/readiness) and the analyzer's
+  "no torch in combat" checks reflect an older light-only assumption; they change only through a
+  reviewed build that implements this doctrine. Until then the runtime is unchanged.
