@@ -300,8 +300,10 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 
 ## 2026-10-30 — Tactical awareness doctrine derives responses; it does not ask for global switches (Brian)
 
-- Party-shared sight may establish that a contact exists and where it was reported. It never supplies another
-  actor's attack lane: the companion executing a bow or bomb action must validate its own current line and arc.
+- Brian's sight is not a source or prerequisite. "If I can see them, they can see them" means a rendered,
+  unobstructed enemy is fairly available to competent companion perception. Companions notice through their own
+  senses; they do not wait for Brian to look, face, mark or call out. Companion-to-companion reports may share a
+  contact, but every attacker still validates its own current line and arc.
 - Sixty metres is a test ceiling for clear daylight noticing, not a universal sight radius or engagement range.
   Visibility is an environment fact affected by darkness, fog, Mistlands obscurity, weather, lighting, terrain,
   target size/motion and the observing character's training.

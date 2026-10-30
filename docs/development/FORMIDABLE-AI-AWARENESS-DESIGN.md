@@ -46,10 +46,11 @@ only broad character scanner. Each companion contributes its own perception samp
 | `Sight` (the companion's own line of sight, inside its field of regard) | existence, position, motion, visible behavior | n/a |
 | `Hearing` (native `CanHearTarget`) | "something there", rough position | alert state, identity of intent |
 | `Contact` (it hurt or touched a party member) | existence, hostility, commitment | n/a |
-| `PartyReport` (another companion's sample, or **the leader's** unobstructed, facing-aware observation) | that the contact exists and its **reported** last-known position | **any companion's attack lane**: whoever shoots or throws validates its own current line, arc and friend clearance |
+| `PartyReport` (another companion's sample) | that the contact exists and its **reported** last-known position | **any companion's attack lane**: whoever shoots or throws validates its own current line, arc and friend clearance |
 
-Leader observations are communication, not borrowed eyes. Until a callout is expressed (look and voice), the
-source is still tagged `PartyReport`, so the transfer can be made visible later.
+Brian's sight is not a source or prerequisite. "If I can see them, they can see them" means a normally rendered,
+unoccluded enemy is fairly observable by competent companions using their own perception. A future explicit
+player command/mark could create a report, but ordinary awareness never depends on Brian looking first.
 
 ### 2.2 Contact record (fixed capacity, reused; transient, never persisted)
 
@@ -98,8 +99,8 @@ Grouping: single-link within 6 m among non-wildlife hostile contacts, recomputed
 
 **Who spends the rays, and fairness.** The party has one scheduler and a budget of ≤ 48 line-of-sight rays per
 second. Each tick it serves contacts in **urgency order**: committed and closing first, then by time to contact,
-then contacts nearer than 20 m. Within each urgency band it rotates **round-robin across observers** (companions,
-plus one leader-report slot), so no companion is starved and an urgent contact is never queued behind a distant
+then contacts nearer than 20 m. Within each urgency band it rotates **round-robin across companion observers**,
+so no companion is starved and an urgent contact is never queued behind a distant
 idle one. A contact's ray is cast from the observer best placed to see it (nearest, with it inside that observer's
 field of regard). The candidate distance pass (`GetAllCharacters`) runs at 4 Hz per party. Telemetry reports
 rays spent per observer.
@@ -128,7 +129,7 @@ transient.
 ## 3. Interpretation (evidence thresholds, not timers)
 
 ```
-Unseen ──(2 Sight samples ≥0.25 s apart, a Contact, or a PartyReport)──▶ Noticed
+Unseen ──(2 Sight samples ≥0.25 s apart, a Contact, or a companion PartyReport)──▶ Noticed
 Noticed ──(alert behavior perceived)──▶ Alerted
 Noticed/Alerted ──(commitment evidence)──▶ Committed
 any ──(not seen 3 s)──▶ Lost ──(seen again)──▶ previous state; dropped per §2.4
