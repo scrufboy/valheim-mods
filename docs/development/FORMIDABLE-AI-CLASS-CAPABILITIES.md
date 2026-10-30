@@ -5,11 +5,23 @@ Status: pure policy candidate, offline-tested only. No runtime adapter or profil
 ## Principle
 
 A class is a stable composition of capabilities, preferences and limits. It is not a separate
-`UpdateAI` loop. Every module reads the same immutable combat frame and emits a request; the
-FormidableAI kernel grants at most one owner for each action domain and one final actor plan.
+`UpdateAI` loop. `ClassProposalModule` adapts class facts into the shared kernel's `CombatProposal`
+and `DecisionDomain` contracts; there is no second class-specific domain model. The kernel grants
+at most one owner for each action domain and one final actor plan.
 
 The class policy never calls movement, facing, attack, transform, ZDO or private game methods.
-Requests describe intent and reason. The future executor confirms start/completion or cancellation.
+Proposals describe intent, atomic domains and priority. `LastDecision` preserves the reason for
+telemetry. The future executor reports start, commit confirmation, recovery or cancellation facts.
+
+## Action lifecycle
+
+`Idle -> Started -> Confirmed -> Recovering -> Idle`, with `Cancelled` as fail-closed handback.
+
+- Started actions retain their exact domains while awaiting physical commit confirmation.
+- Confirmed actions retain those domains until recovery completes.
+- Target loss or authorization failure emits no proposal, restoring kernel fallback.
+- Personal threat cancels support instead of letting a cast blindly own the actor.
+- Invalid lifecycle facts fail toward yield rather than guessed continuation.
 
 ## Initial classes
 
@@ -26,11 +38,12 @@ Requests describe intent and reason. The future executor confirms start/completi
 
 1. Authority and actor readiness gate every request.
 2. Imminent personal defense outranks support, movement and attack.
-3. Critical safe support may outrank ordinary attack.
-4. Ally safety and firing-lane safety outrank damage opportunity.
-5. Position recovery outranks an unsafe weapon action.
-6. Weapon action occurs only inside the class's valid window.
-7. Investigation/social warning exists only before committed combat.
+3. A started action retains its atomic domains through commit/cancel/recovery.
+4. Critical safe support may outrank ordinary attack.
+5. Ally safety and firing-lane safety outrank damage opportunity.
+6. Position recovery outranks an unsafe weapon action.
+7. Weapon action occurs only inside the class's valid range/lane/recovery window.
+8. Investigation/social warning exists only before committed combat.
 
 Numeric priorities in the pure policy are evidence for arbitration order, not execution permission.
 The kernel must still verify domain availability, target identity, cooldown and action confirmation.
@@ -42,9 +55,10 @@ The kernel must still verify domain availability, target identity, cooldown and 
 - incoming strike cue and defense equipment readiness;
 - personal and ally threat facts;
 - ally critical state and support safety;
-- weapon range band, firing lane and ally obstruction;
+- below/in/above weapon range band, firing lane and ally obstruction;
 - reach/throw readiness and recovery safety;
-- target-isolated investigation evidence and communication status.
+- target-isolated investigation evidence and communication status;
+- current action identity/domains, lifecycle phase, physical commit and recovery completion.
 
 Every fact must come from an owner-authoritative observation adapter. Absence is false/unknown and
 must fail toward yield; class policies may not query the scene independently.
