@@ -214,3 +214,22 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - The immediate core must be protected before expanding maneuvers: real character profile, real facts,
   arbitration, lifecycle, survival/team reasoning and weapon doctrine first; spectacular class routines
   plug in afterward without rewriting those foundations.
+
+## 2026-10-30 — Fair information, attempted actions and continuous combat replanning (Brian)
+
+- FormidableAI may present a trained NPC with an opportunity to respond; it may not grant the outcome.
+  Closing a gap, reaching a partner, holding a corridor, pushing through pressure, blocking, dodging,
+  striking and withdrawing must still succeed or fail through Valheim's native movement, collision,
+  stamina, animation, weapon, damage, status and timing rules.
+- The AI does not cheat merely by reading facts the game already knows, provided the character has a
+  fair perception or learned-knowledge basis for using them. It must not use unseen enemies, future
+  random outcomes, impossible paths, private state with no perceptible consequence, or perfect attack
+  knowledge beyond the character's training and observed tells.
+- Combat is a continuing sense-predict-choose-attempt-observe loop. An action is not considered complete
+  because it was requested. The system observes navigation, obstruction, interruption, damage, target
+  change, partner state, stamina, commitment and recovery, then continues, adapts or hands back.
+- Immediate danger may interrupt a plan: an attacker engaging the NPC can become the local priority;
+  the NPC may defend, stagger, push past or defeat it before resuming the partner-rescue or positioning
+  intent. The original purpose remains in memory rather than being lost on every target change.
+- Survival is the objective, not a guarantee. Failure remains possible because perception, execution,
+  terrain, enemy pressure, equipment and timing are real constraints.

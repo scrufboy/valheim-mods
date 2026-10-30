@@ -42,6 +42,36 @@ The system does not think about every possible behavior continuously. The curren
 eligible set: social/rest, work/hunt, travel, readiness, combat, recovery, retreat or emergency. Facts
 and goals can change the mode; modules cannot ignore it.
 
+## Nested awareness loops
+
+Combat receives the highest decision frequency, but it is not one blind loop. Work is divided by the
+rate at which facts can meaningfully change:
+
+- **event interrupts:** damage, attack tell, stagger, target death, partner down, path failure or hazard contact;
+- **fast tactical loop:** immediate threat, block/dodge/strike window, facing, reach and local obstruction;
+- **coordination loop:** partner access, Sundered risk, corridor/formation responsibility, focus and rescue;
+- **strategic loop:** mode, fight viability, retreat/rally point, weapon plan and biome-level hazards;
+- **slow life loop:** hunger, hunting, camp, work, social behavior, rest and longer-term goals.
+
+Each loop updates shared facts or proposes intent. None writes a competing command directly. Faster
+loops may interrupt execution for immediate survival; slower purpose remains recorded so the actor can
+resume or deliberately abandon it.
+
+## Fair knowledge and earned outcomes
+
+FormidableAI may identify an opportunity; it never grants success. A character ordered to reach a
+partner must still find a path, negotiate enemies, react to attackers and physically arrive. A block
+must be raised inside the real attack window. A dodge must clear the actual hit. A spear must travel
+through the native projectile rules.
+
+Facts are eligible only when supported by fair perception, party communication, persistent memory or
+the character's trained biome/enemy doctrine. Unseen enemies, future random results and impossible
+path knowledge are not valid tactical facts. Training may recognize an observed attack tell and its
+likely consequence; it may not know that an unobserved attack will occur.
+
+Every executed skill reports attempted, committed, interrupted, succeeded, failed and recovered states.
+The arbitrator reasons from that feedback. Requesting an action is never counted as accomplishing it.
+
 ## Action skills
 
 An action skill is a small executable routine such as block an observed strike, dodge an unblockable
