@@ -35,7 +35,7 @@ function Check($code, $what) { if ($code -ne 0) { throw "$what failed" } }
 
 Step '1/6 Regression ledger'
 & $csc /nologo /langversion:5 /out:"$build\ledger.exe" "$root\tests\RegressionLedgerTests.cs" `
-    "$root\src\Kernel\Kernel.Pure.cs" "$root\src\Kernel\GuardCoverage.Pure.cs" "$root\src\Kernel\PartySpacing.Pure.cs" "$root\src\Kernel\Gait.Pure.cs" "$root\src\Kernel\Bomb.Pure.cs" "$root\src\Kernel\Throw.Pure.cs" "$root\src\Kernel\BodyVoice.Pure.cs" "$root\src\Kernel\BodyState.Pure.cs" "$root\src\Kernel\Hazard.Pure.cs" "$root\src\Kernel\ReadyWatch.Pure.cs" "$root\src\Identity\NpcIdentityRecord.cs"
+    "$root\src\Kernel\Kernel.Pure.cs" "$root\src\Kernel\GuardCoverage.Pure.cs" "$root\src\Kernel\PartySpacing.Pure.cs" "$root\src\Kernel\Gait.Pure.cs" "$root\src\Kernel\Bomb.Pure.cs" "$root\src\Kernel\Throw.Pure.cs" "$root\src\Kernel\BodyVoice.Pure.cs" "$root\src\Kernel\BodyState.Pure.cs" "$root\src\Kernel\Hazard.Pure.cs" "$root\src\Kernel\ReadyWatch.Pure.cs" "$root\src\Kernel\Awareness.Pure.cs" "$root\src\Identity\NpcIdentityRecord.cs"
 Check $LASTEXITCODE 'ledger compile'
 & "$build\ledger.exe"; Check $LASTEXITCODE 'regression ledger'
 

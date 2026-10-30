@@ -41,8 +41,8 @@ def main(paths):
     def add(status, name, detail):
         results.append((status, name, detail))
 
-    if start.get("schema") not in (10, 11, 12):
-        print("Not a Living World C.O.R.E. schema-10/11/12 session (core %s)." % start.get("core"))
+    if start.get("schema") not in (10, 11, 12, 13):
+        print("Not a Living World C.O.R.E. schema-10..13 session (core %s)." % start.get("core"))
         return 2
     names = sorted({r["npc"] for r in npc})
     duration = max((r["t"] for r in rows), default=0)
@@ -476,6 +476,55 @@ def main(paths):
                     ", ".join("%s=%d" % kv for kv in sorted(pairs.items(), key=lambda kv: -kv[1])[:6])))
     elif start.get("schema") == 12:
         add("NOT EXERCISED", "FormidableAI shadow", "no comparisons (ShadowObserver off?)")
+
+    # A1 awareness shadow (schema 13, 1.0.32.26+): read-only perception; graded for safety, budget and evidence only
+    contacts = [r for r in rows if r.get("type") == "Contact"]
+    budgets = [r for r in rows if r.get("type") == "AwarenessBudget"]
+    groups = [r for r in rows if r.get("type") == "Group"]
+    if budgets or contacts:
+        afaults = max((b.get("faults", 0) for b in budgets), default=0)
+        add("PASS" if afaults == 0 else "FAIL", "Awareness shadow: no faults", "faults=%d" % afaults)
+        peak = max((b.get("raysPerSec", 0) for b in budgets), default=0)
+        add("PASS" if peak <= 60 else "FAIL", "Awareness shadow: ray budget held (48/s + burst 12)", "peak %d rays/s" % peak)
+        cpu = [b.get("cpuMsPerSec", 0) for b in budgets]
+        alloc = [b.get("allocKbPerSec", 0) for b in budgets]
+        if cpu:
+            add("INFO", "Awareness shadow: cost", "cpu ms/s median %.2f max %.2f; heap growth KB/s median %.1f max %.1f; observers max %d" % (
+                sorted(cpu)[len(cpu) // 2], max(cpu), sorted(alloc)[len(alloc) // 2], max(alloc), max(b.get("observers", 0) for b in budgets)))
+        drops = sum(b.get("evicted", 0) for b in budgets[-1:]) if budgets else 0
+        refused = max((b.get("refused", 0) for b in budgets), default=0)
+        add("INFO", "Awareness shadow: capacity", "evicted %d, refused %d, candidates dropped %d, group overflow %d" % (
+            drops, refused, max((b.get("candidatesDropped", 0) for b in budgets), default=0), max((b.get("groupOverflow", 0) for b in budgets), default=0)))
+        noticed = [c for c in contacts if c.get("from") == "None" and c.get("to") == "Noticed"]
+        if noticed:
+            by = defaultdict(list)
+            for c in noticed:
+                by[c.get("source", "?")].append(c.get("dist") or 0)
+            add("INFO", "Awareness shadow: noticing distance", "; ".join("%s n=%d median %.0f m max %.0f m" % (k, len(v), sorted(v)[len(v) // 2], max(v)) for k, v in sorted(by.items())))
+        committed = [c for c in contacts if c.get("to") == "Committed"]
+        if committed:
+            reasons = defaultdict(int)
+            for c in committed:
+                e = c.get("evidence", "")
+                reasons["closing" if e.startswith("closing") else e] += 1
+            first_notice = {}
+            for c in noticed:
+                first_notice.setdefault(c.get("id"), c.get("gameT", 0))
+            leads = [c.get("gameT", 0) - first_notice[c.get("id")] for c in committed if c.get("id") in first_notice]
+            add("INFO", "Awareness shadow: commitment", "%d commitments (%s); notice-to-commit median %.1f s; dist at commit median %.0f m" % (
+                len(committed), ", ".join("%s=%d" % kv for kv in sorted(reasons.items())),
+                sorted(leads)[len(leads) // 2] if leads else float("nan"),
+                sorted(c.get("dist") or 0 for c in committed)[len(committed) // 2]))
+        trans = defaultdict(int)
+        for c in contacts:
+            trans["%s->%s" % (c.get("from"), c.get("to"))] += 1
+        add("INFO", "Awareness shadow: transitions", ", ".join("%s=%d" % kv for kv in sorted(trans.items(), key=lambda kv: -kv[1])))
+        if groups:
+            add("INFO", "Awareness shadow: groups", "%d records, largest %d, committed records %d; poison knowledge unknown in %d%% of member counts" % (
+                len(groups), max(g.get("members", 0) for g in groups), sum(1 for g in groups if g.get("committed")),
+                100 * sum(g.get("poisonUnknown", 0) for g in groups) // max(1, sum(g.get("members", 0) for g in groups))))
+    elif start.get("schema") == 13:
+        add("NOT EXERCISED", "Awareness shadow", "no awareness records (AwarenessShadow off?)")
 
     report(results)
     return 1 if any(s == "FAIL" for s, _, _ in results) else 0

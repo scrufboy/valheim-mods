@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.32.25";
+        public const string Version = "1.0.32.26";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -40,6 +40,8 @@ namespace LivingWorld.Core
         public static bool PartyCloudPlayer { get { return partyCloudPlayer == null || partyCloudPlayer.Value; } }
         public static float PartyCloudFraction { get { return partyCloudFraction == null ? .35f : Mathf.Clamp01(partyCloudFraction.Value); } }
         public static bool HazardAwareness { get { return hazardAwareness == null || hazardAwareness.Value; } }
+        static BepInEx.Configuration.ConfigEntry<bool> awarenessShadow;
+        public static bool AwarenessShadow { get { return awarenessShadow != null && awarenessShadow.Value; } }
         public static bool DevHazardLog { get { return devHazardLog != null && devHazardLog.Value; } }
         public static bool BodyBurning { get { return bodyBurning == null || bodyBurning.Value; } }
         public static bool BodyFrost { get { return bodyFrost == null || bodyFrost.Value; } }
@@ -84,6 +86,8 @@ namespace LivingWorld.Core
             shieldBlocking = Config.Bind("Combat", "ShieldBlocking", false,
                 "Experimental: companions raise shields against close melee and aimed projectiles.");
             FormidableShadowBehavior.Bind(Config);
+            awarenessShadow = Config.Bind("FormidableAI", "AwarenessShadow", false,
+                "Development only (A1): shared party awareness in shadow. Companions notice, track and interpret creatures with their own sight/hearing and report it to telemetry. Read-only: nothing in play reads it.");
             companionBombs = Config.Bind("Combat", "CompanionBombs", true,
                 "Companions use bombs as ranged area control: acquire the best enemy cluster 9-20 m out, favour groups coming at the party, and aim where they are headed. Never throw close in panic or if you or another companion would be within 5.5 m of the landing. Off = never throw.");
             bodyVoice = Config.Bind("BodyVoice", "Enabled", true,

@@ -21,7 +21,7 @@ namespace LivingWorld.Telemetry
     {
         public const string Guid = "local.livingworld.telemetry";
         public const string Version = CorePlugin.Version;
-        const int Schema = 12; // adds rate-limited FormidableShadow comparison records
+        const int Schema = 13; // 13: A1 awareness shadow (Contact, Group, AwarenessBudget); 12: FormidableShadow
         const float SampleSeconds = .5f;
         const long MaxBytes = 64L * 1024L * 1024L;
 
@@ -242,6 +242,67 @@ namespace LivingWorld.Telemetry
                 Num("targetPicks", kernel.Targeting == null ? 0 : kernel.Targeting.Picks);
                 End();
                 ObserveFormidable(kernel);
+            }
+            ObserveAwareness();
+        }
+
+        // ---- A1 awareness shadow (schema 13): drained from bounded per-party rings, each record written once ----
+        readonly Dictionary<long, long> lastContactSeq = new Dictionary<long, long>();
+        readonly Dictionary<long, long> lastGroupSeq = new Dictionary<long, long>();
+        readonly Dictionary<long, long> lastBudgetSeq = new Dictionary<long, long>();
+        readonly ContactTransition[] transitionBuf = new ContactTransition[128];
+
+        void ObserveAwareness()
+        {
+            foreach (PartyAwareness party in PartyAwareness.All)
+            {
+                long seen;
+                if (!lastContactSeq.TryGetValue(party.LeaderId, out seen)) seen = -1;
+                int n = party.Book.TransitionsAfter(seen, transitionBuf);
+                for (int i = 0; i < n; i++)
+                {
+                    ContactTransition t = transitionBuf[i];
+                    Begin("Contact"); Num("gameT", t.Time); Num("id", t.Id); Str("family", t.Family);
+                    Str("from", t.From.ToString()); Str("to", t.To.ToString()); Str("source", t.Source.ToString());
+                    Str("observer", party.ObserverName(t.Observer)); Num("dist", t.Distance); Num("closing", t.Closing); Num("ttc", t.TimeToContact);
+                    Bool("alertedObserved", t.Alerted); Num("targetsWhom", t.TargetsWhom); Str("evidence", t.Evidence);
+                    Bool("dark", party.Dark); Str("weather", party.Weather); Str("biome", party.Biome); Num("noticeRange", party.NoticeRange);
+                    Str("posture", party.Posture.ToString());
+                    End();
+                    seen = t.Sequence;
+                }
+                lastContactSeq[party.LeaderId] = seen;
+
+                long gseen;
+                if (!lastGroupSeq.TryGetValue(party.LeaderId, out gseen)) gseen = -1;
+                long gstart = Math.Max(gseen + 1, party.GroupSequence - party.GroupRing.Length);
+                for (long q = gstart; q < party.GroupSequence; q++)
+                {
+                    GroupSnapshot g = party.GroupRing[q % party.GroupRing.Length];
+                    Begin("Group"); Num("gameT", g.Time); Num("id", g.Id); Num("members", g.Members); Num("alerted", g.Alerted);
+                    Num("committedMembers", g.CommittedMembers); Bool("committed", g.Committed); Num("dist", g.Distance);
+                    Num("closing", g.Closing); Num("ttc", g.TimeToContact); Num("radius", g.Radius);
+                    Num("poisonKnownSusceptible", g.SusceptibleKnown); Num("poisonKnownImmune", g.ImmuneKnown); Num("poisonUnknown", g.Unknown);
+                    End();
+                    gseen = q;
+                }
+                lastGroupSeq[party.LeaderId] = gseen;
+
+                long bseen;
+                if (!lastBudgetSeq.TryGetValue(party.LeaderId, out bseen)) bseen = 0;
+                if (party.BudgetSequence != bseen)
+                {
+                    lastBudgetSeq[party.LeaderId] = party.BudgetSequence;
+                    Begin("AwarenessBudget"); Num("contacts", party.Book.Count); Num("groups", party.Groups.Count);
+                    Num("raysPerSec", party.RaysPerSecond); Num("raysDeferred", party.RaysDeferred);
+                    for (int o = 0; o < party.ObserverCount; o++) Num("rays_" + o, party.RaysBy(o));
+                    Num("observers", party.ObserverCount); Num("cpuMsPerSec", party.CpuMsPerSecond); Num("allocKbPerSec", party.AllocKbPerSecond);
+                    Num("stepsPerSec", party.StepsPerSecond); Num("evicted", party.Book.Evicted); Num("refused", party.Book.Refused);
+                    Num("candidatesDropped", party.CandidatesDropped); Num("groupOverflow", party.Groups.Overflow); Num("faults", party.Faults);
+                    Str("posture", party.Posture.ToString()); Num("noticeRange", party.NoticeRange); Bool("dark", party.Dark);
+                    Str("weather", party.Weather); Str("biome", party.Biome);
+                    End();
+                }
             }
         }
 

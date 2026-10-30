@@ -43,6 +43,19 @@ static class RegressionLedgerTests
         Run("1.0.32.12 throw: aims ahead of a moving group, inside reach, not at its feet", ThrowLeadsAndRange);
         Run("1.0.32.12 throw: ballistic elevation lands at the planned distance for the Souls throw speed", ThrowBallistics);
         Run("1.0.32.12 throw: a lone weak enemy is not worth it; a lone tough one is; cooldown holds", ThrowWorthAndCadence);
+        Run("A1 awareness (Brian 2026-10-30): two sight samples notice; alert seen -> Alerted; nothing is committed by being visible", AwNoticeAndAlert);
+        Run("A1 awareness: commitment only from evidence - hurt party, perceptible targeting, or sustained alert approach", AwCommitEvidence);
+        Run("A1 awareness: a native target with no visible behavior is not commitment", AwHiddenTargetNotEvidence);
+        Run("A1 awareness: committed decommits after 3 s without targeting, approach or harm", AwDecommit);
+        Run("A1 awareness: not seen 3 s -> Lost (last position kept), seen again restores; dropped at 10 s, committed kept 20 s", AwLostAndDrop);
+        Run("A1 awareness: occluded or outside the field of regard is not seen; 360 deg only close", AwFieldOfRegard);
+        Run("A1 awareness: notice range = 60 m clear day x environment x salience x training", AwNoticeRange);
+        Run("A1 awareness: single-link 6 m groups with committed and time-to-contact", AwGrouping);
+        Run("A1 awareness: capacity 32 - stalest non-committed evicted, committed never evicted, refusal counted", AwCapacity);
+        Run("A1 awareness: ray budget held; observers served fairly; urgent work first", AwFairScheduling);
+        Run("A1 awareness: sneaking is a cost, not a veto - hidden until a contact commits", AwSneakDoctrine);
+        Run("A1 awareness: susceptibility is Unknown unless learned; native modifiers are never knowledge", AwUnknownResistance);
+        Run("A1 awareness: wildlife never commits by approach, only by targeting or harm", AwWildlife);
         Run("1.0.32.21 throw (Brian live): never poison an all-immune group; mixed groups count only who it can hurt", ThrowSkipsPoisonImmune);
         Run("1.0.32.24 throw (Brian live direction): bombs acquire groups as ranged area control, never a close panic throw", ThrowUsesRangedBand);
         Run("1.0.32.13 body voice: one onset cough, bounded repeats, one recovery breath", BodyVoiceOnsetRepeatRecover);
@@ -154,6 +167,216 @@ static class RegressionLedgerTests
     {
         try { test(); passed++; Console.WriteLine("  pass " + name); }
         catch (Exception e) { failed++; failures.Add(name + " :: " + e.Message); Console.WriteLine("  FAIL " + name + " :: " + e.Message); }
+    }
+
+    // --- A1 shared awareness (shadow) ---
+
+    static ContactObservation Ob(int id, float x, float z, float vx = 0f, float vz = 0f, bool alerted = false)
+    {
+        return new ContactObservation { Id = id, Family = "$enemy_test", Position = new P2(x, z), Velocity = new P2(vx, vz), Radius = .5f,
+            NativeAlerted = alerted, NativeTargetMember = -1 };
+    }
+
+    static ContactState StepTo(ContactBook b, ContactObservation o, float from, float to, P2 c)
+    {
+        ContactRecord r = null;
+        for (float t = from; t <= to + 1e-4f; t += .1f)
+        {
+            o.Position = o.Position + o.Velocity * .1f;
+            r = b.Perceive(o, ContactSource.Sight, 0, t);
+            b.Step(t, .1f, c);
+        }
+        return r == null ? ContactState.None : r.State;
+    }
+
+    static void AwNoticeAndAlert()
+    {
+        var b = new ContactBook(); P2 c = new P2(0f, 0f);
+        b.Perceive(Ob(1, 40f, 0f), ContactSource.Sight, 0, 0f); b.Step(0f, .1f, c);
+        Assert(b.Find(1).State == ContactState.None, "one sample must not notice");
+        b.Perceive(Ob(1, 40f, 0f), ContactSource.Sight, 0, .1f); b.Step(.1f, .1f, c);
+        Assert(b.Find(1).State == ContactState.None, "samples closer than 0.25 s count once");
+        b.Perceive(Ob(1, 40f, 0f), ContactSource.Sight, 0, .3f); b.Step(.3f, .1f, c);
+        Assert(b.Find(1).State == ContactState.Noticed, "two samples 0.25 s apart notice");
+        Assert(StepTo(b, Ob(1, 40f, 0f, 0f, 0f, true), .4f, 5f, c) == ContactState.Alerted, "alert seen -> Alerted, standing still stays uncommitted");
+    }
+
+    static void AwCommitEvidence()
+    {
+        P2 c = new P2(0f, 0f);
+        var a = new ContactBook();   // sustained alert approach
+        Assert(StepTo(a, Ob(1, 50f, 0f, -3f, 0f, true), 0f, 1.5f, c) != ContactState.Committed, "1.5 s barely started must not commit early");
+        Assert(StepTo(a, Ob(1, 45f, 0f, -3f, 0f, true), 1.6f, 2.6f, c) == ContactState.Committed, "sustained alert approach commits");
+        Assert(a.Find(1).CommitReason.StartsWith("closing"), "reason recorded: " + a.Find(1).CommitReason);
+        var n = new ContactBook();   // closing but not alerted
+        Assert(StepTo(n, Ob(2, 50f, 0f, -3f, 0f, false), 0f, 4f, c) != ContactState.Committed, "unalerted wandering toward us is not commitment");
+        var s = new ContactBook();   // closing sideways
+        Assert(StepTo(s, Ob(3, 30f, 0f, -1f, 3f, true), 0f, 4f, c) != ContactState.Committed, "passing by (heading > 35 deg) is not commitment");
+        var h = new ContactBook();   // hurt
+        ContactObservation o = Ob(4, 30f, 0f); o.HurtParty = true;
+        h.Perceive(o, ContactSource.Contact, 0, 0f); h.Step(0f, .1f, c);
+        Assert(h.Find(4).State == ContactState.Committed && h.Find(4).CommitReason == "hurt party", "harm commits at once");
+        var t = new ContactBook();   // perceptible targeting
+        ContactObservation q = Ob(5, 30f, 0f, 0f, 0f, true); q.NativeTargetMember = 1; q.TargetPerceptible = true;
+        Assert(StepTo(t, q, 0f, .5f, c) == ContactState.Committed, "perceptible targeting of a companion commits");
+    }
+
+    static void AwHiddenTargetNotEvidence()
+    {
+        var b = new ContactBook(); P2 c = new P2(0f, 0f);
+        ContactObservation q = Ob(1, 30f, 0f, 0f, 0f, true); q.NativeTargetMember = 0; q.TargetPerceptible = false;
+        Assert(StepTo(b, q, 0f, 4f, c) == ContactState.Alerted, "native target without visible facing/charge/attack is not evidence");
+        var hz = new ContactBook();   // heard only: no alert or targeting is read
+        ContactObservation w = Ob(2, 30f, 0f, 0f, 0f, true); w.NativeTargetMember = 0; w.TargetPerceptible = true;
+        for (float t = 0f; t < 2f; t += .1f) { hz.Perceive(w, ContactSource.Hearing, 0, t); hz.Step(t, .1f, c); }
+        Assert(hz.Find(2).State == ContactState.Noticed, "hearing notices but reads no alert or intent");
+    }
+
+    static void AwDecommit()
+    {
+        var b = new ContactBook(); P2 c = new P2(0f, 0f);
+        ContactObservation q = Ob(1, 20f, 0f, 0f, 0f, true); q.NativeTargetMember = 0; q.TargetPerceptible = true;
+        Assert(StepTo(b, q, 0f, .5f, c) == ContactState.Committed, "committed");
+        q.NativeTargetMember = -1; q.TargetPerceptible = false;
+        Assert(StepTo(b, q, .6f, 3f, c) == ContactState.Committed, "holds for 3 s");
+        Assert(StepTo(b, q, 3.1f, 4.2f, c) == ContactState.Alerted, "decommits to Alerted after 3 s of no evidence");
+    }
+
+    static void AwLostAndDrop()
+    {
+        var b = new ContactBook(); P2 c = new P2(0f, 0f);
+        StepTo(b, Ob(1, 40f, 0f, 0f, 0f, true), 0f, 1f, c);
+        for (float t = 1.1f; t < 4.15f; t += .1f) b.Step(t, .1f, c);
+        Assert(b.Find(1).State == ContactState.Lost && b.Find(1).LastKnownPos.X == 40f, "Lost after 3 s, last position kept");
+        b.Perceive(Ob(1, 41f, 0f, 0f, 0f, true), ContactSource.Sight, 0, 4.3f); b.Step(4.3f, .1f, c);
+        Assert(b.Find(1).State == ContactState.Alerted, "seen again restores the previous state");
+        for (float t = 4.4f; t < 14.5f; t += .1f) b.Step(t, .1f, c);
+        Assert(b.Find(1) == null, "dropped 10 s after last seen");
+        var k = new ContactBook();
+        ContactObservation o = Ob(2, 30f, 0f); o.HurtParty = true;
+        k.Perceive(o, ContactSource.Contact, 0, 0f);
+        for (float t = 0f; t < 15f; t += .1f) k.Step(t, .1f, c);
+        Assert(k.Find(2) != null && k.Find(2).State == ContactState.Lost, "committed contact kept past 10 s");
+        for (float t = 15f; t < 21f; t += .1f) k.Step(t, .1f, c);
+        Assert(k.Find(2) == null, "committed contact dropped at 20 s");
+    }
+
+    static void AwFieldOfRegard()
+    {
+        P2 me = new P2(0f, 0f), fwd = new P2(0f, 1f);
+        Assert(Visibility.InFieldOfRegard(me, fwd, new P2(0f, 50f), 60f), "ahead at 50 m seen");
+        Assert(Visibility.InFieldOfRegard(me, fwd, new P2(40f, -5f), 60f), "95 deg to the side seen (head turn)");
+        Assert(!Visibility.InFieldOfRegard(me, fwd, new P2(0f, -40f), 60f), "directly behind at 40 m not seen");
+        Assert(Visibility.InFieldOfRegard(me, fwd, new P2(0f, -10f), 60f), "behind but within 12 m: peripheral");
+        Assert(!Visibility.InFieldOfRegard(me, fwd, new P2(0f, 61f), 60f), "beyond notice range not seen");
+        // occlusion is a runtime ray (Physics.Linecast on view-blocking layers); an occluded sample is simply never perceived:
+        var b = new ContactBook();
+        for (float t = 0f; t < 5f; t += .1f) b.Step(t, .1f, new P2(0f, 0f));
+        Assert(b.Count == 0, "no sample, no contact (occluded creatures are unknown)");
+    }
+
+    static void AwNoticeRange()
+    {
+        Assert(Math.Abs(Visibility.NoticeRange(1f, 1f, 1f) - 60f) < .01f, "clear day 60 m");
+        Assert(Math.Abs(Visibility.NoticeRange(Visibility.EnvironmentFactor(true), 1f, 1f) - 35f) < .01f, "ordinary dark 35 m");
+        Assert(Visibility.Salience(.3f, 0f) < 1f && Visibility.Salience(1.5f, 3f) > 1f, "small/still less salient, big/moving more");
+        Assert(Visibility.Salience(.1f, 0f) >= AwarenessTuning.SalienceMin && Visibility.Salience(5f, 9f) <= AwarenessTuning.SalienceMax, "salience bounded");
+    }
+
+    static void AwGrouping()
+    {
+        var b = new ContactBook(); P2 c = new P2(0f, 0f);
+        StepTo(b, Ob(1, 30f, 0f, -2f, 0f, true), 0f, 3f, c);
+        StepTo(b, Ob(2, 35f, 0f, -2f, 0f, true), 0f, 3f, c);
+        StepTo(b, Ob(3, 40f, 0f, -2f, 0f, true), 0f, 3f, c);    // chain 5 m apart -> one group
+        StepTo(b, Ob(4, 0f, 45f, 0f, 0f, false), 0f, 3f, c);    // far away, separate
+        var g = new GroupBook(); g.Build(b, c, new KnowledgeBook());
+        Assert(g.Count == 2, "two groups, got " + g.Count);
+        GroupRecord big = g.Groups[0].Members == 3 ? g.Groups[0] : g.Groups[1];
+        Assert(big.Members == 3 && big.Id == 1, "chain is one group, id = smallest member");
+        Assert(big.IsCommitted && !float.IsInfinity(big.TimeToContact) && big.ClosingSpeed > 1.5f, "closing alert group committed with time to contact");
+        Assert(big.Unknown == 3 && big.SusceptibleKnown == 0 && big.ImmuneKnown == 0, "poison susceptibility Unknown for all without learned knowledge");
+    }
+
+    static void AwCapacity()
+    {
+        var b = new ContactBook(); P2 c = new P2(0f, 0f);
+        for (int i = 0; i < AwarenessTuning.ContactCapacity; i++)
+        {
+            ContactObservation o = Ob(100 + i, 50f, i); o.HurtParty = i < 31;   // 31 committed, 1 noticed
+            b.Perceive(o, i < 31 ? ContactSource.Contact : ContactSource.Sight, 0, i * .01f);
+            b.Perceive(o, ContactSource.Sight, 0, .5f + i * .01f);
+        }
+        b.Step(1f, .1f, c);
+        b.Perceive(Ob(500, 50f, 0f), ContactSource.Sight, 0, 1.1f);
+        Assert(b.Find(500) != null && b.Find(131) == null && b.Evicted == 1, "the stale non-committed contact was evicted");
+        b.Perceive(Ob(501, 50f, 0f), ContactSource.Sight, 0, 1.2f);
+        Assert(b.Find(501) != null && b.Find(500) == null, "next new contact evicts the next non-committed");
+        int committed = 0; for (int i = 0; i < 31; i++) if (b.Find(100 + i) != null) committed++;
+        Assert(committed == 31, "committed contacts are never evicted");
+        var full = new ContactBook();
+        for (int i = 0; i < AwarenessTuning.ContactCapacity; i++) { ContactObservation o = Ob(i, 50f, i); o.HurtParty = true; full.Perceive(o, ContactSource.Contact, 0, 0f); }
+        full.Step(0f, .1f, c);
+        Assert(full.Perceive(Ob(999, 1f, 1f), ContactSource.Sight, 0, .1f) == null && full.Refused == 1, "all committed: refusal counted, nothing overwritten");
+    }
+
+    static void AwFairScheduling()
+    {
+        var s = new RayScheduler();
+        bool[] eligible = { true, true, true };
+        float[] dist = { 10f, 20f, 30f };
+        int[] count = new int[3];
+        int taken = 0;
+        for (int tick = 0; tick < 50; tick++)       // one second at 50 Hz
+        {
+            s.Refill(tick * .02f, .02f);
+            for (int k = 0; k < 4; k++)
+            {
+                int o = s.ChooseObserver(eligible, dist, 3);
+                if (!s.TryTake(o)) break;
+                count[o]++; taken++;
+            }
+        }
+        Assert(taken <= AwarenessTuning.RaysPerSecond + AwarenessTuning.RayBurst, "budget held: " + taken);
+        Assert(Math.Abs(count[0] - count[1]) <= 1 && Math.Abs(count[1] - count[2]) <= 1, "observers served evenly: " + count[0] + "/" + count[1] + "/" + count[2]);
+        int[] idx = { 0, 1, 2, 3 }; int[] band = { 2, 0, 1, 0 }; float[] ttc = { 99f, 8f, 99f, 3f }; float[] d = { 50f, 30f, 10f, 25f };
+        RayScheduler.Order(idx, 4, band, ttc, d);
+        Assert(idx[0] == 3 && idx[1] == 1 && idx[2] == 2 && idx[3] == 0, "urgent first (band, then time to contact): " + string.Join(",", Array.ConvertAll(idx, x => x.ToString())));
+        Assert(RayScheduler.Band(true, 50f) == 0 && RayScheduler.Band(false, 15f) == 1 && RayScheduler.Band(false, 40f) == 2, "bands");
+        Assert(RayScheduler.RefreshInterval(0) == .25f && RayScheduler.RefreshInterval(2) == 1f, "refresh intervals");
+    }
+
+    static void AwSneakDoctrine()
+    {
+        Assert(StealthDoctrine.Posture(ContactState.Noticed, true, false) == ShadowPosture.Observe, "noticed -> observe, not readiness");
+        Assert(StealthDoctrine.Posture(ContactState.Alerted, true, false) == ShadowPosture.Readiness, "credible alert -> readiness");
+        Assert(StealthDoctrine.Posture(ContactState.Alerted, true, true) == ShadowPosture.HoldStealth, "sneaking: alert alone keeps hidden");
+        Assert(StealthDoctrine.Posture(ContactState.Committed, true, true) == ShadowPosture.Combat, "sneaking: committed = stealth failed");
+        Assert(StealthDoctrine.Posture(ContactState.None, false, false) == ShadowPosture.Calm, "nothing -> calm");
+        Assert(!StealthDoctrine.MayInitiate(ContactState.Alerted) && StealthDoctrine.MayInitiate(ContactState.Committed), "initiate only on commitment");
+    }
+
+    static void AwUnknownResistance()
+    {
+        var k = new KnowledgeBook();
+        Assert(!k.Query("$enemy_skeleton", DamageKind.Poison).Known, "empty book: Unknown");
+        Assert(!k.Learn("$enemy_skeleton", DamageKind.Poison, Susceptibility.Immune, 1f, KnowledgeProvenance.None), "no provenance, no knowledge");
+        Assert(k.Learn("$enemy_skeleton", DamageKind.Poison, Susceptibility.Immune, .9f, KnowledgeProvenance.ObservedCombat), "observed combat teaches");
+        KnowledgeView v = k.Query("$enemy_skeleton", DamageKind.Poison);
+        Assert(v.Known && v.Value == Susceptibility.Immune && v.Provenance == KnowledgeProvenance.ObservedCombat, "learned fact with provenance");
+        Assert(!k.Query("$enemy_greydwarf", DamageKind.Poison).Known, "other families stay Unknown");
+    }
+
+    static void AwWildlife()
+    {
+        var b = new ContactBook(); P2 c = new P2(0f, 0f);
+        ContactObservation deer = Ob(1, 40f, 0f, -4f, 0f, true); deer.Wildlife = true;
+        Assert(StepTo(b, deer, 0f, 4f, c) != ContactState.Committed, "a deer running at us is not committed");
+        deer.HurtParty = true;
+        b.Perceive(deer, ContactSource.Contact, 0, 4.1f); b.Step(4.1f, .1f, c);
+        Assert(b.Find(1).State == ContactState.Committed, "wildlife that hurts us is committed");
+        var g = new GroupBook(); g.Build(b, c, null);
+        Assert(g.Count == 0, "wildlife never forms hostile groups");
     }
 
     static void Assert(bool condition, string message) { if (!condition) throw new Exception(message); }
