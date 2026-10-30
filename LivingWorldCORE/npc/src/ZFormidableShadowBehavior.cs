@@ -3,6 +3,7 @@ using BepInEx.Configuration;
 using LivingWorld.Companions.FormidableAI.Classes;
 using LivingWorld.FormidableAI.Integration;
 using LivingWorld.FormidableAI.Kernel;
+using LivingWorld.FormidableAI.Profile;
 using LivingWorld.FormidableAI.Shadow;
 using UnityEngine;
 
@@ -22,6 +23,8 @@ namespace LivingWorld.Core
         static ConfigEntry<bool> enabled;
         ClassCombatFacts facts;
         ClassProposalModule classModule;
+        CharacterCombatProfile profile;
+        string profileKey;
         FormidableClass role;
         long sequence;
         float nextSample;
@@ -29,6 +32,10 @@ namespace LivingWorld.Core
         public override string Name { get { return "formidable-shadow"; } }
         public override NpcDomain Claims { get { return NpcDomain.None; } }
         public int TraceCount { get { return trace.Count; } }
+        public string ProfileJob { get { return profile == null ? "" : profile.Job.ToString(); } }
+        public string ProfileClass { get { return profile == null ? "" : profile.FormidableClass.ToString(); } }
+        public string ProfileWeapons { get { return profile == null ? "" : profile.Weapons.ToString(); } }
+        public string ProfileSurvival { get { return profile == null ? "" : profile.Survival.ToString(); } }
 
         public System.Collections.Generic.IList<ShadowTraceEntry> Snapshot()
         {
@@ -58,7 +65,8 @@ namespace LivingWorld.Core
             Character target = nativeFrame.Senses.Target;
             string actorId = Identity(Body.Human);
             string targetId = Identity(target);
-            FormidableClass nextRole = Role();
+            profile = Profile(actorId);
+            FormidableClass nextRole = profile.FormidableClass;
             if (classModule == null || nextRole != role)
             {
                 role = nextRole;
@@ -125,11 +133,36 @@ namespace LivingWorld.Core
                 fallback ? DomainOwner.Native : DomainOwner.Formidable, action, reason, targetId, null, now);
         }
 
-        FormidableClass Role()
+        CharacterCombatProfile Profile(string actorId)
         {
             NpcAppearance appearance = Body.Human.GetComponent<NpcAppearance>();
-            return appearance != null && String.Equals(appearance.Role, "archer", StringComparison.OrdinalIgnoreCase)
-                ? FormidableClass.Huntress : FormidableClass.Warden;
+            string savedRole = appearance == null ? "guard" : appearance.Role;
+            bool oneHanded=false, shield=false, bow=false, spear=false, heavy=false, magic=false;
+            Inventory inventory=Body.Human.GetInventory();
+            if(inventory!=null)
+            {
+                foreach(ItemDrop.ItemData item in inventory.GetAllItems())
+                {
+                    if(item==null||item.m_shared==null) continue;
+                    ItemDrop.ItemData.ItemType type=item.m_shared.m_itemType;
+                    if(type==ItemDrop.ItemData.ItemType.Shield) shield=true;
+                    if(type==ItemDrop.ItemData.ItemType.Bow) bow=true;
+                    if(type==ItemDrop.ItemData.ItemType.TwoHandedWeapon||type==ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft) heavy=true;
+                    if(item.m_shared.m_skillType==Skills.SkillType.Spears) spear=true;
+                    if(item.m_shared.m_skillType==Skills.SkillType.ElementalMagic||item.m_shared.m_skillType==Skills.SkillType.BloodMagic) magic=true;
+                    if(item.IsWeapon()&&type!=ItemDrop.ItemData.ItemType.Bow&&type!=ItemDrop.ItemData.ItemType.TwoHandedWeapon&&type!=ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft) oneHanded=true;
+                }
+            }
+            string key=savedRole+"|"+oneHanded+shield+bow+spear+heavy+magic;
+            if(profile!=null&&profileKey==key) return profile;
+            profileKey=key;
+            profile=CharacterCombatProfileFactory.Create(new CharacterRollupFacts{
+                PersonIdentity=actorId, SavedRole=savedRole, Origin=OriginBiome.Unknown,
+                Culture="", GenderExpression=appearance==null?"":(appearance.Female?"female":"male"),
+                Training=TrainingBand.Trained, HasOneHanded=oneHanded, HasShield=shield,
+                HasBow=bow, HasSpear=spear, HasHeavy=heavy, HasMagic=magic
+            });
+            return profile;
         }
 
         bool TargetsActor(Character threat)

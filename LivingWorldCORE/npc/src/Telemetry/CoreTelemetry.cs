@@ -277,6 +277,10 @@ namespace LivingWorld.Telemetry
                 Str("target", prediction == null ? (native == null ? "" : native.TargetIdentity) : prediction.TargetIdentity);
                 Str("attack", prediction == null ? (native == null ? "" : native.AttackIdentity) : prediction.AttackIdentity);
                 Str("predictionReason", prediction == null ? "" : prediction.Reason);
+                Str("profileJob", observer.ProfileJob);
+                Str("profileClass", observer.ProfileClass);
+                Str("profileWeapons", observer.ProfileWeapons);
+                Str("profileSurvival", observer.ProfileSurvival);
                 End();
                 seen = entry.Sequence;
             }
