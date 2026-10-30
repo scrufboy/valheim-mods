@@ -12,7 +12,7 @@ namespace LivingWorld.FormidableAI.Kernel
             DecisionDomain.Attack, DecisionDomain.Support
         };
 
-        private sealed class Candidate
+        private struct Candidate
         {
             public string ModuleId;
             public CombatProposal Proposal;
@@ -21,13 +21,33 @@ namespace LivingWorld.FormidableAI.Kernel
         private readonly Dictionary<DecisionDomain, DomainLease> _active =
             new Dictionary<DecisionDomain, DomainLease>();
         private readonly HashSet<string> _disabledModules = new HashSet<string>(StringComparer.Ordinal);
+        private readonly List<Candidate> _candidates = new List<Candidate>(16);
+        private readonly List<CombatProposal> _moduleProposals = new List<CombatProposal>(8);
+        private readonly Candidate[] _winners = new Candidate[8];
+        private readonly bool[] _hasWinner = new bool[8];
         private long _revision;
 
         public ArbitrationResult Evaluate(CombatFrame frame, IList<IFormidableCombatModule> modules)
         {
+            ArbitrationBuffer buffer = new ArbitrationBuffer();
+            EvaluateInto(frame, modules, buffer);
+            DomainLease[] leases = new DomainLease[buffer.LeaseCount];
+            for (int i = 0; i < leases.Length; i++)
+            {
+                DomainLease x = buffer.GetLease(i);
+                leases[i] = new DomainLease { Domain = x.Domain, OwnerId = x.OwnerId, ActionId = x.ActionId,
+                    TargetIdentity = x.TargetIdentity, Revision = x.Revision };
+            }
+            return new ArbitrationResult(frame.Sequence, leases, buffer.CopyFaults());
+        }
+
+        public void EvaluateInto(CombatFrame frame, IList<IFormidableCombatModule> modules, ArbitrationBuffer output)
+        {
             if (frame == null) throw new ArgumentNullException("frame");
-            List<Candidate> candidates = new List<Candidate>();
-            List<ModuleFault> faults = new List<ModuleFault>();
+            if (output == null) throw new ArgumentNullException("output");
+            output.Reset(frame.Sequence);
+            _candidates.Clear();
+            Array.Clear(_hasWinner, 0, _hasWinner.Length);
 
             if (frame.OwnerReady && modules != null)
             {
@@ -37,46 +57,62 @@ namespace LivingWorld.FormidableAI.Kernel
                     if (module == null || string.IsNullOrEmpty(module.Id) || _disabledModules.Contains(module.Id)) continue;
                     try
                     {
-                        IEnumerable<CombatProposal> proposals = module.Evaluate(frame);
-                        if (proposals == null) continue;
-                        foreach (CombatProposal proposal in proposals)
+                        IBufferedFormidableCombatModule buffered = module as IBufferedFormidableCombatModule;
+                        if (buffered != null)
                         {
-                            if (Valid(proposal, frame.Time)) candidates.Add(new Candidate { ModuleId = module.Id, Proposal = proposal });
+                            _moduleProposals.Clear();
+                            buffered.Collect(frame, _moduleProposals);
+                            for (int p = 0; p < _moduleProposals.Count; p++)
+                            {
+                                CombatProposal proposal = _moduleProposals[p];
+                                if (Valid(proposal, frame.Time)) _candidates.Add(new Candidate { ModuleId = module.Id, Proposal = proposal });
+                            }
+                        }
+                        else
+                        {
+                            IEnumerable<CombatProposal> proposals = module.Evaluate(frame);
+                            if (proposals == null) continue;
+                            foreach (CombatProposal proposal in proposals)
+                            {
+                                if (Valid(proposal, frame.Time)) _candidates.Add(new Candidate { ModuleId = module.Id, Proposal = proposal });
+                            }
                         }
                     }
                     catch (Exception error)
                     {
                         _disabledModules.Add(module.Id);
-                        faults.Add(new ModuleFault { ModuleId = module.Id, ErrorType = error.GetType().Name, Message = error.Message });
+                        output.AddFault(module.Id, error);
                     }
                 }
             }
 
-            candidates.Sort(CompareCandidates);
-            Dictionary<DecisionDomain, Candidate> winners = new Dictionary<DecisionDomain, Candidate>();
+            _candidates.Sort(CompareCandidates);
             DecisionDomain claimed = DecisionDomain.None;
-            for (int i = 0; i < candidates.Count; i++)
+            for (int i = 0; i < _candidates.Count; i++)
             {
-                Candidate candidate = candidates[i];
+                Candidate candidate = _candidates[i];
                 if ((claimed & candidate.Proposal.Domains) != DecisionDomain.None) continue;
                 for (int d = 0; d < AtomicDomains.Length; d++)
                 {
                     DecisionDomain domain = AtomicDomains[d];
-                    if ((candidate.Proposal.Domains & domain) != 0) winners[domain] = candidate;
+                    if ((candidate.Proposal.Domains & domain) != 0)
+                    {
+                        _winners[d] = candidate;
+                        _hasWinner[d] = true;
+                    }
                 }
                 claimed |= candidate.Proposal.Domains;
             }
 
-            DomainLease[] leases = new DomainLease[AtomicDomains.Length];
             for (int i = 0; i < AtomicDomains.Length; i++)
             {
                 DecisionDomain domain = AtomicDomains[i];
-                Candidate winner;
-                leases[i] = winners.TryGetValue(domain, out winner)
+                Candidate winner = _winners[i];
+                DomainLease lease = _hasWinner[i]
                     ? SetLease(domain, winner.ModuleId, winner.Proposal.ActionId, winner.Proposal.TargetIdentity)
                     : SetLease(domain, NativeOwnerId, "native-fallback", frame.AuthorizedTargetIdentity);
+                output.SetLease(i, lease);
             }
-            return new ArbitrationResult(frame.Sequence, Clone(leases), faults.ToArray());
         }
 
         public bool CancelOwner(string moduleId, string reason)
@@ -126,16 +162,5 @@ namespace LivingWorld.FormidableAI.Kernel
             return string.CompareOrdinal(left.Proposal.ActionId, right.Proposal.ActionId);
         }
 
-        private static DomainLease[] Clone(DomainLease[] leases)
-        {
-            DomainLease[] copy = new DomainLease[leases.Length];
-            for (int i = 0; i < leases.Length; i++)
-            {
-                DomainLease x = leases[i];
-                copy[i] = new DomainLease { Domain = x.Domain, OwnerId = x.OwnerId, ActionId = x.ActionId,
-                    TargetIdentity = x.TargetIdentity, Revision = x.Revision };
-            }
-            return copy;
-        }
     }
 }

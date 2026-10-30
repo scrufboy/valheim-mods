@@ -43,6 +43,11 @@ namespace LivingWorld.FormidableAI.Kernel
         IEnumerable<CombatProposal> Evaluate(CombatFrame frame);
     }
 
+    public interface IBufferedFormidableCombatModule : IFormidableCombatModule
+    {
+        void Collect(CombatFrame frame, IList<CombatProposal> output);
+    }
+
     public sealed class DomainLease
     {
         public DecisionDomain Domain { get; internal set; }
@@ -82,6 +87,75 @@ namespace LivingWorld.FormidableAI.Kernel
         {
             for (int i = 0; i < _leases.Length; i++) if (_leases[i].Domain == domain) return _leases[i];
             return null;
+        }
+    }
+
+    public sealed class ArbitrationBuffer
+    {
+        private readonly DomainLease[] _leases = new DomainLease[8];
+        private ModuleFault[] _faults = new ModuleFault[2];
+        private int _faultCount;
+
+        public ArbitrationBuffer()
+        {
+            for (int i = 0; i < _leases.Length; i++) _leases[i] = new DomainLease();
+            for (int i = 0; i < _faults.Length; i++) _faults[i] = new ModuleFault();
+        }
+
+        public long Sequence { get; internal set; }
+        public int LeaseCount { get { return _leases.Length; } }
+        public int FaultCount { get { return _faultCount; } }
+        public DomainLease GetLease(int index) { return _leases[index]; }
+        public ModuleFault GetFault(int index)
+        {
+            if (index < 0 || index >= _faultCount) throw new ArgumentOutOfRangeException("index");
+            return _faults[index];
+        }
+
+        public DomainLease LeaseFor(DecisionDomain domain)
+        {
+            for (int i = 0; i < _leases.Length; i++) if (_leases[i].Domain == domain) return _leases[i];
+            return null;
+        }
+
+        internal void Reset(long sequence) { Sequence = sequence; _faultCount = 0; }
+
+        internal void SetLease(int index, DomainLease source)
+        {
+            DomainLease target = _leases[index];
+            target.Domain = source.Domain;
+            target.OwnerId = source.OwnerId;
+            target.ActionId = source.ActionId;
+            target.TargetIdentity = source.TargetIdentity;
+            target.Revision = source.Revision;
+        }
+
+        internal void AddFault(string moduleId, Exception error)
+        {
+            EnsureFaultCapacity(_faultCount + 1);
+            ModuleFault fault = _faults[_faultCount++];
+            fault.ModuleId = moduleId;
+            fault.ErrorType = error.GetType().Name;
+            fault.Message = error.Message;
+        }
+
+        internal ModuleFault[] CopyFaults()
+        {
+            ModuleFault[] copy = new ModuleFault[_faultCount];
+            for (int i = 0; i < _faultCount; i++)
+            {
+                ModuleFault x = _faults[i];
+                copy[i] = new ModuleFault { ModuleId = x.ModuleId, ErrorType = x.ErrorType, Message = x.Message };
+            }
+            return copy;
+        }
+
+        private void EnsureFaultCapacity(int required)
+        {
+            if (_faults.Length >= required) return;
+            int oldLength = _faults.Length;
+            Array.Resize(ref _faults, Math.Max(required, oldLength * 2));
+            for (int i = oldLength; i < _faults.Length; i++) _faults[i] = new ModuleFault();
         }
     }
 }
