@@ -29,7 +29,8 @@ approved runtime branches into `main`.
 | `lwc-core-1.0/1.0.32.17-standing-restore` | `1af8029` | 1.0.32.16 + 1.0.32.7 standing anchor restored (spacing keeps only contact back-off); INSTALLED 2026-10-29 (hash `352a03fd…`); superseded before play |
 | `lwc-core-1.0/1.0.32.18-ready-watch` | `a8bafe2` | 1.0.32.17 + ReadyWatch behavior (weapon drawn, leader standing: watch own outside half, turn/sweep, short footing shifts); Brian-approved; INSTALLED 2026-10-29 (hash `c2511673…`); live: companions stopped dead wherever the leader stopped (trigger bug); superseded |
 | `lwc-core-1.0/1.0.32.19-ready-watch-trigger` | `bd1d7da` | ready watch only after re-acquiring the leased spot near the leader; INSTALLED 2026-10-29 (hash `b6f60615…`); superseded before play |
-| `lwc-core-1.0/1.0.32.20-sneak-approach` | `f310b10` | 1.0.32.19 + far companions come up at pace and sneak only within 6 m of a crouching leader; INSTALLED 2026-10-29 (hash `53f7bd6d…`), live test pending (movement + poison/body states) |
+| `lwc-core-1.0/1.0.32.20-sneak-approach` | `f310b10` | 1.0.32.19 + far companions come up at pace and sneak only within 6 m of a crouching leader; INSTALLED 2026-10-29 (hash `53f7bd6d…`); LIVE 16:08: traversal sound (Brian: "sublime"), party clouds/escape/coughs proven, poison wasted on undead (see CLAUDE-OUTBOX/2026-10-29-live-result-1.0.32.20) |
+| `lwc-core-1.0/1.0.32.21-bomb-eligibility` | `31f269d` | 1.0.32.20 + no poison cloud on poison-immune groups (native damage modifiers); INSTALLED 2026-10-29 (hash `7a1f4de7…`), live test pending |
 | `lwc-core-1.0/parked-1.0.33` | `965a2a0` | parked hot-path experiment; not installed |
 
 **Game build:** Brian's installed Valheim updated to **1.0.21** on 2026-10-28 (assembly `9f959c03…`); prior inspections used 1.0.20. 1.0.32.14 rebuilt against 1.0.21 is byte-identical and passes all gates (OFFLINE-TESTED).
