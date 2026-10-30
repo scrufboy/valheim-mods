@@ -485,6 +485,39 @@ namespace LivingWorld.Core
     }
 
     /// <summary>
+    /// Visible-behavior intent, for actors whose AI names no target or sets no alert (other mods' characters, any
+    /// reader gap). A player would read the same cues: it is facing a member and closing on it, or attacking one close by.
+    /// </summary>
+    public static class VisibleIntent
+    {
+        public const float AttackReach = 4f, AlertRunSpeed = 3f;
+
+        /// <returns>index into members of the visibly targeted member, or -1.</returns>
+        public static int Target(P2 position, P2 forward, P2 velocity, bool attacking, P2[] members, int count)
+        {
+            int best = -1; float bestD = float.PositiveInfinity;
+            P2 f = forward.Normalized;
+            double cosFacing = Math.Cos(AwarenessTuning.TargetFacing * Math.PI / 180d);
+            for (int i = 0; i < count; i++)
+            {
+                P2 to = members[i] - position;
+                float d = to.Length;
+                if (d < 1e-3f) continue;
+                P2 dir = to * (1f / d);
+                bool facing = f.Length > .5f && P2.Dot(f, dir) >= cosFacing;
+                bool charging = P2.Dot(velocity, dir) >= AwarenessTuning.ChargeSpeed;
+                bool striking = attacking && d <= AttackReach && facing;
+                if (!(striking || facing && charging)) continue;
+                if (d < bestD) { bestD = d; best = i; }
+            }
+            return best;
+        }
+
+        /// <summary>Visible alert: running, or visibly targeting a member.</summary>
+        public static bool Alerted(P2 velocity, int visibleTarget) { return visibleTarget >= 0 || velocity.Length >= AlertRunSpeed; }
+    }
+
+    /// <summary>
     /// The posture A2 would adopt (computed in A1 as a shadow fact only). Noticing produces observation; credible threat
     /// produces readiness; commitment produces combat. Sneaking is a cost, not a veto: merely noticed/alerted contacts
     /// keep the party hidden; a committed contact means stealth has failed.

@@ -13,6 +13,11 @@ namespace LivingWorld.Core
     ///
     /// Perception is companion-owned: observers are the party's companions. The leader's body position only enters the
     /// party centroid (where "toward the party" points); the leader's camera, facing and sight are never inputs.
+    ///
+    /// Keyed by SIDE, not by player: a side is a set of actors that watch together. Today the only wired side is a
+    /// player's companion party (key = leader id). Camps of our own hostile or friendly FormidableAI NPCs use the same
+    /// core, the same fairness rules and the same intent readers (ActorIntent) with their own side key; actors of
+    /// another side - including other FormidableAI actors - are ordinary contacts when hostile.
     /// </summary>
     public sealed class PartyAwareness
     {
@@ -163,7 +168,7 @@ namespace LivingWorld.Core
             Humanoid first = observers[0].Body.Human;
             foreach (Character c in Character.GetAllCharacters())
             {
-                if (c == null || c.IsDead() || c.IsPlayer() || c.GetComponent<NpcKernel>() != null) continue;
+                if (c == null || c.IsDead() || c.IsPlayer() || OwnSide(c)) continue;
                 if (!BaseAI.IsEnemy(first, c)) continue;
                 Vector3 cp = c.transform.position;
                 P2 c2 = new P2(cp.x, cp.z);
@@ -189,6 +194,14 @@ namespace LivingWorld.Core
             }
         }
 
+        bool OwnSide(Character c)
+        {
+            NpcKernel k = c.GetComponent<NpcKernel>();
+            if (k == null) return false;
+            NpcLeaderBinding b = k.GetComponent<NpcLeaderBinding>();
+            return b != null && b.LeaderId == LeaderId;
+        }
+
         int HurtBy(Character c)
         {
             for (int o = 0; o < observerCount; o++)
@@ -196,12 +209,25 @@ namespace LivingWorld.Core
             return -1;
         }
 
+        // Members a contact may target (companions and the leader's body). The leader is a member, never a sensor.
+        readonly P2[] memberPos = new P2[AwarenessTuning.ObserverCapacity + 1];
+        public int ReaderFormidable { get; private set; }
+        public int ReaderMonster { get; private set; }
+        public int ReaderBaseAI { get; private set; }
+        public int ReaderVisible { get; private set; }
+
         ContactObservation Observe(Character c, Player leader, float now)
         {
             Vector3 p = c.transform.position, v = c.GetVelocity();
             BaseAI ai = c.GetBaseAI();
-            MonsterAI monster = ai as MonsterAI;
-            Character target = monster == null ? null : monster.GetTargetCreature();
+            Character target; bool alerted;
+            IntentReader reader = ActorIntent.Read(c, out target, out alerted);
+            if (reader == IntentReader.FormidableActor) ReaderFormidable++;
+            else if (reader == IntentReader.NativeMonsterAI) ReaderMonster++;
+            else if (reader == IntentReader.NativeBaseAI) ReaderBaseAI++;
+            else ReaderVisible++;
+            P2 pos = new P2(p.x, p.z), vel = new P2(v.x, v.z);
+            Vector3 fw = c.transform.forward; P2 fwd = new P2(fw.x, fw.z);
             int member = -1;
             if (target != null)
             {
@@ -212,18 +238,29 @@ namespace LivingWorld.Core
             if (member >= 0)
             {
                 Vector3 to = target.transform.position - p; to.y = 0f;
-                Vector3 f = c.transform.forward; f.y = 0f;
+                Vector3 f = fw; f.y = 0f;
                 bool facing = to.sqrMagnitude > .01f && f.sqrMagnitude > .01f && Vector3.Angle(f, to) <= AwarenessTuning.TargetFacing;
                 Vector3 hv = new Vector3(v.x, 0f, v.z);
                 bool charging = to.sqrMagnitude > .01f && Vector3.Dot(hv, to.normalized) >= AwarenessTuning.ChargeSpeed;
                 perceptible = facing || charging || c.InAttack();
             }
+            else
+            {
+                // No reader names a party target: judge by what is visible, the same cues a player reads.
+                int n = 0;
+                for (int o = 0; o < observerCount; o++) memberPos[n++] = obsPos[o];
+                int leaderSlot = -1;
+                if (leader != null) { Vector3 lp = leader.transform.position; leaderSlot = n; memberPos[n++] = new P2(lp.x, lp.z); }
+                int seen = VisibleIntent.Target(pos, fwd, vel, c.InAttack(), memberPos, n);
+                if (seen >= 0) { member = seen == leaderSlot ? AwarenessTuning.LeaderTarget : seen; perceptible = true; }
+                if (reader == IntentReader.VisibleOnly || reader == IntentReader.NativeBaseAI) alerted = alerted || VisibleIntent.Alerted(vel, seen);
+            }
             return new ContactObservation
             {
                 Id = c.GetInstanceID(), Family = c.m_name,
                 Wildlife = c.GetFaction() == Character.Faction.AnimalsVeg, Sleeping = ai != null && ai.IsSleeping(), Boss = c.IsBoss(),
-                Position = new P2(p.x, p.z), Height = p.y, Velocity = new P2(v.x, v.z), Radius = c.GetRadius(),
-                NativeAlerted = ai != null && ai.IsAlerted(),
+                Position = pos, Height = p.y, Velocity = vel, Radius = c.GetRadius(),
+                NativeAlerted = alerted,
                 NativeTargetMember = member, TargetPerceptible = perceptible,
                 HurtParty = HurtBy(c) >= 0
             };

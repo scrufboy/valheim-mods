@@ -56,6 +56,7 @@ static class RegressionLedgerTests
         Run("A1 awareness: sneaking is a cost, not a veto - hidden until a contact commits", AwSneakDoctrine);
         Run("A1 awareness: susceptibility is Unknown unless learned; native modifiers are never knowledge", AwUnknownResistance);
         Run("A1 awareness: wildlife never commits by approach, only by targeting or harm", AwWildlife);
+        Run("A1 awareness (Brian: aggro is aggro): any actor without an AI reader is judged by visible facing, charge and attack", AwVisibleIntent);
         Run("1.0.32.21 throw (Brian live): never poison an all-immune group; mixed groups count only who it can hurt", ThrowSkipsPoisonImmune);
         Run("1.0.32.24 throw (Brian live direction): bombs acquire groups as ranged area control, never a close panic throw", ThrowUsesRangedBand);
         Run("1.0.32.13 body voice: one onset cough, bounded repeats, one recovery breath", BodyVoiceOnsetRepeatRecover);
@@ -365,6 +366,19 @@ static class RegressionLedgerTests
         KnowledgeView v = k.Query("$enemy_skeleton", DamageKind.Poison);
         Assert(v.Known && v.Value == Susceptibility.Immune && v.Provenance == KnowledgeProvenance.ObservedCombat, "learned fact with provenance");
         Assert(!k.Query("$enemy_greydwarf", DamageKind.Poison).Known, "other families stay Unknown");
+    }
+
+    static void AwVisibleIntent()
+    {
+        P2[] members = { new P2(0f, 0f), new P2(4f, 0f), new P2(-3f, -2f) };
+        Assert(VisibleIntent.Target(new P2(0f, 20f), new P2(0f, -1f), new P2(0f, -4f), false, members, 3) == 0, "facing and charging member 0");
+        Assert(VisibleIntent.Target(new P2(20f, 20f), new P2(1f, 0f), new P2(4f, 0f), false, members, 3) < 0, "running past, not facing us: no target");
+        Assert(VisibleIntent.Target(new P2(0f, 20f), new P2(0f, -1f), new P2(0f, 0f), false, members, 3) < 0, "facing but standing: no target");
+        Assert(VisibleIntent.Target(new P2(4f, 2.5f), new P2(0f, -1f), new P2(0f, 0f), true, members, 3) == 1, "attacking the member in front of it");
+        Assert(!VisibleIntent.Alerted(new P2(1f, 0f), -1) && VisibleIntent.Alerted(new P2(3.5f, 0f), -1) && VisibleIntent.Alerted(new P2(0f, 0f), 2), "visible alert: running or targeting");
+        var b = new ContactBook(); P2 c = new P2(0f, 0f);
+        ContactObservation o = Ob(7, 0f, 30f, 0f, -4f, true); o.NativeTargetMember = 0; o.TargetPerceptible = true;   // as PartyAwareness fills it from VisibleIntent
+        Assert(StepTo(b, o, 0f, .5f, c) == ContactState.Committed, "a visibly charging modded/unknown actor commits like any other");
     }
 
     static void AwWildlife()

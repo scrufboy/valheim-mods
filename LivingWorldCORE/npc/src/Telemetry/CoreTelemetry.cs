@@ -298,6 +298,8 @@ namespace LivingWorld.Telemetry
                     for (int o = 0; o < party.ObserverCount; o++) Num("rays_" + o, party.RaysBy(o));
                     Num("observers", party.ObserverCount); Num("cpuMsPerSec", party.CpuMsPerSecond); Num("allocKbPerSec", party.AllocKbPerSecond);
                     Num("stepsPerSec", party.StepsPerSecond); Num("evicted", party.Book.Evicted); Num("refused", party.Book.Refused);
+                    Num("readerFormidable", party.ReaderFormidable); Num("readerMonsterAI", party.ReaderMonster);
+                    Num("readerBaseAI", party.ReaderBaseAI); Num("readerVisibleOnly", party.ReaderVisible);
                     Num("candidatesDropped", party.CandidatesDropped); Num("groupOverflow", party.Groups.Overflow); Num("faults", party.Faults);
                     Str("posture", party.Posture.ToString()); Num("noticeRange", party.NoticeRange); Bool("dark", party.Dark);
                     Str("weather", party.Weather); Str("biome", party.Biome);
