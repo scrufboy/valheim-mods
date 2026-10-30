@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.32.23";
+        public const string Version = "1.0.32.24";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -85,7 +85,7 @@ namespace LivingWorld.Core
                 "Experimental: companions raise shields against close melee and aimed projectiles.");
             FormidableShadowBehavior.Bind(Config);
             companionBombs = Config.Bind("Combat", "CompanionBombs", true,
-                "Companions throw bombs the Souls of the Land Pillager way (Greydwarf throw, ooze bomb, overhead swing) at the best enemy cluster 6-13.5 m out, favouring groups coming at the party, aimed where they are headed. Never if you or another companion would be within 5.5 m of the landing. Off = never throw.");
+                "Companions use bombs as ranged area control: acquire the best enemy cluster 9-20 m out, favour groups coming at the party, and aim where they are headed. Never throw close in panic or if you or another companion would be within 5.5 m of the landing. Off = never throw.");
             bodyVoice = Config.Bind("BodyVoice", "Enabled", true,
                 "Body-reaction voice addon (separate from the locked combat voice): companions cough when poison or gas first takes hold, again every 4-7 s while it lasts, and catch their breath when it clears. Combat lines always take priority. Clips: voices/body/<male|female>/<onset|repeat|recover>/*.wav.");
             bodyBurning = Config.Bind("BodyVoice", "Burning", true,

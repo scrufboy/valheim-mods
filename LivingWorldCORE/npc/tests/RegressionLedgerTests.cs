@@ -44,6 +44,7 @@ static class RegressionLedgerTests
         Run("1.0.32.12 throw: ballistic elevation lands at the planned distance for the Souls throw speed", ThrowBallistics);
         Run("1.0.32.12 throw: a lone weak enemy is not worth it; a lone tough one is; cooldown holds", ThrowWorthAndCadence);
         Run("1.0.32.21 throw (Brian live): never poison an all-immune group; mixed groups count only who it can hurt", ThrowSkipsPoisonImmune);
+        Run("1.0.32.24 throw (Brian live direction): bombs acquire groups as ranged area control, never a close panic throw", ThrowUsesRangedBand);
         Run("1.0.32.13 body voice: one onset cough, bounded repeats, one recovery breath", BodyVoiceOnsetRepeatRecover);
         Run("1.0.32.13 body voice: combat lines win; an onset is deferred then dropped, never stacked", BodyVoiceYieldsToCombat);
         Run("1.0.32.13 body voice: nothing after death; a one-tick flicker is not an exposure", BodyVoiceDeathAndFlicker);
@@ -1178,14 +1179,23 @@ static class RegressionLedgerTests
 
     static void ThrowBallistics()
     {
-        foreach (float d in new[] { 6f, 9f, 13f })
+        foreach (float d in new[] { 9f, 15f, 20f })
         {
             float e = ThrowPlanner.Elevation(d, 0f);
             Assert(!float.IsNaN(e), "no solution at " + d + " m");
             float range = ThrowPlanner.Speed * ThrowPlanner.Speed * (float)Math.Sin(2 * e) / ThrowPlanner.Gravity;
             Assert(Math.Abs(range - d) < .05f, "elevation lands at " + range.ToString("0.00") + " m instead of " + d);
         }
-        Assert(float.IsNaN(ThrowPlanner.Elevation(16f, 0f)), "claimed a solution beyond 14.4 m");
+        Assert(float.IsNaN(ThrowPlanner.Elevation(23f, 0f)), "claimed a solution beyond 22.5 m");
+    }
+
+    static void ThrowUsesRangedBand()
+    {
+        Assert(!PlanAt(new[] { Foe(0f, 7f), Foe(.8f, 7.2f) }, new ThrowBody[0]).Throw,
+            "used a bomb as a close panic attack");
+        ThrowPlan far = PlanAt(new[] { Foe(0f, 18f), Foe(.8f, 18.3f), Foe(-.8f, 18.1f) }, new ThrowBody[0]);
+        Assert(far.Throw && far.Distance >= 17f && far.Distance <= ThrowPlanner.MaxRange,
+            "did not acquire a valid far cluster (" + far.Reason + ", " + far.Distance.ToString("0.0") + " m)");
     }
 
     static ThrowBody Undead(float x, float z, float vx = 0f, float vz = 0f) { var b = Foe(x, z, vx, vz); b.Immune = true; return b; }

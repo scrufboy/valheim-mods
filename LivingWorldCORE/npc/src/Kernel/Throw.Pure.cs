@@ -35,12 +35,14 @@ namespace LivingWorld.Core
 
     public static class ThrowPlanner
     {
-        public const float Speed = 12f;            // Greydwarf_throw / Souls Pillager throw speed
+        // 1.0.32.24 candidate: bombs are ranged area control, not a close panic attack.
+        // The cloned Living World throw owns this velocity; vanilla throws remain untouched.
+        public const float Speed = 15f;
         public const float Gravity = 10f;          // oozebomb_projectile gravity
         public const float ClusterRadius = 3.5f;   // members within this of a seed form a cluster
         public const float BlastRadius = 4f;       // oozebomb_explosion
         public const float FriendMargin = 1.5f;    // never a friend within blast + margin, now or when it lands
-        public const float MinRange = 6f, MaxRange = 13.5f;   // 14.4 m is the flat-ground maximum at 12 m/s
+        public const float MinRange = 9f, MaxRange = 20f;     // 22.5 m flat maximum at 15 m/s leaves height/lead margin
         public const float LeadFactor = .8f;       // aim most of the way to where they are headed
         public const float IncomingWeight = 1.5f;
         public const float ToughAtLeast = 200f;
