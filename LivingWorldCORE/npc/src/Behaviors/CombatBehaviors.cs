@@ -25,48 +25,7 @@ namespace LivingWorld.Core
 
         public override bool Wants(NpcFrame f)
         {
-            if (f.Phase == NpcPhase.Combat || f.Phase == NpcPhase.CombatClear) return true;
-            // Brian 2026-10-30: the companion's own sight decides, not the leader's weapon. A visible, valid group may
-            // be opened on from Calm or Readiness alike; only the leader's sneak (stealth intent) holds the throw.
-            if (!CorePlugin.CompanionBombs || (f.Phase != NpcPhase.Readiness && f.Phase != NpcPhase.Calm) ||
-                f.Senses.LeaderCrouching || Body == null || Body.Human == null) return false;
-            // Keep ownership until the native throw animation has delivered and
-            // FinishBomb has restored the real loadout.
-            if (Body.Throwing) return true;
-            if (Body.Human.InAttack() || Body.Human.IsDrawingBow() || Body.Human.IsStaggering() || Body.Human.IsBlocking()) return false;
-            cadence.Cooldown = CorePlugin.BombCooldown;
-            if (!cadence.Ready(f.Now) || (!CorePlugin.BombsEndless && Body.BombReserve <= 0)) return false;
-            // Not yet granted: look for an opening at the same 0.2 s cadence StepBomb uses (bounded raycasts).
-            if (!Active) { if (f.Now < nextOpeningScan) return false; nextOpeningScan = f.Now + .2f; }
-            Humanoid me = Body.Human;
-            Vector3 at = me.transform.position;
-            int nh = 0, nf = 0;
-            P2 party = new P2(at.x, at.z); int partyN = 1;
-            foreach (Character c in Character.GetAllCharacters())
-            {
-                if (c == null || c == me || c.IsDead()) continue;
-                if (Vector3.Distance(c.transform.position, at) > 30f) continue;
-                bool friend = c.IsPlayer() || c.GetComponent<NpcKernel>() != null || !BaseAI.IsEnemy(me, c);
-                if (friend)
-                {
-                    if (c.IsPlayer() || c.GetComponent<NpcKernel>() != null) { party = party + new P2(c.transform.position.x, c.transform.position.z); partyN++; }
-                    if (nf < friendBuf.Length) friendBuf[nf++] = BodyOf(c);
-                }
-                else if (nh < hostileBuf.Length && Body.Ai != null && Body.Ai.CanSeeTarget(c)) { hostileActors[nh] = c; hostileBuf[nh++] = BodyOf(c); }
-            }
-            party = party * (1f / partyN);
-            Vector3 fw = me.transform.forward;
-            ThrowPlan plan = ThrowPlanner.Plan(new P2(at.x, at.z), at.y, new P2(fw.x, fw.z), party, hostileBuf, nh, friendBuf, nf);
-            if (!plan.Throw) return false;
-            Character target = null; float best = float.PositiveInfinity;
-            for (int i = 0; i < nh; i++)
-            {
-                Vector3 p = hostileActors[i].transform.position;
-                float dx = p.x - plan.Aim.X, dz = p.z - plan.Aim.Z, d2 = dx * dx + dz * dz;
-                if (d2 < best) { best = d2; target = hostileActors[i]; }
-            }
-            if (target == null) return false;
-            return true;
+            return f.Phase == NpcPhase.Combat || f.Phase == NpcPhase.CombatClear;
         }
 
         public override void Enter(NpcFrame f)
@@ -136,10 +95,9 @@ namespace LivingWorld.Core
 
         // ---- 1.0.32.12 bomb throw: Souls Pillager throw, player-like decision (ThrowPlanner), native execution.
         readonly ThrowCadence cadence = new ThrowCadence();
-        float nextBombCheck, nextBombSkipLog, nextOpeningScan;
+        float nextBombCheck, nextBombSkipLog;
         bool aiming; Vector3 aimPoint; float aimSince; ThrowPlan aimPlan;
         readonly ThrowBody[] hostileBuf = new ThrowBody[24];
-        readonly Character[] hostileActors = new Character[24];
         readonly ThrowBody[] friendBuf = new ThrowBody[16];
 
         static ThrowBody BodyOf(Character c)
@@ -165,48 +123,37 @@ namespace LivingWorld.Core
             if (f.Now < nextBombCheck) return;
             nextBombCheck = f.Now + .2f;
             bool busy = me.InAttack() || me.IsDrawingBow() || me.IsStaggering() || me.IsBlocking();
-            if (busy) { aiming = false; return; }
+            Character target = f.Senses.Target;
+            if (busy || target == null) { aiming = false; return; }
 
-            Character target; ThrowPlan plan;
+            Vector3 at = me.transform.position;
+            int nh = 0, nf = 0;
+            P2 party = new P2(at.x, at.z); int partyN = 1;
+            foreach (Character c in Character.GetAllCharacters())
             {
-                Vector3 at = me.transform.position;
-                int nh = 0, nf = 0;
-                P2 party = new P2(at.x, at.z); int partyN = 1;
-                foreach (Character c in Character.GetAllCharacters())
+                if (c == null || c == me || c.IsDead()) continue;
+                float d = Vector3.Distance(c.transform.position, at);
+                if (d > 30f) continue;
+                bool friend = c.IsPlayer() || c.GetComponent<NpcKernel>() != null || !BaseAI.IsEnemy(me, c);
+                if (friend)
                 {
-                    if (c == null || c == me || c.IsDead()) continue;
-                    if (Vector3.Distance(c.transform.position, at) > 30f) continue;
-                    bool friend = c.IsPlayer() || c.GetComponent<NpcKernel>() != null || !BaseAI.IsEnemy(me, c);
-                    if (friend)
-                    {
-                        if (c.IsPlayer() || c.GetComponent<NpcKernel>() != null) { party = party + new P2(c.transform.position.x, c.transform.position.z); partyN++; }
-                        if (nf < friendBuf.Length) friendBuf[nf++] = BodyOf(c);
-                    }
-                    else if (nh < hostileBuf.Length && Body.Ai != null && Body.Ai.CanSeeTarget(c)) { hostileActors[nh] = c; hostileBuf[nh++] = BodyOf(c); }
+                    if (c.IsPlayer() || c.GetComponent<NpcKernel>() != null) { party = party + new P2(c.transform.position.x, c.transform.position.z); partyN++; }
+                    if (nf < friendBuf.Length) friendBuf[nf++] = BodyOf(c);
                 }
-                party = party * (1f / partyN);
-                Vector3 fw = me.transform.forward;
-                plan = ThrowPlanner.Plan(new P2(at.x, at.z), at.y, new P2(fw.x, fw.z), party, hostileBuf, nh, friendBuf, nf);
-                target = null; float best = float.PositiveInfinity;
-                if (plan.Throw)
+                else if (nh < hostileBuf.Length && Body.Ai != null && Body.Ai.CanSeeTarget(c)) hostileBuf[nh++] = BodyOf(c);
+            }
+            party = party * (1f / partyN);
+            Vector3 fw = me.transform.forward;
+            ThrowPlan plan = ThrowPlanner.Plan(new P2(at.x, at.z), at.y, new P2(fw.x, fw.z), party, hostileBuf, nh, friendBuf, nf);
+            if (!plan.Throw)
+            {
+                aiming = false;
+                if (CorePlugin.DevBombLog && f.Now >= nextBombSkipLog)
                 {
-                    for (int i = 0; i < nh; i++)
-                    {
-                        Vector3 p = hostileActors[i].transform.position;
-                        float dx = p.x - plan.Aim.X, dz = p.z - plan.Aim.Z, d2 = dx * dx + dz * dz;
-                        if (d2 < best) { best = d2; target = hostileActors[i]; }
-                    }
+                    nextBombSkipLog = f.Now + 3f;
+                    CorePlugin.Report("BOMB-SKIP " + me.GetHoverName() + " reason=" + plan.Reason + " hostilesSeen=" + nh + " t=" + f.Now.ToString("0.00"));
                 }
-                if (!plan.Throw || target == null)
-                {
-                    aiming = false;
-                    if (CorePlugin.DevBombLog && f.Now >= nextBombSkipLog)
-                    {
-                        nextBombSkipLog = f.Now + 3f;
-                        CorePlugin.Report("BOMB-SKIP " + me.GetHoverName() + " reason=" + plan.Reason + " hostilesSeen=" + nh + " t=" + f.Now.ToString("0.00"));
-                    }
-                    return;
-                }
+                return;
             }
             aimPlan = plan;
             aimPoint = new Vector3(plan.Aim.X, plan.AimHeight, plan.Aim.Z);
@@ -220,7 +167,7 @@ namespace LivingWorld.Core
             if (Body.ThrowBomb(this, target, aimPoint))
             {
                 cadence.Started(f.Now);
-                CorePlugin.Report("BOMB-THROW " + me.GetHoverName() + " mode=" + (f.Phase == NpcPhase.Readiness || f.Phase == NpcPhase.Calm ? "opening-area-control phase=" + f.Phase : "in-combat-area-control") + " cluster=" + plan.Members + " poisonable=" + plan.Susceptible + " incoming=" + plan.Incoming +
+                CorePlugin.Report("BOMB-THROW " + me.GetHoverName() + " cluster=" + plan.Members + " poisonable=" + plan.Susceptible + " incoming=" + plan.Incoming +
                     " dist=" + plan.Distance.ToString("0.0") + " lead=" + plan.Lead.ToString("0.0") + " elev=" + (plan.Elevation * Mathf.Rad2Deg).ToString("0") +
                     " friendClear=" + (float.IsInfinity(plan.FriendClearance) ? "none" : plan.FriendClearance.ToString("0.0")) +
                     (CorePlugin.BombsEndless ? " endless" : " left=" + Body.BombReserve) + " t=" + f.Now.ToString("0.00"));
