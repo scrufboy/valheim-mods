@@ -1,6 +1,6 @@
 # A1 shared awareness (shadow): implementation and verification
 
-**Branch** `work/awareness-a1` · **commit** `d56c2c0` + actor-agnostic intent (see §9) · **version** 1.0.32.26 · base `17edec6` (combat behavior = `5f54db8`)
+**Branch** `work/awareness-a1` · **commit** `d989514` (revision 3: §9 actor-agnostic intent, §10 tactical-group boundary and initiative) · **version** 1.0.32.26 · base `17edec6` (combat behavior = `5f54db8`)
 **Status:** OFFLINE-TESTED. Not installed. Gameplay unchanged. A2 not started.
 
 ## 1. What runs
@@ -33,7 +33,7 @@
  └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Files: `src/Kernel/Awareness.Pure.cs` (pure, ledger-tested), `src/Kernel/PartyAwareness.cs` (Unity reads),
+Files: `src/Kernel/Awareness.Pure.cs` (pure, ledger-tested), `src/Kernel/AwarenessGroup.cs` (adapter boundary + Unity reads; was `PartyAwareness.cs`), `src/Kernel/ActorIntent.cs`,
 one line in `NpcKernel.Update`, config in `CorePlugin`, schema 13 in `CoreTelemetry`, `tools/analyze_session.py`.
 
 ## 2. Implemented values
@@ -182,7 +182,7 @@ and telemetry.
 
 ## 9. Update: aggro is aggro (Brian, after presentation)
 
-Intent is now read the same way whoever generates the aggro, and the service is keyed by **side**:
+Intent is now read the same way whoever generates the aggro ("side" wording superseded by §10's tactical group):
 
 | Actor | Reader | Target / alert from |
 |---|---|---|
@@ -198,3 +198,88 @@ rules and readers under their own side key. `AwarenessBudget` reports how many j
 
 Ledger 145/145 (+1 visible-intent test). Gates unchanged (ownership 76, voice LOCKED, movement-writer OK).
 DLLs: core `6310a7f76e3dd4dc69ebcfcc765bb19b8772dd18598341eaccd75186390cf59e`, telemetry `1632867e90184efb78c7d63fe01bfc6a96ad3484ee1ded65a0132b5eedcdec91`.
+
+## 10. Revision 3: tactical-group boundary and initiative (review `90b08e2`)
+
+### 10.1 What "group" means (and does not)
+
+| Concept | Owner | Question it answers |
+|---|---|---|
+| Valheim faction | the game (`Character.Faction`, `BaseAI.IsEnemy`) | who is normally hostile to whom; **initial hostility authority** |
+| Living World allegiance | the character/faction record (future) | loyalty, defection, reputation; refines hostility later |
+| **AwarenessGroupId** | the awareness adapter | who shares one encounter picture right now |
+
+Awareness keeps **no friend/enemy table**. The earlier "side" wording overstated the code (it was keyed by the leader id),
+and is replaced by this boundary:
+
+```csharp
+interface IAwarenessGroupAdapter {
+  long   AwarenessGroupId { get; }        // stable tactical group id; not a faction
+  string Kind { get; }                    // "companion-party" now; camps later
+  int    Members(GroupMember[] into);     // bounded; each: Actor, Sensor?, Ai (hearing), Kernel (FormidableAI actor), Name
+  bool   IsMember(Character c);
+  bool   IsHostile(Character c);          // relationship context (native faction now), never invented here
+  bool   StealthIntent { get; }           // changes costs, never a veto
+}
+```
+
+- The core (`AwarenessGroup`) contains **no `Player` type** and **no `IsPlayer()` exclusion**. Whether any actor,
+  including a player, is a hostile contact is the adapter's relationship call.
+- `CompanionPartyAdapter` is the first adapter. The leader id maps to a namespaced group id inside the adapter only.
+  Companions are sensors. Brian's body is a **protected non-sensor member**: it is in the centroid and can be targeted,
+  but it is never eyes.
+- A camp adapter supplies its own id, members and relationship context. The policy needs no rewrite.
+
+### 10.2 Initiative trace
+
+| Milestone | Recorded when (first time only) |
+|---|---|
+| `Envelope` | the actor first enters the candidate envelope (72 m from a sensor) |
+| `Evidence` | first fair sample: sight, sound or harm |
+| `Noticed` · `Alerted` · `Committed` | the interpretation transitions |
+| `MemberTarget` | a member's own native AI first targets it |
+| `ResponseReady` | shadow only: committed and inside the current 30 m engagement rule |
+| `MemberAction` | a member's attack, bow draw or throw while targeting it |
+
+- Each milestone records time, distance and time to contact. A contact publishes one `Initiative` record on member action, or on drop/eviction with whatever it reached. Never-noticed contacts publish nothing.
+- Independent checks mark concurrently, so duplicated or serial delay shows up directly in the deltas.
+
+**The analyzer reports:**
+- median latency `Envelope→Evidence→Noticed→Committed→MemberTarget/MemberAction`, and evidence-to-action;
+- median distance at each milestone;
+- **native targeting ahead of awareness**: how often a member's native AI targeted a contact before awareness committed it;
+- the calibration value `perception lead = closing speed × lag` that would cover the gap.
+
+The order of work stays: remove redundant latency first, then test the smallest added lead.
+
+**Sample (SIMULATED, pure core):** a Greydwarf enters at 64 m, alerts at 4 s, charges at 4 m/s from 5 s; companion 0's
+native AI targets it at 12.5 s and swings at 14.5 s.
+
+```
+{"type":"Initiative","group":"companion-party","family":"$enemy_greydwarf","outcome":"member action",
+ "tEnvelope":0.0,"dEnvelope":64.0, "tEvidence":1.0,"dEvidence":64.0, "tNoticed":1.5,"dNoticed":64.0,
+ "tAlerted":4.5,"dAlerted":64.0, "tCommitted":5.5,"dCommitted":62.0,"ttcCommitted":44.3,
+ "tMemberTarget":12.5,"dMemberTarget":34.0, "tResponseReady":13.5,"dResponseReady":30.0, "tMemberAction":14.5,"dMemberAction":26.0}
+```
+
+In this simulation awareness commits 7 s and 28 m before the native target. The live test measures whether that
+holds, or whether native AI is ever ahead.
+
+### 10.3 Verification (revision 3)
+
+- Ledger **148/148** (+3 initiative tests).
+- Native gate 46.
+- Ownership 76 (unchanged).
+- Voice LOCKED, unchanged.
+- Movement-writer and analyzer OK.
+- DLLs: core `862196d2119e8c6ab23787a13557b0f49c132a6a355c040482ad817d010bd865`, telemetry `f42f10d94f0887be8ce42b15c8e3cc87e95c898b3c8b8825ec025ed25e0ff73f`.
+- When `AwarenessShadow` is off, the kernel hook skips all adapter work.
+
+### 10.4 Added acceptance criteria for the live/video test
+
+In addition to §8:
+- every combat contact a member targeted has an `Initiative` record;
+- **native targeting is never routinely ahead of awareness commitment**: report the count and median lag;
+- any lag gives a measured lead (closing × lag), to be applied only after redundant latency is removed;
+- `Noticed` precedes the member's native target on day encounters that start beyond 30 m;
+- evidence-to-action latency is no worse than the native reaction seen in the video.
