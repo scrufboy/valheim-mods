@@ -297,3 +297,20 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
   is committed, threatens the party or deserves engagement.
 - Awareness is continuous evidence gathering, not a repeating action timer: perception samples update a
   bounded contact record; state changes only when evidence changes enough to cross explicit thresholds.
+
+## 2026-10-30 — Tactical awareness doctrine derives responses; it does not ask for global switches (Brian)
+
+- Party-shared sight may establish that a contact exists and where it was reported. It never supplies another
+  actor's attack lane: the companion executing a bow or bomb action must validate its own current line and arc.
+- Sixty metres is a test ceiling for clear daylight noticing, not a universal sight radius or engagement range.
+  Visibility is an environment fact affected by darkness, fog, Mistlands obscurity, weather, lighting, terrain,
+  target size/motion and the observing character's training.
+- Ranged engagement is bounded by the equipped capability. Bows may answer a committed distant threat within
+  their trained effective envelope. A 9–20 m bomb cannot engage beyond 30 m. Melee pursuit retains its leash;
+  awareness may instead choose ready, cover, reposition, withdraw or hold.
+- Sneaking does not create a global fire/no-fire answer. If stealth is intact, companions avoid initiating on a
+  merely noticed or suspicious contact. If a group has genuinely committed to the party and combat is becoming
+  unavoidable, the arbiter may choose the best survival response, including opening area control.
+- Native damage modifiers are not automatically character knowledge. Resistance/immunity may influence a
+  tactical proposal only through legitimate training, biome doctrine, lore/compendium learning or observed
+  combat evidence. Execution physics may remain exact; tactical knowledge may not be omniscient.
