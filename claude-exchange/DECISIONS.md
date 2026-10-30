@@ -176,3 +176,41 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - Character generation must emit one inspectable profile explaining why this NPC has these stats,
   skills, gear, food budget and combat doctrine. FormidableAI reads that profile; it does not infer a
   generic class from prefab name alone.
+
+## 2026-10-30 — Living World C.O.R.E. is the FormidableAI character system (Brian)
+
+- Living World C.O.R.E. and FormidableAI are not separate piles of features. The core owns the
+  persistent person and the decision process; voice, combat, status, environment, social behavior,
+  emotes, camps, spawning, equipment and progression are behavioral/capability modules attached
+  through that core.
+- The governing order is:
+  1. **Who:** stable identity, origin, people/culture, gender expression, relationships, faction and history.
+  2. **Where/with whom:** biome, terrain, hazards, party, bonds, camp/home and current social context.
+  3. **What they can do:** body, stats, skills, food budget, equipment, weapon training, spells and supplies.
+  4. **Why:** survival, party protection, hunger/needs, duty, hunting, travel, rest and other current goals.
+  5. **What now:** one shared world frame and arbitrator choose a valid intent for the current mode.
+  6. **How:** bounded action skills execute that intent with entry conditions, commitment, feedback,
+     cancellation, recovery and domain ownership.
+  7. **What changed:** memory, consequences, skill growth, equipment changes, injury and relationships persist.
+  8. **How it is expressed:** voice, posture, emotes, animation and visible status expose the same internal state.
+- Modules may propose facts or actions; they may not become independent brains, create parallel state,
+  write native behavior without an owned domain, or bolt timers directly onto the actor.
+- Scripted maneuvers are valid skills, not hacks, when selected for a reason. A kite, lunge, dash-stop,
+  spear throw, aerial throw, circle, shield wall, herding move or bomb setup must declare prerequisites,
+  tactical purpose, expected outcome, abort conditions, recovery and the domains it owns.
+- Randomness selects among tactically valid choices and provides personal variation. It never makes an
+  invalid action intelligent and never substitutes for perception or prediction.
+- Mode limits the decision space. Peaceful/local-safe modes can permit hunting, gathering, social and
+  rest needs; danger/readiness/combat modes suppress irrelevant goals and prioritize survival and duty.
+- Biome doctrine is reusable knowledge attached to the rolled character, not a forked AI. A Mistlands-
+  trained companion brings relevant terrain, hazard and enemy knowledge, but still needs suitable gear,
+  party composition and judgment.
+- Camps and spawning tools decide where persisted people enter the world and which plausible pairs or
+  mixed parties live there. They do not own the person's brain. External mod techniques may be adapted
+  behind Living World interfaces, but no external system becomes a second authority.
+- A full party should support genuinely different play: martial defender, ranged hunter, scout,
+  magic user, healer/cleric, heavy weapon specialist and future roles. Sex/gender pairing is not a
+  class constraint; pairs may be any believable combination of persisted people.
+- The immediate core must be protected before expanding maneuvers: real character profile, real facts,
+  arbitration, lifecycle, survival/team reasoning and weapon doctrine first; spectacular class routines
+  plug in afterward without rewriting those foundations.
