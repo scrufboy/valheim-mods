@@ -113,3 +113,15 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
   - Leaving a cloud is a tactical decision.
   - A party knows where its poison is; being pushed in by combat is the realistic exception.
 - A test arena is needed for this. R&D record: `research/BOMBS-CLOUDS-AND-STATUS-EXPOSURE-RND.md`.
+
+## 2026-10-30 — FormidableAI combat objective and survival (Brian)
+
+- Every companion must always try to beat their opponents. Survival is part of competent combat,
+  not an optional behavior or a reason to accept a wipe as successful AI.
+- Tier and gear explain difficulty; they do not change the objective. Seekers may exceed a party's
+  tier, but Plains-quality companions should contest Fulings more evenly than the 1.0.32.22 run did.
+- Long-term survival has two cooperating owners: combat judgment now (defense, spacing, threat,
+  disengagement, protection and target/action choice) and progression later (levels, armor and
+  weapons). Lack of progression makes better combat more urgent, not less.
+- Permanent death remains meaningful. FormidableAI must improve the odds honestly rather than grant
+  invulnerability, hidden stat cheats or guaranteed victory.
