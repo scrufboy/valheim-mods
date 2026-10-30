@@ -523,6 +523,34 @@ def main(paths):
             add("INFO", "Awareness shadow: groups", "%d records, largest %d, committed records %d; poison knowledge unknown in %d%% of member counts" % (
                 len(groups), max(g.get("members", 0) for g in groups), sum(1 for g in groups if g.get("committed")),
                 100 * sum(g.get("poisonUnknown", 0) for g in groups) // max(1, sum(g.get("members", 0) for g in groups))))
+        inits = [r for r in rows if r.get("type") == "Initiative"]
+        if inits:
+            def med(v):
+                v = sorted(x for x in v if x is not None)
+                return v[len(v) // 2] if v else float("nan")
+            def delta(r, a, b):
+                return r["t" + b] - r["t" + a] if ("t" + a) in r and ("t" + b) in r and r["t" + a] is not None and r["t" + b] is not None else None
+            steps = [("Envelope", "Evidence"), ("Evidence", "Noticed"), ("Noticed", "Committed"), ("Committed", "MemberTarget"),
+                     ("Committed", "MemberAction"), ("Evidence", "MemberAction")]
+            add("INFO", "Initiative: latency (median s)", "; ".join("%s->%s %.2f" % (a, b, med([delta(r, a, b) for r in inits])) for a, b in steps))
+            add("INFO", "Initiative: distance (median m)", "; ".join("%s %.0f" % (m, med([r.get("d" + m) for r in inits if ("d" + m) in r]))
+                                                                       for m in ("Envelope", "Noticed", "Committed", "MemberTarget", "MemberAction")))
+            # Native ahead of awareness: a member targeted/acted on the contact before awareness committed it.
+            ahead = [r for r in inits if "tMemberTarget" in r and ("tCommitted" not in r or r["tMemberTarget"] < r["tCommitted"])]
+            lags = []
+            for r in ahead:
+                if "tCommitted" in r and r.get("ttcCommitted") not in (None, 0):
+                    closing = (r.get("dCommitted") or 0) / r["ttcCommitted"]
+                    lags.append((r["tCommitted"] - r["tMemberTarget"], closing))
+            lead = med([lag * closing for lag, closing in lags])
+            n = len([r for r in inits if "tMemberTarget" in r])
+            add("INFO", "Initiative: native targeting ahead of awareness commitment",
+                "%d of %d contacts a member targeted; median lag %.2f s; perception lead that would cover it = %.1f m (closing x lag)" % (
+                    len(ahead), n, med([l for l, _ in lags]), lead))
+            outcomes = defaultdict(int)
+            for r in inits:
+                outcomes[r.get("outcome", "?")] += 1
+            add("INFO", "Initiative: records", "%d (%s)" % (len(inits), ", ".join("%s=%d" % kv for kv in sorted(outcomes.items()))))
     elif start.get("schema") == 13:
         add("NOT EXERCISED", "Awareness shadow", "no awareness records (AwarenessShadow off?)")
 

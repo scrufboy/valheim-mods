@@ -57,6 +57,9 @@ static class RegressionLedgerTests
         Run("A1 awareness: susceptibility is Unknown unless learned; native modifiers are never knowledge", AwUnknownResistance);
         Run("A1 awareness: wildlife never commits by approach, only by targeting or harm", AwWildlife);
         Run("A1 awareness (Brian: aggro is aggro): any actor without an AI reader is judged by visible facing, charge and attack", AwVisibleIntent);
+        Run("A1 initiative (90b08e2): milestones recorded once, in order, with distance and time to contact; published on member action", AwInitiativeTrace);
+        Run("A1 initiative: a contact dropped or evicted publishes the milestones it reached; never-noticed publishes nothing", AwInitiativePartial);
+        Run("A1 initiative: response-ready only once committed inside the 30 m engagement rule", AwInitiativeResponseReady);
         Run("1.0.32.21 throw (Brian live): never poison an all-immune group; mixed groups count only who it can hurt", ThrowSkipsPoisonImmune);
         Run("1.0.32.24 throw (Brian live direction): bombs acquire groups as ranged area control, never a close panic throw", ThrowUsesRangedBand);
         Run("1.0.32.13 body voice: one onset cough, bounded repeats, one recovery breath", BodyVoiceOnsetRepeatRecover);
@@ -377,8 +380,68 @@ static class RegressionLedgerTests
         Assert(VisibleIntent.Target(new P2(4f, 2.5f), new P2(0f, -1f), new P2(0f, 0f), true, members, 3) == 1, "attacking the member in front of it");
         Assert(!VisibleIntent.Alerted(new P2(1f, 0f), -1) && VisibleIntent.Alerted(new P2(3.5f, 0f), -1) && VisibleIntent.Alerted(new P2(0f, 0f), 2), "visible alert: running or targeting");
         var b = new ContactBook(); P2 c = new P2(0f, 0f);
-        ContactObservation o = Ob(7, 0f, 30f, 0f, -4f, true); o.NativeTargetMember = 0; o.TargetPerceptible = true;   // as PartyAwareness fills it from VisibleIntent
+        ContactObservation o = Ob(7, 0f, 30f, 0f, -4f, true); o.NativeTargetMember = 0; o.TargetPerceptible = true;   // as AwarenessGroup fills it from VisibleIntent
         Assert(StepTo(b, o, 0f, .5f, c) == ContactState.Committed, "a visibly charging modded/unknown actor commits like any other");
+    }
+
+    static void AwInitiativeTrace()
+    {
+        var b = new ContactBook(); P2 c = new P2(0f, 0f); b.SetCentroid(c);
+        ContactObservation o = Ob(1, 0f, 50f, 0f, 0f, false); o.EnvelopeSince = .01f; o.EnvelopeDistance = 55f;
+        ContactRecord r = null;
+        for (float t = .1f; t <= 12f; t += .1f)
+        {
+            bool alert = t >= 2f, charging = t >= 3f;
+            o.NativeAlerted = alert; o.Velocity = charging ? new P2(0f, -4f) : new P2(0f, 0f);
+            o.Position = o.Position + o.Velocity * .1f;
+            r = b.Perceive(o, ContactSource.Sight, 0, t); b.Step(t, .1f, c);
+            if (t >= 7f) b.MarkMember(1, Milestone.MemberTarget, t);
+            if (t >= 8f) b.MarkMember(1, Milestone.MemberAction, t);
+        }
+        MilestoneMark[] m = r.Trace.Marks;
+        Assert(m[(int)Milestone.InEnvelope].Set && Math.Abs(m[(int)Milestone.InEnvelope].Time - .01f) < 1e-4f && m[(int)Milestone.InEnvelope].Distance == 55f, "envelope time/distance carried");
+        float prev = -1f;
+        foreach (Milestone x in new[] { Milestone.InEnvelope, Milestone.FirstEvidence, Milestone.Noticed, Milestone.Alerted, Milestone.Committed, Milestone.MemberTarget, Milestone.MemberAction })
+        {
+            Assert(m[(int)x].Set, x + " set");
+            Assert(m[(int)x].Time >= prev, x + " in order");
+            prev = m[(int)x].Time;
+        }
+        Assert(!float.IsInfinity(m[(int)Milestone.FirstEvidence].Distance), "distance known at first evidence");
+        Assert(m[(int)Milestone.Committed].Distance > m[(int)Milestone.MemberAction].Distance, "distance shrinks toward action");
+        Assert(!float.IsInfinity(m[(int)Milestone.Committed].TimeToContact), "time to contact at commitment");
+        float noticed = m[(int)Milestone.Noticed].Time;
+        b.MarkMember(1, Milestone.MemberAction, 20f);
+        Assert(r.Trace.Marks[(int)Milestone.MemberAction].Time < 20f && r.Trace.Marks[(int)Milestone.Noticed].Time == noticed, "first occurrence only");
+        var buf = new InitiativeRecord[4];
+        Assert(b.InitiativeAfter(-1, buf) == 1 && buf[0].Id == 1 && buf[0].Outcome == "member action", "published once on member action");
+        Assert(b.InitiativeAfter(buf[0].Sequence, buf) == 0, "not republished");
+    }
+
+    static void AwInitiativePartial()
+    {
+        var b = new ContactBook(); P2 c = new P2(0f, 0f);
+        StepTo(b, Ob(1, 40f, 0f, 0f, 0f, true), 0f, 1f, c);
+        for (float t = 1.1f; t < 15f; t += .1f) b.Step(t, .1f, c);
+        var buf = new InitiativeRecord[4];
+        Assert(b.InitiativeAfter(-1, buf) == 1 && buf[0].Outcome == "dropped" && buf[0].Trace.Marks[(int)Milestone.Alerted].Set
+            && !buf[0].Trace.Marks[(int)Milestone.Committed].Set, "dropped contact publishes the milestones it reached");
+        var e = new ContactBook();
+        e.Perceive(Ob(2, 40f, 0f), ContactSource.Sight, 0, 0f);       // one sample, never noticed
+        for (float t = .1f; t < 5f; t += .1f) e.Step(t, .1f, c);
+        Assert(e.InitiativeAfter(-1, buf) == 0, "never-noticed contacts publish nothing");
+    }
+
+    static void AwInitiativeResponseReady()
+    {
+        var b = new ContactBook(); P2 c = new P2(0f, 0f);
+        ContactObservation q = Ob(1, 0f, 45f, 0f, 0f, true); q.NativeTargetMember = 0; q.TargetPerceptible = true;
+        StepTo(b, q, 0f, 1f, c);
+        Assert(b.Find(1).State == ContactState.Committed && !b.Find(1).Trace.Marks[(int)Milestone.ResponseReady].Set, "committed at 45 m is not response-ready");
+        q.Velocity = new P2(0f, -5f);
+        StepTo(b, q, 1.1f, 5f, c);
+        MilestoneMark rr = b.Find(1).Trace.Marks[(int)Milestone.ResponseReady];
+        Assert(rr.Set && rr.Distance <= AwarenessTuning.ResponseRange + .5f, "response-ready once inside 30 m: " + rr.Distance);
     }
 
     static void AwWildlife()

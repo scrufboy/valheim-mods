@@ -31,7 +31,8 @@ namespace LivingWorld.Core
         public const float RaysPerSecond = 48f, RayBurst = 12f;
         public const float UrgentRefresh = .25f, FarRefresh = 1f, NearBand = 20f;
         public const float EnumerationInterval = .25f;        // 4 Hz candidate distance pass per party
-        public const int LeaderTarget = 99;                   // TargetsWhom value for "the leader" (a party member, not a sensor)
+        public const int MemberCapacity = 10;                 // group members (sensors + protected non-sensors)
+        public const float ResponseRange = 30f;               // shadow "response-ready": committed and inside the current 30 m engagement rule
     }
 
     public static class Visibility
@@ -74,13 +75,42 @@ namespace LivingWorld.Core
         public bool Wildlife, Sleeping, Boss;
         public P2 Position; public float Height; public P2 Velocity; public float Radius;
         public bool NativeAlerted;          // its own alert state; counts only when sighted (visible stance/run)
-        public int NativeTargetMember;      // party member it natively targets (0..7 companion, 99 leader), -1 none
+        public int NativeTargetMember;      // group member index it targets (reader or visible), -1 none
+        public float EnvelopeSince, EnvelopeDistance;   // first time inside the candidate envelope (NaN = unknown)
         public bool TargetPerceptible;      // facing that member within 30 deg, charging it, or attacking
         public bool HurtParty;              // hurt a party member within the hurt memory
     }
 
+    /// <summary>Initiative milestones (90b08e2): how long the path from presence to action takes, and where.</summary>
+    public enum Milestone { InEnvelope, FirstEvidence, Noticed, Alerted, Committed, MemberTarget, ResponseReady, MemberAction }
+
+    public struct MilestoneMark { public bool Set; public float Time, Distance, TimeToContact; }
+
+    public sealed class InitiativeTrace
+    {
+        public const int Count = 8;
+        public readonly MilestoneMark[] Marks = new MilestoneMark[Count];
+        public bool Emitted;
+        public bool Mark(Milestone m, float now, float distance, float ttc)
+        {
+            int i = (int)m;
+            if (Marks[i].Set) return false;            // first occurrence only; independent checks mark concurrently
+            Marks[i] = new MilestoneMark { Set = true, Time = now, Distance = distance, TimeToContact = ttc };
+            return true;
+        }
+        public void Reset() { for (int i = 0; i < Count; i++) Marks[i] = new MilestoneMark(); Emitted = false; }
+        public void CopyFrom(InitiativeTrace o) { for (int i = 0; i < Count; i++) Marks[i] = o.Marks[i]; Emitted = o.Emitted; }
+    }
+
+    public sealed class InitiativeRecord
+    {
+        public long Sequence; public int Id; public string Family = ""; public string Outcome = "";
+        public readonly InitiativeTrace Trace = new InitiativeTrace();
+    }
+
     public sealed class ContactRecord
     {
+        public readonly InitiativeTrace Trace = new InitiativeTrace();
         public bool Used;
         public int Id; public string Family; public bool Wildlife, Sleeping, Boss;
         public ContactState State, LostFrom;
@@ -107,6 +137,7 @@ namespace LivingWorld.Core
             AlertedObserved = false; TargetsWhomObserved = -1; TargetEvidenceAt = float.NegativeInfinity; HurtParty = false;
             CommitEvidence = 0f; ApproachSeenAt = LastCommitReasonAt = float.NegativeInfinity; CommitReason = "";
             Confidence = 0f; GroupId = -1;
+            Trace.Reset();
         }
     }
 
@@ -176,6 +207,15 @@ namespace LivingWorld.Core
             }
             else r.Velocity = o.Velocity;
             r.LastKnownPos = o.Position; r.Height = o.Height;
+            if (hasCentroid)
+            {
+                P2 toC = centroid - r.LastKnownPos; r.Distance = toC.Length;
+                r.ClosingSpeed = P2.Dot(r.Velocity, toC.Normalized);
+                r.TimeToContact = r.ClosingSpeed > .2f ? r.Distance / r.ClosingSpeed : float.PositiveInfinity;
+            }
+            if (!r.Trace.Marks[(int)Milestone.InEnvelope].Set && !float.IsNaN(o.EnvelopeSince) && o.EnvelopeSince > 0f)
+                r.Trace.Mark(Milestone.InEnvelope, o.EnvelopeSince, o.EnvelopeDistance, float.PositiveInfinity);
+            r.Trace.Mark(Milestone.FirstEvidence, now, r.Distance, r.TimeToContact);
             r.LastSeen = now; r.LastSource = source; r.LastObserver = observer;
             if (r.Samples == 0 || now - r.LastSampleAt >= AwarenessTuning.NoticeSpacing) { r.Samples++; r.LastSampleAt = now; }
             if (source == ContactSource.Sight)
@@ -196,8 +236,14 @@ namespace LivingWorld.Core
         }
 
         /// <summary>Interpretation and staleness. centroid = party centroid (companions and the leader's body).</summary>
+        P2 centroid; bool hasCentroid;
+
+        /// <summary>Where "toward the group" points; set before perceiving so first-evidence distance is known.</summary>
+        public void SetCentroid(P2 c) { centroid = c; hasCentroid = true; }
+
         public void Step(float now, float dt, P2 centroid)
         {
+            this.centroid = centroid; hasCentroid = true;
             for (int i = 0; i < Records.Length; i++)
             {
                 ContactRecord r = Records[i];
@@ -239,7 +285,7 @@ namespace LivingWorld.Core
                 if (committedNow && r.State != ContactState.Committed)
                 {
                     // The reason string is built only on the transition (no per-frame allocation).
-                    r.CommitReason = r.HurtParty ? "hurt party" : targets ? "targets " + (r.TargetsWhomObserved == AwarenessTuning.LeaderTarget ? "leader" : "companion " + r.TargetsWhomObserved)
+                    r.CommitReason = r.HurtParty ? "hurt party" : targets ? "targets member " + r.TargetsWhomObserved
                         : "closing " + r.ClosingSpeed.ToString("0.0") + " m/s for " + r.CommitEvidence.ToString("0.0") + " s";
                     Emit(r, r.State, r.State = ContactState.Committed, now, r.CommitReason);
                 }
@@ -250,11 +296,53 @@ namespace LivingWorld.Core
                 }
                 else if (r.State == ContactState.Noticed && r.AlertedObserved)
                     Emit(r, ContactState.Noticed, r.State = ContactState.Alerted, now, "alert behavior seen");
+                if (r.State == ContactState.Committed && r.Distance <= AwarenessTuning.ResponseRange)
+                    r.Trace.Mark(Milestone.ResponseReady, now, r.Distance, r.TimeToContact);
             }
+        }
+
+        readonly InitiativeRecord[] initiative = new InitiativeRecord[32];
+        long initiativeSequence;
+        public long InitiativeCount { get { return initiativeSequence; } }
+
+        /// <summary>A group member's own observable step on this contact (its native target, its attack/shot/throw).</summary>
+        public void MarkMember(int id, Milestone m, float now)
+        {
+            ContactRecord r = Find(id);
+            if (r == null || r.State == ContactState.None) return;
+            if (r.Trace.Mark(m, now, r.Distance, r.TimeToContact) && m == Milestone.MemberAction) PublishInitiative(r, "member action");
+        }
+
+        void PublishInitiative(ContactRecord r, string outcome)
+        {
+            if (r.Trace.Emitted || !r.Trace.Marks[(int)Milestone.Noticed].Set) return;
+            r.Trace.Emitted = true;
+            int slot = (int)(initiativeSequence % initiative.Length);
+            if (initiative[slot] == null) initiative[slot] = new InitiativeRecord();
+            InitiativeRecord rec = initiative[slot];
+            rec.Sequence = initiativeSequence++; rec.Id = r.Id; rec.Family = r.Family; rec.Outcome = outcome;
+            rec.Trace.CopyFrom(r.Trace);
+        }
+
+        /// <summary>Initiative records with Sequence greater than after, oldest first. Returns count.</summary>
+        public int InitiativeAfter(long after, InitiativeRecord[] output)
+        {
+            long start = Math.Max(after + 1, initiativeSequence - initiative.Length);
+            int n = 0;
+            for (long q = start; q < initiativeSequence && n < output.Length; q++) output[n++] = initiative[q % initiative.Length];
+            return n;
         }
 
         void Emit(ContactRecord r, ContactState from, ContactState to, float now, string evidence)
         {
+            if (to == ContactState.Noticed) r.Trace.Mark(Milestone.Noticed, now, r.Distance, r.TimeToContact);
+            else if (to == ContactState.Alerted) r.Trace.Mark(Milestone.Alerted, now, r.Distance, r.TimeToContact);
+            else if (to == ContactState.Committed)
+            {
+                if (!r.Trace.Marks[(int)Milestone.Alerted].Set && r.AlertedObserved) r.Trace.Mark(Milestone.Alerted, now, r.Distance, r.TimeToContact);
+                r.Trace.Mark(Milestone.Committed, now, r.Distance, r.TimeToContact);
+            }
+            else if (to == ContactState.None) PublishInitiative(r, evidence);   // dropped or evicted: publish what was reached
             ContactTransition t = new ContactTransition
             {
                 Sequence = sequence, Time = now, Id = r.Id, Family = r.Family, From = from, To = to, Source = r.LastSource,

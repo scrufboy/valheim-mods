@@ -21,7 +21,7 @@ namespace LivingWorld.Telemetry
     {
         public const string Guid = "local.livingworld.telemetry";
         public const string Version = CorePlugin.Version;
-        const int Schema = 13; // 13: A1 awareness shadow (Contact, Group, AwarenessBudget); 12: FormidableShadow
+        const int Schema = 13; // 13: A1 awareness shadow (Contact, Group, Initiative, AwarenessBudget); 12: FormidableShadow
         const float SampleSeconds = .5f;
         const long MaxBytes = 64L * 1024L * 1024L;
 
@@ -251,30 +251,36 @@ namespace LivingWorld.Telemetry
         readonly Dictionary<long, long> lastGroupSeq = new Dictionary<long, long>();
         readonly Dictionary<long, long> lastBudgetSeq = new Dictionary<long, long>();
         readonly ContactTransition[] transitionBuf = new ContactTransition[128];
+        readonly Dictionary<long, long> lastInitiativeSeq = new Dictionary<long, long>();
+        readonly InitiativeRecord[] initiativeBuf = new InitiativeRecord[32];
+        static readonly string[,] MilestoneKeys = {
+            { "tEnvelope", "dEnvelope", "ttcEnvelope" }, { "tEvidence", "dEvidence", "ttcEvidence" }, { "tNoticed", "dNoticed", "ttcNoticed" },
+            { "tAlerted", "dAlerted", "ttcAlerted" }, { "tCommitted", "dCommitted", "ttcCommitted" }, { "tMemberTarget", "dMemberTarget", "ttcMemberTarget" },
+            { "tResponseReady", "dResponseReady", "ttcResponseReady" }, { "tMemberAction", "dMemberAction", "ttcMemberAction" } };
 
         void ObserveAwareness()
         {
-            foreach (PartyAwareness party in PartyAwareness.All)
+            foreach (AwarenessGroup party in AwarenessGroup.All)
             {
                 long seen;
-                if (!lastContactSeq.TryGetValue(party.LeaderId, out seen)) seen = -1;
+                if (!lastContactSeq.TryGetValue(party.AwarenessGroupId, out seen)) seen = -1;
                 int n = party.Book.TransitionsAfter(seen, transitionBuf);
                 for (int i = 0; i < n; i++)
                 {
                     ContactTransition t = transitionBuf[i];
                     Begin("Contact"); Num("gameT", t.Time); Num("id", t.Id); Str("family", t.Family);
                     Str("from", t.From.ToString()); Str("to", t.To.ToString()); Str("source", t.Source.ToString());
-                    Str("observer", party.ObserverName(t.Observer)); Num("dist", t.Distance); Num("closing", t.Closing); Num("ttc", t.TimeToContact);
-                    Bool("alertedObserved", t.Alerted); Num("targetsWhom", t.TargetsWhom); Str("evidence", t.Evidence);
+                    Str("group", party.Kind); Str("observer", party.SensorName(t.Observer)); Num("dist", t.Distance); Num("closing", t.Closing); Num("ttc", t.TimeToContact);
+                    Bool("alertedObserved", t.Alerted); Str("targetsWhom", party.MemberName(t.TargetsWhom)); Str("evidence", t.Evidence);
                     Bool("dark", party.Dark); Str("weather", party.Weather); Str("biome", party.Biome); Num("noticeRange", party.NoticeRange);
                     Str("posture", party.Posture.ToString());
                     End();
                     seen = t.Sequence;
                 }
-                lastContactSeq[party.LeaderId] = seen;
+                lastContactSeq[party.AwarenessGroupId] = seen;
 
                 long gseen;
-                if (!lastGroupSeq.TryGetValue(party.LeaderId, out gseen)) gseen = -1;
+                if (!lastGroupSeq.TryGetValue(party.AwarenessGroupId, out gseen)) gseen = -1;
                 long gstart = Math.Max(gseen + 1, party.GroupSequence - party.GroupRing.Length);
                 for (long q = gstart; q < party.GroupSequence; q++)
                 {
@@ -286,17 +292,35 @@ namespace LivingWorld.Telemetry
                     End();
                     gseen = q;
                 }
-                lastGroupSeq[party.LeaderId] = gseen;
+                lastGroupSeq[party.AwarenessGroupId] = gseen;
+
+                long iseen;
+                if (!lastInitiativeSeq.TryGetValue(party.AwarenessGroupId, out iseen)) iseen = -1;
+                int ni = party.Book.InitiativeAfter(iseen, initiativeBuf);
+                for (int i = 0; i < ni; i++)
+                {
+                    InitiativeRecord rec = initiativeBuf[i];
+                    Begin("Initiative"); Str("group", party.Kind); Num("id", rec.Id); Str("family", rec.Family); Str("outcome", rec.Outcome);
+                    for (int m = 0; m < InitiativeTrace.Count; m++)
+                    {
+                        MilestoneMark mk = rec.Trace.Marks[m];
+                        if (!mk.Set) continue;
+                        Num(MilestoneKeys[m, 0], mk.Time); Num(MilestoneKeys[m, 1], mk.Distance); Num(MilestoneKeys[m, 2], mk.TimeToContact);
+                    }
+                    End();
+                    iseen = rec.Sequence;
+                }
+                lastInitiativeSeq[party.AwarenessGroupId] = iseen;
 
                 long bseen;
-                if (!lastBudgetSeq.TryGetValue(party.LeaderId, out bseen)) bseen = 0;
+                if (!lastBudgetSeq.TryGetValue(party.AwarenessGroupId, out bseen)) bseen = 0;
                 if (party.BudgetSequence != bseen)
                 {
-                    lastBudgetSeq[party.LeaderId] = party.BudgetSequence;
+                    lastBudgetSeq[party.AwarenessGroupId] = party.BudgetSequence;
                     Begin("AwarenessBudget"); Num("contacts", party.Book.Count); Num("groups", party.Groups.Count);
                     Num("raysPerSec", party.RaysPerSecond); Num("raysDeferred", party.RaysDeferred);
-                    for (int o = 0; o < party.ObserverCount; o++) Num("rays_" + o, party.RaysBy(o));
-                    Num("observers", party.ObserverCount); Num("cpuMsPerSec", party.CpuMsPerSecond); Num("allocKbPerSec", party.AllocKbPerSecond);
+                    for (int o = 0; o < party.SensorCount; o++) Num("rays_" + o, party.RaysBy(o));
+                    Num("observers", party.SensorCount); Num("members", party.MemberCount); Str("group", party.Kind); Num("cpuMsPerSec", party.CpuMsPerSecond); Num("allocKbPerSec", party.AllocKbPerSecond);
                     Num("stepsPerSec", party.StepsPerSecond); Num("evicted", party.Book.Evicted); Num("refused", party.Book.Refused);
                     Num("readerFormidable", party.ReaderFormidable); Num("readerMonsterAI", party.ReaderMonster);
                     Num("readerBaseAI", party.ReaderBaseAI); Num("readerVisibleOnly", party.ReaderVisible);

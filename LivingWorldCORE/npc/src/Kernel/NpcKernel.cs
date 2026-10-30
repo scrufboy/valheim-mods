@@ -184,7 +184,7 @@ namespace LivingWorld.Core
                 if (!genderVoiced) { genderVoiced = true; CompanionCombatVoice.ApplyGender(this); }
             }
             body.TickStamina(Time.deltaTime);
-            PartyAwareness.Tick(this);   // A1 shadow: read-only party awareness (off unless [FormidableAI] AwarenessShadow)
+            if (CorePlugin.AwarenessShadow) AwarenessGroup.Tick(CompanionPartyAdapter.For(this));   // A1 shadow: read-only tactical-group awareness (off unless [FormidableAI] AwarenessShadow)
             if (Time.time < nextDecision) return;
             float dt = nextDecision <= 0f ? Tuning.DecisionInterval : Tuning.DecisionInterval + (Time.time - nextDecision);
             nextDecision = Time.time + Tuning.DecisionInterval;
