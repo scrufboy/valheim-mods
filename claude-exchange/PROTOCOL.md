@@ -52,3 +52,19 @@ A candidate may replace the current baseline only when:
 ## Conflict handling
 
 When Claude and Codex propose different changes, preserve both submissions. Compare evidence and changed boundaries before choosing. Do not merge two speculative fixes merely because both compile.
+
+## Character-semantics gate
+
+Character identity, roster membership, class/role meaning, biome tier, default pair and
+starting package are owner-controlled semantics. A source author may not infer a change
+from a new feature list or from mechanical similarity. Specifically:
+
+- an omitted existing character/type remains present;
+- a similar higher-biome character is additive, not an upgrade that replaces the
+  earlier-biome character;
+- shared weapon doctrine or equipment does not imply shared identity;
+- a candidate with an unresolved semantic decision remains uninstalled and off.
+
+Every submission touching these fields must include an explicit before/after roster
+matrix. Any row that disappears, changes identity or gains an alias requires a quoted
+Brian decision authorizing that exact change.

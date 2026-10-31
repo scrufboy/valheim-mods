@@ -381,3 +381,11 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - No existing or future generic Archer may be renamed, reclassified, upgraded, migrated or defaulted into Huntress. Huntress exists only when the Huntress character/profile itself is deliberately created.
 - A class/role implementation must not collapse a generic profession into a named or special character. The same preservation rule applies to every authored special character.
 - Remove the `guard -> Warden` and `archer -> Huntress` migration concept completely; do not retain it as a compatibility option, fallback or hidden default.
+
+## 2026-10-31 — Additive biome roster; progression never replaces the person (Brian, superseding ambiguous class language)
+
+- The project permanently retains its early-game Guard and Archer for Meadows/Black Forest play. Later-biome characters with similar responsibilities are additional people, not replacements or upgrades of those characters.
+- The Plains spear Huntress is her own authored character. Archer never becomes Huntress. Guard never becomes Warden. Scout remains Scout.
+- Progression may improve a persisted character's skills, knowledge, armor, food and weapons while that character remains the same person/type. Reaching a later biome never changes identity.
+- This supersedes any earlier wording that listed only Warden, Huntress, Scout and Legion/heavy or allowed an “explicit migration.” No migration between these identities is valid.
+- An omitted existing roster row is preserved. Neither agent may interpret a shorter design list as authorization to discard, rename, merge or supersede existing characters.
