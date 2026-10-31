@@ -358,3 +358,11 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - Brian's question about whether the missing Legionnaire might relate to the error was not a diagnosis and did not authorize removing OrcBrute or NinoBosque.
 - Neither actor has been shown to cause the `ZNetScene.RemoveObjects` burst. Their live static audits were structurally clean, and `HuntPlayer=false` already explained why a spawned outer-ring actor might never reach the visible fight.
 - NinoBosque and OrcBrute remain active in their natural spawners and full-roster training raids. The lifecycle observer gathers evidence during ordinary play; actors are not quarantined from an unproven timing correlation.
+
+## 2026-10-31 — Build the friendly FormidableAI classes before the owned hostile roster (Brian)
+
+- The next true build phase replaces missing companion combat judgment; it is not another spawn, fixture, or observer-only phase.
+- Finish the universal awareness-to-initiative path, impact-aware defense, class weapon doctrine, cohesion and recovery behavior in the real 1.0.x companions first.
+- Warden, Huntress, Scout and Legion/heavy must become explicit trained character profiles rather than inferred labels or copies of one generic combatant.
+- The current Souls roster remains live opposing pressure while those classes are built. An owned Living World hostile/lore pack may establish its package and profile boundary now, but its full roster waits until it can consume the same proven FormidableAI core instead of creating a second brain.
+- Survival improves through competent choices, gear, training and cooperation—not immunity, hidden knowledge or inflated health.
