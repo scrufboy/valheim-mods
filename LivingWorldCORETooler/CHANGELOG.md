@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.4
+
+- Added the unresolved blue `RRRN_NinoBosque` specialist to the temporary isolation boundary: it logged one spawn but never appeared in combat, video, awareness, damage, death or kill records.
+- Corrected the evidence claim: both NinoBosque and OrcBrute were eligible around the error bursts, so neither is declared the cause until their construction and removal lifecycles are traced separately.
+- Kept the five Souls actor types that produced valid live combat active and left pursuit, range, group sizes, caps and combat behavior unchanged.
+
 ## 2.6.3
 
 - Temporarily disabled only the two `RRRN_OrcBrute` heavy raid slots after two live error bursts aligned with OrcBrute spawn opportunities and no OrcBrute ever completed spawning.
