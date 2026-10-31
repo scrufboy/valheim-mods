@@ -374,3 +374,10 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - Warden and Huntress are separate explicitly created classes. A new class is assigned only by an explicit character-creation/profile choice and then persisted as that person's identity.
 - Backward compatibility means preserving the legacy Guard/Archer/Scout identity and behavior until that character is explicitly rerolled or migrated by Brian. It does not mean selecting the nearest new doctrine.
 - A candidate that identifies an unresolved class-set decision must not be installed with one interpretation enabled by default before Brian/Codex resolves it.
+
+## 2026-10-31 — Huntress is her own authored character, never an Archer migration (Brian)
+
+- Huntress is a distinct authored character/profile with her own identity, history, starting package, training and doctrine. Sharing a bow or ranged behavior with an Archer creates no identity relationship.
+- No existing or future generic Archer may be renamed, reclassified, upgraded, migrated or defaulted into Huntress. Huntress exists only when the Huntress character/profile itself is deliberately created.
+- A class/role implementation must not collapse a generic profession into a named or special character. The same preservation rule applies to every authored special character.
+- Remove the `guard -> Warden` and `archer -> Huntress` migration concept completely; do not retain it as a compatibility option, fallback or hidden default.
