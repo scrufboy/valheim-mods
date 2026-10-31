@@ -2,7 +2,7 @@
 
 Maintained and packaged for Living World C.O.R.E. by **Brian / scrufboy**.
 
-Version 2.6.1 puts the two current Elder-pattern FormidableAI stress raids directly on the **Raids** page: **Formidable Arena** and **Formidable Souls Swamp**, with the standard noon setup and stop-event controls beside them. The older bounded Souls matchups and every vanilla raid control remain available. Version 2.5.0's separate **Site Survey** module also remains intact.
+Version 2.6.1 puts the two current Elder-pattern FormidableAI stress raids directly on the **Raids** page: **Formidable Arena** and **Formidable Souls Swamp**, with the standard noon setup and stop-event controls beside them. The superseded bounded-trial buttons are removed so every visible raid button resolves in the installed profile. Every vanilla raid control remains available, and Version 2.5.0's separate **Site Survey** module remains intact.
 
 This is the Living World C.O.R.E. Tooler: one Living World plugin identity,
 Living World branding, the familiar proven interface/colors/control layout,
@@ -14,10 +14,10 @@ confirmed destructive actions, and an arbitrary command bridge. Invalid
 unfinished ObjectDB item entries are skipped without flooding `LogOutput.log`.
 
 The Raids page launches the installed `lwc_formidable_arena` and
-`lwc_formidable_souls_swamp` long-range training events, plus the older bounded
-Pillager and Krauguk matchups. Custom Raids loads and synchronizes the event
-records; the Tooler issues the normal Valheim event commands and does not create
-a separate combat, faction, or defended-player state.
+`lwc_formidable_souls_swamp` long-range training events. Its package includes
+the matching Custom Raids definitions. The Tooler issues the normal Valheim
+event commands and does not create a separate combat, faction, or
+defended-player state.
 
 The World page includes Midnight, Morning, Noon, Evening, normal time-flow,
 time skipping, named environment forcing, Clear, Rain, Thunderstorm, Fog,

@@ -42,8 +42,6 @@ $requiredCapabilities = @(
     'lwsummon',
     'lwgoto',
     'event army_moder',
-    'event lwc_souls_pillagers',
-    'event lwc_krauguk_legion',
     'event lwc_formidable_arena',
     'event lwc_formidable_souls_swamp',
     'stopevent',

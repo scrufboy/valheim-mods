@@ -28,7 +28,7 @@ $output = Join-Path $build 'LivingWorld.CORE.Tooler.dll'
 $archive = Join-Path $dist 'scrufboy-LivingWorldCORETooler-2.6.1.zip'
 $icon = Join-Path $root 'icon.png'
 $iconBase64 = Join-Path $root 'icon.png.base64'
-$raidConfig = Join-Path $root 'config\custom_raids.supplemental.lwc_formidable_trials.cfg'
+$raidConfig = Join-Path $root 'config\custom_raids.supplemental.lwc_formidable_souls.cfg'
 
 if (Test-Path -LiteralPath $build) {
     $resolvedBuild = (Resolve-Path -LiteralPath $build).Path

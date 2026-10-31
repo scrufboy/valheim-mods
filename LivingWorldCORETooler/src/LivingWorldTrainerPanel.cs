@@ -150,9 +150,6 @@ namespace Scrufboy.LivingWorld.Tooler
                 new ActionDef("Surtling raid", "event surtling", "Native surtling event."));
             Row(new ActionDef("Random eligible raid", "randomevent", "Starts an eligible native event."),
                 new ActionDef("STOP RAID", "stopevent", "Stops the event timer; enemies already spawned may remain."));
-            Heading("Souls of the Land matchups");
-            Row(new ActionDef("Pillagers - 2 to 3", "event lwc_souls_pillagers", "Bounded RandomEvent with RRRN_Pillager. Needs the Souls/RRRCore stack."),
-                new ActionDef("Krauguk Legion - 2", "event lwc_krauguk_legion", "Bounded RandomEvent with two RRRN_OrcBrute. Needs the Souls/RRRCore stack."));
         }
 
         // ---------------- 3. Player ----------------

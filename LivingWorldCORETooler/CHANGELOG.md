@@ -4,7 +4,8 @@
 
 - Added first-class Raids-page buttons for the current `lwc_formidable_arena` and `lwc_formidable_souls_swamp` Elder-pattern FormidableAI stress raids.
 - Added the standard noon setup beside the current training-raid controls and kept the existing stop-event control explicit.
-- Preserved the older bounded Pillager and Krauguk matchups, every vanilla raid control, and all non-raid Tooler pages.
+- Removed the two obsolete bounded-trial buttons whose event definitions were deliberately superseded in the Arena profile; every visible raid button now names an event packaged or supplied by the game.
+- Preserved every vanilla raid control and all non-raid Tooler pages.
 
 ## 2.6.0
 
