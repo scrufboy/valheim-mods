@@ -61,6 +61,21 @@ approved runtime branches into `main`.
 - Full evidence and requested next actions:
   `claude-exchange/CODEX-OUTBOX/2026-10-31-a1-rev5-live-raids-wolves/`.
 
+## Staged after the latest live evidence — 2026-10-31
+
+- **OFFLINE-TESTED / INSTALLED, not live-proven:** RRRCore 3.1.5 current-Player
+  prefab compatibility on branch `work/rrrcore-souls-1.0.21` at `15d49d3`.
+  Installed compatibility DLL hash `dd3073fa…` in the isolated Arena profile.
+- The original natural Souls Spawn That roster remains configured for all six
+  prefabs. The old packed arena/trial configs are backed up and replaced by two
+  `army_theelder`-pattern events: `lwc_formidable_arena` and
+  `lwc_formidable_souls_swamp`. Both use an explicit 70-95 m random ring and put
+  the Legionnaire only in the one-at-a-time heavy slot.
+- Next gate is one world load proving Spawn That loaded and
+  `SOULS-PREFAB SUMMARY 6/6 ready` with no RRRCore prefab exception. No combat
+  test is requested until that registration gate passes. See
+  `CODEX-OUTBOX/2026-10-31-souls-prefab-elder-raid/`.
+
 - 1.0.32.26 A1 second session: **LIVE-PROVEN** for the narrow compatibility claim that a
   MonsterDB-created hostile retaining native `MonsterAI` is discovered and tracked by A1.
   Session `LWC-20261031-000022-LWC_HumanLab_v1-part00.jsonl` ran 965 s with two companions,

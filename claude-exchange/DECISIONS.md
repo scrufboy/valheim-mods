@@ -316,3 +316,18 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - Native damage modifiers are not automatically character knowledge. Resistance/immunity may influence a
   tactical proposal only through legitimate training, biome doctrine, lore/compendium learning or observed
   combat evidence. Execution physics may remain exact; tactical knowledge may not be omniscient.
+
+## 2026-10-31 — Souls opponents are competitive FormidableAI evidence (Brian)
+
+- Restore Souls of the Land actors as genuine world combatants, not adjacent
+  fixtures or disposable target dummies. Their original biome-based natural
+  spawning and a controlled raid both provide opposing combat evidence.
+- Friendly and hostile observations feed the same universal FormidableAI core.
+  The goal is a combat brain that can later live beneath every Living World
+  combatant, with class/weapon/biome doctrine composed above it.
+- The controlled Souls raid clones Valheim's `army_theelder` spawn law: ordinary
+  groups arrive from varied outer positions, with bounded population and one
+  specialist/heavy at a time. It must not be redesigned as a packed barrage.
+- Krauguk Legionnaires (`RRRN_OrcBrute`) occupy the Elder brute slot: sporadic,
+  single heavy pressure. They are not Greydwarf-equivalent group fodder; if they
+  block and coordinate, they can defeat the current companion pair.
