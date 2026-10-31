@@ -14,9 +14,10 @@ Spawn That is deliberately disabled so ambient spawning cannot contaminate the t
 
 `BepInEx\config\custom_raids.supplemental.lwc_formidable_arena.cfg`
 
-Event `lwc_formidable_arena` spawns `RRRN_Pillager` (2-3) and `RRRN_OrcBrute` (1-2) at 50-65 m. Both entries use
-`HuntPlayer = true`; the raid forces `Faction = PlainsMonsters` so the two Souls types remain one hostile training
-horde. This does not give the companions a defend objective. They simply fight the raid.
+Event `lwc_formidable_arena` spawns `RRRN_Pillager` (2-3) and `RRRN_OrcBrute` (1-2) at 50-65 m. Both entries now use
+`HuntPlayer = false`; nothing may force the horde to acquire Brian, and nothing may give the companions a defend,
+escort, or protect-leader objective. The raid forces `Faction = PlainsMonsters` only so the two Souls types remain one
+hostile training horde. Combatants choose targets through normal AI hostility while Brian remains unseen.
 
 Please do the following now:
 
