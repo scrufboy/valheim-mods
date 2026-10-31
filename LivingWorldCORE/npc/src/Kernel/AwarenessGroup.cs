@@ -200,6 +200,7 @@ namespace LivingWorld.Core
         void Step()
         {
             float now = Time.time;
+            if (lastStep > 0f && now - lastStep < AwarenessTuning.StepInterval) return;   // 10 Hz (rev 5): cost, not latency
             float dt = lastStep <= 0f ? 0f : Mathf.Min(now - lastStep, .5f);
             lastStep = now;
             long mem0 = GC.GetTotalMemory(false);
@@ -357,8 +358,8 @@ namespace LivingWorld.Core
                 ContactRecord r = Book.Find(id);
                 P2 pos = observed[i].Position;
                 float d = P2.Distance(centroid, pos);
-                bool urgent = r != null && (r.State == ContactState.Committed || (!float.IsInfinity(r.TimeToContact) && r.ClosingSpeed >= AwarenessTuning.CommitClosingSpeed));
-                int b = RayScheduler.Band(urgent, d);
+                bool closing = r != null && !float.IsInfinity(r.TimeToContact) && r.ClosingSpeed >= AwarenessTuning.CommitClosingSpeed;
+                int b = r == null ? RayScheduler.Band(false, d) : RayScheduler.Band(r.State, r.Samples, closing, d);
                 float mine = lastRayId[i] == id ? lastRay[i] : float.NegativeInfinity;
                 float last = r != null ? Mathf.Max(r.LastRayAt, mine) : mine;
                 if (now - last < RayScheduler.RefreshInterval(b)) continue;

@@ -31,6 +31,7 @@ namespace LivingWorld.Core
         public const float RaysPerSecond = 48f, RayBurst = 12f;
         public const float UrgentRefresh = .25f, FarRefresh = 1f, NearBand = 20f;
         public const float EnumerationInterval = .25f;        // 4 Hz candidate distance pass per party
+        public const float StepInterval = .1f;                // 10 Hz interpretation, rays, groups, member edges (was every frame; live cost 1.5-1.7 ms/s)
         public const int MemberCapacity = 10;                 // group members (sensors + protected non-sensors)
         public const float ResponseRange = 30f;               // shadow "response-ready": committed and inside the current 30 m engagement rule
     }
@@ -89,13 +90,13 @@ namespace LivingWorld.Core
     public sealed class InitiativeRecord
     {
         public const int Count = 8;
-        public long Sequence; public int Id; public string Family = ""; public string Outcome = "";
+        public long Sequence; public int Id; public string Family = ""; public string Outcome = ""; public bool Wildlife;
         public readonly MilestoneMark[] Marks = new MilestoneMark[Count];
     }
 
     public sealed class InitiativeEntry
     {
-        public bool Used; public int Id; public string Family = ""; public float LastPresent;
+        public bool Used; public int Id; public string Family = ""; public float LastPresent; public bool Wildlife;
         public readonly MilestoneMark[] Marks = new MilestoneMark[InitiativeRecord.Count];
         public bool Has(Milestone m) { return Marks[(int)m].Set; }
     }
@@ -148,10 +149,13 @@ namespace LivingWorld.Core
             }
             InitiativeEntry slot = free ?? idle ?? any;
             if (slot != free) { Evicted++; Publish(slot, "evicted"); }
-            slot.Used = true; slot.Id = id; slot.Family = ""; slot.LastPresent = now;
+            slot.Used = true; slot.Id = id; slot.Family = ""; slot.LastPresent = now; slot.Wildlife = false;
             for (int i = 0; i < slot.Marks.Length; i++) slot.Marks[i] = new MilestoneMark();
             return slot;
         }
+
+        /// <summary>Kind of actor (visible faction), for reading timelines; never creates a timeline.</summary>
+        public void Classify(int id, bool wildlife) { InitiativeEntry e = Find(id); if (e != null) e.Wildlife = wildlife; }
 
         /// <summary>The actor is still around (in the candidate pass or someone's target). Never creates a timeline.</summary>
         public void Present(int id, float now) { InitiativeEntry e = Find(id); if (e != null) e.LastPresent = now; }
@@ -189,7 +193,7 @@ namespace LivingWorld.Core
         {
             if (!Worthy(e)) return;
             InitiativeRecord r = ring[published % ring.Length];
-            r.Sequence = published++; r.Id = e.Id; r.Family = e.Family; r.Outcome = outcome;
+            r.Sequence = published++; r.Id = e.Id; r.Family = e.Family; r.Outcome = outcome; r.Wildlife = e.Wildlife;
             for (int i = 0; i < e.Marks.Length; i++) r.Marks[i] = e.Marks[i];
         }
 
@@ -352,7 +356,7 @@ namespace LivingWorld.Core
                 r.ClosingSpeed = P2.Dot(r.Velocity, toC.Normalized);
                 r.TimeToContact = r.ClosingSpeed > .2f ? r.Distance / r.ClosingSpeed : float.PositiveInfinity;
             }
-            if (Ledger != null) Ledger.Mark(r.Id, r.Family, Milestone.FirstEvidence, now, r.Distance, r.TimeToContact);
+            if (Ledger != null) { Ledger.Mark(r.Id, r.Family, Milestone.FirstEvidence, now, r.Distance, r.TimeToContact); Ledger.Classify(r.Id, r.Wildlife); }
             r.LastSeen = now; r.LastSource = source; r.LastObserver = observer;
             if (r.Samples == 0 || now - r.LastSampleAt >= AwarenessTuning.NoticeSpacing) { r.Samples++; r.LastSampleAt = now; }
             if (source == ContactSource.Sight)
@@ -646,6 +650,19 @@ namespace LivingWorld.Core
             tokens -= 1f; RaysThisWindow++;
             if (observer >= 0 && observer < spent.Length) spent[observer]++;
             return true;
+        }
+
+        /// <summary>
+        /// Urgency band of a contact for line-of-sight refresh (A1 rev 5, both live sessions):
+        /// band 0 - committed, closing, credibly alert, or awaiting the second sample that confirms a notice
+        ///          (live: Evidence->Noticed was exactly the 1 s far refresh; native targets landed in that gap);
+        /// band 1 - anything within 20 m; band 2 - the rest.
+        /// </summary>
+        public static int Band(ContactState state, int samples, bool closing, float distance)
+        {
+            bool pendingNotice = state == ContactState.None && samples >= 1;
+            bool urgent = state == ContactState.Committed || state == ContactState.Alerted || closing || pendingNotice;
+            return Band(urgent, distance);
         }
 
         public static int Band(bool committedOrClosing, float distance)

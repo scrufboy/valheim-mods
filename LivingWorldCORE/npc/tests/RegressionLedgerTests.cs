@@ -67,6 +67,8 @@ static class RegressionLedgerTests
         Run("A1 initiative (cebfcd0): a target/action already active at first sample is an upper bound; real edges are not", AwAlreadyActiveUpperBound);
         Run("A1 initiative (cebfcd0): session stop flushes open native-marked timelines (target-only, still active)", AwSessionStopFlush);
         Run("A1 initiative (cebfcd0): a bounded ring never loses records silently - the reader sees the overwrite count", AwRingGapObservable);
+        Run("A1 rev 5 (both live sessions): a contact awaiting its confirming sample, or credibly alert, is re-checked at 0.25 s, not 1 s", AwFastRefreshForPendingAndAlert);
+        Run("A1 rev 5: initiative timelines carry the wildlife classification", AwInitiativeWildlifeFlag);
         Run("1.0.32.21 throw (Brian live): never poison an all-immune group; mixed groups count only who it can hurt", ThrowSkipsPoisonImmune);
         Run("1.0.32.24 throw (Brian live direction): bombs acquire groups as ranged area control, never a close panic throw", ThrowUsesRangedBand);
         Run("1.0.32.13 body voice: one onset cough, bounded repeats, one recovery breath", BodyVoiceOnsetRepeatRecover);
@@ -561,6 +563,40 @@ static class RegressionLedgerTests
         Native(l, 5000, Milestone.MemberTarget, 9f, 10f); l.Flush("x");
         n = l.After(seq - 1, buf, out lost);
         Assert(n == 1 && lost == 0, "regular drain loses nothing");
+    }
+
+    static void AwFastRefreshForPendingAndAlert()
+    {
+        Assert(RayScheduler.Band(ContactState.None, 1, false, 40f) == 0, "one sample, awaiting confirmation: urgent band");
+        Assert(RayScheduler.Band(ContactState.None, 0, false, 40f) == 2, "no sample yet at 40 m: far band");
+        Assert(RayScheduler.Band(ContactState.Alerted, 3, false, 40f) == 0, "credibly alert at 40 m: urgent band");
+        Assert(RayScheduler.Band(ContactState.Noticed, 3, false, 40f) == 2, "merely noticed at 40 m: far band");
+        Assert(RayScheduler.Band(ContactState.Noticed, 3, false, 15f) == 1, "anything within 20 m: near band");
+        Assert(RayScheduler.Band(ContactState.Committed, 3, false, 50f) == 0 && RayScheduler.Band(ContactState.Noticed, 3, true, 50f) == 0, "committed or closing: urgent");
+        Assert(RayScheduler.RefreshInterval(0) == .25f && RayScheduler.RefreshInterval(2) == 1f, "urgent 0.25 s, far 1 s");
+        // Effect on noticing: with 0.25 s confirmation a far contact is noticed ~0.25 s after first evidence.
+        var b = new ContactBook(); P2 c = new P2(0f, 0f);
+        float first = 0f, t = 0f, last = float.NegativeInfinity;
+        ContactRecord r = null;
+        for (; t < 3f; t += .1f)
+        {
+            int band = r == null ? 2 : RayScheduler.Band(r.State, r.Samples, false, 40f);
+            if (t - last >= RayScheduler.RefreshInterval(band) - 1e-4f) { r = b.Perceive(Ob(1, 40f, 0f), ContactSource.Sight, 0, t); last = t; }
+            b.Step(t, .1f, c);
+            if (r != null && r.State == ContactState.Noticed) break;
+        }
+        Assert(t - first <= .35f, "noticed within one urgent refresh of first evidence, took " + (t - first));
+    }
+
+    static void AwInitiativeWildlifeFlag()
+    {
+        InitiativeLedger l; var b = LedgerBook(out l); P2 c = new P2(0f, 0f);
+        ContactObservation deer = Ob(1, 30f, 0f); deer.Wildlife = true;
+        StepTo(b, deer, 0f, 1f, c);
+        Native(l, 1, Milestone.MemberTarget, 1.1f, 30f);
+        l.Flush("stop");
+        InitiativeRecord[] r = Drain(l);
+        Assert(r.Length == 1 && r[0].Wildlife, "wildlife flag carried to the published timeline");
     }
 
     static void AwWildlife()

@@ -318,7 +318,7 @@ namespace LivingWorld.Telemetry
                 for (int i = 0; i < ni; i++)
                 {
                     InitiativeRecord rec = initiativeBuf[i];
-                    Begin("Initiative"); Str("group", party.Kind); Num("seq", rec.Sequence); Num("id", rec.Id); Str("family", rec.Family); Str("outcome", rec.Outcome);
+                    Begin("Initiative"); Str("group", party.Kind); Num("seq", rec.Sequence); Num("id", rec.Id); Str("family", rec.Family); Str("outcome", rec.Outcome); Bool("wildlife", rec.Wildlife);
                     for (int m = 0; m < InitiativeRecord.Count; m++)
                     {
                         MilestoneMark mk = rec.Marks[m];

@@ -568,11 +568,26 @@ def main(paths):
                 (("Envelope", "Evidence"), ("Evidence", "Noticed"), ("Noticed", "Alerted"), ("Alerted", "Committed"), ("Committed", "ResponseReady"))))
             add("INFO", "Initiative: distance (median m)", "; ".join("%s %s" % (m, fmt(med([r.get("d" + m) for r in inits if r.get("d" + m) is not None]), "m"))
                                                                        for m in ("Envelope", "Evidence", "Noticed", "Committed", "MemberTarget", "MemberAction")))
+            # Native target before commitment, classified (rev 5). "Companion engaged first": the companion struck before
+            # awareness committed the contact, or it never committed (wildlife, passive, provoked). That is a native
+            # engagement choice, not awareness lateness. "Awareness late": committed after the native target but before
+            # the companion's first action.
+            pre = [r for r in inits if t(r, "MemberTarget") is not None and (t(r, "Committed") is None or t(r, "MemberTarget") < t(r, "Committed"))]
+            engaged_first = [r for r in pre if t(r, "Committed") is None or (t(r, "MemberAction") is not None and t(r, "MemberAction") <= t(r, "Committed"))]
+            late = [r for r in pre if r not in engaged_first]
+            add("INFO", "Initiative: native target before commitment, classified",
+                "%d total: companion engaged first %d (wildlife %d, never committed %d); awareness late %d (median lag %s)" % (
+                    len(pre), len(engaged_first), sum(1 for r in engaged_first if r.get("wildlife")),
+                    sum(1 for r in engaged_first if t(r, "Committed") is None), len(late),
+                    fmt(med([t(r, "Committed") - t(r, "MemberTarget") for r in late]))))
             # Calibration: where native targeting led awareness, the lead that would cover it = closing x lag.
+            # Commitment lead counts only the "awareness late" cases; notice lead counts every native-first notice.
             for aw in ("Noticed", "Committed"):
                 leads, lags = [], []
                 for r in inits:
                     if t(r, "MemberTarget") is None or t(r, aw) is None or t(r, "MemberTarget") >= t(r, aw):
+                        continue
+                    if aw == "Committed" and r not in late:
                         continue
                     lag = t(r, aw) - t(r, "MemberTarget")
                     ttc_ = r.get("ttcMemberTarget"); d_ = r.get("dMemberTarget")
