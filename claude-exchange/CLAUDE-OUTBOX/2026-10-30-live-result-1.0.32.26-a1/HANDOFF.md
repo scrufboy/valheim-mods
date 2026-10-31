@@ -28,3 +28,19 @@ alignment will be by clock.
 - FAIL combat churn 13.8/min (vs 6.0/min in .22). Needs video: many short skirmishes in mist.
 - FAIL shield in calm 36% (known). FAIL dead time 6% (known; 1.0.6 was 13%). FAIL heavies 0 started (small fights).
 - All other checks PASS; no deaths.
+
+## Video review (clip `2026-10-30 18-14-08.mp4`)
+- **Alignment:** game-log wall-clock anchors (game time 337 = 18:15:08) give clip time = game time − 277 s. The clip
+  covers game time 277–753. Clip `18-22-05.mp4` starts after telemetry stopped (RunStop shutdown 18:21:59) and has no
+  telemetry.
+- **The on-screen debug overlay lags:** at clip 78 s it showed `t=317.60` while true game time was ~355. Report lines queue
+  behind the message display, up to ~38 s. Use the clock mapping, not the overlay, for alignment. (Finding for the
+  dev overlay; no gameplay effect.)
+- **Troll:** awareness Noticed at game 362.3 (29.6 m, clip 85 s), Alerted 363.3, Committed 364.4 (targets leader). The
+  companion's native target was at 362.9; the Troll is in frame fighting from clip ~91 s. Awareness was ahead of native
+  targeting and of the camera.
+- **Native-first-notice cases** (game 319.4, 327.4, 420.6, 423.1) were close dark-forest skirmishes at 18–22 m, with
+  lags of 0.1–1.2 s. The footage is too dark to fix the exact visual onset. The lag size matches the telemetry
+  (median 0.37 s).
+- Evidence preserved on the device: `BepInEx/LivingWorldBackups/sessions/2026-10-30-A1-awareness-shadow/` (telemetry,
+  game log, README). Videos stay in the OBS folder.
