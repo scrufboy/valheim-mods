@@ -352,3 +352,9 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - Brian is not the project's console operator. A diagnostic may expose internal commands for developers, but an ordinary requested test must be automatic, available through the Tooler, or operated by an agent after Brian explicitly says the world is ready.
 - Brian's role is to judge gameplay and provide video when human visual judgment matters. He is not expected to memorize or type multi-step spawn/remove command sequences merely to generate engineering evidence.
 - Test instructions must begin with the gameplay question being answered and explain why a live run is necessary. If the engineering operation is more complex than loading a world, pressing one clearly named control and exiting, the team owns the automation.
+
+## 2026-10-31 — Questions are not causal findings; restore the full Souls roster (Brian)
+
+- Brian's question about whether the missing Legionnaire might relate to the error was not a diagnosis and did not authorize removing OrcBrute or NinoBosque.
+- Neither actor has been shown to cause the `ZNetScene.RemoveObjects` burst. Their live static audits were structurally clean, and `HuntPlayer=false` already explained why a spawned outer-ring actor might never reach the visible fight.
+- NinoBosque and OrcBrute remain active in their natural spawners and full-roster training raids. The lifecycle observer gathers evidence during ordinary play; actors are not quarantined from an unproven timing correlation.
