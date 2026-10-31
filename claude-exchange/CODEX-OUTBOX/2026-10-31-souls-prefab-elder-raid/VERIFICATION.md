@@ -11,6 +11,16 @@
   `824042f3fe0cb8fbe26e47be86e582eb7d90765ee9f695da6a5f332f10cc2b49`.
 - **PRESERVED:** replaced raid files and BepInEx loader caches are under
   `BepInEx\LivingWorldBackups\2026-10-31-before-souls-prefab-and-elder-raids`.
-- **UNKNOWN:** no world has been loaded after installation. Runtime prefab
-  registration and natural/raid spawning are not yet live-proven.
+- **LIVE-PROVEN 2026-10-31:** isolated Arena world load on Valheim 1.0.21 and
+  C.O.R.E. 1.0.32.27 loaded 15 expected plug-ins. Spawn That 1.2.20, Custom
+  Raids 1.8.2, RRRCore 3.1.5 and the compatibility plug-in were all present.
+- **LIVE-PROVEN:** `RRR_NPC base rebuilt from the current Player prefab graph`
+  executed and all six named Souls prefabs reported `humanoid=True
+  monsterAI=True`, followed by `SOULS-PREFAB SUMMARY 6/6 ready`.
+- **LIVE-PROVEN:** complete launch/world-load log: zero error lines, zero
+  `DesignNpcBase` exceptions, zero missing/invalid Souls prefab records and zero
+  `Unable to find spawn RRRN_*` warnings.
+- **NOT YET LIVE-PROVEN:** natural-spawn frequency, raid composition/pacing in
+  play, and combat behavior under those encounters. Those are the next video
+  and telemetry evidence.
 

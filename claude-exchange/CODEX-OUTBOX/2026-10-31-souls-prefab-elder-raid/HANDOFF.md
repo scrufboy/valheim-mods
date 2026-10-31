@@ -52,15 +52,24 @@
   distance and group rules. The stale BepInEx type-loader cache was moved to the
   backup so Spawn That is rediscovered on the next launch.
 
-## Gate still required
+## Live registration gate — PASS 2026-10-31
 
-- **UNKNOWN:** world/ObjectDB execution. The user must not be asked to run the
-  raid until one world load shows:
-  - the compatibility plug-in loaded;
-  - Spawn That 1.2.20 loaded;
-  - `RRR_NPC base rebuilt from the current Player prefab graph`;
-  - `SOULS-PREFAB SUMMARY 6/6 ready`;
-  - no `DesignNpcBase` exception and no `Unable to find spawn RRRN_*` warning.
+- **LIVE-PROVEN:** the isolated `LWC Formidable Arena` profile loaded the
+  `LWC_HumanLab_v1` world with Valheim 1.0.21 and C.O.R.E. 1.0.32.27.
+- **LIVE-PROVEN:** BepInEx loaded 15 expected plug-ins, including Spawn That
+  1.2.20, Custom Raids 1.8.2, RRRCore 3.1.5 and the compatibility plug-in.
+- **LIVE-PROVEN:** the compatibility plug-in rebuilt the RRR_NPC base from the
+  current Player prefab graph. RRRCore then registered all six Souls actors as
+  humanoids with MonsterAI and emitted `SOULS-PREFAB SUMMARY 6/6 ready`.
+- **LIVE-PROVEN:** the complete launch/world-load log contains zero error lines,
+  no `DesignNpcBase` exception and no `Unable to find spawn RRRN_*` warning.
+- **DIAGNOSTIC-CORRECTED:** the first launch attempt was not an Arena result.
+  Steam had a stale Valheim `LaunchOptions` entry for `LWC MonsterDB A1`, which
+  was appended after r2modman's Arena arguments and won. That obsolete entry was
+  cleared (with a localconfig backup), and the passing launch command contained
+  only the Arena preloader path.
 
-The branch includes `Verify-LaunchLog.ps1` for that exact gate.
+Registration is now proven. Natural-spawn frequency and the two raid
+compositions remain the next live combat/video evidence, not a prerequisite for
+this prefab gate.
 
