@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.5
+
+- Restored NinoBosque and both OrcBrute heavy slots to the full training-raid roster after review showed their quarantine came from an unproven suspicion rather than causal evidence.
+- Kept `HuntPlayer=true` on all eight slots so the first full-roster pursuit test measures the intended Elder-pattern encounter.
+- Left range, timing, group sizes, caps, factions, hostile stats and combat behavior unchanged; the separate lifecycle observer now records evidence if the removal error recurs.
+
 ## 2.6.4
 
 - Added the unresolved blue `RRRN_NinoBosque` specialist to the temporary isolation boundary: it logged one spawn but never appeared in combat, video, awareness, damage, death or kill records.

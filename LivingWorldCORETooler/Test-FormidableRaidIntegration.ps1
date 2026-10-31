@@ -27,19 +27,19 @@ if (($config -split '\r?\n' | Where-Object { $_ -match '^HuntPlayer\s*=\s*true$'
     ($config -split '\r?\n' | Where-Object { $_ -match '^HuntPlayer\s*=\s*false$' }).Count -ne 0) {
     throw 'Every current FormidableAI raid slot must perform normal hostile raid pursuit.'
 }
-$quarantinedSections = [regex]::Matches(
+$raidSlots = [regex]::Matches(
     $config,
-    '(?ms)^\[LWC_Formidable_Souls_(?:Forest\.2|Forest\.3|Swamp\.3)\]\s*.*?(?=^\[|\z)'
+    '(?ms)^\[LWC_Formidable_Souls_(?:Forest|Swamp)\.\d\]\s*.*?(?=^\[|\z)'
 )
-if ($quarantinedSections.Count -ne 3 -or
-    ($quarantinedSections | Where-Object { $_.Value -notmatch '(?m)^Enabled\s*=\s*false$' }).Count -ne 0) {
-    throw 'The unresolved NinoBosque and OrcBrute raid slots must remain isolated until their RRR lifecycles are traced.'
+if ($raidSlots.Count -ne 8 -or
+    ($raidSlots | Where-Object { $_.Value -notmatch '(?m)^Enabled\s*=\s*true\r?$' }).Count -ne 0) {
+    throw 'All eight full-roster FormidableAI raid slots must be enabled.'
 }
 if (($config -split '\r?\n' | Where-Object { $_ -match '^SpawnRadiusMin\s*=\s*70$' }).Count -ne 8 -or
     ($config -split '\r?\n' | Where-Object { $_ -match '^SpawnRadiusMax\s*=\s*95$' }).Count -ne 8) {
     throw 'Every current FormidableAI raid slot must use the 70-95 m initiative ring.'
 }
-if ($manifest.version_number -ne '2.6.4') {
+if ($manifest.version_number -ne '2.6.5') {
     throw 'Unexpected Tooler package version.'
 }
 if ($manifest.dependencies -notcontains 'ASharpPen-Custom_Raids-1.8.2') {
@@ -52,7 +52,7 @@ if ($manifest.dependencies -notcontains 'ASharpPen-Custom_Raids-1.8.2') {
     Events = @('lwc_formidable_arena', 'lwc_formidable_souls_swamp')
     RandomPool = $false
     HuntPlayer = $true
-    UnresolvedRrrRaidSlotsEnabled = $false
+    FullRosterEnabled = $true
     SpawnRing = '70-95 m'
     Config = $configPath
 } | ConvertTo-Json -Depth 3

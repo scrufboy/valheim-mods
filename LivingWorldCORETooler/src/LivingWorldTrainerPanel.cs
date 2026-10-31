@@ -5,7 +5,7 @@ namespace Scrufboy.LivingWorld.Tooler
 {
     internal static class LivingWorldPanel
     {
-        // Tooler 2.6.4: 14 Living World pages -> 7. Every control appears exactly once; destructive
+        // Tooler 2.6.5: 14 Living World pages -> 7. Every control appears exactly once; destructive
         // actions stay on their own page behind the two-click confirmation. The four original
         // Tooler pages (Player, Entities, Terrain Shaper, Misc) are untouched.
         private static readonly ToolerPage[] Pages = LivingWorldToolerModules.Create(
