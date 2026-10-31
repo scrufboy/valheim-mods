@@ -1,0 +1,16 @@
+# Verification
+- OFFLINE-TESTED: canonical Mono build (REFS = Valheim 1.0.21 refs, /tmp/claude-0/refs21), exit 0. Full output: BUILD-OUTPUT.txt.
+  - Regression ledger 186/186 (157 existing + 29 A2).
+  - Native gate 58/58; appearance gate locked.
+  - Ownership gate: 89 sites, all in allowed classes.
+  - Combat-voice lock: 71 methods unchanged.
+  - Movement-writer gate: OK (lock unchanged).
+  - Analyzer self-test OK.
+- DLLs (two identical builds): LivingWorld.HumanNpc.dll 0a3a2ff94da474e0998be5d09c80797d22f425aa41619bbacf3a7ad2ceb918a2; LivingWorld.Telemetry.dll 62e00da7722bbe7580451337701f1dbb8996d2c1de1e3d694bf8b7c8a65ce931. Not committed.
+- OFFLINE-TESTED: the A2 analyzer section run on the 17:20 session relabelled to schema 14 (baseline under the new definitions):
+  - melee vs class-bow-range 8%;
+  - legacy >= 10 m 10% melee + 82 bomb-throw samples;
+  - fall-backs clear 6/12;
+  - calm back bow-only 50%.
+- SOURCE-INSPECTED: independent review agent; 13 findings fixed before push (HANDOFF §10).
+- INSTALLED: no. LIVE-PROVEN: no.

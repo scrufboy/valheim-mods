@@ -1,0 +1,18 @@
+# Changed files (branch work/formidable-a2, f2b8e1f, base 1ec0f18 = 1.0.32.29)
+- src/Kernel/Formidable.Pure.cs (new): TrainedClass + ClassDoctrine/kits/weapon bands, IFormidableProfileSource boundary, InitiativePolicy, StrikeObservation/DefenseArbiter/StrikeTimingBook/DefenseWindow, LanePlanner.
+- src/Kernel/Kernel.Pure.cs: PhaseInputs InitiativeEngage/Ready; arbiter uses them; TargetCandidate PartyCommitted/LeaderDistance; TargetPolicy leash (WithinLeash shared by take/keep); FallBackPolicy.Abort/Lane.
+- src/Kernel/Awareness.Pure.cs: Milestone.MemberResponse (Count 9).
+- src/Kernel/AwarenessGroup.cs: read-only ForKernel/ActorOf/Options/StateOf; MarkResponse (ledger).
+- src/Kernel/NpcKernel.cs: class load/ApplyClass, StepInitiative, NoteEngage, RequestEvade, DamageTaken.
+- src/Kernel/NpcBody.cs: Engage, class identity (SetClass/EnsureClass/TryGetClass), class kits in Outfit/ReapplyKitOnce, StowCanonical, RefreshWeapon/ChooseWeapon class bands, StrikeNow, AttackOf, per-class bow minimum.
+- src/Kernel/NativeApi.cs: Attack.m_time.
+- src/Kernel/NpcBehavior.cs: frame Evading/EvadeDir/FallBackHazard/FocusContact.
+- src/Behaviors/CombatBehaviors.cs: initiative/continuity engage, weapon re-check, StepDefense + Defense ring, focus look.
+- src/Behaviors/FallBackBehavior.cs: lane planning, evade, no-lane stand, hazard path kept.
+- src/Behaviors/TargetSelection.cs: party-committed candidates, leash in Choose and StillEngaged.
+- src/Behaviors/CombatLanes.cs (new, read-only physics), src/Behaviors/StrikeTimingHook.cs (new, observe-only postfix).
+- src/CorePlugin.cs: version 1.0.33.0; [FormidableAI] Initiative/Classes/Defense/FallbackLanes/PairClasses; classes at spawn; strike-timing patch.
+- src/Telemetry/CoreTelemetry.cs: schema 14 fields, Defense/DefenseGap rows, MemberResponse keys, real blocking state.
+- tests/FormidableA2Tests.cs (new, 29 tests); tests/RegressionLedgerTests.cs (runs them); build.sh (compiles them).
+- tools/analyze_session.py: schema 14 + A2 section.
+- docs/development/FORMIDABLE-A2-CANDIDATE.md (new).

@@ -1,0 +1,23 @@
+== 1/6 Regression ledger (offline policy tests)
+tests/RegressionLedgerTests.cs(496,59): warning CS0219: The variable `c' is assigned but its value is never used
+tests/RegressionLedgerTests.cs(1502,16): warning CS0219: The variable `before' is assigned but its value is never used
+tests/RegressionLedgerTests.cs(1876,49): warning CS0219: The variable `last' is assigned but its value is never used
+Compilation succeeded - 3 warning(s)
+Regression ledger: 186 passed, 0 failed.
+== 2/6 Native compatibility gate
+Native gate: 58 private members verified as live instance members.
+Appearance gate: fresh attach, immutable saved repair, and visible native LOD readiness locked.
+== 3/6 Compile core (C# 5, matches the Windows .NET Framework compiler)
+Compilation succeeded - 13 warning(s)
+== 4/6 Ownership gate (no native writes outside NpcBody)
+Ownership gate: 89 native write sites, all inside NpcBody, NpcFactory, NpcAppearance, NpcLeaderBinding, NpcWetStatus, CompanionCombatVoice.
+== 5/6 Compile telemetry recorder
+== 6/6 Analyzer self-test
+Analyzer self-test: clean session passes, regressed session flagged 5 failures -> OK
+== Combat-voice lock (companion combat module, approved 1.0.32.6; set VOICES=<voices/companion dir> to check the pools too)
+Combat-voice gate: 71 methods, 10 call sites, rules -> LOCKED, unchanged
+== Movement-writer gate (native Follow is the only calm-movement writer; party spacing writes nothing)
+Movement-writer gate: 13 writer call sites; party spacing must write none; Step only from traversal -> OK
+0a3a2ff94da474e0998be5d09c80797d22f425aa41619bbacf3a7ad2ceb918a2  LivingWorld.HumanNpc.dll
+62e00da7722bbe7580451337701f1dbb8996d2c1de1e3d694bf8b7c8a65ce931  LivingWorld.Telemetry.dll
+BUILD VERIFIED. Offline only: live behavior is proven by a play session + tools/analyze_session.py.
