@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.6.6
+
+- Corrected all eight Souls raid spawn intervals from `5000` seconds to `5` seconds. The previous millisecond-style value exceeded the entire 120-second raid, so the event started but its source creatures never received a spawn attempt.
+- Added an integration contract that rejects the erroneous `5000` value and requires eight five-second intervals.
+
 ## 2.6.5
 
 - Restored NinoBosque and both OrcBrute heavy slots to the full training-raid roster after review showed their quarantine came from an unproven suspicion rather than causal evidence.

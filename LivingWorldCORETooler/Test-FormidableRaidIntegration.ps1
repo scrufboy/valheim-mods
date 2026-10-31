@@ -39,7 +39,11 @@ if (($config -split '\r?\n' | Where-Object { $_ -match '^SpawnRadiusMin\s*=\s*70
     ($config -split '\r?\n' | Where-Object { $_ -match '^SpawnRadiusMax\s*=\s*95$' }).Count -ne 8) {
     throw 'Every current FormidableAI raid slot must use the 70-95 m initiative ring.'
 }
-if ($manifest.version_number -ne '2.6.5') {
+if (($config -split '\r?\n' | Where-Object { $_ -match '^SpawnInterval\s*=\s*5$' }).Count -ne 8 -or
+    ($config -split '\r?\n' | Where-Object { $_ -match '^SpawnInterval\s*=\s*5000$' }).Count -ne 0) {
+    throw 'Every current FormidableAI raid slot must retry every 5 seconds; Custom Raids uses seconds, not milliseconds.'
+}
+if ($manifest.version_number -ne '2.6.6') {
     throw 'Unexpected Tooler package version.'
 }
 if ($manifest.dependencies -notcontains 'ASharpPen-Custom_Raids-1.8.2') {
@@ -53,6 +57,7 @@ if ($manifest.dependencies -notcontains 'ASharpPen-Custom_Raids-1.8.2') {
     RandomPool = $false
     HuntPlayer = $true
     FullRosterEnabled = $true
+    SpawnInterval = '5 s'
     SpawnRing = '70-95 m'
     Config = $configPath
 } | ConvertTo-Json -Depth 3
