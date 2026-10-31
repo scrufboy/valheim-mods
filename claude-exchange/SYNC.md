@@ -15,6 +15,10 @@ uncommitted files on Brian's PC, are invisible to the other agent.
    completely. A shorter proposed roster never supersedes or deletes an existing one.
 3. Tell Brian in five lines or fewer what changed since the last session and
    what you are about to do.
+4. Identify this chat's authority from Brian's explicit language: discussion/design,
+   writing, review/diagnosis, or execution. A question does not establish execution
+   authority. Scope from another chat is context only unless Brian explicitly hands the
+   work into this chat.
 
 ## End of every session that changed anything
 
@@ -40,6 +44,10 @@ Also stop before installation when the candidate:
   placement, default pair or persisted profile without Brian's explicit authorization;
 - contains a “decision needed” or unresolved semantic conflict affecting runtime defaults;
 - enables a new behavior by default before its ownership and compatibility review.
+
+A question about testing, readiness or next steps is not installation authority. The
+install instruction must be explicit, must name or clearly identify the reviewed
+candidate, and must come after unresolved design decisions are closed.
 
 Compilation and offline tests do not authorize choosing among unresolved character
 semantics. Preserve the installed baseline until the decision is explicit.

@@ -22,3 +22,24 @@ loadouts, read `docs/development/CHARACTER-IDENTITY-CONTRACT.md` completely.
 - If a candidate changes an existing roster identity or reports an unresolved semantic
   decision, stop. Do not build a migration, choose a default or install it. Obtain
   Brian's explicit decision first.
+
+## Conversation authority boundary
+
+Questions and design conversations are non-mutating by default. Interrogatives such as
+“should we,” “do we need,” “what if,” “or do we build,” “could this,” and “why” request
+analysis, not implementation.
+
+- Do not turn discussion, brainstorming, comparison, criticism, approval of an idea or
+  a hypothetical into a work order.
+- Do not carry an idea from a discussion chat into an execution chat as authorization.
+  Chats may intentionally have different purposes and scope.
+- Before editing code, configs, documentation, Git state or installed files, identify
+  the user's explicit action instruction for that exact mutation. If there is none,
+  answer only.
+- “That sounds right,” “agreed,” and answers to design questions approve the statement
+  being discussed; they do not authorize an unrequested build or installation.
+- Installation always requires a distinct explicit instruction after the candidate and
+  its unresolved decisions have been presented. A request to test does not authorize
+  inventing or installing a different design.
+- When uncertain whether a chat is discussion-only or execution-scoped, preserve state
+  and ask one direct scope question. Never resolve ambiguity by acting.

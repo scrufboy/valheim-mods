@@ -68,3 +68,17 @@ from a new feature list or from mechanical similarity. Specifically:
 Every submission touching these fields must include an explicit before/after roster
 matrix. Any row that disappears, changes identity or gains an alias requires a quoted
 Brian decision authorizing that exact change.
+
+## Discussion is not authorization
+
+The exchange may record ideas from any chat, but it may promote work only from an
+explicit execution instruction. Questions, hypotheticals and design comparisons remain
+non-mutating evidence of what Brian is considering.
+
+Every implementation or installation submission must quote the exact owner-authored
+action sentence that authorized it. A quotation that contains only a question,
+brainstorm, preference or approval of a concept is insufficient.
+
+Separate chats may be intentionally scoped for discussion, design writing, diagnosis,
+implementation or testing. An agent must not merge their authority merely because they
+belong to the same project. Cross-chat material supplies context, not permission.

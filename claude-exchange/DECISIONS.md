@@ -389,3 +389,11 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - Progression may improve a persisted character's skills, knowledge, armor, food and weapons while that character remains the same person/type. Reaching a later biome never changes identity.
 - This supersedes any earlier wording that listed only Warden, Huntress, Scout and Legion/heavy or allowed an “explicit migration.” No migration between these identities is valid.
 - An omitted existing roster row is preserved. Neither agent may interpret a shorter design list as authorization to discard, rename, merge or supersede existing characters.
+
+## 2026-10-31 — Interrogative/design chats are not execution authority (Brian)
+
+- Project chats have distinct purposes. Some are for talking through ideas and designs; others are explicitly for writing or executing project work.
+- Questions such as “should we,” “do we need,” “or do we build,” “what if” and “why” request an answer. They do not authorize code, design replacement, file changes, Git changes, installation or cross-chat promotion.
+- Agreement with an explanation or preference does not silently convert the conversation into an implementation order.
+- Before either agent mutates project or machine state, it must be able to quote Brian's explicit action instruction for that exact scope. Otherwise it answers only and preserves state.
+- Authority from one chat does not automatically transfer to another. Cross-chat context informs reasoning but never broadens permission.
