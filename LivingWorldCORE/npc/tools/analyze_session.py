@@ -52,7 +52,14 @@ def main(paths):
         add("FAIL", "Companions present", "no companion samples at all (registration/party failure?)")
         report(results)
         return 1
-    add("PASS", "Companions present", "%d companion(s), %d samples" % (len(names), len(npc)))
+    # Only actors that left Initializing count as companions (2026-10-31: four failed spawns, stuck in Initializing,
+    # were reported as "6 companions"). Stuck actors are listed separately.
+    active = sorted({r["npc"] for r in npc if r.get("phase") not in (None, "Initializing")})
+    stuck = [n for n in names if n not in active]
+    add("PASS" if active else "FAIL", "Companions present", "%d active companion(s), %d samples%s" % (
+        len(active), len(npc), ("; never left Initializing: %s" % ", ".join(stuck)) if stuck else ""))
+    if stuck:
+        add("FAIL", "Companions finish initializing", "%d actor(s) never left Initializing: %s" % (len(stuck), ", ".join(stuck)))
 
     # 1. Ownership violations / faults
     violations = max((r.get("violations", 0) for r in npc), default=0)
