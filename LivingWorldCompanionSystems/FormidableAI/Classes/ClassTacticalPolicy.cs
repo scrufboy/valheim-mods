@@ -63,12 +63,15 @@ namespace LivingWorld.Companions.FormidableAI.Classes
             if(!facts.CommittedCombat) return Precombat(profile,facts,target);
             if(!facts.TargetAuthorized||string.IsNullOrEmpty(target)) return ClassDecision.Yield("combat-target-not-authorized");
             switch(profile.Class){
+                case FormidableClass.Guard:
                 case FormidableClass.Warden:return Warden(profile,facts,target);
+                case FormidableClass.Archer:
                 case FormidableClass.Huntress:return Huntress(profile,facts,target);
+                case FormidableClass.Scout:
+                case FormidableClass.Pathfinder:return Pathfinder(profile,facts,target);
                 case FormidableClass.Mystic:return Mystic(profile,facts,target);
                 case FormidableClass.Skirmisher:return Skirmisher(profile,facts,target);
                 case FormidableClass.Commander:return Commander(profile,facts,target);
-                case FormidableClass.Pathfinder:return Pathfinder(profile,facts,target);
                 default:return ClassDecision.Yield("unknown-class");}
         }
 

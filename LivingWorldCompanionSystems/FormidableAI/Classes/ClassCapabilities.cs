@@ -22,6 +22,9 @@ namespace LivingWorld.Companions.FormidableAI.Classes
 
     public enum FormidableClass
     {
+        Guard,
+        Archer,
+        Scout,
         Warden,
         Huntress,
         Mystic,
@@ -50,10 +53,14 @@ namespace LivingWorld.Companions.FormidableAI.Classes
         {
             switch (role)
             {
+                case FormidableClass.Guard:
                 case FormidableClass.Warden:
                     return new ClassProfile(role, ClassCapability.ShieldDefense | ClassCapability.ProtectAlly);
+                case FormidableClass.Archer:
                 case FormidableClass.Huntress:
                     return new ClassProfile(role, ClassCapability.RangedPressure | ClassCapability.FiringLane);
+                case FormidableClass.Scout:
+                    return new ClassProfile(role, ClassCapability.Investigation | ClassCapability.ThreatCommunication | ClassCapability.RangedPressure);
                 case FormidableClass.Mystic:
                     return new ClassProfile(role, ClassCapability.HealSupport | ClassCapability.CastSupport);
                 case FormidableClass.Skirmisher:

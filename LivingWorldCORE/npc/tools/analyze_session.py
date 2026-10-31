@@ -613,7 +613,7 @@ def main(paths):
 
 
 def formidable_a2(rows, npc, add, start):
-    """FormidableAI A2 (3e5ac3c) acceptance metrics. Each states its exact definition in its detail line."""
+    """FormidableAI A2 corrected-candidate acceptance metrics. Each states its exact definition in its detail line."""
     def med(v):
         v = sorted(x for x in v if x is not None)
         if not v:
@@ -621,13 +621,14 @@ def formidable_a2(rows, npc, add, start):
         h = len(v) // 2
         return v[h] if len(v) % 2 else (v[h - 1] + v[h]) / 2.0
 
-    cls = {}
+    roles = {}
     for r in npc:
-        if r.get("class"):
-            cls[r["npc"]] = r["class"]
-    add("INFO", "A2: switches", "initiative %s, classes %s, defense %s, lanes %s, pair roster %s" % (
-        start.get("cfgInitiative"), start.get("cfgClasses"), start.get("cfgDefense"), start.get("cfgLanes"), start.get("cfgPairClasses")))
-    add("INFO" if cls else "NOT EXERCISED", "A2: classes", ", ".join("%s=%s" % kv for kv in sorted(cls.items())) or "no class field")
+        if r.get("role"):
+            roles[r["npc"]] = r["role"]
+    add("INFO", "A2: switches", "initiative %s, role weapon choice %s, defense %s, lanes %s" % (
+        start.get("cfgInitiative"), start.get("cfgRoleWeaponChoice"), start.get("cfgDefense"), start.get("cfgLanes")))
+    add("INFO" if roles else "NOT EXERCISED", "A2: authored roles",
+        ", ".join("%s=%s" % kv for kv in sorted(roles.items())) or "no role field")
 
     # 1. Response: committed -> the first FormidableAI response (readiness facing it, or engaging it) by any member.
     inits = [r for r in rows if r.get("type") == "Initiative"]
@@ -643,32 +644,32 @@ def formidable_a2(rows, npc, add, start):
         for _, r in lat:
             kinds[(r.get("byMemberResponse") or ":?").split(":")[-1]] += 1
         add("INFO", "A2: first response kind", ", ".join("%s %d" % kv for kv in sorted(kinds.items())))
-        hunt = [x for x, r in lat if cls.get((r.get("byMemberResponse") or "").split(":")[0]) == "Huntress"]
-        hd = [r.get("dMemberResponse") for _, r in lat if cls.get((r.get("byMemberResponse") or "").split(":")[0]) == "Huntress"]
-        add("INFO", "A2: Huntress ranged response (reported apart from melee)",
+        archer = [x for x, r in lat if roles.get((r.get("byMemberResponse") or "").split(":")[0]) == "Archer"]
+        ad = [r.get("dMemberResponse") for _, r in lat if roles.get((r.get("byMemberResponse") or "").split(":")[0]) == "Archer"]
+        add("INFO", "A2: Archer ranged response (reported apart from melee)",
             "n=%d, median latency %s s, median distance %s m (native ranged target median was 9 m)" % (
-                len(hunt), "%.2f" % med(hunt) if hunt else "n/a", "%.1f" % med(hd) if hd else "n/a"))
+                len(archer), "%.2f" % med(archer) if archer else "n/a", "%.1f" % med(ad) if ad else "n/a"))
     late = [r for r in inits if r.get("tMemberTarget") is not None and r.get("tCommitted") is not None and r["tMemberTarget"] < r["tCommitted"]
             and not (r.get("tMemberAction") is not None and r["tMemberAction"] <= r["tCommitted"])]
     add("PASS" if len(late) <= 3 else "FAIL", "A2: awareness-late native targets (no regression above 3)",
         "%d cases, median lag %s s" % (len(late), "%.2f" % med([r["tCommitted"] - r["tMemberTarget"] for r in late]) if late else "n/a"))
 
-    # 2. Melee held against a target the class should shoot: flying, or at/after the class bow band; throws and
+    # 2. Melee held against a target the authored role should shoot: flying, or at/after its bow band; throws and
     #    a target charging in within 1.2 s (no swap) are not melee choices. Only companions that carry a bow.
-    band = {"Warden": 12, "Huntress": 6, "Scout": 10, "Legion": 14}
+    band = {"Guard": 12, "Archer": 6, "Scout": 10}
     bowers = {r["npc"] for r in npc if "Bow" in (r.get("handL", "") + r.get("backL", "")) or r.get("ammo", 0) > 0}
     need = [r for r in npc if r.get("phase") == "Combat" and r.get("target") and r["npc"] in bowers and not r.get("throwing")
             and "BombThrow" not in r.get("handR", "") and not (0 <= r.get("targetTtc", -1) < 1.2)
-            and (r.get("targetFlying") or r.get("targetDist", 0) >= band.get(cls.get(r["npc"], "Warden"), 10))]
+            and (r.get("targetFlying") or r.get("targetDist", 0) >= band.get(roles.get(r["npc"], "Unknown"), 10))]
     if need:
         bad = [r for r in need if "Bow" not in r.get("handL", "")]
         share = len(bad) / len(need)
         by = defaultdict(lambda: [0, 0])
         for r in need:
-            by[cls.get(r["npc"], "?")][0] += 1
-            by[cls.get(r["npc"], "?")][1] += "Bow" not in r.get("handL", "")
-        add("PASS" if share <= .05 else "FAIL", "A2: melee held vs flying / class-bow-range targets <= 5%",
-            "%.0f%% of %d samples; by class %s (throws and <1.2 s charges excluded)" % (
+            by[roles.get(r["npc"], "?")][0] += 1
+            by[roles.get(r["npc"], "?")][1] += "Bow" not in r.get("handL", "")
+        add("PASS" if share <= .05 else "FAIL", "A2: melee held vs flying / role-bow-range targets <= 5%",
+            "%.0f%% of %d samples; by role %s (throws and <1.2 s charges excluded)" % (
                 share * 100, len(need), ", ".join("%s %d/%d" % (k, v[1], v[0]) for k, v in sorted(by.items()))))
     legacy = [r for r in npc if r.get("phase") == "Combat" and r.get("target") and (r.get("targetFlying") or r.get("targetDist", 0) >= 10)]
     if legacy:

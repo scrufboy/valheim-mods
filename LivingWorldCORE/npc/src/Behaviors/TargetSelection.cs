@@ -42,7 +42,7 @@ namespace LivingWorld.Core
             Character current = body.Ai.GetTargetCreature();
             int currentId = current == null || current.IsDead() ? -1 : current.GetInstanceID();
             string reason;
-            float leash = CorePlugin.FormidableClasses ? kernel.Doctrine.Leash : float.PositiveInfinity;
+            float leash = CorePlugin.FormidableInitiative ? kernel.Doctrine.Leash : float.PositiveInfinity;
             int pick = TargetPolicy.Choose(candidates, currentId, encounter, s.LeaderCrouching, s.NearestPartyDistance, leash, out reason);
             Reason = reason;
             if (pick < 0) return null;
@@ -111,7 +111,7 @@ namespace LivingWorld.Core
             CollectPartners(kernel.Frame.Senses.Leader);
             Build(kernel.Body.Human, kernel.Frame.Senses.Leader);
             int id = target.GetInstanceID();
-            float leash = CorePlugin.FormidableClasses ? kernel.Doctrine.Leash : float.PositiveInfinity;
+            float leash = CorePlugin.FormidableInitiative ? kernel.Doctrine.Leash : float.PositiveInfinity;
             for (int i = 0; i < candidates.Count; i++)
                 if (candidates[i].Id == id)
                 {

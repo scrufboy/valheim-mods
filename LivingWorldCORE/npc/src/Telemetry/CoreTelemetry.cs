@@ -99,8 +99,8 @@ namespace LivingWorld.Telemetry
             Str("core", CorePlugin.Version); Num("schema", Schema); Str("world", ZNet.instance.GetWorldName());
             Str("player", Player.m_localPlayer.GetPlayerName()); Bool("registered", CorePlugin.Registered);
             Bool("cfgShieldBlocking", CorePlugin.ShieldBlocking); Num("cfgFoodStamina", CorePlugin.FoodStamina);
-            Bool("cfgInitiative", CorePlugin.FormidableInitiative); Bool("cfgClasses", CorePlugin.FormidableClasses);
-            Bool("cfgDefense", CorePlugin.FormidableDefense); Bool("cfgLanes", CorePlugin.FormidableLanes); Str("cfgPairClasses", CorePlugin.PairClasses);
+            Bool("cfgInitiative", CorePlugin.FormidableInitiative); Bool("cfgRoleWeaponChoice", CorePlugin.FormidableWeaponChoice);
+            Bool("cfgDefense", CorePlugin.FormidableDefense); Bool("cfgLanes", CorePlugin.FormidableLanes);
             End();
             Logger.LogInfo("Recording read-only telemetry: " + path);
         }
@@ -183,7 +183,7 @@ namespace LivingWorld.Telemetry
                     for (long q = dstart; q < combat.DefenseSequence; q++)
                     {
                         NativeCombatBehavior.DefenseRecord d = combat.DefenseRing[q % combat.DefenseRing.Length];
-                        Begin("Defense"); Actor(kernel); Str("class", kernel.Class.ToString()); Num("gameT", d.Time);
+                        Begin("Defense"); Actor(kernel); Str("role", kernel.Doctrine.RoleName); Num("gameT", d.Time);
                         Str("attacker", d.Attacker); Str("attack", d.Attack); Str("choice", d.Choice); Str("why", d.Why ?? "");
                         Num("impactIn", d.ImpactIn); Num("actLead", d.ActLead); Bool("learned", d.Learned);
                         Str("outcome", d.Outcome ?? ""); Num("damage", d.Damage); Bool("attackerStaggered", d.AttackerStaggered);
@@ -272,7 +272,7 @@ namespace LivingWorld.Telemetry
                 Str("weaponPick", body.LastWeaponPick ?? ""); Num("weaponSwaps", body.WeaponSwaps);
                 Num("targetPicks", kernel.Targeting == null ? 0 : kernel.Targeting.Picks);
                 // A2 (3e5ac3c)
-                Str("class", kernel.Class.ToString());
+                Str("role", kernel.Doctrine.RoleName);
                 Str("initiative", kernel.Initiative.ToString()); Str("initiativeWhy", kernel.InitiativeWhy ?? "");
                 Num("initiativeEngages", kernel.InitiativeEngages); Num("continuityEngages", kernel.ContinuityEngages);
                 Str("focus", kernel.Frame.FocusContact == null ? "" : kernel.Frame.FocusContact.GetHoverName());

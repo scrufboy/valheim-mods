@@ -35,10 +35,10 @@ namespace LivingWorld.Core
 
         public NpcBody Body { get { return body; } }
 
-        // ---------------- A2 (3e5ac3c): class, initiative, evade ----------------
-        bool classLoaded;
-        public TrainedClass Class { get; private set; }
-        public ClassDoctrine Doctrine { get; private set; }
+        // ---------------- A2 corrected candidate: existing-role doctrine, initiative, evade ----------------
+        bool doctrineLoaded;
+        public CombatRole TacticalRole { get { return Doctrine.Role; } }
+        public CombatDoctrine Doctrine { get; private set; }
         readonly InitiativeOption[] initBuffer = new InitiativeOption[24];
         readonly List<InitiativeOption> initOptions = new List<InitiativeOption>(24);
         public InitiativeResponse Initiative { get; private set; }
@@ -58,14 +58,6 @@ namespace LivingWorld.Core
             evadeDir = direction;
             evadeUntil = Time.time + seconds;
             Evades++;
-        }
-
-        /// <summary>A2.2: a class written at creation applies at once (the kernel may have latched the role class first).</summary>
-        internal void ApplyClass(TrainedClass c)
-        {
-            classLoaded = true;
-            Class = c;
-            Doctrine = ClassDoctrines.For(c);
         }
 
         void Tags()
@@ -161,7 +153,7 @@ namespace LivingWorld.Core
 
         void Awake()
         {
-            Doctrine = ClassDoctrines.For(TrainedClass.Warden);
+            Doctrine = CombatDoctrines.ForRole(null);
             InitiativeWhy = "";
             string missing = NativeApi.MissingMembers();
             if (missing.Length > 0)
@@ -282,11 +274,11 @@ namespace LivingWorld.Core
             wasOwner = true;
             if (appearance != null && appearance.Ready)
             {
-                if (!classLoaded)
+                if (!doctrineLoaded)
                 {
-                    classLoaded = true;
-                    Class = CorePlugin.FormidableClasses ? body.EnsureClass(appearance.Role) : TrainedClass.Warden;
-                    Doctrine = ClassDoctrines.For(Class);
+                    doctrineLoaded = true;
+                    // Read the character's authored creation role. Do not infer, rename, migrate or persist identity.
+                    Doctrine = CombatDoctrines.ForRole(appearance.Role);
                 }
                 body.ReapplyKitOnce();
                 if (!genderVoiced) { genderVoiced = true; CompanionCombatVoice.ApplyGender(this); }

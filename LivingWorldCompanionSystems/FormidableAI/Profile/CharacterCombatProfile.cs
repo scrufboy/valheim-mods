@@ -61,8 +61,10 @@ namespace LivingWorld.FormidableAI.Profile
         {
             if(facts==null) throw new ArgumentNullException("facts");
             CombatJob job=Job(facts.SavedRole);
-            FormidableClass role=job==CombatJob.Archer?FormidableClass.Huntress:
-                job==CombatJob.Scout?FormidableClass.Pathfinder:FormidableClass.Warden;
+            // Tactical modules may be shared, but identity is exact and additive: an Archer is not a Huntress,
+            // a Guard is not a Warden, and a Scout is not a Pathfinder.
+            FormidableClass role=job==CombatJob.Archer?FormidableClass.Archer:
+                job==CombatJob.Scout?FormidableClass.Scout:FormidableClass.Guard;
             WeaponDoctrine weapons=WeaponDoctrine.None;
             if(facts.HasOneHanded) weapons|=WeaponDoctrine.OneHanded;
             if(facts.HasShield&&facts.HasOneHanded) weapons|=WeaponDoctrine.Shield;

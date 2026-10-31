@@ -17,7 +17,7 @@ namespace LivingWorld.Core
     {
         public const string Guid = "local.livingworld.humannpc";
         public const string Name = "Living World C.O.R.E. NPC";
-        public const string Version = "1.0.33.0";
+        public const string Version = "1.0.33.1";
         internal const string GuardPrefab = "LWC_HumanGuard_v2";
         internal const string ArcherPrefab = "LWC_HumanArcher_v2";
         internal const string LegacyPrefab = "LWC_HumanScout_v1";
@@ -42,14 +42,13 @@ namespace LivingWorld.Core
         public static bool HazardAwareness { get { return hazardAwareness == null || hazardAwareness.Value; } }
         static BepInEx.Configuration.ConfigEntry<bool> awarenessShadow;
         public static bool AwarenessShadow { get { return awarenessShadow != null && awarenessShadow.Value; } }
-        // A2 (3e5ac3c): FormidableAI execution switches. Each falls back to the native path at once when off.
-        static BepInEx.Configuration.ConfigEntry<bool> formidableInitiative, formidableClasses, formidableDefense, formidableLanes;
-        static BepInEx.Configuration.ConfigEntry<string> pairClasses;
-        public static bool FormidableInitiative { get { return AwarenessShadow && (formidableInitiative == null || formidableInitiative.Value); } }
-        public static bool FormidableClasses { get { return formidableClasses == null || formidableClasses.Value; } }
-        public static bool FormidableDefense { get { return formidableDefense == null || formidableDefense.Value; } }
-        public static bool FormidableLanes { get { return formidableLanes == null || formidableLanes.Value; } }
-        public static string PairClasses { get { return pairClasses == null ? "Warden,Huntress" : pairClasses.Value; } }
+        // A2 corrected candidate: execution switches are off until a reviewed build is explicitly enabled.
+        // They alter combat decisions only; no switch creates, renames, migrates, equips or persists a character role.
+        static BepInEx.Configuration.ConfigEntry<bool> formidableInitiative, formidableWeaponChoice, formidableDefense, formidableLanes;
+        public static bool FormidableInitiative { get { return AwarenessShadow && formidableInitiative != null && formidableInitiative.Value; } }
+        public static bool FormidableWeaponChoice { get { return formidableWeaponChoice != null && formidableWeaponChoice.Value; } }
+        public static bool FormidableDefense { get { return formidableDefense != null && formidableDefense.Value; } }
+        public static bool FormidableLanes { get { return formidableLanes != null && formidableLanes.Value; } }
         public static bool DevHazardLog { get { return devHazardLog != null && devHazardLog.Value; } }
         public static bool BodyBurning { get { return bodyBurning == null || bodyBurning.Value; } }
         public static bool BodyFrost { get { return bodyFrost == null || bodyFrost.Value; } }
@@ -96,19 +95,17 @@ namespace LivingWorld.Core
             FormidableShadowBehavior.Bind(Config);
             awarenessShadow = Config.Bind("FormidableAI", "AwarenessShadow", false,
                 "Development only (A1): shared party awareness in shadow. Companions notice, track and interpret creatures with their own sight/hearing and report it to telemetry. Read-only: nothing in play reads it.");
-            formidableInitiative = Config.Bind("FormidableAI", "Initiative", true,
-                "A2: shared awareness drives the response. Noticed = watch, alerted = ready, committed = the class response at once (engage in reach, " +
+            formidableInitiative = Config.Bind("FormidableAI", "Initiative", false,
+                "A2 candidate: shared awareness drives the response. Noticed = watch, alerted = ready, committed = the existing role's response at once (engage in reach, " +
                 "ready in formation beyond it), without waiting for the native 2 s re-pick. Needs AwarenessShadow = true. Off = native target acquisition.");
-            formidableClasses = Config.Bind("FormidableAI", "Classes", true,
-                "A2: explicit trained classes (Warden, Huntress, Scout, Legion) stored on each companion: weapon bands, reach, leash, defense " +
-                "preferences and class kits. Off = one generic doctrine for everyone (the 1.0.32 rules).");
-            formidableDefense = Config.Bind("FormidableAI", "Defense", true,
-                "A2: impact-aware defense. Each incoming strike aimed at a companion gets one decision (block, parry, evade, interrupt, " +
+            formidableWeaponChoice = Config.Bind("FormidableAI", "RoleWeaponChoice", false,
+                "A2 candidate: Guard, Archer and Scout keep their authored identities and use role-aware weapon distance bands. " +
+                "No role is inferred, stored or changed. Off = the 1.0.32 weapon rule.");
+            formidableDefense = Config.Bind("FormidableAI", "Defense", false,
+                "A2 candidate: impact-aware defense. Each incoming strike aimed at a companion gets one decision (block, parry, evade, interrupt, " +
                 "counter or absorb) timed to its predicted impact; nothing is raised on a timer. Off = Combat.ShieldBlocking rule.");
-            formidableLanes = Config.Bind("FormidableAI", "FallbackLanes", true,
-                "A2: a fall-back picks a clear lane (terrain, water, obstacles, never past an enemy) toward the partner or leader before moving. Off = straight away.");
-            pairClasses = Config.Bind("FormidableAI", "PairClasses", "Warden,Huntress",
-                "Classes for the next new pair (lwparty), first then second: Warden, Huntress, Scout or Legion. Existing companions keep theirs.");
+            formidableLanes = Config.Bind("FormidableAI", "FallbackLanes", false,
+                "A2 candidate: a fall-back picks a clear lane (terrain, water, obstacles, never past an enemy) toward the partner or leader before moving. Off = straight away.");
             companionBombs = Config.Bind("Combat", "CompanionBombs", true,
                 "Companions use bombs as ranged area control: acquire the best enemy cluster 9-20 m out, favour groups coming at the party, and aim where they are headed. Never throw close in panic or if you or another companion would be within 5.5 m of the landing. Off = never throw.");
             bodyVoice = Config.Bind("BodyVoice", "Enabled", true,
@@ -360,17 +357,6 @@ namespace LivingWorld.Core
             Vector3[] points = FindSpawnPair(leader);
             Spawn(GuardPrefab, points[0], leader.transform.rotation, created);
             Spawn(ArcherPrefab, points[1], leader.transform.rotation, created);
-            // A2.2: classes are written the moment each person exists, before the kernel can read a role-based default.
-            TrainedClass[] classes = ClassDoctrines.Pair(PairClasses);
-            bool classKit = false;
-            for (int i = 0; i < created.Count && i < classes.Length && FormidableClasses; i++)
-            {
-                NpcKernel k = created[i].GetComponent<NpcKernel>();
-                if (k == null) continue;
-                k.Body.SetClass(classes[i]);
-                k.ApplyClass(classes[i]);
-                classKit |= classes[i] == TrainedClass.Scout || classes[i] == TrainedClass.Legion;
-            }
 
             float deadline = Time.realtimeSinceStartup + 10f;
             while (created.Any(a => a != null && !a.GetComponent<NpcAppearance>().Ready) && Time.realtimeSinceStartup < deadline)
@@ -382,7 +368,6 @@ namespace LivingWorld.Core
                 if (!appearance.Ready) throw new InvalidOperationException(appearance.Status);
             }
             foreach (GameObject actor in created) actor.GetComponent<NpcLeaderBinding>().Bind(leader, generation);
-            if (kit == null && classKit) kit = CompanionKits.Iron;   // Scout/Legion weapons are not in the prefab: outfit the iron tier
             string gear = "";
             if (kit != null)
             {
@@ -393,8 +378,7 @@ namespace LivingWorld.Core
                 }
                 gear = " Gear: " + kit + " q" + quality + ".";
             }
-            Report("PARTY READY: two companions bound to you" + (replace ? "; replaced " + removed + " old record(s)." : ".") + gear +
-                (FormidableClasses ? " Classes: " + classes[0] + ", " + classes[1] + "." : ""));
+            Report("PARTY READY: two companions bound to you" + (replace ? "; replaced " + removed + " old record(s)." : ".") + gear);
         }
 
         static void Spawn(string prefabId, Vector3 position, Quaternion rotation, List<GameObject> created)

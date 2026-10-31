@@ -1,4 +1,5 @@
-// Living World C.O.R.E. - FormidableAI A2 (3e5ac3c): explicit classes, initiative, strike-window defense, fallback lanes.
+// Living World C.O.R.E. - FormidableAI A2 corrected candidate: initiative, role-aware tactics,
+// strike-window defense and fallback lanes. Character identity is read, never created or rewritten here.
 //
 // Pure decision layer: no Unity, no Valheim. The runtime samples facts, these rules decide, NpcBody executes.
 // Every number here is a TEST PARAMETER chosen conservatively for the first live session; telemetry reports each one.
@@ -8,19 +9,24 @@ using System.Collections.Generic;
 namespace LivingWorld.Core
 {
     // ------------------------------------------------------------------------------------------------------------
-    // A2.2 Explicit classes
+    // A2.2 Existing-role combat doctrine
     // ------------------------------------------------------------------------------------------------------------
 
-    /// <summary>The trained character class. Stored on the person (ZDO), never re-inferred from what is in hand.</summary>
-    public enum TrainedClass { Warden, Huntress, Scout, Legion }
+    /// <summary>
+    /// A tactical reading of the creation role already owned by the character. This is not character identity,
+    /// is never persisted, and is never inferred from equipment. Unknown preserves an authored role that this
+    /// combat revision does not yet know how to specialize.
+    /// </summary>
+    public enum CombatRole { Unknown, Guard, Archer, Scout }
 
     /// <summary>
     /// What a class has been trained to prefer. The tactical core reads these preferences together with the actual
     /// loadout; a preference never creates a capability (no shield in the inventory = no block, whatever the class).
     /// </summary>
-    public struct ClassDoctrine
+    public struct CombatDoctrine
     {
-        public TrainedClass Class;
+        public CombatRole Role;
+        public string RoleName;
         // Weapon bands (ground targets). Bow at/after BowFrom, melee under MeleeUnder, hysteresis between.
         public float BowFrom, MeleeUnder;   // the class's own bow minimum (native AI will not fire inside it) is MeleeUnder
         // Initiative: a committed contact is engaged (target taken) inside EngageRange of me; beyond it the class holds
@@ -34,88 +40,35 @@ namespace LivingWorld.Core
         public bool RangedOpening;   // takes committed contacts at bow range as an opening
     }
 
-    public static class ClassDoctrines
+    public static class CombatDoctrines
     {
         public const float SwapCommit = 1.2f;    // a closing target this soon is met with the weapon in hand (no swap)
 
-        public static ClassDoctrine For(TrainedClass c)
+        public static CombatDoctrine ForRole(string role)
         {
-            switch (c)
+            string normalized = string.IsNullOrEmpty(role) ? "" : role.Trim().ToLowerInvariant();
+            switch (normalized)
             {
-                case TrainedClass.Huntress:
-                    return new ClassDoctrine { Class = c, BowFrom = 6f, MeleeUnder = 4f, EngageRange = 28f, Leash = 28f,
+                case "archer":
+                    return new CombatDoctrine { Role = CombatRole.Archer, RoleName = "Archer", BowFrom = 6f, MeleeUnder = 4f, EngageRange = 28f, Leash = 28f,
                         Parry = .2f, Interrupt = .1f, Evade = .8f, Absorb = .1f, CoverWeight = .8f, RangedOpening = true };
-                case TrainedClass.Scout:
-                    return new ClassDoctrine { Class = c, BowFrom = 10f, MeleeUnder = 5f, EngageRange = 24f, Leash = 22f,
+                case "scout":
+                    return new CombatDoctrine { Role = CombatRole.Scout, RoleName = "Scout", BowFrom = 10f, MeleeUnder = 5f, EngageRange = 24f, Leash = 22f,
                         Parry = .3f, Interrupt = .7f, Evade = .9f, Absorb = .1f, CoverWeight = .4f, RangedOpening = true };
-                case TrainedClass.Legion:
-                    return new ClassDoctrine { Class = c, BowFrom = 14f, MeleeUnder = 8f, EngageRange = 14f, Leash = 14f,
-                        Parry = .4f, Interrupt = .6f, Evade = .2f, Absorb = .8f, CoverWeight = .5f, RangedOpening = false };
-                default:
-                    return new ClassDoctrine { Class = TrainedClass.Warden, BowFrom = 12f, MeleeUnder = 7f, EngageRange = 14f, Leash = 14f,
+                case "guard":
+                    return new CombatDoctrine { Role = CombatRole.Guard, RoleName = "Guard", BowFrom = 12f, MeleeUnder = 7f, EngageRange = 14f, Leash = 14f,
                         Parry = .7f, Interrupt = .3f, Evade = .2f, Absorb = .3f, CoverWeight = .6f, RangedOpening = false };
-            }
-        }
-
-        public static bool TryParse(string s, out TrainedClass c)
-        {
-            c = TrainedClass.Warden;
-            if (string.IsNullOrEmpty(s)) return false;
-            switch (s.Trim().ToLowerInvariant())
-            {
-                case "warden": c = TrainedClass.Warden; return true;
-                case "huntress": case "hunter": c = TrainedClass.Huntress; return true;
-                case "scout": c = TrainedClass.Scout; return true;
-                case "legion": case "heavy": c = TrainedClass.Legion; return true;
-                default: return false;
-            }
-        }
-
-        /// <summary>The class a companion's creation roll (prefab role) made it, for people created before classes were stored.
-        /// It is written once to the person; afterwards the stored class is the identity.</summary>
-        public static TrainedClass FromRole(string role)
-        {
-            return role != null && role.Equals("archer", StringComparison.OrdinalIgnoreCase) ? TrainedClass.Huntress : TrainedClass.Warden;
-        }
-
-        /// <summary>Classes for a new pair from the configured roster ("Warden,Huntress" by default). Unknown names keep the role class.</summary>
-        public static TrainedClass[] Pair(string roster)
-        {
-            var result = new[] { TrainedClass.Warden, TrainedClass.Huntress };
-            if (string.IsNullOrEmpty(roster)) return result;
-            string[] parts = roster.Split(',');
-            for (int i = 0; i < result.Length && i < parts.Length; i++)
-            {
-                TrainedClass c;
-                if (TryParse(parts[i], out c)) result[i] = c;
-            }
-            return result;
-        }
-
-        /// <summary>
-        /// Class kit at a gear tier (iron, plains). Same armor tier for every class; weapons follow the class.
-        /// Warden and Huntress keep the kits companions already had (no regression of their equipment).
-        /// Order: chest, legs, cape, bow, arrows, primary melee, shield-or-null.
-        /// </summary>
-        public static string[] Kit(TrainedClass c, string tier)
-        {
-            bool plains = tier != null && tier.Equals(CompanionKits.Plains, StringComparison.OrdinalIgnoreCase);
-            string chest = plains ? "ArmorPaddedCuirass" : "ArmorIronChest", legs = plains ? "ArmorPaddedGreaves" : "ArmorIronLegs";
-            string cape = plains ? "CapeLinen" : "CapeDeerHide", bow = plains ? "BowDraugrFang" : "BowFineWood", arrow = plains ? "ArrowNeedle" : "ArrowWood";
-            switch (c)
-            {
-                case TrainedClass.Scout:
-                    return new[] { chest, legs, cape, bow, arrow, plains ? "SpearWolfFang" : "SpearBronze", null };
-                case TrainedClass.Legion:
-                    return new[] { chest, legs, cape, bow, arrow, plains ? "AtgeirBlackmetal" : "AtgeirIron", null };
-                default:   // Warden, Huntress: the existing kits
-                    return new[] { chest, legs, cape, bow, arrow, plains ? "SwordBlackmetal" : "SwordIron", plains ? "ShieldBlackmetal" : "ShieldBanded" };
+                default:
+                    // Neutral behavior for an authored role not yet specialized. Crucially, this does not call it a Guard.
+                    return new CombatDoctrine { Role = CombatRole.Unknown, RoleName = string.IsNullOrEmpty(role) ? "Unknown" : role,
+                        BowFrom = 10f, MeleeUnder = 7f, EngageRange = 18f, Leash = 18f,
+                        Parry = .4f, Interrupt = .4f, Evade = .5f, Absorb = .3f, CoverWeight = .5f, RangedOpening = false };
             }
         }
 
         /// <summary>The weapon for the current target, by class bands. Flying: bow if usable. A target closing on me this soon
         /// is met with the weapon already in hand (a swap would be caught mid-change).</summary>
-        public static WeaponChoice.Pick Weapon(ClassDoctrine d, bool hasBow, bool hasAmmo, bool hasMelee, bool holdingBow, bool holdingMelee,
+        public static WeaponChoice.Pick Weapon(CombatDoctrine d, bool hasBow, bool hasAmmo, bool hasMelee, bool holdingBow, bool holdingMelee,
             float distance, bool targetFlying, float timeToContact)
         {
             bool bowUsable = hasBow && hasAmmo;
@@ -136,7 +89,7 @@ namespace LivingWorld.Core
     public interface IFormidableProfileSource
     {
         /// <summary>Doctrine for an actor this source owns (by prefab/family name), or false.</summary>
-        bool TryGetDoctrine(string family, out ClassDoctrine doctrine);
+        bool TryGetDoctrine(string family, out CombatDoctrine doctrine);
     }
 
     public static class FormidableProfiles
@@ -145,10 +98,10 @@ namespace LivingWorld.Core
         public static void Register(IFormidableProfileSource source) { if (source != null && !sources.Contains(source)) sources.Add(source); }
         public static int Count { get { return sources.Count; } }
 
-        public static bool TryGet(string family, out ClassDoctrine doctrine)
+        public static bool TryGet(string family, out CombatDoctrine doctrine)
         {
             for (int i = 0; i < sources.Count; i++) if (sources[i].TryGetDoctrine(family, out doctrine)) return true;
-            doctrine = default(ClassDoctrine);
+            doctrine = default(CombatDoctrine);
             return false;
         }
     }
@@ -189,7 +142,7 @@ namespace LivingWorld.Core
         }
 
         /// <summary>The committed contact this member should engage now, or -1. strongest = strongest non-wildlife state seen.</summary>
-        public static int Choose(IList<InitiativeOption> options, ClassDoctrine d, out ContactState strongest, out string why)
+        public static int Choose(IList<InitiativeOption> options, CombatDoctrine d, out ContactState strongest, out string why)
         {
             strongest = ContactState.None;
             why = "nothing committed";
@@ -209,8 +162,8 @@ namespace LivingWorld.Core
                 if (!onMe && !(inReach && leashed) && !guarding) continue;
                 float score = onMe ? 1000f : 0f;
                 if (o.HurtUs) score += 120f;
-                if (o.TargetsLeader) score += d.Class == TrainedClass.Warden ? 90f : 60f;
-                if (o.TargetsPartner) score += d.Class == TrainedClass.Warden || d.Class == TrainedClass.Legion ? 75f : 50f;
+                if (o.TargetsLeader) score += d.Role == CombatRole.Guard ? 90f : 60f;
+                if (o.TargetsPartner) score += d.Role == CombatRole.Guard ? 75f : 50f;
                 if (o.TargetsMe) score += 45f;
                 if (d.RangedOpening && o.Distance >= d.BowFrom) score += 20f;     // the opening shot is the archer's job
                 score -= o.Distance * (d.RangedOpening ? .5f : 2f);
@@ -223,7 +176,7 @@ namespace LivingWorld.Core
                 why = o.Distance <= SelfDefense && (o.TargetsMe || o.HurtUs) ? "on me" : o.HurtUs ? "hurt us" : o.TargetsLeader ? "intercept: on leader"
                     : o.TargetsPartner ? "intercept: on partner" : d.RangedOpening && o.Distance >= d.BowFrom ? "ranged opening" : "committed in reach";
             }
-            else if (strongest == ContactState.Committed) why = "committed beyond " + d.Class + " reach: ready in formation";
+            else if (strongest == ContactState.Committed) why = "committed beyond " + d.RoleName + " reach: ready in formation";
             return best;
         }
     }
@@ -303,7 +256,7 @@ namespace LivingWorld.Core
             return s.Distance <= s.Reach + ReachSlack;
         }
 
-        public static DefensePlan Plan(StrikeObservation s, DefenseCapability me, ClassDoctrine d)
+        public static DefensePlan Plan(StrikeObservation s, DefenseCapability me, CombatDoctrine d)
         {
             var p = new DefensePlan { AttackerId = s.AttackerId, ImpactIn = ImpactIn(s), Choice = DefenseChoice.None, Why = "no threat" };
             if (!Threatens(s)) return p;

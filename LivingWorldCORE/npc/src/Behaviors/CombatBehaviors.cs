@@ -38,7 +38,7 @@ namespace LivingWorld.Core
             // A window left open by an evade is judged when combat resumes; one from an earlier fight is dropped unjudged.
             if (defense.Open && f.Now > defense.ReleaseAt + 1f) { defense.Cancel(); windowAttacker = null; }
             Body.RestorePace(this);
-            Body.TuneRangedWeapons(this, kernel == null || !CorePlugin.FormidableClasses ? CombatHands.RangedMinimum : kernel.Doctrine.MeleeUnder);
+            Body.TuneRangedWeapons(this, kernel == null || !CorePlugin.FormidableWeaponChoice ? CombatHands.RangedMinimum : kernel.Doctrine.MeleeUnder);
         }
 
         public override void Tick(NpcFrame f)
@@ -98,7 +98,7 @@ namespace LivingWorld.Core
                 prepared = s.Target;
                 nextWeapon = f.Now + .25f;
             }
-            else if (CorePlugin.FormidableClasses && s.Target != null && f.Now >= nextWeapon && !Body.Throwing && !Body.Human.InAttack() && !defense.Open)
+            else if (CorePlugin.FormidableWeaponChoice && s.Target != null && f.Now >= nextWeapon && !Body.Throwing && !Body.Human.InAttack() && !defense.Open)
             {
                 // A2.2: the class weapon band is re-checked while the fight moves (not only at the native ~1 s ask).
                 nextWeapon = f.Now + .25f;
@@ -272,7 +272,7 @@ namespace LivingWorld.Core
         {
             Humanoid me = Body.Human;
             if (reaction < 0f) reaction = BlockPolicy.ReactionFor(Body.Root.name.GetStableHashCode() ^ Body.Root.GetInstanceID());
-            ClassDoctrine doctrine = kernel == null ? ClassDoctrines.For(TrainedClass.Warden) : kernel.Doctrine;
+            CombatDoctrine doctrine = kernel == null ? CombatDoctrines.ForRole(null) : kernel.Doctrine;
             ItemDrop.ItemData weapon = me.GetCurrentWeapon();
             bool meleeInHand = weapon != null && weapon.m_shared != null && weapon.m_shared.m_attack != null &&
                 weapon.m_shared.m_attack.m_attackType != Attack.AttackType.Projectile && weapon.m_shared.m_skillType != Skills.SkillType.Bows &&

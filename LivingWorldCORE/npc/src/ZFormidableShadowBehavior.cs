@@ -86,8 +86,8 @@ namespace LivingWorld.Core
                 ShieldReady = Body.ShieldInHand,
                 PersonalThreat = target != null && TargetsActor(target),
                 LineOfFireClear = true,
-                BelowPreferredRange = role == FormidableClass.Huntress && distance < 8f,
-                AbovePreferredRange = role == FormidableClass.Huntress && distance > 25f,
+                BelowPreferredRange = (role == FormidableClass.Archer || role == FormidableClass.Huntress) && distance < 8f,
+                AbovePreferredRange = (role == FormidableClass.Archer || role == FormidableClass.Huntress) && distance > 25f,
                 TargetInReach = distance <= 4.5f,
                 Lifecycle = ActionLifecyclePhase.Idle
             };

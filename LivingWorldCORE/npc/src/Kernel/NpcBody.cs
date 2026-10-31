@@ -338,14 +338,11 @@ namespace LivingWorld.Core
             if (Human.InAttack()) return "mid-attack";
             string[] names = CompanionKits.Items(kit);
             if (names == null) return "unknown kit '" + kit + "' (iron, plains)";
-            TrainedClass cls;
-            if (CorePlugin.FormidableClasses && TryGetClass(out cls)) names = ClassDoctrines.Kit(cls, kit);   // A2.2: weapons follow the class
             if (ObjectDB.instance == null) return "item database not ready";
             quality = CompanionKits.ClampQuality(quality);
             var prefabs = new GameObject[names.Length];
             for (int i = 0; i < names.Length; i++)
             {
-                if (names[i] == null) continue;   // a class kit without a shield
                 prefabs[i] = ObjectDB.instance.GetItemPrefab(names[i]);
                 if (prefabs[i] == null || prefabs[i].GetComponent<ItemDrop>() == null) return "missing vanilla item " + names[i];
             }
@@ -385,49 +382,13 @@ namespace LivingWorld.Core
             return "";
         }
 
-        // ---------------- A2.2 explicit class (3e5ac3c): stored on the person, written once ----------------
-
-        public const string ClassKey = "lw_class";
-
-        /// <summary>The stored class, if any.</summary>
-        public bool TryGetClass(out TrainedClass c)
-        {
-            c = TrainedClass.Warden;
-            ZDO z = View == null || !View.IsValid() ? null : View.GetZDO();
-            return z != null && ClassDoctrines.TryParse(z.GetString(ClassKey, ""), out c);
-        }
-
-        /// <summary>Owner only: the class this person was created as. Not a behavior domain (identity, like the kit record).</summary>
-        internal bool SetClass(TrainedClass c)
-        {
-            if (!IsOwner) return false;
-            View.GetZDO().Set(ClassKey, c.ToString());
-            return true;
-        }
-
-        /// <summary>Stored class, or (people created before classes were stored) the class of their creation roll, written once.</summary>
-        internal TrainedClass EnsureClass(string role)
-        {
-            TrainedClass c;
-            if (TryGetClass(out c)) return c;
-            c = ClassDoctrines.FromRole(role);
-            if (SetClass(c)) CorePlugin.Report(Human.GetHoverName() + " class recorded: " + c + " (from creation role '" + role + "').");
-            return c;
-        }
-
-        /// <summary>Classes whose weapons differ from the companion prefab's: their kit must be re-applied on every load.</summary>
-        static bool ClassNeedsKit(TrainedClass c) { return c == TrainedClass.Scout || c == TrainedClass.Legion; }
-
         /// <summary>Once per load: re-apply a recorded non-default kit (Valheim re-gives prefab items on load).</summary>
         internal void ReapplyKitOnce()
         {
             if (kitChecked || !IsOwner) return;
             kitChecked = true;
             string kit = Kit;
-            TrainedClass cls;
-            bool classKit = CorePlugin.FormidableClasses && TryGetClass(out cls) && ClassNeedsKit(cls);
-            if (!classKit && (kit.Length == 0 || kit == CompanionKits.Iron)) return;
-            if (kit.Length == 0) kit = CompanionKits.Iron;
+            if (kit.Length == 0 || kit == CompanionKits.Iron) return;
             string refused = Outfit(kit, KitQuality);
             if (refused.Length > 0) { kitChecked = false; CorePlugin.Warn(Human.GetHoverName() + " kit " + kit + " not re-applied: " + refused); }
         }
@@ -480,8 +441,8 @@ namespace LivingWorld.Core
         {
             Require(NpcDomain.Hands, caller);
             DouseTorchCore();
-            if (CorePlugin.FormidableClasses && Human.InAttack()) return;   // finish the swing first; never stow the bow alone mid-attack
-            if (CorePlugin.FormidableClasses) StowCanonical();
+            if (CorePlugin.FormidableWeaponChoice && Human.InAttack()) return;   // finish the swing first; never stow the bow alone mid-attack
+            if (CorePlugin.FormidableWeaponChoice) StowCanonical();
             if (LeftItem != null || RightItem != null) Human.HideHandItems(false, true);
             RestoreShieldToBack();
             Publish(null, null, BackLeft, BackRight);
@@ -631,13 +592,13 @@ namespace LivingWorld.Core
             bool holdingMelee = melee != null && ReferenceEquals(right, melee);
             float distance = Vector3.Distance(Root.transform.position, target.transform.position);
             WeaponChoice.Pick pick;
-            if (CorePlugin.FormidableClasses)
+            if (CorePlugin.FormidableWeaponChoice)
             {
                 Vector3 to = Root.transform.position - target.transform.position; to.y = 0f;
                 Vector3 v = target.GetVelocity(); v.y = 0f;
                 float closing = to.sqrMagnitude < .01f ? 0f : Vector3.Dot(v, to.normalized);
                 float ttc = closing > .5f ? Mathf.Max(0f, distance - 1.5f) / closing : float.PositiveInfinity;
-                pick = ClassDoctrines.Weapon(kernel.Doctrine, bow != null, AmmoCount > 0, melee != null, holdingBow, holdingMelee,
+                pick = CombatDoctrines.Weapon(kernel.Doctrine, bow != null, AmmoCount > 0, melee != null, holdingBow, holdingMelee,
                     distance, target.IsFlying(), ttc);
             }
             else pick = WeaponChoice.Choose(bow != null, AmmoCount > 0, melee != null, holdingBow, holdingMelee,
@@ -687,7 +648,7 @@ namespace LivingWorld.Core
             return TuneRangedWeapons(caller, CombatHands.RangedMinimum);
         }
 
-        /// <param name="minimum">A2.2: the class's own bow minimum (Huntress 3.5 m, Scout 5 m, others 8 m): the bow is never held
+        /// <param name="minimum">A2.2: the existing role's bow minimum. The bow is never held
         /// at a distance where native AI refuses to fire it.</param>
         public int TuneRangedWeapons(NpcBehavior caller, float minimum)
         {
