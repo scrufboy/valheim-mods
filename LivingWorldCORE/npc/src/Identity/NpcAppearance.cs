@@ -197,8 +197,14 @@ namespace LivingWorld.Core
             }
             if (Female && beardObject != null)
             { reason = "female actor retained facial hair"; return false; }
-            if (!Female && (BeardName.Length == 0 || beardObject == null || !AttachmentRenders(beardObject, out renderReason)))
-            { reason = "waiting for visible male beard " + BeardName; return false; }
+            if (!Female && BeardName.Length == 0)
+            { reason = "saved male beard is missing"; return false; }
+            if (!Female && (beardObject == null || !AttachmentRenders(beardObject, out renderReason)))
+            {
+                reason = "waiting for visible male beard " + BeardName + " (selected=" + expectedBeard +
+                    ", rendered=" + currentBeard + ", object=" + (beardObject == null ? "missing" : renderReason) + ")";
+                return false;
+            }
             reason = "";
             return true;
         }
@@ -206,12 +212,17 @@ namespace LivingWorld.Core
         bool AttachmentRenders(GameObject attachment, out string reason)
         {
             if (!attachment.activeInHierarchy) { reason = "inactive"; return false; }
-            Transform visualRoot = visuals.m_bodyModel == null ? null : visuals.m_bodyModel.transform.parent;
+            GameObject visualObject = NativeApi.VisualObject.GetValue(visuals) as GameObject;
+            Transform visualRoot = visualObject == null ? null : visualObject.transform;
+            // Native AttachItem has two valid paths. "attach_skin" is parented
+            // under m_bodyModel.transform.parent; rigid "attach" styles such as
+            // Beard1 are parented to m_helmet. Both live under m_visual.
             if (visualRoot == null || (!ReferenceEquals(attachment.transform, visualRoot) && !attachment.transform.IsChildOf(visualRoot)))
             { reason = "outside native rig"; return false; }
             Renderer[] renderers = attachment.GetComponentsInChildren<Renderer>(true);
             if (renderers == null || renderers.Length == 0) { reason = "no renderer"; return false; }
-            LODGroup lod = visuals.m_bodyModel.GetComponentInParent<LODGroup>();
+            LODGroup lod = visuals.m_bodyModel == null ? null : visuals.m_bodyModel.GetComponentInParent<LODGroup>();
+            Transform skinRoot = visuals.m_bodyModel == null ? null : visuals.m_bodyModel.transform.parent;
             Renderer[] lodRenderers = lod == null || lod.GetLODs().Length == 0 ? null : lod.GetLODs()[0].renderers;
             foreach (Renderer renderer in renderers)
             {
@@ -219,8 +230,8 @@ namespace LivingWorld.Core
                 if (renderer.sharedMaterials == null || renderer.sharedMaterials.Length == 0 ||
                     renderer.sharedMaterials.All(material => material == null)) continue;
                 SkinnedMeshRenderer skin = renderer as SkinnedMeshRenderer;
-                if (skin != null && (skin.sharedMesh == null || skin.rootBone == null ||
-                    (!ReferenceEquals(skin.rootBone, visualRoot) && !skin.rootBone.IsChildOf(visualRoot)))) continue;
+                if (skin != null && (skin.sharedMesh == null || skin.rootBone == null || skinRoot == null ||
+                    (!ReferenceEquals(skin.rootBone, skinRoot) && !skin.rootBone.IsChildOf(skinRoot)))) continue;
                 if (lodRenderers != null && !lodRenderers.Contains(renderer)) continue;
                 reason = "visible";
                 return true;

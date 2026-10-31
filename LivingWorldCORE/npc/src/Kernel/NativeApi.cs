@@ -83,6 +83,7 @@ namespace LivingWorld.Core
         internal static readonly FieldInfo BeardInstance = Field(typeof(VisEquipment), "m_beardItemInstance");
         internal static readonly FieldInfo CurrentHairHash = Field(typeof(VisEquipment), "m_currentHairItemHash");
         internal static readonly FieldInfo CurrentBeardHash = Field(typeof(VisEquipment), "m_currentBeardItemHash");
+        internal static readonly FieldInfo VisualObject = Field(typeof(VisEquipment), "m_visual");
         internal static readonly FieldInfo RequestedModel = Field(typeof(VisEquipment), "m_modelIndex");
         internal static readonly FieldInfo RequestedSkinColor = Field(typeof(VisEquipment), "m_skinColor");
         internal static readonly FieldInfo RequestedHairColor = Field(typeof(VisEquipment), "m_hairColor");

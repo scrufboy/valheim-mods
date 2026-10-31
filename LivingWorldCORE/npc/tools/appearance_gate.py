@@ -22,6 +22,7 @@ def main():
     native_members = (
         '"m_hairItemInstance"', '"m_beardItemInstance"',
         '"m_currentHairItemHash"', '"m_currentBeardItemHash"',
+        '"m_visual"',
         '"m_modelIndex"', '"m_skinColor"', '"m_hairColor"',
         '"m_hairItem"', '"m_beardItem"', '"UpdateVisuals"',
         '"SetHairEquipped"', '"SetBeardEquipped"',
@@ -64,12 +65,17 @@ def main():
         "InvokeNative(NativeApi.UpdateLodgroup)",
         "InvokeNative(NativeApi.UpdateColors)",
         "attachment.activeInHierarchy",
+        "NativeApi.VisualObject.GetValue(visuals)",
+        "attachment.transform.IsChildOf(visualRoot)",
         "renderer.sharedMaterials.All",
         "lodRenderers.Contains(renderer)",
     )
     for contract in required:
         if contract not in appearance:
             failures.append("appearance readiness/attachment contract missing: " + contract)
+
+    if "visuals.m_bodyModel.transform.parent;\n            if (visualRoot" in appearance:
+        failures.append("rig containment regressed to the skinned-only root; rigid native attachments would fail")
 
     if "CreateIdentity();" not in appearance or "!view.GetZDO().GetBool(MarkerKey, false)" not in appearance:
         failures.append("saved identities are no longer protected from reroll")
