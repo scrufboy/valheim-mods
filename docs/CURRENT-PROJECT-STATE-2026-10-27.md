@@ -34,9 +34,32 @@ approved runtime branches into `main`.
 | `work/formidable-ai-1.0.32.21` (1.0.32.22) | `034c539` | 1.0.32.21 + FormidableAI core (ChatGPT) + read-only shadow observer (`NpcDomain.None`, 2 Hz, `FormidableShadow` telemetry, schema 12) + analyzer schema-12 support (Claude); all gates pass; INSTALLED 2026-10-30 (hash `e0d16428…`, telemetry `4b5f56f9…`) with observer on; LIVE-PROVEN wiring/safety 2026-10-30: 1,838 s, 6,003 comparisons across 10 spawned companions, zero sequence gaps, zero domain violations and zero kernel/behavior faults; native combat remained authoritative; comparison mix is plumbing evidence, not a quality score |
 | `work/bomb-ranged-acquisition` (1.0.32.24) | `5f54db8` | 1.0.32.22 + 1.0.32.23 read-only character profile (torch excluded from weapon doctrine, `2a276f2`) + bomb ranged area control (throw 15 m/s, band 9-20 m; decision law otherwise unchanged); Claude canonical build: ledger 131/131, native 46, ownership 76 sites, voice LOCKED unchanged, movement-writer OK, analyzer OK; INSTALLED 2026-10-30 (hash `86fabe84…`, telemetry `01946edb…`); superseded by 1.0.32.26 before its bomb test, backup in `LivingWorldBackups`, .22 backed up; observer still on; test = bomb acquisition/release range with video + telemetry, not a FormidableAI quality score |
 | `work/awareness-a1` (1.0.32.26) | `eb28f1c` | `17edec6` (bomb world acquisition removed; = `5f54db8` combat behavior, 9-20 m band) + A1 shared awareness SHADOW: tactical-group adapter (`AwarenessGroupId`, hostility from native `BaseAI.IsEnemy`), companion-owned sight/hearing/contact, Noticed/Alerted/Committed/Lost, groups, empty KnowledgeBook, independent initiative ledger (native target/action edges, upper bounds, flush at stop, gap records), schema 13. Approved `572b450`. Claude canonical build: ledger 155/155, native 46, ownership 76 (unchanged), voice LOCKED unchanged, movement-writer OK, analyzer OK. INSTALLED 2026-10-30 (core `c95d9ef7…`, telemetry `da82cdca…`, both verified on device) with `AwarenessShadow = true` and `ShadowObserver = true`; .24 backed up. Shadow-only: no gameplay control. Next: short video session per presentation §8/§10.5 |
+| `work/awareness-a1` (1.0.32.27) | `7c22507` | A1 rev 5: 10 Hz interpretation/group step, urgent 0.25 s refresh for confirming/alerted contacts, corrected native-first analyzer classification. Gates 157/157; native 46; ownership 76; voice lock unchanged; movement/analyzer checks pass. INSTALLED 2026-10-31 in isolated Arena profile from reproducible current-game Mono build (core `979972eb…`, telemetry `42298a29…`). LIVE-PROVEN 2026-10-31: 1,442 s, zero awareness/kernel/ownership faults, median awareness cost 0.55 ms/s, complete initiative records, only three true awareness-late cases (0.42 s median). Shadow-only; no gameplay authority. See `CODEX-OUTBOX/2026-10-31-a1-rev5-live-raids-wolves`. |
 | `lwc-core-1.0/parked-1.0.33` | `965a2a0` | parked hot-path experiment; not installed |
 
 ## Latest live evidence — 2026-10-31
+
+- 1.0.32.27 A1 revision 5 ordinary-raid/mountain session: **LIVE-PROVEN** safe and
+  complete at two active observers. Awareness cost fell to 0.55 ms/s median;
+  sight notice median was 49 m, commitment median was 36 m, and native member
+  targeting followed commitment by 6.28 s median. This accepts the revision-5
+  scheduling change and provides the live basis for A2 posture; A1 remained
+  read-only.
+- Bomb ranged release is **LIVE-PROVEN improved**: 25 throws, 9.1-20.0 m,
+  median 15.7 m; 14 at 15 m or farther and none inside the 9 m floor. Video
+  shows poison established ahead of the party. This does not claim FormidableAI
+  bomb initiative because native combat still owned acquisition.
+- Souls arena setup **FAILED** before any Souls actor could exist. RRRCore 3.1.5
+  null-dereferenced in `Npc.DesignNpcBase`; all six requested `RRRN_*` prefabs
+  were then missing from Custom Raids. The earlier plugin-stage launch gate was
+  incomplete; world/ObjectDB initialization exposed the second incompatibility.
+- The wolf raid killed the two functioning companions. Four actors requested
+  afterward never left `Initializing`: two party transactions failed because
+  selected hair objects never rendered, and no partial party was kept. The
+  analyzer's “6 companions present” headline counts these transient samples and
+  is not an operational party count.
+- Full evidence and requested next actions:
+  `claude-exchange/CODEX-OUTBOX/2026-10-31-a1-rev5-live-raids-wolves/`.
 
 - 1.0.32.26 A1 second session: **LIVE-PROVEN** for the narrow compatibility claim that a
   MonsterDB-created hostile retaining native `MonsterAI` is discovered and tracked by A1.
