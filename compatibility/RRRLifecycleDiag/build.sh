@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # Canonical Mono build + contract check for the RRR lifecycle diagnostic.
 #
-# Usage: REFS=<dir with the reference DLLs below> ./build.sh
-# REFS must hold the Valheim 0.221.x managed DLLs (valheim_Data/Managed), BepInEx.dll and 0Harmony.dll
-# from BepInEx/core. Nothing from REFS is committed. Output goes to ./bin (git-ignored).
+# Usage: REFS=<dir> [CHECK_REFS=<dir>] ./build.sh
+# REFS holds exactly the 14 compile references listed below: 12 from Valheim valheim_Data/Managed and
+# BepInEx.dll + 0Harmony.dll from the target profile's BepInEx/core. Only these are compiled against.
+# CHECK_REFS (optional) holds further current valheim_Data/Managed DLLs that the metadata contract needs at
+# runtime so Mono can load Character/Humanoid (e.g. UnityEngine.ParticleSystemModule). They are never compile
+# references and do not affect the DLL. Nothing from REFS/CHECK_REFS is committed. Output: ./bin (git-ignored).
 set -euo pipefail
 cd "$(dirname "$0")"
 : "${REFS:?set REFS to the reference directory}"
@@ -44,9 +47,14 @@ if grep -qE 'TrackAllRRRN|cfgPrefabs' Plugin.cs; then echo "FAIL configurable/gl
 echo "== metadata contract (Mono reflection)"
 # System Mono must use its own BCL, so stage the game/BepInEx DLLs without Unity's mscorlib/System*.
 STAGE="$(mktemp -d)"; trap 'rm -rf "$STAGE"' EXIT
-for f in "$REFS"/*.dll; do
-  case "$(basename "$f")" in mscorlib.dll|System.dll|System.Core.dll) ;; *) cp "$f" "$STAGE/";; esac
+for d in ${CHECK_REFS:+"$CHECK_REFS"} "$REFS"; do
+  for f in "$d"/*.dll; do
+    case "$(basename "$f")" in mscorlib.dll|System.dll|System.Core.dll|System.*.dll) ;; *) cp "$f" "$STAGE/";; esac
+  done
 done
+if [ -n "${CHECK_REFS:-}" ]; then
+  echo "check-only runtime references: $(ls "$CHECK_REFS"/*.dll | wc -l) files from $CHECK_REFS (sha256 of the set: $(cd "$CHECK_REFS" && sha256sum *.dll | sha256sum | cut -c1-16))"
+fi
 cp $OUT "$STAGE/"
 mcs -nologo -langversion:5 -r:System.Core -out:bin/ContractCheck.exe tools/ContractCheck.cs
 MONO_PATH="$STAGE" mono bin/ContractCheck.exe "$STAGE/assembly_valheim.dll" "$STAGE/LivingWorld.RRRLifecycleDiag.dll"
