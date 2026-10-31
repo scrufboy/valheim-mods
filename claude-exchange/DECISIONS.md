@@ -366,3 +366,11 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - Warden, Huntress, Scout and Legion/heavy must become explicit trained character profiles rather than inferred labels or copies of one generic combatant.
 - The current Souls roster remains live opposing pressure while those classes are built. An owned Living World hostile/lore pack may establish its package and profile boundary now, but its full roster waits until it can consume the same proven FormidableAI core instead of creating a second brain.
 - Survival improves through competent choices, gear, training and cooperation—not immunity, hidden knowledge or inflated health.
+
+## 2026-10-31 — Existing roles are not aliases for new classes (Brian)
+
+- Guard, Archer and Scout are real existing character identities. They are not migration aliases for Warden, Huntress or any other new class.
+- Loading an existing companion must never silently rewrite its class because of its role, roster slot, weapon or gear. In particular: Guard does not become Warden; Archer does not become Huntress; Scout does not become Warden.
+- Warden and Huntress are separate explicitly created classes. A new class is assigned only by an explicit character-creation/profile choice and then persisted as that person's identity.
+- Backward compatibility means preserving the legacy Guard/Archer/Scout identity and behavior until that character is explicitly rerolled or migrated by Brian. It does not mean selecting the nearest new doctrine.
+- A candidate that identifies an unresolved class-set decision must not be installed with one interpretation enabled by default before Brian/Codex resolves it.
