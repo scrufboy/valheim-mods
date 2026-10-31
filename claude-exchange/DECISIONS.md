@@ -338,3 +338,11 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - The Living World C.O.R.E. Tooler's Raids page must expose the currently installed FormidableAI training raids and their ordinary time/stop controls.
 - A raid button must name an event actually supplied by the Tooler package, the active profile or Valheim itself. Superseded buttons must not remain as dead interface promises.
 - Launching through the Tooler remains a normal Valheim event command. It must not add a defended-player status, faction invention, combat behavior or artificial test state.
+
+## 2026-10-31 — Raids hunt the player; Souls hostiles need FormidableAI help (Brian)
+
+- Raids must work as raids: every mob a raid spawns hunts the player (`HuntPlayer = true`). The 2026-10-31 Arena/Swamp
+  training raids spawned with `HuntPlayer = false` at a 70–95 m ring and didn't come in; Brian had to use a visual aid on
+  the map to find them. This supersedes the earlier "Brian is not a forced target" setting for training raids.
+- The Souls hostiles are currently easy ("we owned them"). They are the hostile lineage FormidableAI is meant to make
+  formidable, which is the goal for the hostile side of the shared character core.
