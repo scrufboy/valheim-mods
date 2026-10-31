@@ -346,3 +346,9 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
   the map to find them. This supersedes the earlier "Brian is not a forced target" setting for training raids.
 - The Souls hostiles are currently easy ("we owned them"). They are the hostile lineage FormidableAI is meant to make
   formidable, which is the goal for the hostile side of the shared character core.
+
+## 2026-10-31 — Internal diagnostic commands are not Brian's test interface (Brian)
+
+- Brian is not the project's console operator. A diagnostic may expose internal commands for developers, but an ordinary requested test must be automatic, available through the Tooler, or operated by an agent after Brian explicitly says the world is ready.
+- Brian's role is to judge gameplay and provide video when human visual judgment matters. He is not expected to memorize or type multi-step spawn/remove command sequences merely to generate engineering evidence.
+- Test instructions must begin with the gameplay question being answered and explain why a live run is necessary. If the engineering operation is more complex than loading a world, pressing one clearly named control and exiting, the team owns the automation.
