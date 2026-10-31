@@ -14,6 +14,8 @@ function Assert-Contains([string]$Text, [string]$Expected, [string]$Message) {
 
 Assert-Contains $panel 'event lwc_souls_pillagers' 'The Tooler is missing the pillager RandomEvent button.'
 Assert-Contains $panel 'event lwc_krauguk_legion' 'The Tooler is missing the legion RandomEvent button.'
+Assert-Contains $panel 'event lwc_formidable_arena' 'The Tooler is missing the current Formidable Arena button.'
+Assert-Contains $panel 'event lwc_formidable_souls_swamp' 'The Tooler is missing the current Formidable Souls Swamp button.'
 Assert-Contains $config 'Name = lwc_souls_pillagers' 'The pillager RandomEvent is not configured.'
 Assert-Contains $config 'PrefabName = RRRN_Pillager' 'The pillager event does not use the verified Souls prefab.'
 Assert-Contains $config 'Name = lwc_krauguk_legion' 'The legion RandomEvent is not configured.'
@@ -31,7 +33,7 @@ if ($config -notmatch '(?s)\[LWC_Souls_Pillagers\.0\].*?MaxSpawned\s*=\s*3.*?Gro
 if ($config -notmatch '(?s)\[LWC_Krauguk_Legion\.0\].*?MaxSpawned\s*=\s*2.*?GroupSizeMin\s*=\s*2.*?GroupSizeMax\s*=\s*2') {
     throw 'The legion matchup is not bounded to two combatants.'
 }
-if ($manifest.version_number -ne '2.4.1') {
+if ($manifest.version_number -ne '2.6.1') {
     throw 'Unexpected Tooler package version.'
 }
 if ($manifest.dependencies -notcontains 'ASharpPen-Custom_Raids-1.8.2') {
@@ -41,7 +43,7 @@ if ($manifest.dependencies -notcontains 'ASharpPen-Custom_Raids-1.8.2') {
 [ordered]@{
     Status = 'PASS'
     PackageVersion = $manifest.version_number
-    Events = @('lwc_souls_pillagers', 'lwc_krauguk_legion')
+    Events = @('lwc_formidable_arena', 'lwc_formidable_souls_swamp', 'lwc_souls_pillagers', 'lwc_krauguk_legion')
     RandomPool = $false
     PillagerGroup = '2-3'
     LegionGroup = '2'

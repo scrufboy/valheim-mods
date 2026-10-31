@@ -5,7 +5,7 @@ namespace Scrufboy.LivingWorld.Tooler
 {
     internal static class LivingWorldPanel
     {
-        // Tooler 2.6.0: 14 Living World pages -> 7. Every control appears exactly once; destructive
+        // Tooler 2.6.1: 14 Living World pages -> 7. Every control appears exactly once; destructive
         // actions stay on their own page behind the two-click confirmation. The four original
         // Tooler pages (Player, Entities, Terrain Shaper, Misc) are untouched.
         private static readonly ToolerPage[] Pages = LivingWorldToolerModules.Create(
@@ -128,6 +128,11 @@ namespace Scrufboy.LivingWorld.Tooler
         // ---------------- 2. Raids ----------------
         private static void Raids()
         {
+            Heading("Current FormidableAI training raids");
+            Row(new ActionDef("Formidable Arena", "event lwc_formidable_arena", "Starts the current Elder-pattern mixed Souls raid at the configured long-range ring."),
+                new ActionDef("Formidable Souls Swamp", "event lwc_formidable_souls_swamp", "Starts the current Elder-pattern swamp Souls raid at the configured long-range ring."));
+            Row(new ActionDef("STOP TRAINING RAID", "stopevent", "Stops the active event timer; enemies already spawned may remain."),
+                new ActionDef("Noon", "tod 0.5", "Sets daylight for the standard awareness and initiative stress run."));
             Heading("Vanilla raids (biome order)");
             Row(new ActionDef("Eikthyr army", "event army_eikthyr", "Meadows."),
                 new ActionDef("Elder army", "event army_theelder", "Black Forest."));

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.1
+
+- Added first-class Raids-page buttons for the current `lwc_formidable_arena` and `lwc_formidable_souls_swamp` Elder-pattern FormidableAI stress raids.
+- Added the standard noon setup beside the current training-raid controls and kept the existing stop-event control explicit.
+- Preserved the older bounded Pillager and Krauguk matchups, every vanilla raid control, and all non-raid Tooler pages.
+
 ## 2.6.0
 
 - Living World pages reorganized from 14 to 7: Companions, Raids, Player, Spawn, World, Build, Admin.

@@ -2,7 +2,7 @@
 
 Maintained and packaged for Living World C.O.R.E. by **Brian / scrufboy**.
 
-Version 2.5.0 adds a separate **Site Survey** module. Walk and record four corners, calculate from live altered terrain, preview the computed settlement/arena campus, and export a concise report plus machine-readable JSON. Controller bindings are shown directly on the page. Terrain application remains locked and is not included in this build.
+Version 2.6.1 puts the two current Elder-pattern FormidableAI stress raids directly on the **Raids** page: **Formidable Arena** and **Formidable Souls Swamp**, with the standard noon setup and stop-event controls beside them. The older bounded Souls matchups and every vanilla raid control remain available. Version 2.5.0's separate **Site Survey** module also remains intact.
 
 This is the Living World C.O.R.E. Tooler: one Living World plugin identity,
 Living World branding, the familiar proven interface/colors/control layout,
@@ -13,11 +13,11 @@ item/prefab spawning, time of day, environment/weather, terrain, map/admin,
 confirmed destructive actions, and an arbitrary command bridge. Invalid
 unfinished ObjectDB item entries are skipped without flooding `LogOutput.log`.
 
-The Raids page includes two opt-in, real Valheim `RandomEvent` matchups for
-Formidable companion evaluation: a bounded group of two to three Common Folk
-Pillagers and a two-combatant Krauguk Legion. They use the installed Souls of
-the Land RRR prefabs, hunt the player/party, and are excluded from random world
-raid selection. Custom Raids 1.8.2 loads and synchronizes these event records.
+The Raids page launches the installed `lwc_formidable_arena` and
+`lwc_formidable_souls_swamp` long-range training events, plus the older bounded
+Pillager and Krauguk matchups. Custom Raids loads and synchronizes the event
+records; the Tooler issues the normal Valheim event commands and does not create
+a separate combat, faction, or defended-player state.
 
 The World page includes Midnight, Morning, Noon, Evening, normal time-flow,
 time skipping, named environment forcing, Clear, Rain, Thunderstorm, Fog,
