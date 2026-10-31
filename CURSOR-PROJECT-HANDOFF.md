@@ -9,10 +9,11 @@ This file is the starting point for Cursor. It is a map to the whole project, no
 - GitHub: https://github.com/scrufboy/valheim-mods
 - Authoritative documentation checkout:
   `C:\Users\scruf\Documents\ChatGPT\Living World C.O.R.E. Custom NPC CREATION and AI\valheim-mods-formidable-current`
-- Corrected A2 working checkout (active code repair; uncommitted until reviewed):
+- Corrected A2 working checkout (active code repair; review branch, not installed):
   `C:\Users\scruf\Documents\ChatGPT\Living World C.O.R.E. Custom NPC CREATION and AI\valheim-mods-formidable-a2-corrected`
 - Safe installed-source baseline checkout lineage: remote branch `origin/work/native-hair-attachment-1.0.32.29`, commit `1ec0f18`
 - Rejected A2 candidate: remote branch `origin/work/formidable-a2`, commit `f2b8e1f`
+- Corrected A2 review branch: `origin/work/formidable-a2-corrected`, commit `4cbcfff`
 - Current project/exchange branch: `work/formidable-ai-current`, current authority commit `b9364fe`
 - Live r2modman profile (read-only unless Brian explicitly authorizes an install):
   `C:\Users\scruf\AppData\Roaming\r2modmanPlus-local\Valheim\profiles\LWC Formidable Arena`
@@ -136,7 +137,7 @@ These must remain behind switches that are off by default until reviewed and exp
 Work only here for this audit/repair:
 `C:\Users\scruf\Documents\ChatGPT\Living World C.O.R.E. Custom NPC CREATION and AI\valheim-mods-formidable-a2-corrected`
 
-It is branch `work/formidable-a2-corrected`, based on rejected `f2b8e1f`, with uncommitted repair work in progress. Inspect the entire diff before editing.
+It is branch `work/formidable-a2-corrected`, commit `4cbcfff`, based on rejected `f2b8e1f`. It is a WIP review branch: it has passed only source grep/diff checks, not the full build. Inspect the entire diff before editing.
 
 Already-started corrections include:
 
