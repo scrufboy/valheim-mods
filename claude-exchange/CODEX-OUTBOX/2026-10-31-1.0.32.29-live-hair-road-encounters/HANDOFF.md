@@ -1,6 +1,6 @@
 # 1.0.32.29 live result: native hair gate passed; ordinary encounters captured
 
-Brian exited the game after a short ordinary-play session. He did not remember the custom raid commands, so no configured raid was started. He recovered his gear, spawned one party, and fought RRR encounters along the road.
+Brian exited the game after a short ordinary-play session. He did not remember the custom raid commands, so no configured raid was started. He recovered his gear, spawned one party, and fought naturally spawned RRR encounters along the road.
 
 ## Appearance and party gate
 
@@ -16,7 +16,7 @@ This live-proves the .29 complete-native-visual-root correction for the selectio
 ## Session evidence
 
 - Telemetry: schema/current core session, 619 s, 2 active companions, 2,040 companion samples.
-- Encounters included manually spawned `RRRN_Pillager x3` and `RRRN_WoodsSoul x3` groups. No raid event was active.
+- Spawn That naturally produced `RRRN_Pillager x3` and `RRRN_WoodsSoul x3` groups. No raid event was active.
 - Zero domain ownership violations; zero kernel/behavior faults; zero companion deaths.
 - Damage: Aud 15 hits / 903 damage / 6 kills; Vestein 25 hits / 1,427 damage / 11 kills.
 - Awareness: 26 initiative records, no native-only invisible contacts, no ring overwrite, peak 23 rays/s, median CPU 0.54 ms/s, zero capacity drops.
