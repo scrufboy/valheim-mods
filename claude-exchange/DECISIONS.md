@@ -331,3 +331,10 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - Krauguk Legionnaires (`RRRN_OrcBrute`) occupy the Elder brute slot: sporadic,
   single heavy pressure. They are not Greydwarf-equivalent group fodder; if they
   block and coordinate, they can defeat the current companion pair.
+
+## 2026-10-31 — The Tooler owns deliberate raid launch (Brian)
+
+- Brian is not expected to remember or retype project-specific event identifiers for normal test sessions.
+- The Living World C.O.R.E. Tooler's Raids page must expose the currently installed FormidableAI training raids and their ordinary time/stop controls.
+- A raid button must name an event actually supplied by the Tooler package, the active profile or Valheim itself. Superseded buttons must not remain as dead interface promises.
+- Launching through the Tooler remains a normal Valheim event command. It must not add a defended-player status, faction invention, combat behavior or artificial test state.
