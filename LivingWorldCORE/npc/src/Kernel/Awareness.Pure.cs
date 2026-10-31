@@ -82,14 +82,16 @@ namespace LivingWorld.Core
     }
 
     /// <summary>Initiative milestones (90b08e2, cebfcd0): presence to action, measured independently of awareness state.</summary>
-    public enum Milestone { InEnvelope, FirstEvidence, Noticed, Alerted, Committed, MemberTarget, ResponseReady, MemberAction }
+    public enum Milestone { InEnvelope, FirstEvidence, Noticed, Alerted, Committed, MemberTarget, ResponseReady, MemberAction, MemberResponse }
+    // A2 (3e5ac3c): MemberResponse = the first FormidableAI response a member adopts for this contact after it is noticed
+    // (readiness facing it, or engaging it). ResponseReady stays the A1 shadow fact: committed and inside 30 m.
 
     /// <summary>UpperBound: first sampled while already active, so Time is an upper bound on the true start, not the start.</summary>
     public struct MilestoneMark { public bool Set, UpperBound; public float Time, Distance, TimeToContact; public string By; }
 
     public sealed class InitiativeRecord
     {
-        public const int Count = 8;
+        public const int Count = 9;
         public long Sequence; public int Id; public string Family = ""; public string Outcome = ""; public bool Wildlife;
         public readonly MilestoneMark[] Marks = new MilestoneMark[Count];
     }
@@ -134,7 +136,7 @@ namespace LivingWorld.Core
 
         public static bool Worthy(InitiativeEntry e)
         {
-            return e.Has(Milestone.Noticed) || e.Has(Milestone.MemberTarget) || e.Has(Milestone.MemberAction);
+            return e.Has(Milestone.Noticed) || e.Has(Milestone.MemberTarget) || e.Has(Milestone.MemberAction) || e.Has(Milestone.MemberResponse);
         }
 
         InitiativeEntry Acquire(int id, float now)

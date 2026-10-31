@@ -53,6 +53,8 @@ namespace LivingWorld.Core
         internal static readonly FieldInfo CurrentAttack = Field(typeof(Humanoid), "m_currentAttack");
         internal static readonly FieldInfo CurrentAttackIsSecondary = Field(typeof(Humanoid), "m_currentAttackIsSecondary");
         internal static readonly FieldInfo AttackChainLevel = Field(typeof(Attack), "m_currentAttackCainLevel");
+        // A2.3 strike windows (3e5ac3c): an attack's elapsed time (Attack.Update adds dt from Start; read-only).
+        internal static readonly FieldInfo AttackTime = Field(typeof(Attack), "m_time");
         internal static readonly FieldInfo AttackChainLevels = Field(typeof(Attack), "m_attackChainLevels");
         internal static readonly MethodInfo CanStartChainAttack = Method(typeof(Attack), "CanStartChainAttack");
         internal static readonly MethodInfo HaveQueuedChain = Method(typeof(Humanoid), "HaveQueuedChain");

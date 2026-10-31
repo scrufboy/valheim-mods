@@ -426,6 +426,72 @@ namespace LivingWorld.Core
             }
         }
 
+        // ---------------- A2.1 initiative reads (3e5ac3c). Read-only views of the shared frame; no world search. ----------------
+
+        /// <summary>The party awareness group this companion belongs to, if awareness is running for it.</summary>
+        internal static AwarenessGroup ForKernel(NpcKernel kernel)
+        {
+            if (!CorePlugin.AwarenessShadow || kernel == null) return null;
+            NpcLeaderBinding b = kernel.GetComponent<NpcLeaderBinding>();
+            if (b == null || b.LeaderId == 0L) return null;
+            AwarenessGroup g;
+            return groups.TryGetValue(unchecked((long)0x4C57435000000000L ^ b.LeaderId), out g) ? g : null;
+        }
+
+        /// <summary>The live actor behind a contact id (only candidates this group perceives), or null.</summary>
+        public Character ActorOf(int id)
+        {
+            for (int i = 0; i < candidateCount; i++)
+            {
+                Character c = candidates[i];
+                if (c != null && observed[i].Id == id) return c.IsDead() ? null : c;
+            }
+            return null;
+        }
+
+        /// <summary>This member's view of every live contact (noticed or stronger), bounded by into.Length.</summary>
+        internal int Options(Character me, Character leader, InitiativeOption[] into)
+        {
+            int n = 0;
+            if (me == null) return 0;
+            Vector3 mp = me.transform.position;
+            P2 m2 = new P2(mp.x, mp.z);
+            P2 l2 = leader == null ? new P2(0f, 0f) : new P2(leader.transform.position.x, leader.transform.position.z);
+            foreach (ContactRecord r in Book.Records)
+            {
+                if (n >= into.Length) break;
+                if (!r.Used || r.State == ContactState.None || r.State == ContactState.Lost) continue;
+                Character who = r.TargetsWhomObserved >= 0 && r.TargetsWhomObserved < memberCount ? members[r.TargetsWhomObserved].Actor : null;
+                into[n++] = new InitiativeOption
+                {
+                    Id = r.Id, State = r.State,
+                    Distance = P2.Distance(m2, r.LastKnownPos),
+                    LeaderDistance = leader == null ? -1f : P2.Distance(l2, r.LastKnownPos),
+                    TimeToContact = r.TimeToContact,
+                    TargetsMe = who != null && ReferenceEquals(who, me),
+                    TargetsLeader = who != null && leader != null && ReferenceEquals(who, leader),
+                    TargetsPartner = who != null && !ReferenceEquals(who, me) && (leader == null || !ReferenceEquals(who, leader)),
+                    HurtUs = r.HurtParty, Wildlife = r.Wildlife
+                };
+            }
+            return n;
+        }
+
+        /// <summary>Record that a member adopted a response for this contact (first only; observational).</summary>
+        internal void MarkResponse(int id, string by, float now)
+        {
+            ContactRecord r = Book.Find(id);
+            if (r == null) return;
+            Initiative.Mark(id, r.Family, Milestone.MemberResponse, now, r.Distance, r.TimeToContact, false, by);
+        }
+
+        /// <summary>The contact's state in the shared frame (None when unknown). A party-sighted committed contact stays fightable.</summary>
+        public ContactState StateOf(int id)
+        {
+            ContactRecord r = Book.Find(id);
+            return r == null ? ContactState.None : r.State;
+        }
+
         void UpdatePosture()
         {
             ContactState strongest = ContactState.None; bool anyNoticed = false;

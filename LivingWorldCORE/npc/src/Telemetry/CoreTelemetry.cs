@@ -21,7 +21,7 @@ namespace LivingWorld.Telemetry
     {
         public const string Guid = "local.livingworld.telemetry";
         public const string Version = CorePlugin.Version;
-        const int Schema = 13; // 13: A1 awareness shadow (Contact, Group, Initiative, AwarenessBudget); 12: FormidableShadow
+        const int Schema = 14; // 14: A2 classes, initiative engages, Defense windows, fall-back lanes; 13: A1 awareness shadow (Contact, Group, Initiative, AwarenessBudget); 12: FormidableShadow
         const float SampleSeconds = .5f;
         const long MaxBytes = 64L * 1024L * 1024L;
 
@@ -87,6 +87,7 @@ namespace LivingWorld.Telemetry
             lastBlock.Clear();
             lastSwitches.Clear();
             lastFallBack.Clear();
+            lastDefense.Clear();
             active = true;
             if (!subscribed)
             {
@@ -98,6 +99,8 @@ namespace LivingWorld.Telemetry
             Str("core", CorePlugin.Version); Num("schema", Schema); Str("world", ZNet.instance.GetWorldName());
             Str("player", Player.m_localPlayer.GetPlayerName()); Bool("registered", CorePlugin.Registered);
             Bool("cfgShieldBlocking", CorePlugin.ShieldBlocking); Num("cfgFoodStamina", CorePlugin.FoodStamina);
+            Bool("cfgInitiative", CorePlugin.FormidableInitiative); Bool("cfgClasses", CorePlugin.FormidableClasses);
+            Bool("cfgDefense", CorePlugin.FormidableDefense); Bool("cfgLanes", CorePlugin.FormidableLanes); Str("cfgPairClasses", CorePlugin.PairClasses);
             End();
             Logger.LogInfo("Recording read-only telemetry: " + path);
         }
@@ -144,7 +147,8 @@ namespace LivingWorld.Telemetry
                     Str("last", kernel.LastViolation); End();
                 }
                 NativeCombatBehavior combat = Combat(kernel);
-                bool blockUp = combat != null && combat.Block != null && combat.Block.Raised;
+                // A2: the native blocking state itself (raised by the 1.0.32 block rule or an A2 defense window).
+                bool blockUp = kernel.Body != null && kernel.Body.Human != null && kernel.Body.Human.IsBlocking();
                 bool wasUp;
                 bool known = lastBlock.TryGetValue(kernel, out wasUp);
                 if (!known || wasUp != blockUp)
@@ -153,7 +157,7 @@ namespace LivingWorld.Telemetry
                     if (known || blockUp)
                     {
                         Begin(blockUp ? "BlockRaise" : "BlockLower"); Actor(kernel);
-                        Str("reason", combat == null || combat.Block == null ? "" : combat.Block.Reason);
+                        Str("reason", combat == null ? "" : combat.Block != null ? combat.Block.Reason : combat.LastDefense ?? "");
                         Str("threat", combat == null ? "" : combat.BlockThreat);
                         Num("hp", kernel.Body.Human.GetHealth());
                         End();
@@ -169,6 +173,25 @@ namespace LivingWorld.Telemetry
                     End();
                 }
                 lastFallBack[kernel] = fb;
+                // A2.3 defense windows: each written once, drained from the behavior's bounded ring.
+                if (combat != null)
+                {
+                    long dseen;
+                    if (!lastDefense.TryGetValue(kernel, out dseen)) dseen = 0;
+                    long dstart = System.Math.Max(dseen, combat.DefenseSequence - combat.DefenseRing.Length);
+                    if (dstart > dseen) { Begin("DefenseGap"); Actor(kernel); Num("lost", dstart - dseen); End(); }
+                    for (long q = dstart; q < combat.DefenseSequence; q++)
+                    {
+                        NativeCombatBehavior.DefenseRecord d = combat.DefenseRing[q % combat.DefenseRing.Length];
+                        Begin("Defense"); Actor(kernel); Str("class", kernel.Class.ToString()); Num("gameT", d.Time);
+                        Str("attacker", d.Attacker); Str("attack", d.Attack); Str("choice", d.Choice); Str("why", d.Why ?? "");
+                        Num("impactIn", d.ImpactIn); Num("actLead", d.ActLead); Bool("learned", d.Learned);
+                        Str("outcome", d.Outcome ?? ""); Num("damage", d.Damage); Bool("attackerStaggered", d.AttackerStaggered);
+                        Num("stamina", d.Stamina); Num("hp", d.Health);
+                        End();
+                    }
+                    lastDefense[kernel] = combat.DefenseSequence;
+                }
                 TargetSelector sel = kernel.Targeting;
                 int switches = sel == null ? 0 : sel.Picks, seenSwitches;
                 if (lastSwitches.TryGetValue(kernel, out seenSwitches) && switches > seenSwitches)
@@ -248,6 +271,17 @@ namespace LivingWorld.Telemetry
                 Bool("targetFlying", s.Target != null && s.Target.IsFlying());
                 Str("weaponPick", body.LastWeaponPick ?? ""); Num("weaponSwaps", body.WeaponSwaps);
                 Num("targetPicks", kernel.Targeting == null ? 0 : kernel.Targeting.Picks);
+                // A2 (3e5ac3c)
+                Str("class", kernel.Class.ToString());
+                Str("initiative", kernel.Initiative.ToString()); Str("initiativeWhy", kernel.InitiativeWhy ?? "");
+                Num("initiativeEngages", kernel.InitiativeEngages); Num("continuityEngages", kernel.ContinuityEngages);
+                Str("focus", kernel.Frame.FocusContact == null ? "" : kernel.Frame.FocusContact.GetHoverName());
+                Num("targetTtc", s.Target == null ? -1f : TimeToMe(s.Target, p));
+                Bool("throwing", body.Throwing); Bool("evading", kernel.Frame.Evading);
+                Num("evades", kernel.Evades); Num("interrupts", body.Interrupts); Num("counters", body.Counters);
+                Num("defenseWindows", combat == null ? 0 : combat.Opportunities);
+                Str("defense", combat == null || combat.LastDefense == null ? "" : combat.LastDefense);
+                Str("lane", kernel.FallBack.Lane ?? ""); Num("backStows", body.BackStows);
                 End();
                 ObserveFormidable(kernel);
             }
@@ -269,7 +303,8 @@ namespace LivingWorld.Telemetry
             { "tCommitted", "dCommitted", "ttcCommitted", "ubCommitted", "byCommitted" },
             { "tMemberTarget", "dMemberTarget", "ttcMemberTarget", "ubMemberTarget", "byMemberTarget" },
             { "tResponseReady", "dResponseReady", "ttcResponseReady", "ubResponseReady", "byResponseReady" },
-            { "tMemberAction", "dMemberAction", "ttcMemberAction", "ubMemberAction", "byMemberAction" } };
+            { "tMemberAction", "dMemberAction", "ttcMemberAction", "ubMemberAction", "byMemberAction" },
+            { "tMemberResponse", "dMemberResponse", "ttcMemberResponse", "ubMemberResponse", "byMemberResponse" } };
 
 
         void ObserveAwareness()
@@ -396,6 +431,15 @@ namespace LivingWorld.Telemetry
             lastFormidableSequence[kernel] = seen;
         }
 
+        /// <summary>Seconds until this target reaches me at its current closing speed (-1 = not closing).</summary>
+        static float TimeToMe(Character t, Vector3 me)
+        {
+            Vector3 to = me - t.transform.position; to.y = 0f;
+            Vector3 v = t.GetVelocity(); v.y = 0f;
+            float closing = to.sqrMagnitude < .01f ? 0f : Vector3.Dot(v, to.normalized);
+            return closing > .5f ? Mathf.Min(99f, to.magnitude / closing) : -1f;
+        }
+
         static bool TargetIsRanged(Character c)
         {
             Humanoid h = c as Humanoid;
@@ -418,6 +462,7 @@ namespace LivingWorld.Telemetry
         readonly Dictionary<NpcKernel, bool> lastBlock = new Dictionary<NpcKernel, bool>();
         readonly Dictionary<NpcKernel, int> lastSwitches = new Dictionary<NpcKernel, int>();
         readonly Dictionary<NpcKernel, bool> lastFallBack = new Dictionary<NpcKernel, bool>();
+        readonly Dictionary<NpcKernel, long> lastDefense = new Dictionary<NpcKernel, long>();
 
         static NativeCombatBehavior Combat(NpcKernel kernel)
         {

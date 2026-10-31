@@ -21,8 +21,8 @@ done
 CSC="mcs -nologo -target:library -langversion:5 -optimize+ -nostdlib -r:$REFS/mscorlib.dll -r:$REFS/System.dll -r:$REFS/System.Core.dll $refs"
 
 echo "== 1/6 Regression ledger (offline policy tests)"
-mcs -nologo -langversion:5 -out:build/ledger.exe tests/RegressionLedgerTests.cs \
-    src/Kernel/Kernel.Pure.cs src/Kernel/GuardCoverage.Pure.cs src/Kernel/PartySpacing.Pure.cs src/Kernel/Gait.Pure.cs src/Kernel/Bomb.Pure.cs src/Kernel/Throw.Pure.cs src/Kernel/BodyVoice.Pure.cs src/Kernel/BodyState.Pure.cs src/Kernel/Hazard.Pure.cs src/Kernel/ReadyWatch.Pure.cs src/Kernel/Awareness.Pure.cs src/Identity/NpcIdentityRecord.cs
+mcs -nologo -langversion:5 -out:build/ledger.exe tests/RegressionLedgerTests.cs tests/FormidableA2Tests.cs \
+    src/Kernel/Kernel.Pure.cs src/Kernel/GuardCoverage.Pure.cs src/Kernel/PartySpacing.Pure.cs src/Kernel/Gait.Pure.cs src/Kernel/Bomb.Pure.cs src/Kernel/Throw.Pure.cs src/Kernel/BodyVoice.Pure.cs src/Kernel/BodyState.Pure.cs src/Kernel/Hazard.Pure.cs src/Kernel/ReadyWatch.Pure.cs src/Kernel/Awareness.Pure.cs src/Kernel/Formidable.Pure.cs src/Identity/NpcIdentityRecord.cs
 mono build/ledger.exe | tail -1
 
 echo "== 2/6 Native compatibility gate"

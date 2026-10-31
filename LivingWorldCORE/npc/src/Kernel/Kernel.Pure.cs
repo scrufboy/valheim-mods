@@ -91,6 +91,9 @@ namespace LivingWorld.Core
         public float LeaderDistance;
         public float NearestPartyDistance; // < 0 when alone
         public float FormationDistance;    // distance to leased formation slot
+        // A2.1 (3e5ac3c): the shared awareness frame's answer for this member (off = both false = the 1.0.32 arbiter).
+        public bool InitiativeEngage;      // a committed contact this member's class engages now
+        public bool InitiativeReady;       // an alerted contact, or a committed one beyond this class's reach: ready in formation
     }
 
     /// <summary>
@@ -165,7 +168,7 @@ namespace LivingWorld.Core
         {
             if (!s.AppearanceReady) return Set(NpcPhase.Initializing, "identity not ready");
 
-            bool threat = s.HasTarget || s.DamagedRecently;
+            bool threat = s.HasTarget || s.DamagedRecently || s.InitiativeEngage;
             bool returning = cohesion.Observe(inEncounter || threat, s.HasLeader ? s.LeaderDistance : 0f,
                 s.NearestPartyDistance, s.LocalThreat || s.PartnerUnderAttack);
 
@@ -180,7 +183,7 @@ namespace LivingWorld.Core
             {
                 if (returning && !s.LocalThreat && !s.PartnerUnderAttack) return Set(NpcPhase.CombatRegroup, "party separation; returning");
                 if (threat) return Set(NpcPhase.Combat, returning ? "local defense while returning" :
-                    s.HasTarget ? "native target" : "taking damage");
+                    s.HasTarget ? "native target" : s.DamagedRecently ? "taking damage" : "awareness: committed contact");
 
                 // Verified clear: five uninterrupted seconds with no target, no damage
                 // and no alerted hostile in the awareness radius.
@@ -198,6 +201,7 @@ namespace LivingWorld.Core
 
             if (!float.IsPositiveInfinity(secondsSinceEncounter)) secondsSinceEncounter += dt;
             if (!s.HasLeader) return Set(NpcPhase.AwaitingLeader, "no leader");
+            if (s.InitiativeReady) return Set(NpcPhase.Readiness, "awareness: contact to answer");
             if (s.LeaderArmed) return Set(NpcPhase.Readiness, "leader armed");
             if (s.NativeAlert) return Set(NpcPhase.Readiness, "native alert, no target");
             if (Phase == NpcPhase.Regroup && s.FormationDistance > Tuning.RegroupArrival)
@@ -434,7 +438,9 @@ namespace LivingWorld.Core
         public bool Wildlife;        // AnimalsVeg faction (deer and the like)
         public bool HurtUs;          // recently damaged me or a partner
         public bool HurtMe;          // recently damaged me
-        public bool Committed { get { return TargetsMe || TargetsLeader || TargetsPartner || HurtUs || HurtMe; } }
+        public bool PartyCommitted;  // A2.1: the party's shared awareness has it Committed (seen by a member, not borrowed eyes)
+        public float LeaderDistance; // A2.4: it to the leader, -1 if unknown (leash)
+        public bool Committed { get { return TargetsMe || TargetsLeader || TargetsPartner || HurtUs || HurtMe || PartyCommitted; } }
     }
 
     /// <summary>
@@ -464,6 +470,13 @@ namespace LivingWorld.Core
             return c.TargetsPartner && c.PartnerDistance >= 0f && c.PartnerDistance <= PartnerDefenseRadius;
         }
 
+        /// <summary>A2.4 leash, one rule for taking and keeping: inside the leash from the leader, or it is on me, on my partner,
+        /// or going for the leader or a partner (intercepting a protected member's attacker is never chasing).</summary>
+        public static bool WithinLeash(TargetCandidate c, float leash, bool onMe)
+        {
+            return c.LeaderDistance <= leash || c.LeaderDistance < 0f || onMe || OnPartner(c) || c.TargetsLeader || c.TargetsPartner;
+        }
+
         public static bool Engaged(TargetCandidate c, bool encounterActive, bool leaderSneaking)
         {
             if (c.Distance > MaxRange && !(OnPartner(c) && c.Distance <= PartnerReach)) return false;
@@ -485,6 +498,14 @@ namespace LivingWorld.Core
         public static int Choose(IList<TargetCandidate> all, int currentId, bool encounterActive, bool leaderSneaking,
             float partnerSeparation, out string reason)
         {
+            return Choose(all, currentId, encounterActive, leaderSneaking, partnerSeparation, float.PositiveInfinity, out reason);
+        }
+
+        /// <param name="leash">A2.4 class leash: a target farther than this from the leader is not taken or kept (self and
+        /// partner defence excepted), so the fight stays where the party can support itself.</param>
+        public static int Choose(IList<TargetCandidate> all, int currentId, bool encounterActive, bool leaderSneaking,
+            float partnerSeparation, float leash, out string reason)
+        {
             reason = "nothing to fight";
             if (all == null) return -1;
             bool split = partnerSeparation >= SplitDistance;
@@ -497,6 +518,7 @@ namespace LivingWorld.Core
                 if (mine && (onMe < 0 || c.Distance < all[onMe].Distance)) onMe = i;
                 if (split && OnPartner(c) && (partner < 0 || c.PartnerDistance < all[partner].PartnerDistance)) partner = i;
                 if (c.Distance > MaxRange) continue;     // reachable only as the partner's attacker
+                if (!WithinLeash(c, leash, mine)) continue;   // beyond the class leash: hold, do not chase
                 if (c.Id == currentId) current = i;
                 if (nearest < 0 || c.Distance < all[nearest].Distance) nearest = i;
             }
@@ -571,6 +593,12 @@ namespace LivingWorld.Core
             LastOutcome = outcome;
             Reason = outcome;
         }
+
+        /// <summary>A2.4: the mover found no viable lane - the fall-back ends in a decision (stand and fight), not a blind run.</summary>
+        public void Abort(float now, string outcome) { if (Active) End(now, outcome); }
+
+        /// <summary>A2.4: the lane in use ("" = legacy straight-away), for telemetry.</summary>
+        public string Lane = "";
     }
 
     /// <summary>

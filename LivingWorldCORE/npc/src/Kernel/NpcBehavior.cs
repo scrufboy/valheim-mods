@@ -17,6 +17,12 @@ namespace LivingWorld.Core
         public float SecondsSinceEncounter = float.PositiveInfinity;
         public bool FallingBack;
         public Vector3 FallBackFrom;      // position of the nearest engaged enemy when last sensed
+        // A2.3 evade (3e5ac3c): a short side-step executed by the fall-back mover (no new movement writer).
+        public bool Evading;
+        public Vector3 EvadeDir;          // unit side-step direction; the mover leads the anchor 6 m along it
+        public bool FallBackHazard;       // the fall-back flees a harmful cloud (hazard awareness), not enemies
+        // A2.1: the contact this member is answering (look / readiness focus), or null.
+        public Character FocusContact;
     }
 
     public sealed class NpcSenses

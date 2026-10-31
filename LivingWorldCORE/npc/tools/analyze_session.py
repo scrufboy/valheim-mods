@@ -41,8 +41,8 @@ def main(paths):
     def add(status, name, detail):
         results.append((status, name, detail))
 
-    if start.get("schema") not in (10, 11, 12, 13):
-        print("Not a Living World C.O.R.E. schema-10..13 session (core %s)." % start.get("core"))
+    if start.get("schema") not in (10, 11, 12, 13, 14):
+        print("Not a Living World C.O.R.E. schema-10..14 session (core %s)." % start.get("core"))
         return 2
     names = sorted({r["npc"] for r in npc})
     duration = max((r["t"] for r in rows), default=0)
@@ -602,11 +602,133 @@ def main(paths):
                     lags.append(lag); leads.append(closing * lag)
                 add("INFO", "Initiative: lead to cover native-first %s" % aw.lower(),
                     "%d cases; median lag %s; perception lead (closing x lag) %s" % (len(lags), fmt(med(lags)), fmt(med(leads), "m")))
-    elif start.get("schema") == 13:
+    elif start.get("schema") in (13, 14):
         add("NOT EXERCISED", "Awareness shadow", "no awareness records (AwarenessShadow off?)")
+
+    if start.get("schema", 0) >= 14:
+        formidable_a2(rows, npc, add, start)
 
     report(results)
     return 1 if any(s == "FAIL" for s, _, _ in results) else 0
+
+
+def formidable_a2(rows, npc, add, start):
+    """FormidableAI A2 (3e5ac3c) acceptance metrics. Each states its exact definition in its detail line."""
+    def med(v):
+        v = sorted(x for x in v if x is not None)
+        if not v:
+            return None
+        h = len(v) // 2
+        return v[h] if len(v) % 2 else (v[h - 1] + v[h]) / 2.0
+
+    cls = {}
+    for r in npc:
+        if r.get("class"):
+            cls[r["npc"]] = r["class"]
+    add("INFO", "A2: switches", "initiative %s, classes %s, defense %s, lanes %s, pair roster %s" % (
+        start.get("cfgInitiative"), start.get("cfgClasses"), start.get("cfgDefense"), start.get("cfgLanes"), start.get("cfgPairClasses")))
+    add("INFO" if cls else "NOT EXERCISED", "A2: classes", ", ".join("%s=%s" % kv for kv in sorted(cls.items())) or "no class field")
+
+    # 1. Response: committed -> the first FormidableAI response (readiness facing it, or engaging it) by any member.
+    inits = [r for r in rows if r.get("type") == "Initiative"]
+    lat = [(r["tMemberResponse"] - r["tCommitted"], r) for r in inits if r.get("tMemberResponse") is not None and r.get("tCommitted") is not None]
+    if not lat:
+        add("NOT EXERCISED", "A2: committed -> response <= 0.75 s", "no committed contact received a FormidableAI response (Initiative on? AwarenessShadow on?)")
+    else:
+        m = med([x for x, _ in lat])
+        add("PASS" if m <= .75 else "FAIL", "A2: committed -> response <= 0.75 s",
+            "median %.2f s, n=%d, %d answered before commitment (readiness on alert), max %.2f s (was: native target, 10.92 s median)" % (
+                m, len(lat), sum(1 for x, _ in lat if x < 0), max(x for x, _ in lat)))
+        kinds = defaultdict(int)
+        for _, r in lat:
+            kinds[(r.get("byMemberResponse") or ":?").split(":")[-1]] += 1
+        add("INFO", "A2: first response kind", ", ".join("%s %d" % kv for kv in sorted(kinds.items())))
+        hunt = [x for x, r in lat if cls.get((r.get("byMemberResponse") or "").split(":")[0]) == "Huntress"]
+        hd = [r.get("dMemberResponse") for _, r in lat if cls.get((r.get("byMemberResponse") or "").split(":")[0]) == "Huntress"]
+        add("INFO", "A2: Huntress ranged response (reported apart from melee)",
+            "n=%d, median latency %s s, median distance %s m (native ranged target median was 9 m)" % (
+                len(hunt), "%.2f" % med(hunt) if hunt else "n/a", "%.1f" % med(hd) if hd else "n/a"))
+    late = [r for r in inits if r.get("tMemberTarget") is not None and r.get("tCommitted") is not None and r["tMemberTarget"] < r["tCommitted"]
+            and not (r.get("tMemberAction") is not None and r["tMemberAction"] <= r["tCommitted"])]
+    add("PASS" if len(late) <= 3 else "FAIL", "A2: awareness-late native targets (no regression above 3)",
+        "%d cases, median lag %s s" % (len(late), "%.2f" % med([r["tCommitted"] - r["tMemberTarget"] for r in late]) if late else "n/a"))
+
+    # 2. Melee held against a target the class should shoot: flying, or at/after the class bow band; throws and
+    #    a target charging in within 1.2 s (no swap) are not melee choices. Only companions that carry a bow.
+    band = {"Warden": 12, "Huntress": 6, "Scout": 10, "Legion": 14}
+    bowers = {r["npc"] for r in npc if "Bow" in (r.get("handL", "") + r.get("backL", "")) or r.get("ammo", 0) > 0}
+    need = [r for r in npc if r.get("phase") == "Combat" and r.get("target") and r["npc"] in bowers and not r.get("throwing")
+            and "BombThrow" not in r.get("handR", "") and not (0 <= r.get("targetTtc", -1) < 1.2)
+            and (r.get("targetFlying") or r.get("targetDist", 0) >= band.get(cls.get(r["npc"], "Warden"), 10))]
+    if need:
+        bad = [r for r in need if "Bow" not in r.get("handL", "")]
+        share = len(bad) / len(need)
+        by = defaultdict(lambda: [0, 0])
+        for r in need:
+            by[cls.get(r["npc"], "?")][0] += 1
+            by[cls.get(r["npc"], "?")][1] += "Bow" not in r.get("handL", "")
+        add("PASS" if share <= .05 else "FAIL", "A2: melee held vs flying / class-bow-range targets <= 5%",
+            "%.0f%% of %d samples; by class %s (throws and <1.2 s charges excluded)" % (
+                share * 100, len(need), ", ".join("%s %d/%d" % (k, v[1], v[0]) for k, v in sorted(by.items()))))
+    legacy = [r for r in npc if r.get("phase") == "Combat" and r.get("target") and (r.get("targetFlying") or r.get("targetDist", 0) >= 10)]
+    if legacy:
+        thr = sum(1 for r in legacy if r.get("throwing") or "BombThrow" in r.get("handR", ""))
+        mel = sum(1 for r in legacy if "Bow" not in r.get("handL", "") and not (r.get("throwing") or "BombThrow" in r.get("handR", "")))
+        add("INFO", "A2: legacy >=10 m definition, throws separated",
+            "%d samples: melee %d (%.0f%%), bomb throw in hand %d (counted as melee by the 1.0.12 check)" % (len(legacy), mel, 100.0 * mel / len(legacy), thr))
+
+    # 3. Fall-back outcomes: share that reached clear space.
+    ends = [r for r in rows if r.get("type") == "FallBackEnd"]
+    if ends:
+        clear = sum(1 for r in ends if (r.get("outcome") or "").startswith("clear"))
+        nolane = sum(1 for r in ends if "no lane" in (r.get("outcome") or ""))
+        add("PASS" if clear / len(ends) >= .75 else "FAIL", "A2: fall-backs reach clear space >= 75%",
+            "%d of %d (%.0f%%); ended for no viable lane %d" % (clear, len(ends), 100.0 * clear / len(ends), nolane))
+    else:
+        add("NOT EXERCISED", "A2: fall-backs reach clear space >= 75%", "no fall-back ended")
+
+    # 4. Calm back loadout: the melee weapon is worn on the back (not lost behind a stowed bow).
+    calm = [r for r in npc if r.get("phase") == "Calm" and not r.get("torch")]
+    if calm:
+        lost = [r for r in calm if r.get("handL") == "none" and r.get("handR") == "none"
+                and "Bow" in r.get("backL", "") and r.get("backR", "none") == "none"]
+        share = len(lost) / len(calm)
+        add("PASS" if share <= .05 else "FAIL", "A2: calm back keeps melee (+shield), not only the bow",
+            "%.0f%% of %d calm samples showed only the bow on the back (2026-10-31: 45%%)" % (share * 100, len(calm)))
+
+    # 5. Defense: windows, choices, outcomes, timing; every shield raise belongs to a strike window (no cadence).
+    d = [r for r in rows if r.get("type") == "Defense"]
+    if not d:
+        add("NOT EXERCISED", "A2: defense windows", "no strike was aimed at a companion (Defense on?)")
+    else:
+        by = defaultdict(lambda: [0, 0.0, 0])
+        for r in d:
+            k = r.get("choice", "?")
+            by[k][0] += 1
+            by[k][1] += r.get("damage", 0) or 0
+            by[k][2] += 1 if (r.get("damage", 0) or 0) <= 0 else 0
+        add("INFO", "A2: defense windows", "%d windows; %s" % (len(d), "; ".join(
+            "%s %d (no damage %d, damage %.0f)" % (k, v[0], v[2], v[1]) for k, v in sorted(by.items(), key=lambda kv: -kv[1][0]))))
+        outs = defaultdict(int)
+        for r in d:
+            outs[(r.get("outcome") or "?").split(";")[0]] += 1
+        add("INFO", "A2: defense outcomes", ", ".join("%s %d" % kv for kv in sorted(outs.items(), key=lambda kv: -kv[1])))
+        guard = [r for r in d if r.get("choice") in ("Block", "Parry")]
+        if guard:
+            add("INFO", "A2: guard timing", "raise lead median %.2f s (parry lead < 0.25 s), impact-in median %.2f s, learned %d of %d" % (
+                med([r.get("actLead") for r in guard]), med([r.get("impactIn") for r in guard]),
+                sum(1 for r in guard if r.get("learned")), len(guard)))
+        raises = [r for r in rows if r.get("type") == "BlockRaise"]
+        add("PASS" if len(raises) <= len(guard) else "FAIL", "A2: every shield raise answers a strike window (no cadence)",
+            "%d raises, %d block/parry windows" % (len(raises), len(guard)))
+    counters = max((r.get("counters", 0) for r in npc), default=0)
+    add("INFO", "A2: active defense", "interrupts %d, counters %d, evades %d (max per companion)" % (
+        max((r.get("interrupts", 0) for r in npc), default=0), counters, max((r.get("evades", 0) for r in npc), default=0)))
+    eng = defaultdict(lambda: [0, 0])
+    for r in npc:
+        eng[r["npc"]][0] = max(eng[r["npc"]][0], r.get("initiativeEngages", 0))
+        eng[r["npc"]][1] = max(eng[r["npc"]][1], r.get("continuityEngages", 0))
+    add("INFO", "A2: engages taken by FormidableAI", ", ".join("%s initiative %d / continuity %d" % (k, v[0], v[1]) for k, v in sorted(eng.items())))
 
 
 def report(results):

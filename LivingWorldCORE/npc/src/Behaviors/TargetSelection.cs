@@ -42,7 +42,8 @@ namespace LivingWorld.Core
             Character current = body.Ai.GetTargetCreature();
             int currentId = current == null || current.IsDead() ? -1 : current.GetInstanceID();
             string reason;
-            int pick = TargetPolicy.Choose(candidates, currentId, encounter, s.LeaderCrouching, s.NearestPartyDistance, out reason);
+            float leash = CorePlugin.FormidableClasses ? kernel.Doctrine.Leash : float.PositiveInfinity;
+            int pick = TargetPolicy.Choose(candidates, currentId, encounter, s.LeaderCrouching, s.NearestPartyDistance, leash, out reason);
             Reason = reason;
             if (pick < 0) return null;
             Character chosen = actors[pick];
@@ -110,8 +111,14 @@ namespace LivingWorld.Core
             CollectPartners(kernel.Frame.Senses.Leader);
             Build(kernel.Body.Human, kernel.Frame.Senses.Leader);
             int id = target.GetInstanceID();
+            float leash = CorePlugin.FormidableClasses ? kernel.Doctrine.Leash : float.PositiveInfinity;
             for (int i = 0; i < candidates.Count; i++)
-                if (candidates[i].Id == id) return TargetPolicy.Engaged(candidates[i], encounter, kernel.Frame.Senses.LeaderCrouching);
+                if (candidates[i].Id == id)
+                {
+                    TargetCandidate c = candidates[i];
+                    bool onMe = c.HurtMe || (c.TargetsMe && c.Distance <= TargetPolicy.SelfDefenseRange);
+                    return TargetPolicy.Engaged(c, encounter, kernel.Frame.Senses.LeaderCrouching) && TargetPolicy.WithinLeash(c, leash, onMe);
+                }
             return false;   // out of range or no longer sensed
         }
 
@@ -132,6 +139,7 @@ namespace LivingWorld.Core
         {
             candidates.Clear();
             actors.Clear();
+            AwarenessGroup party = CorePlugin.FormidableInitiative ? AwarenessGroup.ForKernel(kernel) : null;
             Vector3 position = me.transform.position;
             Character hurtMe = kernel.RecentAttacker(HurtMemorySeconds);
             foreach (Character other in Character.GetAllCharacters())
@@ -160,7 +168,9 @@ namespace LivingWorld.Core
                 // everything else still has to be within my range and sensed by me.
                 bool onPartner = targetsPartner && partnerDistance >= 0f && partnerDistance <= TargetPolicy.PartnerDefenseRadius;
                 if (distance > TargetPolicy.MaxRange && !onPartner) continue;
-                if (!onPartner && !kernel.Body.Ai.CanSenseTarget(other)) continue;
+                // A2.1: a contact the party's own sensors have Committed stays fightable when this member's native senses lost it.
+                bool partyCommitted = party != null && party.StateOf(other.GetInstanceID()) == ContactState.Committed;
+                if (!onPartner && !partyCommitted && !kernel.Body.Ai.CanSenseTarget(other)) continue;
                 Humanoid humanoid = other as Humanoid;
                 ItemDrop.ItemData weapon = humanoid == null ? null : humanoid.GetCurrentWeapon();
                 candidates.Add(new TargetCandidate
@@ -179,7 +189,9 @@ namespace LivingWorld.Core
                     Alerted = theirAi != null && theirAi.IsAlerted(),
                     Wildlife = other.GetFaction() == Character.Faction.AnimalsVeg,
                     HurtUs = hurtUs,
-                    HurtMe = ReferenceEquals(other, hurtMe)
+                    HurtMe = ReferenceEquals(other, hurtMe),
+                    PartyCommitted = partyCommitted,
+                    LeaderDistance = leader == null ? -1f : Vector3.Distance(leader.transform.position, other.transform.position)
                 });
                 actors.Add(other);
             }

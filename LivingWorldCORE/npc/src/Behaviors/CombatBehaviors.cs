@@ -28,11 +28,17 @@ namespace LivingWorld.Core
             return f.Phase == NpcPhase.Combat || f.Phase == NpcPhase.CombatClear;
         }
 
+        NpcKernel kernel;
+        float nextWeapon;
+
         public override void Enter(NpcFrame f)
         {
             prepared = null;
+            if (kernel == null) kernel = Body.Root.GetComponent<NpcKernel>();
+            // A window left open by an evade is judged when combat resumes; one from an earlier fight is dropped unjudged.
+            if (defense.Open && f.Now > defense.ReleaseAt + 1f) { defense.Cancel(); windowAttacker = null; }
             Body.RestorePace(this);
-            Body.TuneRangedWeapons(this);
+            Body.TuneRangedWeapons(this, kernel == null || !CorePlugin.FormidableClasses ? CombatHands.RangedMinimum : kernel.Doctrine.MeleeUnder);
         }
 
         public override void Tick(NpcFrame f)
@@ -56,13 +62,33 @@ namespace LivingWorld.Core
             // No dead time between targets: after a kill (or anything that empties the slot) the game
             // waits up to 2 s for its next re-pick. With an engaged enemy near, ask for it now.
             // 1.0.7 live: 13% of fighting time targetless with enemies near, 7 of 50 hits taken then.
-            if ((s.Target == null || s.Target.IsDead()) && !s.HasStaticTarget && f.Now >= nextRepick)
+            // A2 (3e5ac3c): the answer is taken at once - the initiative contact, else TargetPolicy's own pick - instead of
+            // dropping the slot and waiting for the native re-pick (2026-10-31: still 10% targetless with a hostile near).
+            if ((s.Target == null || s.Target.IsDead()) && !s.HasStaticTarget)
             {
-                NpcKernel k = Body.Root.GetComponent<NpcKernel>();
-                if (k != null && k.NearestEngagedDistance <= TargetPolicy.MaxRange)
+                Character pick = null;
+                bool fromInitiative = false;
+                if (CorePlugin.FormidableInitiative && kernel != null)
                 {
-                    Body.DropTarget(this);
-                    nextRepick = f.Now + .5f;
+                    if (kernel.InitiativeTarget != null) { pick = kernel.InitiativeTarget; fromInitiative = true; }
+                    else if (kernel.Targeting != null && kernel.NearestEngagedDistance <= TargetPolicy.MaxRange && f.Now >= nextRepick)
+                    {
+                        nextRepick = f.Now + .25f;
+                        pick = kernel.Targeting.Choose();
+                    }
+                }
+                if (pick != null && Vector3.Distance(pick.transform.position, Body.Root.transform.position) <= TargetPolicy.MaxRange)
+                {
+                    if (Body.Engage(this, pick)) { kernel.NoteEngage(pick, fromInitiative); prepared = null; }
+                }
+                else if (!CorePlugin.FormidableInitiative && f.Now >= nextRepick)
+                {
+                    NpcKernel k = Body.Root.GetComponent<NpcKernel>();
+                    if (k != null && k.NearestEngagedDistance <= TargetPolicy.MaxRange)
+                    {
+                        Body.DropTarget(this);
+                        nextRepick = f.Now + .5f;
+                    }
                 }
             }
             if (s.Target != null && s.Target != prepared)
@@ -70,6 +96,13 @@ namespace LivingWorld.Core
                 // Valheim's own distance/attack-data selector, once per new target.
                 Body.EquipBestWeaponFor(this, s.Target);
                 prepared = s.Target;
+                nextWeapon = f.Now + .25f;
+            }
+            else if (CorePlugin.FormidableClasses && s.Target != null && f.Now >= nextWeapon && !Body.Throwing && !Body.Human.InAttack() && !defense.Open)
+            {
+                // A2.2: the class weapon band is re-checked while the fight moves (not only at the native ~1 s ask).
+                nextWeapon = f.Now + .25f;
+                Body.RefreshWeapon(this, s.Target);
             }
             // Combos continue while this behavior holds the hands (1.0.17); FallBack taking the hands ends them.
             Body.AllowChains(this, true);
@@ -77,7 +110,8 @@ namespace LivingWorld.Core
             if (CorePlugin.CompanionBombs) StepBomb(f);
             // Native choice may swap bow -> sword at any time; keep the shield paired.
             if (!Body.Throwing) Body.PairShield(this);
-            if (CorePlugin.ShieldBlocking) StepBlock(f); else if (block != null && block.Raised) Body.SetBlocking(this, false);
+            if (CorePlugin.FormidableDefense) StepDefense(f);
+            else if (CorePlugin.ShieldBlocking) StepBlock(f); else if (block != null && block.Raised) Body.SetBlocking(this, false);
             Body.PublishObserved(this);
             Status = f.Phase == NpcPhase.CombatClear
                 ? "verifying clear " + f.Senses.SecondsSinceDamaged.ToString("0.0") + "s since hit"
@@ -89,7 +123,10 @@ namespace LivingWorld.Core
             prepared = null;
             if (Body.Throwing && Body.IsOwner) Body.FinishBomb(this);
             Body.SetBlocking(this, false);
+            guardUp = false;
             blockThreat = null;
+            // An evade hands the body to the fall-back mover: that window stays open and is judged when combat resumes.
+            if (defense.Open && defense.Plan.Choice != DefenseChoice.Evade) { CloseWindow(f, "released: " + reason); defense.Cancel(); }
             Status = "released: " + reason;
         }
 
@@ -199,8 +236,187 @@ namespace LivingWorld.Core
         public override void LateFrame(NpcFrame f)
         {
             if (aiming && !Body.Throwing) { Body.LookAt(this, aimPoint); return; }   // 1.0.32.12: face the throw
+            // A2.3: face the attacker of the open defense window while the shield is up (a block is frontal).
+            if (defense.Open && windowAttacker != null && !windowAttacker.IsDead() && defense.ShieldUp(f.Now))
+            {
+                Body.LookAt(this, windowAttacker.GetCenterPoint());
+                return;
+            }
             if (block != null && block.Raised && block.AgainstRanged && blockThreat != null)
                 Body.LookAt(this, blockThreat.GetCenterPoint());
+        }
+
+        // ---- A2.3 strike-window defense (3e5ac3c): one decision per incoming strike, timed to its predicted impact ----
+        public static readonly StrikeTimingBook Timings = new StrikeTimingBook();
+        readonly DefenseWindow defense = new DefenseWindow();
+        Character windowAttacker;
+        float windowDamageBefore, reaction = -1f;
+        public DefenseWindow Defense { get { return defense; } }
+        public int Opportunities { get; private set; }
+        public string LastDefense { get; private set; }
+        public float LastImpactIn { get; private set; }
+
+        /// <summary>One defense record per window, consumed by telemetry (bounded).</summary>
+        public struct DefenseRecord
+        {
+            public float Time, ImpactIn, ActLead, Damage, Stamina, Health;
+            public string Attacker, Attack, Choice, Why, Outcome;
+            public bool Learned, AttackerStaggered;
+        }
+        public readonly DefenseRecord[] DefenseRing = new DefenseRecord[32];
+        public long DefenseSequence { get; private set; }
+        DefenseRecord pending;
+        float damageAtOpen;
+
+        void StepDefense(NpcFrame f)
+        {
+            Humanoid me = Body.Human;
+            if (reaction < 0f) reaction = BlockPolicy.ReactionFor(Body.Root.name.GetStableHashCode() ^ Body.Root.GetInstanceID());
+            ClassDoctrine doctrine = kernel == null ? ClassDoctrines.For(TrainedClass.Warden) : kernel.Doctrine;
+            ItemDrop.ItemData weapon = me.GetCurrentWeapon();
+            bool meleeInHand = weapon != null && weapon.m_shared != null && weapon.m_shared.m_attack != null &&
+                weapon.m_shared.m_attack.m_attackType != Attack.AttackType.Projectile && weapon.m_shared.m_skillType != Skills.SkillType.Bows &&
+                weapon.m_dropPrefab != null;
+            var cap = new DefenseCapability
+            {
+                ShieldInHand = Body.ShieldInHand,
+                BusyOwnAttack = me.InAttack() || me.IsDrawingBow() || me.IsStaggering() || Body.Throwing,
+                OwnReach = meleeInHand ? weapon.m_shared.m_aiAttackRange : 0f,
+                OwnWindup = DefenseArbiter.WindupPrior,
+                Health01 = me.GetHealthPercentage(),
+                Reaction = reaction
+            };
+            Vector3 at = me.transform.position, forward = me.transform.forward;
+            // One window at a time: while one is open, no new strike is planned (and nothing is allocated or ray-cast for it).
+            if (!defense.Open)
+            foreach (Character other in Character.GetAllCharacters())
+            {
+                if (other == null || other == me || other.IsDead() || !other.InAttack()) continue;
+                Humanoid h = other as Humanoid;
+                if (h == null) continue;
+                Vector3 offset = other.transform.position - at;
+                float distance = offset.magnitude;
+                if (distance > 40f || !BaseAI.IsEnemy(me, other)) continue;
+                float elapsed; bool secondary;
+                Attack attack = NpcBody.AttackOf(h, out elapsed, out secondary);
+                if (attack == null) continue;
+                MonsterAI ai = other.GetBaseAI() as MonsterAI;
+                bool targetsMe = ai != null && ReferenceEquals(ai.GetTargetCreature(), me);
+                Vector3 back = -offset; back.y = 0f;
+                Vector3 theirForward = other.transform.forward; theirForward.y = 0f;
+                bool facingMe = back.sqrMagnitude < .01f || Vector3.Angle(theirForward, back) <= 45f;
+                bool ranged = attack.m_attackType == Attack.AttackType.Projectile;
+                var obs = new StrikeObservation
+                {
+                    AttackerId = other.GetInstanceID(),
+                    Distance = Mathf.Max(0f, distance - other.GetRadius() - me.GetRadius()),
+                    Reach = attack.m_attackRange,
+                    AimedAtMe = targetsMe || (facingMe && !ranged),
+                    Ranged = ranged, Elapsed = elapsed,
+                    ProjectileSpeed = attack.m_projectileVel, Heavy = secondary
+                };
+                if (!DefenseArbiter.Threatens(obs)) continue;   // filtered before any string or ray work
+                string key = global::Utils.GetPrefabName(other.gameObject) + ":" + attack.m_attackAnimation + (secondary ? ":2" : "");
+                bool learned;
+                obs.Windup = Timings.Windup(key, secondary, out learned);
+                obs.WindupLearned = learned;
+                Vector3 side = Vector3.zero;
+                cap.LaneFree = EvadeLane(at, other.transform.position, out side);
+                DefensePlan plan = DefenseArbiter.Plan(obs, cap, doctrine);
+                if (!defense.Offer(f.Now, f.Now - elapsed, plan)) continue;
+                Opportunities++;
+                windowAttacker = other;
+                evadeSide = side;
+                damageAtOpen = kernel == null ? 0f : (float)kernel.DamageTaken;
+                pending = new DefenseRecord
+                {
+                    Time = f.Now, ImpactIn = plan.ImpactIn, ActLead = plan.ImpactIn - plan.ActIn, Attacker = other.GetHoverName(), Attack = key,
+                    Choice = plan.Choice.ToString(), Why = plan.Why, Learned = learned, Stamina = Body.Stamina, Health = me.GetHealth()
+                };
+                LastDefense = plan.Choice + " (" + plan.Why + ")";
+                LastImpactIn = plan.ImpactIn;
+            }
+
+            if (defense.Open && defense.Due(f.Now))
+            {
+                switch (defense.Plan.Choice)
+                {
+                    case DefenseChoice.Interrupt:
+                        if (!Facing(windowAttacker)) pending.Why += "; not facing, no swing";
+                        else if (!Body.StrikeNow(this, windowAttacker, false)) pending.Why += "; swing refused";
+                        break;
+                    case DefenseChoice.Evade:
+                        if (kernel != null) kernel.RequestEvade(evadeSide, .7f);
+                        break;
+                }
+            }
+            // An unlearned (prior-timed) block/parry stays up while that attacker is still swinging, up to 1.5 s:
+            // slower attacks than the 0.55 s prior must not land just after the guard drops.
+            if (defense.Open && !pending.Learned && windowAttacker != null && !windowAttacker.IsDead() && windowAttacker.InAttack() &&
+                (defense.Plan.Choice == DefenseChoice.Block || defense.Plan.Choice == DefenseChoice.Parry) && f.Now < defense.OpenedAt + 1.5f)
+                defense.ExtendRelease(f.Now + .15f);
+            bool up = defense.ShieldUp(f.Now) && Body.ShieldInHand;
+            if (up != guardUp) { Body.SetBlocking(this, up); guardUp = up; }
+            if (defense.Open && defense.Expire(f.Now)) CloseWindow(f, null);
+        }
+
+        /// <summary>A swing only lands in front: interrupt/counter need the attacker within 45 degrees of my facing.</summary>
+        bool Facing(Character c)
+        {
+            if (c == null) return false;
+            Vector3 to = c.transform.position - Body.Human.transform.position; to.y = 0f;
+            Vector3 f = Body.Human.transform.forward; f.y = 0f;
+            return to.sqrMagnitude < .01f || Vector3.Angle(f, to) <= 45f;
+        }
+
+        Vector3 evadeSide;
+        bool guardUp;
+        readonly bool[] evadeBlocked = new bool[LanePlanner.Directions];
+
+        /// <summary>A side-step lane (left or right of the attacker line) that is standable and clear for 3 m.</summary>
+        bool EvadeLane(Vector3 me, Vector3 attacker, out Vector3 side)
+        {
+            side = Vector3.zero;
+            if (!CorePlugin.FormidableLanes) return false;
+            P2 m = new P2(me.x, me.z), a = new P2(attacker.x, attacker.z);
+            for (int i = 0; i < evadeBlocked.Length; i++) evadeBlocked[i] = false;
+            P2 away = (m - a).Normalized;
+            int l = LanePlanner.Nearest(away.Left), r = LanePlanner.Nearest(away.Left * -1f);
+            evadeBlocked[l] = !CombatLanes.Clear(me, LanePlanner.Direction(l), 3f);
+            evadeBlocked[r] = !CombatLanes.Clear(me, LanePlanner.Direction(r), 3f);
+            int pickLane = LanePlanner.SideStep(m, a, evadeBlocked, false, m);
+            if (pickLane < 0) return false;
+            P2 d = LanePlanner.Direction(pickLane);
+            side = new Vector3(d.X, 0f, d.Z);
+            return true;
+        }
+
+        void CloseWindow(NpcFrame f, string forced)
+        {
+            float taken = kernel == null ? 0f : (float)kernel.DamageTaken - damageAtOpen;
+            bool staggered = windowAttacker != null && !windowAttacker.IsDead() && windowAttacker.IsStaggering();
+            DefenseChoice c = defense.Plan.Choice;
+            string outcome = forced ?? (taken > 0f ? (c == DefenseChoice.Block || c == DefenseChoice.Parry ? "hit through guard" : "hit")
+                : staggered ? "attacker staggered" : "no damage");
+            pending.Damage = taken;
+            pending.Outcome = outcome;
+            pending.AttackerStaggered = staggered;
+            DefenseRing[DefenseSequence % DefenseRing.Length] = pending;
+            DefenseSequence++;
+            // Counter: one swing right after a defended strike, if the attacker is in reach (not a loop: one per window).
+            bool defended = forced == null && taken <= 0f && (c == DefenseChoice.Block || c == DefenseChoice.Parry || c == DefenseChoice.Evade);
+            if (windowAttacker != null && !windowAttacker.IsDead())
+            {
+                Humanoid me = Body.Human;
+                ItemDrop.ItemData weapon = me.GetCurrentWeapon();
+                float reach = weapon != null && weapon.m_shared != null && weapon.m_dropPrefab != null &&
+                    weapon.m_shared.m_skillType != Skills.SkillType.Bows ? weapon.m_shared.m_aiAttackRange : 0f;
+                float d = Mathf.Max(0f, Vector3.Distance(windowAttacker.transform.position, me.transform.position) - windowAttacker.GetRadius() - me.GetRadius());
+                if (DefenseArbiter.Counter(defended, staggered, d, reach, me.InAttack() || me.IsDrawingBow()) && Facing(windowAttacker) &&
+                    Body.StrikeNow(this, windowAttacker, true))
+                    DefenseRing[(DefenseSequence - 1) % DefenseRing.Length].Outcome = outcome + "; countered";
+            }
+            windowAttacker = null;
         }
 
         void ObserveThreats()
@@ -291,19 +507,26 @@ namespace LivingWorld.Core
 
         public override bool Wants(NpcFrame f)
         {
-            return f.Phase == NpcPhase.Readiness && f.Senses.NearestAlertedHostile != null;
+            return f.Phase == NpcPhase.Readiness && (f.Senses.NearestAlertedHostile != null || f.FocusContact != null);
+        }
+
+        // A2.1: the contact this member is answering (shared awareness) takes the look first; else the nearest alerted hostile.
+        static Character Watched(NpcFrame f)
+        {
+            Character c = f.FocusContact;
+            return c != null && !c.IsDead() ? c : f.Senses.NearestAlertedHostile;
         }
 
         public override void Tick(NpcFrame f)
         {
-            Character hostile = f.Senses.NearestAlertedHostile;
+            Character hostile = Watched(f);
             Status = hostile == null ? "watching" : "watching " + hostile.GetHoverName() + " at " +
-                f.Senses.NearestAlertedHostileDistance.ToString("0") + "m";
+                Vector3.Distance(Body.Root.transform.position, hostile.transform.position).ToString("0") + "m";
         }
 
         public override void LateFrame(NpcFrame f)
         {
-            Character hostile = f.Senses.NearestAlertedHostile;
+            Character hostile = Watched(f);
             if (hostile != null) Body.LookAt(this, hostile.GetCenterPoint());
         }
     }

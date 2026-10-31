@@ -34,6 +34,102 @@ namespace LivingWorld.Core
         bool wasOwner, genderVoiced;
 
         public NpcBody Body { get { return body; } }
+
+        // ---------------- A2 (3e5ac3c): class, initiative, evade ----------------
+        bool classLoaded;
+        public TrainedClass Class { get; private set; }
+        public ClassDoctrine Doctrine { get; private set; }
+        readonly InitiativeOption[] initBuffer = new InitiativeOption[24];
+        readonly List<InitiativeOption> initOptions = new List<InitiativeOption>(24);
+        public InitiativeResponse Initiative { get; private set; }
+        public Character InitiativeTarget { get; private set; }
+        public string InitiativeWhy { get; private set; }
+        public int InitiativeEngages { get; private set; }
+        public int ContinuityEngages { get; private set; }
+        float evadeUntil;
+        Vector3 evadeDir;
+        public int Evades { get; private set; }
+        Character lastVoiced;
+        string readyTag, engageTag, continuityTag;
+
+        /// <summary>Defense asks for a side-step; the fall-back mover performs it for this long.</summary>
+        internal void RequestEvade(Vector3 direction, float seconds)
+        {
+            evadeDir = direction;
+            evadeUntil = Time.time + seconds;
+            Evades++;
+        }
+
+        /// <summary>A2.2: a class written at creation applies at once (the kernel may have latched the role class first).</summary>
+        internal void ApplyClass(TrainedClass c)
+        {
+            classLoaded = true;
+            Class = c;
+            Doctrine = ClassDoctrines.For(c);
+        }
+
+        void Tags()
+        {
+            if (readyTag != null) return;
+            string n = body.Human.m_name;
+            readyTag = n + ":ready"; engageTag = n + ":engage"; continuityTag = n + ":continuity";
+        }
+
+        /// <summary>A target was just taken by our layer (initiative or continuity): record the response and keep the call-out law.</summary>
+        internal void NoteEngage(Character target, bool initiative)
+        {
+            if (target == null) return;
+            Tags();
+            if (initiative)
+            {
+                InitiativeEngages++;
+                // Same call-out law as a TargetPolicy pick: once per newly taken enemy, never for a re-take of the same one.
+                if (!ReferenceEquals(target, lastVoiced))
+                    try { CompanionCombatVoice.OnNewTarget(this, target); } catch (Exception e) { CorePlugin.Warn("voice target: " + e.Message); }
+            }
+            else ContinuityEngages++;
+            lastVoiced = target;
+            AwarenessGroup g = AwarenessGroup.ForKernel(this);
+            if (g != null) g.MarkResponse(target.GetInstanceID(), initiative ? engageTag : continuityTag, Time.time);
+        }
+
+        void StepInitiative(NpcSenses s)
+        {
+            Initiative = InitiativeResponse.None;
+            InitiativeTarget = null;
+            frame.FocusContact = null;
+            if (!CorePlugin.FormidableInitiative) { InitiativeWhy = "off"; return; }
+            AwarenessGroup g = AwarenessGroup.ForKernel(this);
+            if (g == null) { InitiativeWhy = "no awareness"; return; }
+            int n = g.Options(body.Human, s.Leader, initBuffer);
+            initOptions.Clear();
+            for (int i = 0; i < n; i++) initOptions.Add(initBuffer[i]);
+            ContactState strongest;
+            string why;
+            int pick = InitiativePolicy.Choose(initOptions, Doctrine, out strongest, out why);
+            Character actor = pick >= 0 ? g.ActorOf(initOptions[pick].Id) : null;
+            Initiative = InitiativePolicy.Response(strongest, s.LeaderCrouching, actor != null);
+            InitiativeTarget = Initiative == InitiativeResponse.Engage ? actor : null;
+            InitiativeWhy = why;
+            // Focus: the engaged contact, else the nearest contact at the strongest (non-wildlife) state.
+            int focus = pick;
+            if (focus < 0)
+            {
+                float best = float.PositiveInfinity;
+                for (int i = 0; i < initOptions.Count; i++)
+                {
+                    InitiativeOption o = initOptions[i];
+                    if (o.State != strongest || (o.Wildlife && !o.HurtUs) || o.Distance >= best) continue;
+                    best = o.Distance; focus = i;
+                }
+            }
+            frame.FocusContact = focus >= 0 ? g.ActorOf(initOptions[focus].Id) : null;
+            if (Initiative == InitiativeResponse.Ready && frame.FocusContact != null && frame.Phase == NpcPhase.Readiness)
+            {
+                Tags();
+                g.MarkResponse(initOptions[focus].Id, readyTag, Time.time);
+            }
+        }
         public NpcFrame Frame { get { return frame; } }
         public TargetSelector Targeting { get; private set; }
 
@@ -65,6 +161,8 @@ namespace LivingWorld.Core
 
         void Awake()
         {
+            Doctrine = ClassDoctrines.For(TrainedClass.Warden);
+            InitiativeWhy = "";
             string missing = NativeApi.MissingMembers();
             if (missing.Length > 0)
                 throw new MissingMemberException("Valheim changed members Living World depends on: " + missing);
@@ -131,9 +229,13 @@ namespace LivingWorld.Core
             }
         }
 
+        /// <summary>Cumulative damage taken (A2.3 defense outcomes compare it across a strike window).</summary>
+        public double DamageTaken { get; private set; }
+
         void OnDamaged(float damage, Character attacker)
         {
             lastDamageTime = Time.time;
+            if (damage > 0f && !float.IsNaN(damage)) DamageTaken += damage;
             try { CompanionCombatVoice.OnHurt(this, damage); } catch (Exception error) { CorePlugin.Warn("voice hurt: " + error.Message); }
             if (body.Human != null) LastHealth = body.Human.GetHealth();
             Action<NpcKernel, float, Character> damaged = Damaged;
@@ -180,6 +282,12 @@ namespace LivingWorld.Core
             wasOwner = true;
             if (appearance != null && appearance.Ready)
             {
+                if (!classLoaded)
+                {
+                    classLoaded = true;
+                    Class = CorePlugin.FormidableClasses ? body.EnsureClass(appearance.Role) : TrainedClass.Warden;
+                    Doctrine = ClassDoctrines.For(Class);
+                }
                 body.ReapplyKitOnce();
                 if (!genderVoiced) { genderVoiced = true; CompanionCombatVoice.ApplyGender(this); }
             }
@@ -229,8 +337,11 @@ namespace LivingWorld.Core
             Sense(frame.Senses);
 
             NpcSenses s = frame.Senses;
+            StepInitiative(s);
             NpcPhase phase = arbiter.Step(new PhaseInputs
             {
+                InitiativeEngage = Initiative == InitiativeResponse.Engage,
+                InitiativeReady = Initiative == InitiativeResponse.Ready,
                 AppearanceReady = appearance != null && appearance.Ready,
                 HasLeader = s.HasLeader,
                 LeaderArmed = s.LeaderArmed,
@@ -252,7 +363,11 @@ namespace LivingWorld.Core
             frame.FallingBack = fallBack.Step(Time.time, fighting, body.Human.GetHealthPercentage(), nearestEngagedDistance);
             frame.FallBackFrom = nearestEngagedPosition;
             // 1.0.32.15: step out of a known harmful cloud with the same fall-back mover (no new movement writer).
-            if (body.IsOwner && hazard.Step(this, body.Human, Time.time)) { frame.FallingBack = true; frame.FallBackFrom = hazard.From; }
+            frame.FallBackHazard = false;
+            if (body.IsOwner && hazard.Step(this, body.Human, Time.time)) { frame.FallingBack = true; frame.FallBackFrom = hazard.From; frame.FallBackHazard = true; }
+            // A2.3: a planned side-step runs on the same mover (fall-back holds every domain while it lasts).
+            frame.Evading = !frame.FallingBack && Time.time < evadeUntil && fighting;
+            frame.EvadeDir = evadeDir;
             if (phase != lastPhase)
             {
                 PhaseChanges++;

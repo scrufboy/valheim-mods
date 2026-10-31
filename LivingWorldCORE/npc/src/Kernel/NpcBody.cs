@@ -186,6 +186,25 @@ namespace LivingWorld.Core
 
         public int TargetDrops { get; private set; }
 
+        /// <summary>
+        /// A2.1 (3e5ac3c): take this enemy as the native target now - the same fields MonsterAI.UpdateTarget writes when its own
+        /// FindEnemy answers - instead of waiting up to 2 s for the native re-pick. The choice was made by the shared awareness
+        /// frame or by TargetPolicy (the same rule FindEnemy answers with). Native MonsterAI then pursues, faces and attacks.
+        /// </summary>
+        public bool Engage(NpcBehavior caller, Character target)
+        {
+            Require(NpcDomain.Movement, caller);
+            if (target == null || target.IsDead() || ReferenceEquals(Ai.GetTargetCreature(), target)) return false;
+            NativeApi.TargetCreature.SetValue(Ai, target);
+            NativeApi.TargetStatic.SetValue(Ai, null);
+            NativeApi.SetAlerted.Invoke(Ai, new object[] { true });
+            NativeApi.UpdateTargetTimer.SetValue(Ai, 2f);   // the native re-pick comes back to TargetPolicy after 2 s, as usual
+            Engages++;
+            return true;
+        }
+
+        public int Engages { get; private set; }
+
         // ---------------- Lab commands (no behavior domain; owner only) ----------------
 
         /// <summary>lwheal: full health and no lingering status effects (cold, poison, burning...).</summary>
@@ -319,11 +338,14 @@ namespace LivingWorld.Core
             if (Human.InAttack()) return "mid-attack";
             string[] names = CompanionKits.Items(kit);
             if (names == null) return "unknown kit '" + kit + "' (iron, plains)";
+            TrainedClass cls;
+            if (CorePlugin.FormidableClasses && TryGetClass(out cls)) names = ClassDoctrines.Kit(cls, kit);   // A2.2: weapons follow the class
             if (ObjectDB.instance == null) return "item database not ready";
             quality = CompanionKits.ClampQuality(quality);
             var prefabs = new GameObject[names.Length];
             for (int i = 0; i < names.Length; i++)
             {
+                if (names[i] == null) continue;   // a class kit without a shield
                 prefabs[i] = ObjectDB.instance.GetItemPrefab(names[i]);
                 if (prefabs[i] == null || prefabs[i].GetComponent<ItemDrop>() == null) return "missing vanilla item " + names[i];
             }
@@ -338,6 +360,7 @@ namespace LivingWorld.Core
             ItemDrop.ItemData sword = null, shield = null;
             foreach (GameObject prefab in prefabs)
             {
+                if (prefab == null) continue;
                 ItemDrop.ItemData item = prefab.GetComponent<ItemDrop>().m_itemData.Clone();
                 item.m_dropPrefab = prefab;
                 bool ammo = item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Ammo;
@@ -362,13 +385,49 @@ namespace LivingWorld.Core
             return "";
         }
 
+        // ---------------- A2.2 explicit class (3e5ac3c): stored on the person, written once ----------------
+
+        public const string ClassKey = "lw_class";
+
+        /// <summary>The stored class, if any.</summary>
+        public bool TryGetClass(out TrainedClass c)
+        {
+            c = TrainedClass.Warden;
+            ZDO z = View == null || !View.IsValid() ? null : View.GetZDO();
+            return z != null && ClassDoctrines.TryParse(z.GetString(ClassKey, ""), out c);
+        }
+
+        /// <summary>Owner only: the class this person was created as. Not a behavior domain (identity, like the kit record).</summary>
+        internal bool SetClass(TrainedClass c)
+        {
+            if (!IsOwner) return false;
+            View.GetZDO().Set(ClassKey, c.ToString());
+            return true;
+        }
+
+        /// <summary>Stored class, or (people created before classes were stored) the class of their creation roll, written once.</summary>
+        internal TrainedClass EnsureClass(string role)
+        {
+            TrainedClass c;
+            if (TryGetClass(out c)) return c;
+            c = ClassDoctrines.FromRole(role);
+            if (SetClass(c)) CorePlugin.Report(Human.GetHoverName() + " class recorded: " + c + " (from creation role '" + role + "').");
+            return c;
+        }
+
+        /// <summary>Classes whose weapons differ from the companion prefab's: their kit must be re-applied on every load.</summary>
+        static bool ClassNeedsKit(TrainedClass c) { return c == TrainedClass.Scout || c == TrainedClass.Legion; }
+
         /// <summary>Once per load: re-apply a recorded non-default kit (Valheim re-gives prefab items on load).</summary>
         internal void ReapplyKitOnce()
         {
             if (kitChecked || !IsOwner) return;
             kitChecked = true;
             string kit = Kit;
-            if (kit.Length == 0 || kit == CompanionKits.Iron) return;
+            TrainedClass cls;
+            bool classKit = CorePlugin.FormidableClasses && TryGetClass(out cls) && ClassNeedsKit(cls);
+            if (!classKit && (kit.Length == 0 || kit == CompanionKits.Iron)) return;
+            if (kit.Length == 0) kit = CompanionKits.Iron;
             string refused = Outfit(kit, KitQuality);
             if (refused.Length > 0) { kitChecked = false; CorePlugin.Warn(Human.GetHoverName() + " kit " + kit + " not re-applied: " + refused); }
         }
@@ -421,10 +480,41 @@ namespace LivingWorld.Core
         {
             Require(NpcDomain.Hands, caller);
             DouseTorchCore();
+            if (CorePlugin.FormidableClasses && Human.InAttack()) return;   // finish the swing first; never stow the bow alone mid-attack
+            if (CorePlugin.FormidableClasses) StowCanonical();
             if (LeftItem != null || RightItem != null) Human.HideHandItems(false, true);
             RestoreShieldToBack();
             Publish(null, null, BackLeft, BackRight);
         }
+
+        /// <summary>
+        /// A2.2: what goes on the back follows the class, not whatever was last in hand. 2026-10-31 live: a fight ended with the bow
+        /// in hand put only the bow on the back (sword and shield nowhere) in 45% of calm samples. The back shows the melee weapon
+        /// and, beside a one-hander, the shield. Only re-equips what the inventory really holds.
+        /// </summary>
+        void StowCanonical()
+        {
+            if (Human.InAttack()) return;
+            ItemDrop.ItemData melee = null, shield = null, bow = null;
+            Inventory inventory = Human.GetInventory();
+            if (inventory == null) return;
+            foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+            {
+                CombatHands.Kind kind = TypeOf(item);
+                if (melee == null && (kind == CombatHands.Kind.OneHanded || kind == CombatHands.Kind.TwoHanded)) melee = item;
+                else if (shield == null && kind == CombatHands.Kind.Shield) shield = item;
+                else if (bow == null && kind == CombatHands.Kind.Ranged) bow = item;
+            }
+            ItemDrop.ItemData left = LeftItem, right = RightItem;
+            if (left == null && right == null) return;   // already on the back: HideHandItems is not reached either
+            if (melee != null && !ReferenceEquals(right, melee) && !Human.IsItemEquiped(melee)) Human.EquipItem(melee, false);
+            // A bow cannot share the hands with a one-hander (native equip drops one), so the back shows melee + shield when both exist.
+            bool wantShield = shield != null && TypeOf(melee) != CombatHands.Kind.TwoHanded;
+            if (wantShield && !Human.IsItemEquiped(shield)) Human.EquipItem(shield, false);
+            BackStows++;
+        }
+
+        public int BackStows { get; private set; }
 
         /// <summary>Weapons come off the back into the hands.</summary>
         public void Draw(NpcBehavior caller)
@@ -510,6 +600,20 @@ namespace LivingWorld.Core
         /// </summary>
         internal bool EquipForNativeSelection(Character target)
         {
+            return ChooseWeapon(target);
+        }
+
+        /// <summary>A2.2: re-evaluate the weapon while fighting (the native ask comes about once a second; a target that walked from
+        /// 8 to 14 m kept the sword until then). Same rule as the native ask; never interrupts an attack, draw or block.</summary>
+        public bool RefreshWeapon(NpcBehavior caller, Character target)
+        {
+            Require(NpcDomain.Hands, caller);
+            if (Human.IsDrawingBow() || Human.IsBlocking()) return false;
+            return ChooseWeapon(target);
+        }
+
+        bool ChooseWeapon(Character target)
+        {
             if (target == null || !IsOwner) return false;
             Inventory inventory = Human.GetInventory();
             if (inventory == null) return false;
@@ -526,7 +630,17 @@ namespace LivingWorld.Core
             bool holdingBow = bow != null && (ReferenceEquals(right, bow) || ReferenceEquals(left, bow));
             bool holdingMelee = melee != null && ReferenceEquals(right, melee);
             float distance = Vector3.Distance(Root.transform.position, target.transform.position);
-            WeaponChoice.Pick pick = WeaponChoice.Choose(bow != null, AmmoCount > 0, melee != null, holdingBow, holdingMelee,
+            WeaponChoice.Pick pick;
+            if (CorePlugin.FormidableClasses)
+            {
+                Vector3 to = Root.transform.position - target.transform.position; to.y = 0f;
+                Vector3 v = target.GetVelocity(); v.y = 0f;
+                float closing = to.sqrMagnitude < .01f ? 0f : Vector3.Dot(v, to.normalized);
+                float ttc = closing > .5f ? Mathf.Max(0f, distance - 1.5f) / closing : float.PositiveInfinity;
+                pick = ClassDoctrines.Weapon(kernel.Doctrine, bow != null, AmmoCount > 0, melee != null, holdingBow, holdingMelee,
+                    distance, target.IsFlying(), ttc);
+            }
+            else pick = WeaponChoice.Choose(bow != null, AmmoCount > 0, melee != null, holdingBow, holdingMelee,
                 distance, target.IsFlying());
             LastWeaponPick = pick.ToString();
             ItemDrop.ItemData want = pick == WeaponChoice.Pick.Bow ? bow : pick == WeaponChoice.Pick.Melee ? melee : null;
@@ -570,7 +684,15 @@ namespace LivingWorld.Core
         /// </summary>
         public int TuneRangedWeapons(NpcBehavior caller)
         {
+            return TuneRangedWeapons(caller, CombatHands.RangedMinimum);
+        }
+
+        /// <param name="minimum">A2.2: the class's own bow minimum (Huntress 3.5 m, Scout 5 m, others 8 m): the bow is never held
+        /// at a distance where native AI refuses to fire it.</param>
+        public int TuneRangedWeapons(NpcBehavior caller, float minimum)
+        {
             Require(NpcDomain.Hands, caller);
+            minimum = Mathf.Clamp(minimum, 2f, CombatHands.RangedMinimum);
             Inventory inventory = Human.GetInventory();
             if (inventory == null) return 0;
             int tuned = 0;
@@ -578,7 +700,7 @@ namespace LivingWorld.Core
             {
                 if (item == null || item.m_shared == null || !CombatHands.IsRanged(TypeOf(item))) continue;
                 ItemDrop.ItemData.SharedData s = item.m_shared;
-                if (s.m_aiAttackRangeMin >= CombatHands.RangedMinimum && s.m_aiAttackRange >= CombatHands.RangedAiRange &&
+                if (Mathf.Abs(s.m_aiAttackRangeMin - minimum) < .01f && s.m_aiAttackRange >= CombatHands.RangedAiRange &&
                     s.m_attack != null && !s.m_attack.m_bowDraw) continue;
                 // Actor-local copy: the shared prefab data (and the player's own bows) stay untouched.
                 s = (ItemDrop.ItemData.SharedData)NativeApi.CloneObject.Invoke(s, null);
@@ -589,7 +711,7 @@ namespace LivingWorld.Core
                     s.m_attack.m_drawDurationMin = 0f;
                 }
                 s.m_aiAttackRange = CombatHands.RangedAiRange;
-                s.m_aiAttackRangeMin = CombatHands.RangedMinimum;
+                s.m_aiAttackRangeMin = minimum;
                 s.m_aiAttackMaxAngle = CombatHands.RangedAimAngle;
                 item.m_shared = s;
                 tuned++;
@@ -806,6 +928,34 @@ namespace LivingWorld.Core
                 if (d <= areaRadius) inArea++;
                 if (other != target && d <= HeavyPolicy.ConvergeRadius) closing++;
             }
+        }
+
+        // ---------------- A2.3 defense actions (3e5ac3c) ----------------
+
+        /// <summary>Interrupt or counter: start one ordinary attack at this enemy now (native attack; reach and facing checked by the plan).</summary>
+        public bool StrikeNow(NpcBehavior caller, Character target, bool counter)
+        {
+            Require(NpcDomain.Hands, caller);
+            if (target == null || target.IsDead() || Human.InAttack() || Human.IsDrawingBow()) return false;
+            if (Human.IsBlocking()) NativeApi.Blocking.SetValue(Human, false);
+            if (!Human.StartAttack(target, false)) return false;
+            if (counter) Counters++; else Interrupts++;
+            return true;
+        }
+
+        public int Interrupts { get; private set; }
+        public int Counters { get; private set; }
+
+        /// <summary>The native attack in progress on any humanoid (read-only) and its elapsed time.</summary>
+        internal static Attack AttackOf(Humanoid h, out float elapsed, out bool secondary)
+        {
+            elapsed = 0f; secondary = false;
+            if (h == null) return null;
+            Attack a = NativeApi.CurrentAttack.GetValue(h) as Attack;
+            if (a == null) return null;
+            elapsed = (float)NativeApi.AttackTime.GetValue(a);
+            secondary = (bool)NativeApi.CurrentAttackIsSecondary.GetValue(h);
+            return a;
         }
 
         // ---------------- Heavy-attack stamina (1.0.21): only heavies spend it; it always refills ----------------

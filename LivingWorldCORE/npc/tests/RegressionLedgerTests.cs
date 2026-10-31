@@ -170,6 +170,7 @@ static class RegressionLedgerTests
         Run("1.0.4 fix: a fleeing creature beyond 30 m is dropped, not chased", BeyondRangeDropped);
         Run("Rule: unseen alerted hostiles are not picked mid-fight (no wallhack)", NoWallhack);
 
+        FormidableA2Tests.RunAll(Run);   // A2 (3e5ac3c)
         Console.WriteLine();
         Console.WriteLine("Regression ledger: " + passed + " passed, " + failed + " failed.");
         foreach (string f in failures) Console.WriteLine("  FAIL " + f);
