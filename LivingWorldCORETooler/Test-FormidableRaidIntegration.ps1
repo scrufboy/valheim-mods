@@ -27,11 +27,19 @@ if (($config -split '\r?\n' | Where-Object { $_ -match '^HuntPlayer\s*=\s*true$'
     ($config -split '\r?\n' | Where-Object { $_ -match '^HuntPlayer\s*=\s*false$' }).Count -ne 0) {
     throw 'Every current FormidableAI raid slot must perform normal hostile raid pursuit.'
 }
+$orcSections = [regex]::Matches(
+    $config,
+    '(?ms)^\[LWC_Formidable_Souls_(?:Forest|Swamp)\.3\]\s*.*?(?=^\[|\z)'
+)
+if ($orcSections.Count -ne 2 -or
+    ($orcSections | Where-Object { $_.Value -notmatch '(?m)^Enabled\s*=\s*false$' }).Count -ne 0) {
+    throw 'Both Krauguk Legionnaire raid slots must remain isolated until RRRN_OrcBrute compatibility is repaired.'
+}
 if (($config -split '\r?\n' | Where-Object { $_ -match '^SpawnRadiusMin\s*=\s*70$' }).Count -ne 8 -or
     ($config -split '\r?\n' | Where-Object { $_ -match '^SpawnRadiusMax\s*=\s*95$' }).Count -ne 8) {
     throw 'Every current FormidableAI raid slot must use the 70-95 m initiative ring.'
 }
-if ($manifest.version_number -ne '2.6.2') {
+if ($manifest.version_number -ne '2.6.3') {
     throw 'Unexpected Tooler package version.'
 }
 if ($manifest.dependencies -notcontains 'ASharpPen-Custom_Raids-1.8.2') {
@@ -44,6 +52,7 @@ if ($manifest.dependencies -notcontains 'ASharpPen-Custom_Raids-1.8.2') {
     Events = @('lwc_formidable_arena', 'lwc_formidable_souls_swamp')
     RandomPool = $false
     HuntPlayer = $true
+    OrcBruteRaidSlotsEnabled = $false
     SpawnRing = '70-95 m'
     Config = $configPath
 } | ConvertTo-Json -Depth 3

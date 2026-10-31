@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.3
+
+- Temporarily disabled only the two `RRRN_OrcBrute` heavy raid slots after two live error bursts aligned with OrcBrute spawn opportunities and no OrcBrute ever completed spawning.
+- Retained the heavy definitions for compatibility repair; all other Souls actors, the 70–95 m ring, native pursuit, group sizes, caps and combat behavior are unchanged.
+- The natural OrcBrute spawner is isolated separately in the active Arena profile so ordinary exploration cannot trigger the same broken construction path.
+
 ## 2.6.2
 
 - Corrected every current FormidableAI raid slot to `HuntPlayer=true` after live video showed `HuntPlayer=false` actors stranded around the 70–95 m ring.
