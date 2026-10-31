@@ -42,6 +42,8 @@ Check $LASTEXITCODE 'ledger compile'
 Step '2/6 Native compatibility gate'
 & $Python -I "$root\tools\native_gate.py" (Join-Path $Managed 'assembly_valheim.dll') "$root\src\Kernel\NativeApi.cs"
 Check $LASTEXITCODE 'native gate'
+& $Python -I "$root\tools\appearance_gate.py" "$root\src\Identity\NpcAppearance.cs" "$root\src\Kernel\NativeApi.cs"
+Check $LASTEXITCODE 'appearance transaction gate'
 
 Step '3/6 Compile core'
 $coreSources = Get-ChildItem -Recurse -Filter *.cs "$root\src" | Where-Object { $_.FullName -notmatch '\\Telemetry\\' } | Sort-Object FullName | ForEach-Object FullName

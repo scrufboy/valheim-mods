@@ -27,6 +27,7 @@ mono build/ledger.exe | tail -1
 
 echo "== 2/6 Native compatibility gate"
 python3 -I tools/native_gate.py "$REFS/assembly_valheim.dll" src/Kernel/NativeApi.cs
+python3 -I tools/appearance_gate.py src/Identity/NpcAppearance.cs src/Kernel/NativeApi.cs
 
 echo "== 3/6 Compile core (C# 5, matches the Windows .NET Framework compiler)"
 $CSC -out:build/LivingWorld.HumanNpc.dll \

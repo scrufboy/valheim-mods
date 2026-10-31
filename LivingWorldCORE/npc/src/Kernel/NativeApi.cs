@@ -83,6 +83,16 @@ namespace LivingWorld.Core
         internal static readonly FieldInfo BeardInstance = Field(typeof(VisEquipment), "m_beardItemInstance");
         internal static readonly FieldInfo CurrentHairHash = Field(typeof(VisEquipment), "m_currentHairItemHash");
         internal static readonly FieldInfo CurrentBeardHash = Field(typeof(VisEquipment), "m_currentBeardItemHash");
+        internal static readonly FieldInfo RequestedModel = Field(typeof(VisEquipment), "m_modelIndex");
+        internal static readonly FieldInfo RequestedSkinColor = Field(typeof(VisEquipment), "m_skinColor");
+        internal static readonly FieldInfo RequestedHairColor = Field(typeof(VisEquipment), "m_hairColor");
+        internal static readonly FieldInfo RequestedHairHash = Field(typeof(VisEquipment), "m_hairItem");
+        internal static readonly FieldInfo RequestedBeardHash = Field(typeof(VisEquipment), "m_beardItem");
+        internal static readonly MethodInfo UpdateVisuals = Method(typeof(VisEquipment), "UpdateVisuals");
+        internal static readonly MethodInfo SetHairEquipped = Method(typeof(VisEquipment), "SetHairEquipped", typeof(int));
+        internal static readonly MethodInfo SetBeardEquipped = Method(typeof(VisEquipment), "SetBeardEquipped", typeof(int));
+        internal static readonly MethodInfo UpdateLodgroup = Method(typeof(VisEquipment), "UpdateLodgroup");
+        internal static readonly MethodInfo UpdateColors = Method(typeof(VisEquipment), "UpdateColors");
 
         // Wet presentation: native Wet is authored player-only for its VFX.
         internal static readonly MethodInfo TriggerStartEffects =

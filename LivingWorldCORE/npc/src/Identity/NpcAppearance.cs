@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -52,6 +53,11 @@ namespace LivingWorld.Core
             Vector3 skin = SkinColor(seed);
             Vector3 hairColor = HairColor(seed);
 
+            // The cloned Player graph can carry request-cache values that do not
+            // belong to its new ZDO. Make the first native setter observably dirty
+            // without touching the rendered/current hashes.
+            PrepareFreshNativeSelection(identity);
+
             visuals.SetModel(identity.Female ? 1 : 0);
             visuals.SetSkinColor(skin);
             visuals.SetHairColor(hairColor);
@@ -64,7 +70,12 @@ namespace LivingWorld.Core
             zdo.Set(HairNameKey, identity.Hair);
             zdo.Set(BeardNameKey, identity.Beard);
             zdo.Set(RoleKey, Role);
+            CommitNativeFacialHair(zdo, identity.Hair, identity.Beard);
+            // MarkerKey means the identity is immutable. Presentation can be
+            // repaired from it after a load; it must never be rerolled.
             zdo.Set(MarkerKey, true);
+            InvokeNative(NativeApi.UpdateVisuals);
+            AttachNativeFacialHair(identity.Hair, identity.Beard);
         }
 
         void ReadIdentity()
@@ -80,11 +91,20 @@ namespace LivingWorld.Core
         IEnumerator Start()
         {
             float deadline = Time.realtimeSinceStartup + 8f;
+            float nextRepair = 0f;
             yield return null;
             while (Time.realtimeSinceStartup < deadline)
             {
                 ReadIdentity();
                 string reason;
+                if (view.IsOwner() && Time.realtimeSinceStartup >= nextRepair && !VisibleFacialHair(out reason))
+                {
+                    // Older 1.0.x records can contain the immutable identity but
+                    // no runtime attachment. Recommit only its exact native
+                    // presentation and attach it; never reroll or rewrite identity.
+                    RepairNativeFacialHair();
+                    nextRepair = Time.realtimeSinceStartup + .25f;
+                }
                 if (VisibleFacialHair(out reason))
                 {
                     human.m_name = DisplayName;
@@ -104,6 +124,53 @@ namespace LivingWorld.Core
             CorePlugin.Report("APPEARANCE FAIL " + Status);
         }
 
+        void PrepareFreshNativeSelection(NpcIdentityRecord identity)
+        {
+            int hair = identity.Hair.GetStableHashCode();
+            int beard = identity.Beard.Length == 0 ? 0 : identity.Beard.GetStableHashCode();
+            NativeApi.RequestedModel.SetValue(visuals, identity.Female ? 0 : 1);
+            NativeApi.RequestedSkinColor.SetValue(visuals, new Vector3(-1f, -1f, -1f));
+            NativeApi.RequestedHairColor.SetValue(visuals, new Vector3(-1f, -1f, -1f));
+            NativeApi.RequestedHairHash.SetValue(visuals, hair ^ Int32.MinValue);
+            NativeApi.RequestedBeardHash.SetValue(visuals, beard ^ Int32.MinValue);
+        }
+
+        void RepairNativeFacialHair()
+        {
+            if (String.IsNullOrEmpty(HairName)) return;
+            CommitNativeFacialHair(view.GetZDO(), HairName, BeardName);
+            InvokeNative(NativeApi.UpdateVisuals);
+            AttachNativeFacialHair(HairName, BeardName);
+        }
+
+        static void CommitNativeFacialHair(ZDO zdo, string hairName, string beardName)
+        {
+            if (zdo == null) throw new InvalidOperationException("Facial-hair selection has no native ZDO.");
+            int hair = hairName.GetStableHashCode();
+            int beard = String.IsNullOrEmpty(beardName) ? 0 : beardName.GetStableHashCode();
+            zdo.Set(ZDOVars.s_hairItem, hair, false);
+            zdo.Set(ZDOVars.s_beardItem, beard, false);
+            if (zdo.GetInt(ZDOVars.s_hairItem, 0) != hair || zdo.GetInt(ZDOVars.s_beardItem, 0) != beard)
+                throw new InvalidOperationException("Facial-hair selection did not persist to the native ZDO.");
+        }
+
+        void AttachNativeFacialHair(string hairName, string beardName)
+        {
+            int hair = hairName.GetStableHashCode();
+            int beard = String.IsNullOrEmpty(beardName) ? 0 : beardName.GetStableHashCode();
+            InvokeNative(NativeApi.SetHairEquipped, hair);
+            InvokeNative(NativeApi.SetBeardEquipped, beard);
+            InvokeNative(NativeApi.UpdateLodgroup);
+            InvokeNative(NativeApi.UpdateColors);
+        }
+
+        object InvokeNative(MethodInfo method, params object[] arguments)
+        {
+            if (method == null) throw new MissingMethodException("Valheim facial-hair presentation member changed.");
+            try { return method.Invoke(visuals, arguments); }
+            catch (TargetInvocationException error) { throw error.InnerException ?? error; }
+        }
+
         bool VisibleFacialHair(out string reason)
         {
             if (String.IsNullOrEmpty(HairName)) { reason = "saved hair is missing"; return false; }
@@ -115,10 +182,11 @@ namespace LivingWorld.Core
             int currentBeard = (int)NativeApi.CurrentBeardHash.GetValue(visuals);
             GameObject hairObject = NativeApi.HairInstance.GetValue(visuals) as GameObject;
             GameObject beardObject = NativeApi.BeardInstance.GetValue(visuals) as GameObject;
-            if (currentHair != expectedHair || hairObject == null || hairObject.GetComponentsInChildren<Renderer>(true).Length == 0)
+            string renderReason = "missing";
+            if (currentHair != expectedHair || hairObject == null || !AttachmentRenders(hairObject, out renderReason))
             {
                 reason = "waiting for visible " + HairName + " (selected=" + expectedHair +
-                    ", rendered=" + currentHair + ", object=" + (hairObject == null ? "missing" : "present") + ")";
+                    ", rendered=" + currentHair + ", object=" + (hairObject == null ? "missing" : renderReason) + ")";
                 return false;
             }
             if (currentBeard != expectedBeard)
@@ -129,10 +197,36 @@ namespace LivingWorld.Core
             }
             if (Female && beardObject != null)
             { reason = "female actor retained facial hair"; return false; }
-            if (!Female && (BeardName.Length == 0 || beardObject == null || beardObject.GetComponentsInChildren<Renderer>(true).Length == 0))
+            if (!Female && (BeardName.Length == 0 || beardObject == null || !AttachmentRenders(beardObject, out renderReason)))
             { reason = "waiting for visible male beard " + BeardName; return false; }
             reason = "";
             return true;
+        }
+
+        bool AttachmentRenders(GameObject attachment, out string reason)
+        {
+            if (!attachment.activeInHierarchy) { reason = "inactive"; return false; }
+            Transform visualRoot = visuals.m_bodyModel == null ? null : visuals.m_bodyModel.transform.parent;
+            if (visualRoot == null || (!ReferenceEquals(attachment.transform, visualRoot) && !attachment.transform.IsChildOf(visualRoot)))
+            { reason = "outside native rig"; return false; }
+            Renderer[] renderers = attachment.GetComponentsInChildren<Renderer>(true);
+            if (renderers == null || renderers.Length == 0) { reason = "no renderer"; return false; }
+            LODGroup lod = visuals.m_bodyModel.GetComponentInParent<LODGroup>();
+            Renderer[] lodRenderers = lod == null || lod.GetLODs().Length == 0 ? null : lod.GetLODs()[0].renderers;
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer == null || !renderer.enabled || !renderer.gameObject.activeInHierarchy) continue;
+                if (renderer.sharedMaterials == null || renderer.sharedMaterials.Length == 0 ||
+                    renderer.sharedMaterials.All(material => material == null)) continue;
+                SkinnedMeshRenderer skin = renderer as SkinnedMeshRenderer;
+                if (skin != null && (skin.sharedMesh == null || skin.rootBone == null ||
+                    (!ReferenceEquals(skin.rootBone, visualRoot) && !skin.rootBone.IsChildOf(visualRoot)))) continue;
+                if (lodRenderers != null && !lodRenderers.Contains(renderer)) continue;
+                reason = "visible";
+                return true;
+            }
+            reason = "no active materialized renderer in native LOD";
+            return false;
         }
 
         static int CountContiguous(string prefix)
