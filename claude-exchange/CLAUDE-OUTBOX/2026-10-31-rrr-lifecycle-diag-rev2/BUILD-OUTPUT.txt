@@ -1,0 +1,171 @@
+== reference inputs (sha256)
+5ed1180fc8cb409d  mscorlib.dll
+439ca04b265472af  System.dll
+9493ebe16569f606  System.Core.dll
+6ae62e082dc494a2  netstandard.dll
+9f959c0396ec4240  assembly_valheim.dll
+771d59cbf3ef7040  assembly_utils.dll
+0c529a84c1ab011a  SoftReferenceableAssets.dll
+ab1753f05f5fae8c  Splatform.dll
+2f43705ebd2e3726  UnityEngine.dll
+fba3821afb6867fe  UnityEngine.CoreModule.dll
+98c812a75597ba92  UnityEngine.PhysicsModule.dll
+6abb58c69cb0f85b  UnityEngine.AnimationModule.dll
+36bdb9af2b8f2eda  BepInEx.dll
+1a21cc03424fc82c  0Harmony.dll
+mcs: Mono C# compiler version 6.8.0.105
+== compile
+built bin/LivingWorld.RRRLifecycleDiag.dll (29696 bytes)
+== source contract
+PASS observer switch defaults false
+PASS fixture switch defaults false
+PASS tracked set is exactly three
+PASS hooks bail out when disabled
+PASS fixture refuses without switch
+PASS fixture one-at-a-time
+PASS fixture single-player guard
+PASS no configurable/global tracking
+== metadata contract (Mono reflection)
+PASS TrackedActors == [RRRN_WoodsSoul, RRRN_NinoBosque, RRRN_OrcBrute]
+PASS ZNetView.m_zdo : ZDO
+PASS ZNetScene.m_instances : Dictionary<ZDO,ZNetView>
+PASS ZNet.IsServer()
+PASS ZNet.IsDedicated()
+PASS ZNet.GetPeers()
+PASS Player.GetAllPlayers()
+PASS target ZNetView.Awake resolves to exactly one declared method (found 1)
+PASS postfix ViewAwakePostfix exists and is static
+PASS   ViewAwakePostfix parameter '__instance' binds to ZNetView.Awake
+PASS   ViewAwakePostfix returns void (observer, never skips original)
+PASS   ViewAwakePostfix wraps its body in try/catch
+PASS target ZNetView.OnDestroy resolves to exactly one declared method (found 1)
+PASS prefix ViewOnDestroyPrefix exists and is static
+PASS   ViewOnDestroyPrefix parameter '__instance' binds to ZNetView.OnDestroy
+PASS   ViewOnDestroyPrefix returns void (observer, never skips original)
+PASS   ViewOnDestroyPrefix wraps its body in try/catch
+PASS target ZNetScene.Destroy resolves to exactly one declared method (found 1)
+PASS prefix SceneDestroyPrefix exists and is static
+PASS   SceneDestroyPrefix parameter 'go' binds to ZNetScene.Destroy
+PASS   SceneDestroyPrefix returns void (observer, never skips original)
+PASS   SceneDestroyPrefix wraps its body in try/catch
+PASS target ZNetScene.OnZDODestroyed resolves to exactly one declared method (found 1)
+PASS prefix SceneZdoDestroyedPrefix exists and is static
+PASS   SceneZdoDestroyedPrefix parameter '__instance' binds to ZNetScene.OnZDODestroyed
+PASS   SceneZdoDestroyedPrefix parameter 'zdo' binds to ZNetScene.OnZDODestroyed
+PASS   SceneZdoDestroyedPrefix returns void (observer, never skips original)
+PASS   SceneZdoDestroyedPrefix wraps its body in try/catch
+PASS target ZNetScene.RemoveObjects resolves to exactly one declared method (found 1)
+PASS finalizer RemoveObjectsFinalizer exists and is static
+PASS   RemoveObjectsFinalizer parameter '__instance' binds to ZNetScene.RemoveObjects
+PASS   RemoveObjectsFinalizer parameter '__exception' binds to ZNetScene.RemoveObjects
+PASS   RemoveObjectsFinalizer returns Exception
+PASS   RemoveObjectsFinalizer receives __exception
+PASS   RemoveObjectsFinalizer wraps its body in try/catch
+PASS   RemoveObjectsFinalizer final instruction returns the incoming __exception (after its catch)
+PASS   RemoveObjectsFinalizer returns outside every protected region
+PASS target ZNetScene.OnDestroy resolves to exactly one declared method (found 1)
+PASS prefix SceneOnDestroyPrefix exists and is static
+PASS   SceneOnDestroyPrefix parameter '__instance' binds to ZNetScene.OnDestroy
+PASS   SceneOnDestroyPrefix returns void (observer, never skips original)
+PASS   SceneOnDestroyPrefix wraps its body in try/catch
+PASS target Character.Awake resolves to exactly one declared method (found 1)
+PASS postfix CharacterAwakePostfix exists and is static
+PASS   CharacterAwakePostfix parameter '__instance' binds to Character.Awake
+PASS   CharacterAwakePostfix returns void (observer, never skips original)
+PASS   CharacterAwakePostfix wraps its body in try/catch
+PASS finalizer CharacterAwakeFinalizer exists and is static
+PASS   CharacterAwakeFinalizer parameter '__instance' binds to Character.Awake
+PASS   CharacterAwakeFinalizer parameter '__exception' binds to Character.Awake
+PASS   CharacterAwakeFinalizer returns Exception
+PASS   CharacterAwakeFinalizer receives __exception
+PASS   CharacterAwakeFinalizer wraps its body in try/catch
+PASS   CharacterAwakeFinalizer final instruction returns the incoming __exception (after its catch)
+PASS   CharacterAwakeFinalizer returns outside every protected region
+PASS target BaseAI.Awake resolves to exactly one declared method (found 1)
+PASS postfix BaseAIAwakePostfix exists and is static
+PASS   BaseAIAwakePostfix parameter '__instance' binds to BaseAI.Awake
+PASS   BaseAIAwakePostfix returns void (observer, never skips original)
+PASS   BaseAIAwakePostfix wraps its body in try/catch
+PASS finalizer BaseAIAwakeFinalizer exists and is static
+PASS   BaseAIAwakeFinalizer parameter '__instance' binds to BaseAI.Awake
+PASS   BaseAIAwakeFinalizer parameter '__exception' binds to BaseAI.Awake
+PASS   BaseAIAwakeFinalizer returns Exception
+PASS   BaseAIAwakeFinalizer receives __exception
+PASS   BaseAIAwakeFinalizer wraps its body in try/catch
+PASS   BaseAIAwakeFinalizer final instruction returns the incoming __exception (after its catch)
+PASS   BaseAIAwakeFinalizer returns outside every protected region
+PASS target Humanoid.Start resolves to exactly one declared method (found 1)
+PASS prefix HumanoidStartPrefix exists and is static
+PASS   HumanoidStartPrefix parameter '__instance' binds to Humanoid.Start
+PASS   HumanoidStartPrefix returns void (observer, never skips original)
+PASS   HumanoidStartPrefix wraps its body in try/catch
+PASS postfix HumanoidStartPostfix exists and is static
+PASS   HumanoidStartPostfix parameter '__instance' binds to Humanoid.Start
+PASS   HumanoidStartPostfix returns void (observer, never skips original)
+PASS   HumanoidStartPostfix wraps its body in try/catch
+PASS finalizer HumanoidStartFinalizer exists and is static
+PASS   HumanoidStartFinalizer parameter '__instance' binds to Humanoid.Start
+PASS   HumanoidStartFinalizer parameter '__exception' binds to Humanoid.Start
+PASS   HumanoidStartFinalizer returns Exception
+PASS   HumanoidStartFinalizer receives __exception
+PASS   HumanoidStartFinalizer wraps its body in try/catch
+PASS   HumanoidStartFinalizer final instruction returns the incoming __exception (after its catch)
+PASS   HumanoidStartFinalizer returns outside every protected region
+PASS target Humanoid.GiveDefaultItems resolves to exactly one declared method (found 1)
+PASS postfix GiveDefaultItemsPostfix exists and is static
+PASS   GiveDefaultItemsPostfix parameter '__instance' binds to Humanoid.GiveDefaultItems
+PASS   GiveDefaultItemsPostfix returns void (observer, never skips original)
+PASS   GiveDefaultItemsPostfix wraps its body in try/catch
+PASS finalizer GiveDefaultItemsFinalizer exists and is static
+PASS   GiveDefaultItemsFinalizer parameter '__instance' binds to Humanoid.GiveDefaultItems
+PASS   GiveDefaultItemsFinalizer parameter '__exception' binds to Humanoid.GiveDefaultItems
+PASS   GiveDefaultItemsFinalizer returns Exception
+PASS   GiveDefaultItemsFinalizer receives __exception
+PASS   GiveDefaultItemsFinalizer wraps its body in try/catch
+PASS   GiveDefaultItemsFinalizer final instruction returns the incoming __exception (after its catch)
+PASS   GiveDefaultItemsFinalizer returns outside every protected region
+PASS target Character.OnDestroy resolves to exactly one declared method (found 1)
+PASS prefix CharacterOnDestroyPrefix exists and is static
+PASS   CharacterOnDestroyPrefix parameter '__instance' binds to Character.OnDestroy
+PASS   CharacterOnDestroyPrefix returns void (observer, never skips original)
+PASS   CharacterOnDestroyPrefix wraps its body in try/catch
+PASS target VisEquipment.AttachItem resolves to exactly one declared method (found 1)
+PASS postfix AttachItemPostfix exists and is static
+PASS   AttachItemPostfix parameter '__instance' binds to VisEquipment.AttachItem
+PASS   AttachItemPostfix parameter 'itemHash' binds to VisEquipment.AttachItem
+PASS   AttachItemPostfix parameter '__result' binds to VisEquipment.AttachItem
+PASS   AttachItemPostfix returns void (observer, never skips original)
+PASS   AttachItemPostfix wraps its body in try/catch
+PASS finalizer AttachItemFinalizer exists and is static
+PASS   AttachItemFinalizer parameter '__instance' binds to VisEquipment.AttachItem
+PASS   AttachItemFinalizer parameter 'itemHash' binds to VisEquipment.AttachItem
+PASS   AttachItemFinalizer parameter '__exception' binds to VisEquipment.AttachItem
+PASS   AttachItemFinalizer returns Exception
+PASS   AttachItemFinalizer receives __exception
+PASS   AttachItemFinalizer wraps its body in try/catch
+PASS   AttachItemFinalizer final instruction returns the incoming __exception (after its catch)
+PASS   AttachItemFinalizer returns outside every protected region
+PASS target Player.OnSpawned resolves to exactly one declared method (found 1)
+PASS postfix PlayerSpawnedPostfix exists and is static
+PASS   PlayerSpawnedPostfix parameter '__instance' binds to Player.OnSpawned
+PASS   PlayerSpawnedPostfix returns void (observer, never skips original)
+PASS   PlayerSpawnedPostfix wraps its body in try/catch
+PASS target Terminal.InitTerminal resolves to exactly one declared method (found 1)
+PASS postfix InitTerminalPostfix exists and is static
+PASS   InitTerminalPostfix returns void (observer, never skips original)
+PASS   InitTerminalPostfix wraps its body in try/catch
+PASS entry Command has a catch clause
+PASS ParseDistance(null) = 12 fallback=False (expected 12 fallback=False)
+Can't find custom attr constructor image: /tmp/tmp.A6pUEXyLg0/UnityEngine.CoreModule.dll mtoken: 0x0a000596 due to: Could not load file or assembly 'UnityEngine.SharedInternalsModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null' or one of its dependencies.
+PASS ParseDistance("15.5") = 15.5 fallback=False (expected 15.5 fallback=False)
+PASS ParseDistance("0") = 8 fallback=False (expected 8 fallback=False)
+PASS ParseDistance("-5") = 8 fallback=False (expected 8 fallback=False)
+PASS ParseDistance("100") = 30 fallback=False (expected 30 fallback=False)
+PASS ParseDistance("abc") = 12 fallback=True (expected 12 fallback=True)
+PASS ParseDistance("") = 12 fallback=True (expected 12 fallback=True)
+PASS ParseDistance("NaN") = 12 fallback=True (expected 12 fallback=True)
+PASS ParseDistance("1e40") = 12 fallback=True (expected 12 fallback=True)
+PASS ParseDistance("12,5") = 12 fallback=True (expected 12 fallback=True)
+contract: 139 passed, 0 failed
+== result
+a63938acd289d74417592559e8a49b4bd55ad51b4e06bd5ec876162333ee9253  bin/LivingWorld.RRRLifecycleDiag.dll
