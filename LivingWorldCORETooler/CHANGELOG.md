@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.2
+
+- Corrected every current FormidableAI raid slot to `HuntPlayer=true` after live video showed `HuntPlayer=false` actors stranded around the 70–95 m ring.
+- This is native hostile raid pursuit only. It does not add a companion defend order, leader status, faction override or artificial combat state.
+- Kept the outer ring, group sizes, population caps, specialist/heavy limits and all combatant stats unchanged so the next run measures the complete attacking force before balance changes.
+
 ## 2.6.1
 
 - Added first-class Raids-page buttons for the current `lwc_formidable_arena` and `lwc_formidable_souls_swamp` Elder-pattern FormidableAI stress raids.

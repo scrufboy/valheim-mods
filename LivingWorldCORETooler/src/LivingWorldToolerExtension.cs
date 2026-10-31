@@ -17,8 +17,8 @@ using ValheimTooler.Utils;
 [assembly: AssemblyCompany("Brian / scrufboy")]
 [assembly: AssemblyProduct("Living World C.O.R.E.")]
 [assembly: AssemblyCopyright("Living World integration Copyright Brian / scrufboy")]
-[assembly: AssemblyVersion("2.6.1.0")]
-[assembly: AssemblyFileVersion("2.6.1.0")]
+[assembly: AssemblyVersion("2.6.2.0")]
+[assembly: AssemblyFileVersion("2.6.2.0")]
 
 namespace Scrufboy.LivingWorld.Tooler
 {
@@ -28,7 +28,7 @@ namespace Scrufboy.LivingWorld.Tooler
     {
         public const string PluginGuid = "com.scrufboy.livingworldcore.tooler";
         public const string PluginName = "Living World C.O.R.E. Tooler — Brian / scrufboy";
-        public const string PluginVersion = "2.6.1";
+        public const string PluginVersion = "2.6.2";
 
         private Harmony harmony;
         private bool coreStarted;

@@ -2,7 +2,7 @@
 
 Maintained and packaged for Living World C.O.R.E. by **Brian / scrufboy**.
 
-Version 2.6.1 puts the two current Elder-pattern FormidableAI stress raids directly on the **Raids** page: **Formidable Arena** and **Formidable Souls Swamp**, with the standard noon setup and stop-event controls beside them. The superseded bounded-trial buttons are removed so every visible raid button resolves in the installed profile. Every vanilla raid control remains available, and Version 2.5.0's separate **Site Survey** module remains intact.
+Version 2.6.2 puts the two current Elder-pattern FormidableAI stress raids directly on the **Raids** page: **Formidable Arena** and **Formidable Souls Swamp**, with the standard noon setup and stop-event controls beside them. Every hostile raid slot uses Valheim's native `HuntPlayer=true` pursuit so actors entering on the 70–95 m ring converge as a raid. This does not create a companion defend order or leader status. The superseded bounded-trial buttons are removed so every visible raid button resolves in the installed profile. Every vanilla raid control remains available, and Version 2.5.0's separate **Site Survey** module remains intact.
 
 This is the Living World C.O.R.E. Tooler: one Living World plugin identity,
 Living World branding, the familiar proven interface/colors/control layout,

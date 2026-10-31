@@ -23,15 +23,15 @@ foreach ($prefab in @('RRRN_Pillager', 'RRRN_WoodsSoul', 'RRRN_NinoBosque', 'RRR
 if (($config -split '\r?\n' | Where-Object { $_ -match '^Random\s*=\s*false$' }).Count -ne 2) {
     throw 'Both formidable trials must be excluded from the random raid pool.'
 }
-if (($config -split '\r?\n' | Where-Object { $_ -match '^HuntPlayer\s*=\s*true$' }).Count -ne 0 -or
-    ($config -split '\r?\n' | Where-Object { $_ -match '^HuntPlayer\s*=\s*false$' }).Count -ne 8) {
-    throw 'Current FormidableAI raids must not turn Brian into a forced defended/target object.'
+if (($config -split '\r?\n' | Where-Object { $_ -match '^HuntPlayer\s*=\s*true$' }).Count -ne 8 -or
+    ($config -split '\r?\n' | Where-Object { $_ -match '^HuntPlayer\s*=\s*false$' }).Count -ne 0) {
+    throw 'Every current FormidableAI raid slot must perform normal hostile raid pursuit.'
 }
 if (($config -split '\r?\n' | Where-Object { $_ -match '^SpawnRadiusMin\s*=\s*70$' }).Count -ne 8 -or
     ($config -split '\r?\n' | Where-Object { $_ -match '^SpawnRadiusMax\s*=\s*95$' }).Count -ne 8) {
     throw 'Every current FormidableAI raid slot must use the 70-95 m initiative ring.'
 }
-if ($manifest.version_number -ne '2.6.1') {
+if ($manifest.version_number -ne '2.6.2') {
     throw 'Unexpected Tooler package version.'
 }
 if ($manifest.dependencies -notcontains 'ASharpPen-Custom_Raids-1.8.2') {
@@ -43,7 +43,7 @@ if ($manifest.dependencies -notcontains 'ASharpPen-Custom_Raids-1.8.2') {
     PackageVersion = $manifest.version_number
     Events = @('lwc_formidable_arena', 'lwc_formidable_souls_swamp')
     RandomPool = $false
-    HuntPlayer = $false
+    HuntPlayer = $true
     SpawnRing = '70-95 m'
     Config = $configPath
 } | ConvertTo-Json -Depth 3
