@@ -36,6 +36,19 @@ approved runtime branches into `main`.
 | `work/awareness-a1` (1.0.32.26) | `eb28f1c` | `17edec6` (bomb world acquisition removed; = `5f54db8` combat behavior, 9-20 m band) + A1 shared awareness SHADOW: tactical-group adapter (`AwarenessGroupId`, hostility from native `BaseAI.IsEnemy`), companion-owned sight/hearing/contact, Noticed/Alerted/Committed/Lost, groups, empty KnowledgeBook, independent initiative ledger (native target/action edges, upper bounds, flush at stop, gap records), schema 13. Approved `572b450`. Claude canonical build: ledger 155/155, native 46, ownership 76 (unchanged), voice LOCKED unchanged, movement-writer OK, analyzer OK. INSTALLED 2026-10-30 (core `c95d9ef7…`, telemetry `da82cdca…`, both verified on device) with `AwarenessShadow = true` and `ShadowObserver = true`; .24 backed up. Shadow-only: no gameplay control. Next: short video session per presentation §8/§10.5 |
 | `lwc-core-1.0/parked-1.0.33` | `965a2a0` | parked hot-path experiment; not installed |
 
+## Latest live evidence — 2026-10-31
+
+- 1.0.32.26 A1 second session: **LIVE-PROVEN** for the narrow compatibility claim that a
+  MonsterDB-created hostile retaining native `MonsterAI` is discovered and tracked by A1.
+  Session `LWC-20261031-000022-LWC_HumanLab_v1-part00.jsonl` ran 965 s with two companions,
+  zero awareness faults, zero ownership violations and no lost initiative/contact records.
+- MonsterDB 0.4.0 cloned `Greydwarf` as `LWC_A1_Hostile`. Two clone instances produced complete
+  Contact/Group/Initiative records, were selected by both companions and were killed normally.
+- This is **not** long-range or tactical-quality proof: the clones entered the awareness envelope at
+  only 5.7 m and 3.6 m and died quickly. It exercises the native `MonsterAI` reader, not the
+  `VisibleOnly` fallback for actors with non-native custom AI. See
+  `claude-exchange/CODEX-OUTBOX/2026-10-31-monsterdb-a1-live-result/`.
+
 **Game build:** Brian's installed Valheim updated to **1.0.21** on 2026-10-28 (assembly `9f959c03…`); prior inspections used 1.0.20. 1.0.32.14 rebuilt against 1.0.21 is byte-identical and passes all gates (OFFLINE-TESTED).
 
 These refs share their complete prerequisite history. They remain separate from
