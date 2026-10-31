@@ -16,4 +16,4 @@
 
 - `Test-FormidableRaidIntegration.ps1`: PASS, Tooler 2.6.6, eight five-second intervals, full roster, HuntPlayer true, 70–95 m ring.
 - `Build-LivingWorldCORETooler.ps1`: PASS, including interface and Site Survey contracts.
-- Runtime: not run and not installed at this handoff.
+- Installed readback matches the verified DLL hashes and contains eight five-second intervals with no remaining `5000` value. Runtime raid behavior remains to be observed in ordinary play.

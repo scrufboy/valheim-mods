@@ -25,4 +25,12 @@ The raid definition said “5 s checks” but all eight slots contained `SpawnIn
 - Core SHA-256: `9FF82AD0FBCD74424458C97679DBEFEC208AE36D6CD9675320334154E858635F`.
 - Package SHA-256: `07F0E3D0FC54F3BFD85A44449218425C9F6B55313E8FD76BFCBD03F1785EF528`.
 
-This is not installed yet. Do not ask Brian for diagnostic commands. Once installed, the ordinary Tooler Formidable Arena button is the runtime check: the roster must begin spawning around the configured ring on five-second attempts and native HuntPlayer must bring it inward.
+## Installed readback
+
+- Installed into the LWC Formidable Arena profile after confirming Valheim was not running.
+- Installed plugin and core hashes match the verified build above.
+- Installed raid config SHA-256: `2E71D00B0F94F99EB989FA312B8047FB76D8FA7BC434F3AF79805B546AE82D2D`.
+- Readback: eight `SpawnInterval = 5` entries and zero `SpawnInterval = 5000` entries.
+- Backup: `BepInEx/LivingWorldBackups/Tooler/2026-10-31-before-2.6.6-spawn-interval-fix/`.
+
+Do not ask Brian for diagnostic commands. The ordinary Tooler Formidable Arena button is now the runtime check: the roster must begin spawning around the configured ring on five-second attempts and native HuntPlayer must bring it inward.
