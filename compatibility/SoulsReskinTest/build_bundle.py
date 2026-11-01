@@ -38,10 +38,14 @@ def build(source, art, output):
         tex.m_Name = 'LWC_' + p.stem
         with Image.open(p) as im:
             tex.set_image(im.convert('RGBA'), target_format=4, mipmap_count=12)
+        linear = p.name in ('sagecloth_n.png', 'sagecloth_m.png', 'SageStaff_Normal.png', 'SageStaff_MetallicSmoothness.png')
+        tex.m_ColorSpace = 0 if linear else 1
+        tex.m_TextureSettings.m_FilterMode = 1
         tex.save()
         added[p.name] = obj.path_id
         inputs[p.name] = {'sha256': sha(p.read_bytes()), 'path_id': obj.path_id,
-                          'width': tex.m_Width, 'height': tex.m_Height}
+                          'width': tex.m_Width, 'height': tex.m_Height,
+                          'color_space': tex.m_ColorSpace, 'filter_mode': tex.m_TextureSettings.m_FilterMode}
 
     edits = []
     original_materials = {}
@@ -119,6 +123,8 @@ def build(source, art, output):
         with Image.open(art / filename) as im:
             assert tex.image.convert('RGBA').tobytes() == im.convert('RGBA').tobytes(), filename
         assert tex.m_MipCount > 1, filename
+        assert tex.m_ColorSpace == info['color_space'], filename
+        assert tex.m_TextureSettings.m_FilterMode == info['filter_mode'], filename
     assert len(after) == len(objects) + len(added)
     report = {'source_dll_sha256': sha(source.read_bytes()), 'original_bundle_sha256': sha(original),
               'output_bundle_sha256': sha(bundle), 'added_textures': inputs,

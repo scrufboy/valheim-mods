@@ -1,0 +1,14 @@
+{
+  "installed": true,
+  "profile": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena",
+  "plugin_path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\plugins\\Unknown-SagesVault-1.1.4-DIAGNOSTIC-1-Artifact-Log-Cleanup.zip\\SagesVault.dll",
+  "plugin_sha256": "6f931d1e1f37c31913462ae0d2bd4244d771d7cadea7a7dbab5533a24cafb021",
+  "enabled": true,
+  "active_equipment_copies": 1,
+  "backup": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\LivingWorldBackups\\SoulsReskin-20261101T052307Z",
+  "unchanged_profile_files": 417,
+  "game_launched": false,
+  "in_game_rendering": "UNKNOWN",
+  "manager_slot": "Unknown-SagesVault-1.1.4-DIAGNOSTIC-1-Artifact-Log-Cleanup.zip",
+  "manager_display": "LWC Souls Embedded Reskin Test 0.1.1"
+}

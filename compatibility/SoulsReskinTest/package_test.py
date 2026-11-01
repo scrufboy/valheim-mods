@@ -55,9 +55,10 @@ def package(profile, root):
         'DO NOT load both copies. Requires the existing BepInEx, Jotunn, RRRCore, Spawn That and compatibility environment.\n'
         'NPC definitions and natural spawn configuration copied unchanged from the selected test profile.\n'
         'Current Custom Raids and LWC character files are not packaged or modified.\n', encoding='utf-8')
-    file_hashes = {p.relative_to(stage).as_posix(): digest(p) for p in stage.rglob('*') if p.is_file()}
+    file_hashes = {p.relative_to(stage).as_posix(): digest(p) for p in stage.rglob('*')
+                   if p.is_file() and p != stage / 'SHA256.json'}
     (stage / 'SHA256.json').write_text(json.dumps(file_hashes, indent=2), encoding='utf-8')
-    archive = stage.parent / 'LWC-Souls-Embedded-Reskin-Test-0.1.0.zip'
+    archive = stage.parent / 'LWC-Souls-Embedded-Reskin-Test-0.1.1.zip'
     with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as z:
         for p in sorted(stage.rglob('*')):
             if p.is_file():

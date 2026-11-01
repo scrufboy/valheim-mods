@@ -1,4 +1,4 @@
-# Souls embedded reskin test 0.1.0
+# Souls embedded reskin test 0.1.1
 
 Private local test repack requested by Brian on 2026-11-01:
 
@@ -32,6 +32,9 @@ Pants metal is redirected to sagecloth_m. Existing spell effects, stealth
 blades, gems, icon atlas, audio, meshes and all other original objects remain
 unchanged. Original texture objects remain embedded so shared references do not
 accidentally change excluded effects. New maps use RGBA32 and mipmaps.
+Color maps use sRGB; normal and metallic data maps use linear sampling. New
+maps use bilinear filtering. Version 0.1.1 corrects the template sampling
+settings caught during the Arena installation audit before gameplay.
 
 ## Verification
 

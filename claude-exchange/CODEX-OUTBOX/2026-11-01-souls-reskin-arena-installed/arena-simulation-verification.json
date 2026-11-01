@@ -1,0 +1,525 @@
+{
+  "status": "PASS",
+  "kind": "OFFLINE prefab/material resolution simulation",
+  "embedded_textures_verified": 31,
+  "material_slots_verified": 108,
+  "prefabs_walked": 66,
+  "new_dangling_local_refs": 0,
+  "npc_definitions_verified": 6,
+  "npc_equipment": [
+    {
+      "prefab": "RRRN_Pillager",
+      "equipment_resolved": [
+        "SageHoodBlack",
+        "SageHoodBrown",
+        "SageRobeBrown",
+        "SageTunicBlack"
+      ],
+      "definition_unchanged": true
+    },
+    {
+      "prefab": "RRRN_WoodsSoul",
+      "equipment_resolved": [],
+      "definition_unchanged": true
+    },
+    {
+      "prefab": "RRRN_Neckman",
+      "equipment_resolved": [],
+      "definition_unchanged": true
+    },
+    {
+      "prefab": "RRRN_NinoBosque",
+      "equipment_resolved": [],
+      "definition_unchanged": true
+    },
+    {
+      "prefab": "RRRN_OrcBrute",
+      "equipment_resolved": [],
+      "definition_unchanged": true
+    },
+    {
+      "prefab": "RRRN_Servant",
+      "equipment_resolved": [
+        "SageRobeBlack"
+      ],
+      "definition_unchanged": true
+    }
+  ],
+  "prefab_results": [
+    {
+      "name": "DeathBlade",
+      "serialized_objects_resolved": 141,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "HeadElf",
+      "serialized_objects_resolved": 50,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "NeedleBlade",
+      "serialized_objects_resolved": 140,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "sage_cold_projectile",
+      "serialized_objects_resolved": 69,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "sage_fireball_projectile",
+      "serialized_objects_resolved": 67,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "sage_lightning_projectile",
+      "serialized_objects_resolved": 67,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "sage_skull_projectile",
+      "serialized_objects_resolved": 61,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "sage_spirit_projectile",
+      "serialized_objects_resolved": 52,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "sage_wind_projectile",
+      "serialized_objects_resolved": 64,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageBook01",
+      "serialized_objects_resolved": 83,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageBook01_OLD",
+      "serialized_objects_resolved": 112,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageBook02",
+      "serialized_objects_resolved": 113,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageBook03",
+      "serialized_objects_resolved": 113,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageBook04",
+      "serialized_objects_resolved": 113,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageCrownGold01",
+      "serialized_objects_resolved": 34,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageCrownGold02",
+      "serialized_objects_resolved": 35,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageCrownGold03",
+      "serialized_objects_resolved": 34,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageCrownObsidian01",
+      "serialized_objects_resolved": 34,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageCrownObsidian02",
+      "serialized_objects_resolved": 35,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageCrownObsidian03",
+      "serialized_objects_resolved": 34,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageCrownSilver01",
+      "serialized_objects_resolved": 34,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageCrownSilver02",
+      "serialized_objects_resolved": 35,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageCrownSilver03",
+      "serialized_objects_resolved": 34,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageDarkStaff",
+      "serialized_objects_resolved": 358,
+      "repainted_material_slots_reachable": 4,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageDarkStaff_OLD",
+      "serialized_objects_resolved": 358,
+      "repainted_material_slots_reachable": 4,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageFireStaff",
+      "serialized_objects_resolved": 347,
+      "repainted_material_slots_reachable": 4,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageFireStaff_OLD",
+      "serialized_objects_resolved": 347,
+      "repainted_material_slots_reachable": 4,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageHolyStaff",
+      "serialized_objects_resolved": 342,
+      "repainted_material_slots_reachable": 4,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageHolyStaff_OLD",
+      "serialized_objects_resolved": 343,
+      "repainted_material_slots_reachable": 4,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageHoodBlack",
+      "serialized_objects_resolved": 165,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageHoodBlue",
+      "serialized_objects_resolved": 165,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageHoodBrown",
+      "serialized_objects_resolved": 165,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageHoodGray",
+      "serialized_objects_resolved": 165,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageHoodGreen",
+      "serialized_objects_resolved": 165,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageHoodRed",
+      "serialized_objects_resolved": 165,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageHoodWhite",
+      "serialized_objects_resolved": 165,
+      "repainted_material_slots_reachable": 1,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageIceStaff",
+      "serialized_objects_resolved": 359,
+      "repainted_material_slots_reachable": 4,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageIceStaff_OLD",
+      "serialized_objects_resolved": 358,
+      "repainted_material_slots_reachable": 4,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageLightningStaff",
+      "serialized_objects_resolved": 417,
+      "repainted_material_slots_reachable": 4,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageLightningStaff_OLD",
+      "serialized_objects_resolved": 418,
+      "repainted_material_slots_reachable": 4,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SagePants",
+      "serialized_objects_resolved": 149,
+      "repainted_material_slots_reachable": 7,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageRobeBlack",
+      "serialized_objects_resolved": 146,
+      "repainted_material_slots_reachable": 6,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageRobeBlue",
+      "serialized_objects_resolved": 146,
+      "repainted_material_slots_reachable": 6,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageRobeBrown",
+      "serialized_objects_resolved": 146,
+      "repainted_material_slots_reachable": 6,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageRobeGray",
+      "serialized_objects_resolved": 146,
+      "repainted_material_slots_reachable": 6,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageRobeGreen",
+      "serialized_objects_resolved": 146,
+      "repainted_material_slots_reachable": 6,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageRobeRed",
+      "serialized_objects_resolved": 146,
+      "repainted_material_slots_reachable": 6,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageRobeWhite",
+      "serialized_objects_resolved": 146,
+      "repainted_material_slots_reachable": 6,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageStaff02",
+      "serialized_objects_resolved": 354,
+      "repainted_material_slots_reachable": 4,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageTunicBlack",
+      "serialized_objects_resolved": 172,
+      "repainted_material_slots_reachable": 7,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageTunicBlue",
+      "serialized_objects_resolved": 172,
+      "repainted_material_slots_reachable": 7,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageTunicBrown",
+      "serialized_objects_resolved": 172,
+      "repainted_material_slots_reachable": 7,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageTunicGray",
+      "serialized_objects_resolved": 172,
+      "repainted_material_slots_reachable": 7,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageTunicGreen",
+      "serialized_objects_resolved": 172,
+      "repainted_material_slots_reachable": 7,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageTunicRed",
+      "serialized_objects_resolved": 172,
+      "repainted_material_slots_reachable": 7,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "SageTunicWhite",
+      "serialized_objects_resolved": 172,
+      "repainted_material_slots_reachable": 7,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "ScholarFireStaff",
+      "serialized_objects_resolved": 354,
+      "repainted_material_slots_reachable": 5,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "vfx_SageFire_AoE1",
+      "serialized_objects_resolved": 28,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "vfx_SageFire_AoE2",
+      "serialized_objects_resolved": 20,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "vfx_SageFireballHit",
+      "serialized_objects_resolved": 31,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "vfx_SageGhost_death",
+      "serialized_objects_resolved": 39,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "vfx_SageGhost_hit",
+      "serialized_objects_resolved": 13,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "vfx_sageice_aoe",
+      "serialized_objects_resolved": 31,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "vfx_sagespell_hit",
+      "serialized_objects_resolved": 25,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "vfx_SageSpirit_attack",
+      "serialized_objects_resolved": 33,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    },
+    {
+      "name": "vfx_SageTerra_hit",
+      "serialized_objects_resolved": 37,
+      "repainted_material_slots_reachable": 0,
+      "baseline_dangling_local_refs": 0,
+      "new_dangling_refs": 0
+    }
+  ],
+  "dependencies": {
+    "Jotunn.dll": "9509221046842a70f94b98bab4cb41005dee026823a7a79345829ed46a30f796",
+    "RRRCore.dll": "753a3645038fef8ee66f14cc1e2bf05bbcbb729f0c3958253e1e91e6b62aec58",
+    "Valheim.SpawnThat.dll": "8a8d6b689b6bb3c65ca6f35a37ea3fde7a18622fbec168f17f1f39242cf22776",
+    "MadHatter.dll": "32432f44c2ed489ce15c498dffbe9cc417dd9661091b600dae3321fbe797bd08",
+    "RunicPack.dll": "ef8ec75fb1b663ff8107a093dbc80de04f92006187dd7f3357610e5341dce496",
+    "LivingWorld.RRRCoreCompat.dll": "dd3073faeee77948b35522e93386e6087a3b820b694abe5917280fb199c45686"
+  },
+  "active_plugin_guid_copies": 1,
+  "core_baseline_unchanged": true,
+  "enabled": true,
+  "unity_physics_ai_or_rendering_simulated": false,
+  "in_game_rendering": "UNKNOWN"
+}
