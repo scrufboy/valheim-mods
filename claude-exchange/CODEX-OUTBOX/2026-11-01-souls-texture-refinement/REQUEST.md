@@ -23,3 +23,8 @@ Local references:
 - Portable build folder: C:/Users/scruf/Documents/LWC Studio Builds/LWCModelSkinStudio-win32-x64
 
 Source/profile scope: artwork and review only; no new NPC classes, role aliases, loadout replacements or distribution assumptions. Please acknowledge this request and report who is authoring each file before concurrent edits.
+
+
+## New footage addendum — read before repainting pants
+
+VIDEO-ADDENDUM.md reviews Brian's new392srecording. Crucially the shown Pillager uses ArmorIronLegs and Servant ArmorRootLegs, not SagePants. The earlier file-level SagePants luma measurement remains accurate but cannot explain those video legs. Match the new cloth to actual existing loadouts; do not change a loadout without Brian. MadHatter exact current loadout usage is six named prefabs across four NPC definitions, inventoried in madhatter-current-usage.json; asset origins/permissions were not determined.

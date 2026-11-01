@@ -1,0 +1,34 @@
+{
+  "provider_prefab_count": 23,
+  "exact_current_loadout_matches": [
+    {
+      "npc": "WoodsSoul",
+      "madhatter_prefabs": [
+        "CatTail",
+        "HoodofYggdrasil"
+      ]
+    },
+    {
+      "npc": "Neckman",
+      "madhatter_prefabs": [
+        "CatTail",
+        "neckhead"
+      ]
+    },
+    {
+      "npc": "NinoBosque",
+      "madhatter_prefabs": [
+        "CatTail",
+        "EphemeralHelm"
+      ]
+    },
+    {
+      "npc": "OrcBrute",
+      "madhatter_prefabs": [
+        "GrimAgeChaosWarrior",
+        "GrimAgeHornedHelm"
+      ]
+    }
+  ],
+  "scope": "Exact prefab roots in current MadHatter bundle versus Souls loadout strings; does not decide asset origins or permissions."
+}
