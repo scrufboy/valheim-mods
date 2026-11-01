@@ -1,0 +1,16 @@
+{
+  "version": "0.1.3",
+  "installed": true,
+  "enabled": true,
+  "bundle_unchanged": true,
+  "configs_unchanged": 71,
+  "dll_sha256": "544a07e998c8dd54411b72b0b5e191dcd049eadf1bb9a92538b97ed19ca043dd",
+  "backup": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\LivingWorldBackups\\SoulsLoader-20261101T055031Z",
+  "archive": "C:\\Users\\scruf\\Documents\\ChatGPT\\Living World C.O.R.E. Custom NPC CREATION and AI\\valheim-mods-formidable-current\\compatibility\\SoulsReskinTest\\dist\\LWC-Souls_Art_Test-0.1.3.zip",
+  "archive_sha256": "e934f68606b63bbc2fc7f9c9dbb9568617a0d736c80f05096f2f26709ca0cb25",
+  "unity_validation": "LIVE-PROVEN startup and equipment loading to main menu",
+  "error_lines": 0,
+  "menu_verified_visually": true,
+  "game_left_running_at_main_menu": true,
+  "world_loaded": false
+}

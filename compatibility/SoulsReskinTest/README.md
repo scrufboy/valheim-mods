@@ -1,4 +1,4 @@
-# LWC Souls Art Test 0.1.2 — Preview 01
+# LWC Souls Art Test 0.1.3 — Preview 01
 
 Private local test repack requested by Brian on 2026-11-01:
 
@@ -65,3 +65,6 @@ for the requested local test; it is not a public release submission.
 
 
 Current named installation is documented in VERIFICATION.md. Label-TestPack.ps1 changes only the visible BepInPlugin label/version and module filename; name_pack.py creates the managed identity, versioned icon/archive and installs the new folder. Legacy 0.1.1 install_arena.py targets the previous folder and intentionally fails its baseline/path checks after this rename.
+
+
+Version 0.1.2 failed in Unity because the resource stream was disposed before lazy bundle reads. Version 0.1.3 uses a memory-backed embedded bundle load. Actual Arena startup and equipment registration reached the main menu with zero BepInEx errors; world rendering remains to inspect. Fix-BundleLoader.ps1 and install_loader_fix.py reproduce the repair and versioned packaging.
