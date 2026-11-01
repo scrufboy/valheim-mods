@@ -1,0 +1,19 @@
+{
+  "installed": true,
+  "profile": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena",
+  "plugin_path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\plugins\\LWC-Souls_Art_Test\\LWC.SoulsArtTest.dll",
+  "plugin_sha256": "21b3dae2eedfa494d50a1d63f5d834068ceb5cae5d0b2ef449e2723f9cb52c74",
+  "enabled": true,
+  "active_equipment_copies": 1,
+  "backup": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\LivingWorldBackups\\SoulsReskin-20261101T052307Z",
+  "unchanged_profile_files": 417,
+  "game_launched": false,
+  "in_game_rendering": "UNKNOWN",
+  "manager_slot": "LWC-Souls_Art_Test",
+  "manager_display": "LWC Souls Art Test",
+  "package_version": "0.1.2",
+  "art_pass": "Preview 01",
+  "label_backup": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\LivingWorldBackups\\SoulsLabels-20261101T052807Z",
+  "labelled_archive": "C:\\Users\\scruf\\Documents\\ChatGPT\\Living World C.O.R.E. Custom NPC CREATION and AI\\valheim-mods-formidable-current\\compatibility\\SoulsReskinTest\\dist\\LWC-Souls_Art_Test-0.1.2.zip",
+  "labelled_archive_sha256": "de2dba3abff8ea21524537982acbcc0470debc5de6ffe196fd1a933c25a19013"
+}

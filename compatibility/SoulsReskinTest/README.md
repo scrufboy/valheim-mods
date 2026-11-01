@@ -1,4 +1,4 @@
-# Souls embedded reskin test 0.1.1
+# LWC Souls Art Test 0.1.2 — Preview 01
 
 Private local test repack requested by Brian on 2026-11-01:
 
@@ -62,3 +62,6 @@ effects. Roll back by removing this candidate's files and restoring the backup.
 Only the original LWC texture pack is covered by its included MIT license.
 Existing runtime and game assets retain their attribution. This artifact is
 for the requested local test; it is not a public release submission.
+
+
+Current named installation is documented in VERIFICATION.md. Label-TestPack.ps1 changes only the visible BepInPlugin label/version and module filename; name_pack.py creates the managed identity, versioned icon/archive and installs the new folder. Legacy 0.1.1 install_arena.py targets the previous folder and intentionally fails its baseline/path checks after this rename.
