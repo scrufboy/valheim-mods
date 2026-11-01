@@ -1,0 +1,254 @@
+[
+  {
+    "name": "sagerobe_brown_d",
+    "version": "reference",
+    "size": [
+      128,
+      128
+    ],
+    "mode": "RGBA",
+    "nonblack_coverage": 0.8859,
+    "median_rgb": [
+      66.0,
+      44.0,
+      30.0
+    ],
+    "median_srgb_luma": 0.1944,
+    "luma_p10_p90": [
+      0.1031,
+      0.2483
+    ],
+    "sha256": "8f8aa62cfcef1ddebf9a4739e5d6e15496670748515e4e2632157211aad4b518"
+  },
+  {
+    "name": "sagerobe_brown_d",
+    "version": "LWC_pass_01",
+    "size": [
+      512,
+      512
+    ],
+    "mode": "RGBA",
+    "nonblack_coverage": 0.8753,
+    "median_rgb": [
+      77.0,
+      53.0,
+      38.0
+    ],
+    "median_srgb_luma": 0.2247,
+    "luma_p10_p90": [
+      0.1392,
+      0.4739
+    ],
+    "sha256": "2f1327914158628d7001e97bac450c5619ba70264cba4d536ddd522e999eca94"
+  },
+  {
+    "name": "sagerobechest_brown_d",
+    "version": "reference",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "nonblack_coverage": 0.0972,
+    "median_rgb": [
+      90.0,
+      71.0,
+      65.0
+    ],
+    "median_srgb_luma": 0.2917,
+    "luma_p10_p90": [
+      0.1825,
+      0.3486
+    ],
+    "sha256": "9b972149856f0956e8053c82bbd5e41029e63b25f07f99e0d1b4a0470b18d80a"
+  },
+  {
+    "name": "sagerobechest_brown_d",
+    "version": "LWC_pass_01",
+    "size": [
+      1024,
+      1024
+    ],
+    "mode": "RGBA",
+    "nonblack_coverage": 0.0965,
+    "median_rgb": [
+      70.0,
+      54.0,
+      48.0
+    ],
+    "median_srgb_luma": 0.2242,
+    "luma_p10_p90": [
+      0.1036,
+      0.3058
+    ],
+    "sha256": "a4a1b71b3877873bf86120a97539cd88a0040812b7ac4793571e43d4316b8b90"
+  },
+  {
+    "name": "SagePants_d",
+    "version": "reference",
+    "size": [
+      128,
+      128
+    ],
+    "mode": "RGBA",
+    "nonblack_coverage": 0.0576,
+    "median_rgb": [
+      40.0,
+      40.0,
+      40.0
+    ],
+    "median_srgb_luma": 0.1569,
+    "luma_p10_p90": [
+      0.1216,
+      0.1765
+    ],
+    "sha256": "6290c7132336ab774ffb1f4fa0dee7d87907bf89c31626c6e065ff09746e1f67"
+  },
+  {
+    "name": "SagePants_d",
+    "version": "LWC_pass_01",
+    "size": [
+      512,
+      512
+    ],
+    "mode": "RGBA",
+    "nonblack_coverage": 0.0566,
+    "median_rgb": [
+      32.0,
+      30.0,
+      28.0
+    ],
+    "median_srgb_luma": 0.119,
+    "luma_p10_p90": [
+      0.0541,
+      0.1988
+    ],
+    "sha256": "184cb38e477e391bbec18b03bdbefe372f233c0ea432d3161de14e0104ed6c97"
+  },
+  {
+    "name": "SagePants_Chest_meshes_chest_d",
+    "version": "reference",
+    "size": [
+      128,
+      128
+    ],
+    "mode": "RGBA",
+    "nonblack_coverage": 0.5071,
+    "median_rgb": [
+      27.0,
+      27.0,
+      27.0
+    ],
+    "median_srgb_luma": 0.1059,
+    "luma_p10_p90": [
+      0.0549,
+      0.1569
+    ],
+    "sha256": "13c1b94add064402e3756a519d4f3aac3dd739824a15c6e6831258fad47019a1"
+  },
+  {
+    "name": "SagePants_Chest_meshes_chest_d",
+    "version": "LWC_pass_01",
+    "size": [
+      512,
+      512
+    ],
+    "mode": "RGBA",
+    "nonblack_coverage": 0.9212,
+    "median_rgb": [
+      28.0,
+      26.0,
+      24.0
+    ],
+    "median_srgb_luma": 0.1039,
+    "luma_p10_p90": [
+      0.0476,
+      0.175
+    ],
+    "sha256": "df5e449fa8ce48198dcb33a0621c196df10165467ec0cca5914de3ac0d7c5dda"
+  },
+  {
+    "region": "robe_dye",
+    "version": "LWC_pass_01",
+    "median_rgb": [
+      76.0,
+      50.0,
+      35.0
+    ],
+    "median_srgb_luma": 0.2135,
+    "p10_p90": [
+      0.1707,
+      0.246
+    ],
+    "mask": "nonblack and alpha > .1",
+    "normalized_uv_crop": [
+      0,
+      0,
+      0.47,
+      0.47
+    ]
+  },
+  {
+    "region": "robe_linen",
+    "version": "LWC_pass_01",
+    "median_rgb": [
+      134.0,
+      122.0,
+      115.0
+    ],
+    "median_srgb_luma": 0.4856,
+    "p10_p90": [
+      0.3865,
+      0.5542
+    ],
+    "mask": "nonblack and alpha > .1",
+    "normalized_uv_crop": [
+      0,
+      0.5,
+      0.47,
+      0.98
+    ]
+  },
+  {
+    "region": "robe_wool",
+    "version": "LWC_pass_01",
+    "median_rgb": [
+      47.0,
+      43.0,
+      39.0
+    ],
+    "median_srgb_luma": 0.1705,
+    "p10_p90": [
+      0.0703,
+      0.2862
+    ],
+    "mask": "nonblack and alpha > .1",
+    "normalized_uv_crop": [
+      0.52,
+      0.52,
+      0.98,
+      0.98
+    ]
+  },
+  {
+    "region": "pants_island",
+    "version": "LWC_pass_01",
+    "median_rgb": [
+      32.0,
+      30.0,
+      28.0
+    ],
+    "median_srgb_luma": 0.1196,
+    "p10_p90": [
+      0.0546,
+      0.2011
+    ],
+    "mask": "nonblack and alpha > .1",
+    "normalized_uv_crop": [
+      0.12,
+      0.17,
+      0.29,
+      0.53
+    ]
+  }
+]
