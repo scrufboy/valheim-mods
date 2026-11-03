@@ -1,0 +1,22 @@
+{
+  "_note": "PROPOSAL v1 - creature voice slots for the swamp frog. Counts and timing are starting targets for Brian to adjust; nothing here is implemented in game.",
+  "creature": "swamp_frog",
+  "slots": {
+    "battle_cry":   {"variants": 6, "dur_s": [0.6, 2.5], "pitch_jitter_st": 1.5, "vol_jitter_db": 2, "cooldown_s": [6, 14],  "search": ["encounter call", "aggressive call", "growl", "grunt", "territorial call"]},
+    "hunt":         {"variants": 6, "dur_s": [0.3, 1.5], "pitch_jitter_st": 1.0, "vol_jitter_db": 3, "cooldown_s": [3, 8],   "search": ["growl", "encounter call", "rasp", "trill"]},
+    "investigate":  {"variants": 5, "dur_s": [0.2, 1.0], "pitch_jitter_st": 2.0, "vol_jitter_db": 3, "cooldown_s": [4, 10],  "search": ["croak", "chirp", "single call"]},
+    "alarmed":      {"variants": 4, "dur_s": [0.1, 0.8], "pitch_jitter_st": 1.5, "vol_jitter_db": 2, "cooldown_s": [3, 6],   "search": ["alarm call", "squeak", "chirp"]},
+    "respond":      {"variants": 5, "dur_s": [0.3, 2.0], "pitch_jitter_st": 1.0, "vol_jitter_db": 3, "cooldown_s": [5, 15],  "search": ["advertisement call", "call", "answer"]},
+    "exclaim":      {"variants": 4, "dur_s": [0.1, 0.6], "pitch_jitter_st": 1.5, "vol_jitter_db": 2, "cooldown_s": [2, 5],   "search": ["territorial call", "short call"]},
+    "hurt":         {"variants": 6, "dur_s": [0.2, 0.8], "pitch_jitter_st": 2.0, "vol_jitter_db": 2, "cooldown_s": [0.4, 1.2], "search": ["release call", "distress call"]},
+    "death":        {"variants": 3, "dur_s": [0.8, 3.0], "pitch_jitter_st": 1.0, "vol_jitter_db": 1, "cooldown_s": [0, 0],   "search": ["distress call", "scream"]},
+    "night_chatter":{"variants": 6, "dur_s": [0.5, 4.0], "pitch_jitter_st": 1.0, "vol_jitter_db": 4, "cooldown_s": [8, 30],  "search": ["advertisement call", "chorus"]},
+    "ambience_bed": {"variants": 3, "dur_s": [20, 120], "pitch_jitter_st": 0.0, "vol_jitter_db": 0, "cooldown_s": [0, 0],   "search": ["chorus", "swamp night"]}
+  },
+  "licence_tiers": {
+    "SHIP": ["cc0", "creative commons 0", "sonniss-gdc"],
+    "SHIP-ATTRIB": ["cc-by", "attribution"],
+    "NC": ["nc", "noncommercial", "remarc"],
+    "REF": ["all rights reserved", "macaulay", "unknown"]
+  }
+}

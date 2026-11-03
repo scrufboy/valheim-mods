@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Swamp Frog Audition</title>
+<style>
+:root{--bg:#14170f;--panel:#1d2216;--ink:#e3e6d6;--mute:#9aa18a;--acc:#9fc25a;--ship:#6fbf73;--attr:#c9b458;--nc:#d98a4a;--ref:#c25a5a;--line:#2e3524}
+:root[data-theme="light"]{--bg:#f3f2ea;--panel:#fff;--ink:#1d2216;--mute:#5d6450;--acc:#4f7a1c;--line:#d8d8c8}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,Segoe UI,sans-serif}
+header{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;z-index:2}
+h1{font-size:16px;margin:0 12px 0 0}
+select,button,input{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit}
+button{cursor:pointer}button.pri{background:var(--acc);color:#111;border-color:var(--acc)}
+main{padding:12px 16px;max-width:1100px;margin:auto}
+.row{display:grid;grid-template-columns:34px 1fr auto auto auto;gap:10px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line)}
+.row.kept{background:color-mix(in srgb,var(--acc) 14%,transparent)}
+.play{width:30px;height:30px;border-radius:50%;padding:0}
+.name{font-family:ui-monospace,Consolas,monospace;font-size:12px;word-break:break-all}
+.sub{color:var(--mute);font-size:12px}
+.tag{font-size:11px;padding:2px 6px;border-radius:10px;border:1px solid}
+.SHIP{color:var(--ship)}.SHIP-ATTRIB{color:var(--attr)}.NC{color:var(--nc)}.REF{color:var(--ref)}
+.note{color:var(--mute);font-size:12px;margin:6px 0 12px}
+@media(max-width:700px){.row{grid-template-columns:34px 1fr;}.row>*:nth-child(n+3){grid-column:2}}
+</style></head><body>
+<header>
+<h1>Swamp Frog Audition</h1>
+<select id="view"><option value="clips">Candidates</option><option value="demos">Pitched demos</option></select>
+<select id="slot"></select><select id="tier"><option value="">All licences</option><option>SHIP</option><option>SHIP-ATTRIB</option><option>NC</option><option>REF</option></select>
+<label><input type="checkbox" id="keptOnly"> kept only</label>
+<label><input type="checkbox" id="auto"> autoplay next</label>
+<span id="count" class="sub"></span>
+<button class="pri" id="export">Export picks CSV</button>
+</header>
+<main>
+<p class="note">Slot guesses are a rough automatic pre-sort (pitch and length), not a verdict. Licence: SHIP = CC0, SHIP-ATTRIB = CC BY (credit needed), NC = non-commercial, REF = unknown licence, so listen only. Keys: Space play/stop, J/K next/prev, X keep.</p>
+<div id="list"></div>
+</main>
+<audio id="au"></audio>
+<script>
+const SLOTS=["battle_cry","hunt","investigate","alarmed","respond","exclaim","hurt","death","night_chatter","ambience_bed","unsorted","reject"];
+let picks={};try{picks=JSON.parse(localStorage.getItem('frogPicks')||'{}')}catch(e){}
+const save=()=>{try{localStorage.setItem('frogPicks',JSON.stringify(picks))}catch(e){}};
+const $=id=>document.getElementById(id), au=$('au');
+$('slot').innerHTML='<option value="">All slots</option>'+SLOTS.slice(0,11).map(s=>`<option>${s}</option>`).join('');
+let shown=[],cur=-1;
+function data(){return $('view').value==='demos'?(window.DEMOS||[]):window.CLIPS}
+function render(){
+ const sl=$('slot').value,t=$('tier').value,k=$('keptOnly').checked;
+ shown=data().filter(r=>(!sl||r.clip.split('/')[1]===sl||$('view').value==='demos')&&(!t||r.tier===t)&&(!k||picks[r.clip]?.keep));
+ $('count').textContent=shown.length+' clips';
+ $('list').innerHTML=shown.map((r,i)=>{const p=picks[r.clip]||{};return `<div class="row ${p.keep?'kept':''}" data-i="${i}">
+ <button class="play" data-a="play">▶</button>
+ <div><div class="name">${r.clip.split('/').pop()}</div><div class="sub">${r.dur_s}s · ${r.centroid_hz} Hz bright · guess: ${r.slot_guess}</div><div class="sub">${r.credit}</div></div>
+ <span class="tag ${r.tier}">${r.tier}</span>
+ <select data-a="slot"><option value="">assign…</option>${SLOTS.map(s=>`<option ${p.slot===s?'selected':''}>${s}</option>`).join('')}</select>
+ <label><input type="checkbox" data-a="keep" ${p.keep?'checked':''}> keep</label></div>`}).join('');
+}
+function play(i){if(i<0||i>=shown.length)return;cur=i;au.src=shown[i].clip;au.play();document.querySelectorAll('.row').forEach(e=>e.style.outline='');const el=document.querySelector(`.row[data-i="${i}"]`);if(el){el.style.outline='1px solid var(--acc)';el.scrollIntoView({block:'nearest'})}}
+au.onended=()=>{if($('auto').checked)play(cur+1)};
+$('list').addEventListener('click',e=>{const row=e.target.closest('.row');if(!row)return;const i=+row.dataset.i;if(e.target.dataset.a==='play')play(i)});
+$('list').addEventListener('change',e=>{const row=e.target.closest('.row');const r=shown[+row.dataset.i];const p=picks[r.clip]||(picks[r.clip]={});
+ if(e.target.dataset.a==='keep'){p.keep=e.target.checked;row.classList.toggle('kept',p.keep)} if(e.target.dataset.a==='slot')p.slot=e.target.value;save()});
+['view','slot','tier','keptOnly'].forEach(id=>$(id).onchange=render);
+document.addEventListener('keydown',e=>{if(e.target.tagName==='SELECT')return;
+ if(e.code==='Space'){e.preventDefault();au.paused?play(Math.max(cur,0)):au.pause()}
+ if(e.key==='j')play(cur+1); if(e.key==='k')play(cur-1);
+ if(e.key==='x'&&cur>=0){const r=shown[cur];const p=picks[r.clip]||(picks[r.clip]={});p.keep=!p.keep;save();render();play(cur)}});
+$('export').onclick=()=>{const all=[...window.CLIPS,...(window.DEMOS||[])];const rows=all.filter(r=>picks[r.clip]?.keep||picks[r.clip]?.slot);
+ const h=['clip','assigned_slot','keep','tier','licence','credit','dur_s','slot_guess'];
+ const csv=[h.join(',')].concat(rows.map(r=>[r.clip,picks[r.clip].slot||'',picks[r.clip].keep?'yes':'',r.tier,r.licence,r.credit,r.dur_s,r.slot_guess].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','))).join('\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='swamp-frog-picks.csv';a.click()};
+</script>
+<script src="manifest.js" onload="render()"></script>
+</body></html>
