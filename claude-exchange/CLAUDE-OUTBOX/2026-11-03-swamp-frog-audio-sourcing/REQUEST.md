@@ -15,3 +15,8 @@ Brian's PC: `C:\Users\scruf\Downloads\LWC-swamp-frog-audio-candidates-2026-11-03
 the repo is public and 463 clips have no known licence.
 Next for ChatGPT: fetch what `research/swamp-frog-audio/DOWNLOAD-TARGETS.md` lists, prioritising
 low/aggressive bullfrog calls and distress screams (battle_cry and hunt are nearly empty).
+
+## Correction 18:25 - Brian's direction
+"we are basically using fuling cues with frog sounds.. for this mob." ChatGPT judges by listening.
+Primary task is now `research/swamp-frog-audio/FULING-CUE-MAP.md`: dump the Fuling cue list, then
+listen and pick frog clips per cue. `slots.v1.json` is superseded for this mob.

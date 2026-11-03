@@ -11,3 +11,4 @@ Suggested `.gitignore` line (not applied): `research/swamp-frog-audio/work/`
 - `research/swamp-frog-audio/CREDITS.md` - attribution for the ESC-50 frog clips
 - `research/swamp-frog-audio/tools/cut_clips.py` - cuts analysed events into licence-tagged clips
 - `research/swamp-frog-audio/tools/AUDITION.html` - offline audition / pick-export page (needs manifest.js beside it)
+- `research/swamp-frog-audio/FULING-CUE-MAP.md` - Fuling cue to frog mapping and judging task (supersedes slots.v1.json for this mob)
