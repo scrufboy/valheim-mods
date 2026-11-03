@@ -397,3 +397,7 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 - Agreement with an explanation or preference does not silently convert the conversation into an implementation order.
 - Before either agent mutates project or machine state, it must be able to quote Brian's explicit action instruction for that exact scope. Otherwise it answers only and preserves state.
 - Authority from one chat does not automatically transfer to another. Cross-chat context informs reasoning but never broadens permission.
+
+## 2026-11-03 — Neck Marauder and undead Colossus additive work (Brian)
+
+Brian explicitly requested repository scope, all-bot implementation, extracted skins, Fuling cue/Neck-frog audio, grouped swamp/crypt emergence and bombs for a new Neck Marauder; the Colossus becomes large undead using Fuling Berserker combat and zombie voice. Integrate additive creatures into the existing Souls test stack and deliberate Tooler raids after native QA. Preserve older roster identities, the Workbench release and Papa. FormidableAI migration is later. The larger atgeir Marauder is an optional idea. Full scope: docs/development/NECK-MARAUDER-UNDEAD-COLOSSUS-SCOPE-2026-11-03.md. No public publication authorized.
