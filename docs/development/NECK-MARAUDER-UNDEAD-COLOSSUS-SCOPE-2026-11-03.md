@@ -91,7 +91,34 @@ inside the Souls/RRR-compatible test stack and does not claim the Workbench now
 automatically exports complete AI creatures from any imported mesh. Frozen
 Workbench0.5.19 RC2 and Papa1.2.3 remain unchanged.
 
-## Assigned ownership
+## Subsequent owner detail: a living swamp defence
+
+The Sunken Marauders are swamp dwellers with a purpose, not a generic raid wave.
+Use more activity around crypt-bearing swamp areas, selected crypt interiors
+and entrances. Some hunt Leeches or wander; others wait below ground. A nearby
+shaman/lookout can alert existing Marauders and Neckmen, who rise and join the
+same fight. This local alarm needs a bounded radius, response cooldown and
+responder cap; it must not create an endless wave or relay without limit.
+Existing species relationships, identity, native combat and network ownership
+remain explicit. The shaman near old-world carved landmarks and the captain-like
+rally are authored roles, not permission to alias existing characters. The exact
+requested wooden landmark is not yet identified: the catalog has goblin_totempole
+and RuneStone_Swamps candidates; do not guess an Elder altar or global spawn point.
+
+The Colossus is rare and almost boss-like, suitable for a deliberate swamp/
+Bonemass-themed raid or Tooler encounter rather than a common natural spawn.
+Brian also requested a visible mining pickaxe carried on Marauders' backs, not
+a pickaxe drop, and support for compatible clubs, spears, shields and Fuling
+weapons. Preserve the original two-axe variant. Iron scraps are a possible loot
+idea, not a reason to invent an unbounded reward or replace current loot silently.
+
+Reclamation's maypole/town/repair/rescued-hero vision is the broader foundation.
+Dedicated chats now separate Reclamation planning and Gale interoperability
+research from this live creature implementation. "Maybe incorporate Gale" is
+research authority, not installation or replacement of r2modman. Preserve all
+existing Guard, Archer and Scout identities. The Workbench remains frozen.
+
+## Assigned ownership (implementation)
 
 Root: scope/Git, audio-source intake, Unity batch export, integration/builds,
 native launch semaphore, profile/raid installation and final evidence.

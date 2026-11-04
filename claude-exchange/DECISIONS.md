@@ -401,3 +401,16 @@ Claude's proposed shape (DESIGN-AUTHORITY only after Brian accepts):
 ## 2026-11-03 — Neck Marauder and undead Colossus additive work (Brian)
 
 Brian explicitly requested repository scope, all-bot implementation, extracted skins, Fuling cue/Neck-frog audio, grouped swamp/crypt emergence and bombs for a new Neck Marauder; the Colossus becomes large undead using Fuling Berserker combat and zombie voice. Integrate additive creatures into the existing Souls test stack and deliberate Tooler raids after native QA. Preserve older roster identities, the Workbench release and Papa. FormidableAI migration is later. The larger atgeir Marauder is an optional idea. Full scope: docs/development/NECK-MARAUDER-UNDEAD-COLOSSUS-SCOPE-2026-11-03.md. No public publication authorized.
+
+## 2026-11-03 — Sunken swamp defence and mining identity (Brian)
+
+Crypt-bearing swamps and selected crypt interiors concentrate Sunken Marauders.
+Active Leech hunters and buried ambushers answer nearby shaman/Neckman alarms
+as a bounded existing group, not infinite raid spawning. Preserve native
+MonsterAI and existing identities. A visible back pickaxe is requested cosmetic
+carry, not loot. Compatible club, spear, shield and Fuling loadouts are wanted;
+iron scraps remain an optional loot idea. The undead Colossus is rare and almost
+boss-like, suitable for deliberate swamp/Bonemass-themed raid tests.
+Reclamation planning and Gale interoperability research now have dedicated
+chats; Gale installation/replacement is not authorized by that research idea.
+Full scope: docs/development/NECK-MARAUDER-UNDEAD-COLOSSUS-SCOPE-2026-11-03.md.
