@@ -65,27 +65,29 @@ Brian: "we make both neck marauders... one surface type... with the spears... th
 | (new) | **Sunken Marauder — picks.** Lives **inside crypts**, working and buzzing about, **fake working until aggro**. |
 | Fuling camp/village | Marauder camps at our swamp castle ruins (surface). |
 | Berserker/Brute | Zombie Colossus (already on the Berserker setup). |
-| Shaman | Neck Shaman (crimson robes) — leads, summons/takes over Colossus. |
+| Shaman role | Neckman Shaman — HUMAN NPC on the Inca Warrior base (C9), red robes, leads, summons/takes over Colossus. Not a Fuling. |
 | Raids | Neck raids from the swamp. |
 
 C1 variant names follow this: "Fuling-arms variant" = Surface Marauder (spears, common); "Miner variant" = Sunken Marauder (picks, crypt interiors).
 
-Known risk: the Neckman is not on the Fuling rig, so Fuling shaman animations cannot play on it. Shaman spells must use Neck animations or a Marauder-style body. Try once; if blocked 20 min, tell Brian.
+Neckman/Shaman are human NPCs on the Inca Warrior base (see C9). They do not use Fuling animations.
 Not ours: Souls of the Land's own Neck/Neckman/Shaman prefabs. Reusing them needs Souls as a dependency or the author's permission — list it in the licence table. Marauder and Colossus are built from Brian's purchased models.
 Home in repo: enemy species belong to Living World content (`LivingWorldEnemyFamilies`) per REPOSITORY-LAYOUT; Brian confirms placement.
 
 ### C9. CORRECTION 08:01 — Neckmen, shamans, Colossus binding, totems (Brian; supersedes C4/C8 where they differ)
 Brian: "inca warriors become neckman.. not necks... men became neckmen and neckmen shaman, the curse is this union.. the neck/frog swamp death.. the neckman shaman are bound.. they are just like the corrupted servant in souls... but they are dressed in red. have cleric stuff like fulings.. and ranged attacks." "using summoned zombie colossus as berserkers... bound defenders, captive, normally hostile to Neck and neckman faction... you have two types of marauders to build that work with the neckman. and none of it needs any original [Souls] vault... we just need to fix our assets."
 
-| Fuling system | Swamp faction (all built from Brian's purchased assets) |
-|---|---|
-| Fuling grunt | **Neckman** = purchased **Inca Warrior** model (AngeloMaN87, downloaded 2026-11-05). |
-| Fuling Shaman | **Neckman Shaman** = Inca Warrior in red, Fuling-shaman cleric magic + ranged attacks, "bound" like the Souls corrupted servant. Run it on the Fuling Shaman controller if the Inca Warrior rig is humanoid (same artist as Colossus/Frog, which work on Fuling controllers — verify first). |
-| Fuling warband members | **Surface Marauder** (spears, common) and **Sunken Marauder** (picks, crypts) — work with the Neckmen. |
-| Berserker | **Zombie Colossus** — normally HOSTILE to Necks/Neckmen. A Neckman Shaman can summon or seize one: it becomes a bound, captive berserker defender for the swamp folk. |
-| Wildlife | **Necks** at the temples; little Necks hunt Leeches in the upper swamp. |
+**CORRECTION 08:20 (Brian) — overrides anything above that puts Neckmen or Shamans on Fuling bodies/controllers. Claude's error, not Brian's instruction.**
 
-No Souls of the Land prefabs are needed. Every body is ours: Inca Warrior, Frog Marauder, Andean Colossus.
+- **Neckmen are HUMANS that were corrupted. They are NOT Fulings.** They are regular human enemy NPCs, like the Souls of the Land Neckman. Human NPC body, human NPC animations and behavior. **Never put them on the Fuling controller.**
+- **The Inca Warrior is the new base body for ALL our human enemy NPCs** — slightly larger than our companions as a base. It has nothing to do with Fulings.
+- **Neckman = Inca Warrior base body + a Neck head**, redone as our own version of the Souls Neckman.
+- **Neckman Shaman = human NPC** (Inca Warrior base, red robes), bound/corrupted like the Souls corrupted servant, with cleric magic and ranged attacks. Human NPC, not a Fuling.
+- **Fuling behavior applies ONLY to the Frog Marauders**: Fuling body actions, combat, weapon choices and responses — because Brian wants their combat and weapon choices to be Fuling-like. Surface (spears, common) and Sunken (picks, crypts) both.
+- **Zombie Colossus**: unchanged (works). Normally hostile to Necks/Neckmen; a Neckman Shaman can summon/seize it as a bound captive berserker defender.
+- **Necks**: swamp wildlife at the temples; little Necks hunt Leeches.
+
+No Souls of the Land files ship. Every body is ours: Inca Warrior (human NPCs), Frog Marauder (Fuling-like), Andean Colossus.
 
 **Totem pillars:** in the ruins pack (KumaBeer, owned), the face towers `Structure_04_02..05` are assembled from separate head prefabs `Ancient_statue_head_01/02` (verified by GUID). Make enlarged stone heads — **Neck, Neckman (Inca Warrior), Frog Marauder** — in the pack's stone material and swap them in for the human heads. No mesh cutting.
 
