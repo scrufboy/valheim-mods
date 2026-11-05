@@ -1,43 +1,30 @@
-# The Bound of the Swamp — lore draft v2 (for Brian's approval)
+# The Zealots — lore draft v3 (for Brian's approval)
 
-Built from Brian's statements (2026-11-05) on a spine of real Andean/Mesoamerican myth. [Brackets] = open for Brian.
+From Brian's statements, 2026-11-05 12:09. [Brackets] open for Brian.
 
-## Canon facts (Brian)
-- The swamps were once lush jungle, home to another people (the Inca pack).
-- **Men became Neckmen.** The Inca warriors are the Neckmen before the swamp magic — undone by their lust and greed.
-- **The curse is a union:** men bound together with the neck/frog swamp death.
-- **Neckman Shamans** are bound, like the Souls corrupted servant, dressed in red, with Fuling-shaman cleric magic and ranged attacks.
-- **Necks** are swamp creatures, now found at the temples. Little Necks hunt Leeches in the upper swamp.
-- **Two kinds of Marauder** work with the Neckmen: surface (spears, common) and sunken (picks, in the crypts, fake-working until aggroed).
-- **The Zombie Colossus** is normally hostile to the Neck/Neckman faction. A shaman can summon or seize one as a **bound, captive berserker defender** that kills everything.
-- **Humans do not belong in the swamp.** The northmen outcast the swamp folk, cut them off, and left them to the swamp's dangers.
-
-## Myth spine (real references, adapted)
-- Inca: the creator **Viracocha** drowned his first race of **giants** in a flood (Unu Pachakuti) and turned some to stone → the Colossus.
-- Maya Popol Vuh: a failed people punished by flood and **changed into lesser creatures** → men bound into Neckmen.
-- Maya **Xibalba**, the underworld "place of fear" reached through caves and water → the sunken crypts and temple interiors.
-- **El Dorado** greed → the sin that brought the curse.
-- Frogs as rain-heralds and earth-monster kin in Mesoamerica → why the curse took the shape of the swamp's frogs.
+## Canon (Brian)
+- Odin pieced this world together from chunks of many realms — even outsider realms. The swamp holds a chunk of the Zealots' homeworld: a jungle empire.
+- They never wanted to leave their jungle. The jungle was killing them. Their Zealot priests prayed for a way to fight it and overcome it.
+- What they got was the swamp itself. They became Neckmen, and the jungle no longer threatened them — because they had become part of it. They got what they wanted. So did the jungle.
+- Now they are a lost race, Apocalypto-style. They have no memory of why they keep mining. They keep trying to rebuild an empire that is gone, in a world they were never supposed to settle in.
+- Men in regression, struggling with the curse — not beasts like Fulings. Something like the Dvergr.
+- Necks are Necks. The Colossus belongs to the undead and hates everything living — until the priests chain it.
 
 ## Story text
 
-Before the rot, the swamps were jungle, and the jungle had a people. They were warriors, builders in stone, and they carved their own faces into towers so the trees would never forget them.
+When Odin built this world, he built it from broken pieces: shards of other realms, stitched together. One shard was a jungle, and in that jungle stood an empire.
 
-They dug for gold. They found it, and they wanted more. They dug past the gold, past the roots, into the dark water under the world.
+The jungle was killing them. It drowned their fields and swallowed their roads. Their Zealot priests climbed the face-towers and prayed for a way to beat it.
 
-The old god answered with the flood. The jungle drowned. Their giants were turned to stone and sank with the towers. And the people were not killed — they were *bound*. Their flesh was joined to the swamp's frog-death, man to beast, and they rose as Neckmen.
+The prayer was answered. The jungle rotted into swamp and took them into itself. Their skin went cold and slick, their faces changed, and the swamp stopped trying to kill them — because now they were the swamp. The priests had their victory. So did the jungle.
 
-Their priests did not escape it. They became the Neckman Shamans: bound like servants, still wearing the red of their temples, still speaking the old words — now with swamp-fire and curses.
+They are the Zealots now. Neckmen. They do not remember the prayer. They only remember the work: dig, carry, build, pray. Their Marauders run in packs through the reeds — darts, knives, spears and torches — fast and screaming and never alone. Below the temples the miners keep digging for an empire that will never stand again, in a world that was never theirs.
 
-Under them work the Marauders. Above ground they carry spears and hunt. Below, in the crypts, they dig as they did before the flood — picks ringing on stone for gold that will never come — until something disturbs the work.
+The dead do not leave them in peace. The great undead Colossi hate every living thing, and they come for the Zealots as they come for everyone. But the priests have learned an old trick. They chain a Colossus by the bronze ring in its nose and drag it to war. When the chain breaks, it roars — and turns its rage on whoever the Zealots are fighting.
 
-The stone giants walk again as the dead. They hate the bound and crush them. But a shaman who knows the old words can chain a Colossus, and then it fights for the swamp folk — a captive berserker against everything and everyone, until it bursts into the thickest poison the swamp has ever breathed.
-
-On the temple columns the old human faces are gone. The bound carved their own over them: Neck, Neckman, frog.
-
-The northmen came last. They saw only monsters, cut the swamp off, and left it to rot. Humans do not belong here. The swamp remembers why.
+On the temple columns the old human faces are gone. The Zealots carved their own over them.
 
 ## Open for Brian
-- The old people's name.
-- What the Necks are: the curse's first beasts, or animals the curse took its shape from?
-- Do Neckmen remember being men?
+- The old empire's name.
+- Do the Necks come from the same curse, or were they always in the swamp?
+- Do any Zealots remember?
