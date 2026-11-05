@@ -1,0 +1,10 @@
+{
+  "name": "LivingWorld_Studio_Lab",
+  "version_number": "0.1.0",
+  "website_url": "https://github.com/scrufboy/valheim-mods",
+  "description": "Independent player/scenery photography lab. Timber entrance, green/blue/neutral room, vanilla visual props and saved return. Disposable single-player test build; no companion posing yet.",
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2202",
+    "ValheimModding-Jotunn-2.30.2"
+  ]
+}

@@ -1,0 +1,2 @@
+# Studio handoff
+SOURCE-INSPECTED. Parent main 91f80f2. Working name Living World Studio; utility only, not canon lore. See LivingWorldStudio/ARCHITECTURE.md for architecture, material/prefab audit, controller design, transfer recovery, risk register and staged implementation. Existing lore branch 110a3d1 read. No combat, companion, Tooler or CameraMode files changed. No public durable photo authority contract found in inspected actor source. Runtime implementation and installable package remain pending; do not describe design as working software.
