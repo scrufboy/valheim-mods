@@ -1,4 +1,4 @@
-# HANDOFF — Rebuild Troll and Bear the right way (Claude → ChatGPT), 2026-11-05
+# HANDOFF — Rebuild Troll, Bear and Marauder the right way (Claude → ChatGPT), 2026-11-05
 
 Owner: Brian. Owner instruction (verbatim): "can you fix the troll and the bear please and make them correctly".
 Owner method (verbatim): "the robot was supposed to keep the shape of the purchased troll...and make a new prefab.. like trolls revamped did and Unjohnny did with his yeti in Outsiders".
@@ -77,12 +77,26 @@ Only 4 purchased clips exist. v1 mapping: all attack_* triggers → Attack_01 (v
 Same build/runtime pattern as the Troll; package **Bjorn_Reborn**, next version 0.2.0; remove the rotation-bridge runtime.
 HDRP materials must be converted to a shader Valheim renders.
 
+## 3b. Sunken / Marsh Marauder — fix the weapons the practical way
+
+Owner (verbatim, 2026-11-05): it "left the models original axes in hand.. but gave it spear chucking animations. it never thought to use unity and our tools kit to just put dual pickaxes into the sunken marayders hands instaed of it's own axes... then just give the creature ealy axes animations". The pickaxe on the back is "an empty prop model attached to the back", not an equipable item.
+
+Verified current code (`creature_runtime/`): default "axes" loadout = invisible GoblinSword clone (`swing_longsword`) while the model's own axes stay visible; spear-throw comes from the `ExperimentalOozeBomb` GoblinSpear path; back pickaxe is built as a VisEquipment two-handed back slot with geometry checks (`MarauderCarry.cs`).
+
+Fix:
+1. New loadout `pickaxes` (make it the default; keep `axes` as a config option, per the Nov 3 scope): hide `FrogMarauder_AxeL/R`, parent a pickaxe mesh (vanilla `PickaxeIron`/`PickaxeAntler` visual, plain MeshRenderer, no ItemDrop) to the model's left and right hand sockets. The attack item is the right-hand one-handed chop; left is visual.
+2. Attack animation = Fuling one-handed swing (`swing_longsword` is the verified one-handed action on the Goblin controller). If the Goblin controller has a closer axe-chop action, read its action list once and use it; do not import player animations.
+3. Back pickaxe = static mesh parented to the upper-spine bone, on the living body and the corpse. Delete the back-slot/VisEquipment/geometry-check path.
+4. Bomb stays off.
+5. Voice: native Neck sounds now (approved fallback); frog picks later.
+
 ## 4. Corpse (both)
 
 Vanilla death spawns `<creature>_ragdoll`. Make our own ragdoll from our visual: Rigidbody + Capsule/Box collider + CharacterJoint on the main bones (hips, spine, head, upper/lower limbs), vanilla `Ragdoll` component settings copied from the vanilla ragdoll, pose copied from the living visual by bone name at death, and swap it into the creature's death effect. Gate: it falls and lies on the ground, same look, no floating. (Valheim-side pose transfer for owned corpses already exists in the Marauder/Colossus code — reuse it.)
 
 ## 5. Order of work
 
+0. Marauder pickaxes (§3b) — smallest change, do it first.
 1. Troll: Editor builder → bundle → plugin → load in Arena-copy / Sandbox (not the telemetry baseline) → look → screenshot from the game → tell Brian.
 2. Bear: same.
 3. Only then: trophy (head from the correctly shaped troll on `TrophyFrostTroll`), wet skin, Gravenhide paints.
