@@ -56,6 +56,24 @@ One themed release: the two Marauder variants, the little Necks' behavior, the N
 ### C7. Lore / creation / immersion story
 Write it from `LORE-DRAFT.md` (this folder) — Claude drafted it strictly from Brian's statements. Put a short version in each README and the full version on the pack page. Brian approves the wording.
 
+### C8. FACTION MAP — our Souls pack's Neck faction (Brian, 07:35–07:37)
+Brian: "we make both neck marauders... one surface type... with the spears... that is common, and one type, with picks. This technically gives us the ability to adopt the entire fuling system into the neck marauder type. we build their faction of our souls pack here." "perhaps surface prefabs.. for now sunken ones in the crypt.. should be there working and buzzing about.. fake working until aggro"
+
+| Fuling system | Neck faction |
+|---|---|
+| Fuling (grunt) | **Surface Marauder — spears, COMMON.** Fuling weapons (spear default; club/sword/shield allowed). Spawns from **surface prefabs** in the swamp. |
+| (new) | **Sunken Marauder — picks.** Lives **inside crypts**, working and buzzing about, **fake working until aggro**. |
+| Fuling camp/village | Marauder camps at our swamp castle ruins (surface). |
+| Berserker/Brute | Zombie Colossus (already on the Berserker setup). |
+| Shaman | Neck Shaman (crimson robes) — leads, summons/takes over Colossus. |
+| Raids | Neck raids from the swamp. |
+
+C1 variant names follow this: "Fuling-arms variant" = Surface Marauder (spears, common); "Miner variant" = Sunken Marauder (picks, crypt interiors).
+
+Known risk: the Neckman is not on the Fuling rig, so Fuling shaman animations cannot play on it. Shaman spells must use Neck animations or a Marauder-style body. Try once; if blocked 20 min, tell Brian.
+Not ours: Souls of the Land's own Neck/Neckman/Shaman prefabs. Reusing them needs Souls as a dependency or the author's permission — list it in the licence table. Marauder and Colossus are built from Brian's purchased models.
+Home in repo: enemy species belong to Living World content (`LivingWorldEnemyFamilies`) per REPOSITORY-LAYOUT; Brian confirms placement.
+
 ## D. ORDER (today)
 1. Graphics sheet (A) → Brian.
 2. Þurs VFX retint (B).
