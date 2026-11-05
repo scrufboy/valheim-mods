@@ -25,6 +25,9 @@ Faction = **the Zealots**. Necks stay Necks. Each class is named under the Zealo
 - Living settlement life at our ruins/temple: **mining, working, praying** (Diablo 2 feel).
 - **Undead Colossus: always hostile to everyone except undead/zombie kind.** In Zealot raids the priests bring one **bound in chains attached to its bronze nose ring**. During the fight they break the chain (or it breaks free): it **roars** and becomes a summoned beast that kills all the Zealots' enemies.
 
+- **The binding is a spell that wears off (Brian, 12:17).** When it ends, the Colossus kills everything — nothing is spared, Zealots included. Only a **successful rebind by a Zealot Priest** makes it fight for the Neck faction again.
+  - Implementation sketch: bound = temporary faction/tamed state with a timer; on expiry → hostile to all living (undead excepted). Rebind = a priest cast with a chance or channel time, can fail. If no priest is alive to rebind, it turns on the Zealots. (Gameplay: kill the priests and their own Colossus turns on them.) Timer length, rebind chance and visible cue (chain glow / eye-beam color change) are Brian's to set.
+
 ## World
 - Our ruins (KumaBeer pack, owned) and the temple placed in swamps (Upgrade World for existing worlds).
 - Pillars/totems/columns crowned with giant stone **Neck, Neckman and Frog Marauder heads** (from the trophy-statue work, head-swap on Structure_04_02..05).
