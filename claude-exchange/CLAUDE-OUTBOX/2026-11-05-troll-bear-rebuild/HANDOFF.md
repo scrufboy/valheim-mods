@@ -37,7 +37,7 @@ Do:
 
 Brian's words: "keep the shape of the purchased troll... and make a new prefab.. like trolls revamped did and Unjohnny did with his yeti in Outsiders".
 
-Verified method (Claude read both mods' bundles): own skeleton + own avatar + own clips + **own Animator controller that uses the vanilla Troll's parameter names**, vanilla components only (Humanoid, MonsterAI, ZNetView, ZSyncTransform, ZSyncAnimation, CharacterDrop, VisEquipment, FootStep, CharacterAnimEvent, LevelEffects).
+**The only method: learn how Trolls Revamped and Outsiders did it and do that.** Verified (Claude read both mods' bundles): own skeleton + own avatar + own clips + **own Animator controller that uses the vanilla Troll's parameter names**, vanilla components only (Humanoid, MonsterAI, ZNetView, ZSyncTransform, ZSyncAnimation, CharacterDrop, VisEquipment, FootStep, CharacterAnimEvent, LevelEffects).
 
 Source: `Documents/LWC Model Skin Studio/Unity Projects/Troll-6000.0.75f1-20261104-445f4ff0/Assets/cave_troll/` (`prefabs/troll.prefab`, `meshes/troll_.fbx`). Editor 6000.0.75f1.
 Purchased clips (play on its own skeleton): idle, idle_break, walk, run, attack1, attack2, take_damage, death.
@@ -49,8 +49,6 @@ Controller (values copied from Trolls Revamped `troll_animator_ru`):
 - Map: `swing_logv`→attack1, `swing_logh`→attack2, `punch`→attack1, `throw`→attack2, `attack`→attack1, `stagger`→take_damage, water→walk/idle.
 - Duplicate clips to owned `.anim`, add events: `Stop` before hit, `OnAttackTrigger` at hit frame, optional `Speed` (wind-up ~0.75, swing ~1.8, recover ~1.0). Reference: Stop @0.47, Speed 1.8 @0.53, OnAttackTrigger @0.90.
 - Swap this visual onto the vanilla `Troll` prefab (keep all vanilla gameplay, items, drops, spawns) and its corpse. Remove the old Þurs 0.2.x runtime. Package Þurs 0.3.0.
-
-**Fallback if the own-clip controller blocks you (rule 6 first):** do it exactly like the Colossus. The purchased troll already has a valid Humanoid avatar (`Assets/LWCPrepared/TrollHumanoid001/TrollHuman.avatar.asset`, your own Nov 4 work). Drive it with a humanoid native controller the way the Colossus uses the Fuling Berserker. Tell Brian which route you used.
 
 Then (only after the troll looks right in game): trophy = head of THIS troll on `TrophyFrostTroll`, Gravenhide skins, wet look.
 
