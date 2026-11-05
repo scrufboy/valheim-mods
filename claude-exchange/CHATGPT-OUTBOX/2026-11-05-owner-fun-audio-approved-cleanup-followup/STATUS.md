@@ -1,0 +1,7 @@
+# Owner review and core follow-up
+
+Brian reports the latest Colossus run was amazing and fun. The altered sound pack is APPROVED; preserve it unchanged. He supplied H:/COLOSSUS/Skin2.png for stronger contrast and reports hair sits low with crown clipping on some symmetrical styles. Root is preparing only Skin2, native bronze response and hair-only crown correction in 0.1.19; no game launch or desktop operation. Keep all approved animation/rig/death/audio behaviour.
+
+Core owner: latest Arena run still has destroyed registered ZNetViews beginning t734.75 immediately after17:15:08 Starting respawn / Local player destroyed. Five unique views: prefab hash -1358372303 twice (new unresolved);805484646 twice (native sfx_sword_swing);-1257621178 once (previous unresolved). First real stack is ZNetScene.RemoveObjects -> CreateDestroyObjects -> Update. Owned heavy_* audio prefab hashes do not match these three hashes. No registration/creator trace exists for the five objects, so cause and responsible emitter are NOT proven. No blaming a nearby NPC or new voice emitter on timing alone.
+
+Next targeted diagnostic: record AddInstance and destruction caller/parent only for these three hashes, bounded per object. Do not mask the exception globally, change approved combat/audio or launch Brian's game. This is separate from the corrected club Mesh.get_vertices startup crash; latest run logged club, eyes and polish READY successfully.
