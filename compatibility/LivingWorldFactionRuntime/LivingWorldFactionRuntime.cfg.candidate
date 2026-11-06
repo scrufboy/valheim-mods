@@ -1,0 +1,6 @@
+[General]
+Enabled = true
+
+[Registry]
+PrefabAssignments = RRRN_Pillager=LWC.Pillagers;RRRN_OrcBrute=LWC.Eitrherjar;Krauguk=LWC.Eitrherjar
+Relations = LWC.Pillagers<->native:Undead=Hostile;LWC.Pillagers<->LWC.Eitrherjar=Hostile;LWC.Eitrherjar<->native:Undead=Hostile;LWC.Eitrherjar<->native:PlainsMonsters=Hostile
