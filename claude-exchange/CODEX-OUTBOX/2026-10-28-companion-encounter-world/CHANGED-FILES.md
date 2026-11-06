@@ -1,0 +1,62 @@
+# Changed files
+
+Every staged file in this companion-encounter submission is listed below. Paths are repository-relative.
+
+- `LivingWorldCORE/COMPANION-ENCOUNTER-RESOLUTION-ARC.md` — Canonical encounter, camp, needs, discovery, away-state, rescue, and release arc.
+- `LivingWorldCORE/README.md` — Links the new encounter authority from the C.O.R.E. index.
+- `LivingWorldCompanionSystems/CampLifecycle/ADAPTER-HANDOFF.md` — Whole-camp routines, station/needs facts, unload lifecycle, tests, or runtime handoff.
+- `LivingWorldCompanionSystems/CampLifecycle/CampLifecyclePolicy.cs` — Whole-camp routines, station/needs facts, unload lifecycle, tests, or runtime handoff.
+- `LivingWorldCompanionSystems/CampLifecycle/CampLifecyclePolicyTests.cs` — Whole-camp routines, station/needs facts, unload lifecycle, tests, or runtime handoff.
+- `LivingWorldCompanionSystems/CampLifecycle/Test-CampLifecycle.ps1` — Whole-camp routines, station/needs facts, unload lifecycle, tests, or runtime handoff.
+- `LivingWorldCompanionSystems/Discovery/ADAPTER-HANDOFF-1.0.x.md` — Deterministic discovery and safe camp-site policy, persistence, tests, or 1.0.x handoff.
+- `LivingWorldCompanionSystems/Discovery/DiscoveryPersistence.cs` — Deterministic discovery and safe camp-site policy, persistence, tests, or 1.0.x handoff.
+- `LivingWorldCompanionSystems/Discovery/DiscoveryPolicy.cs` — Deterministic discovery and safe camp-site policy, persistence, tests, or 1.0.x handoff.
+- `LivingWorldCompanionSystems/Discovery/DiscoveryPolicyTests.cs` — Deterministic discovery and safe camp-site policy, persistence, tests, or 1.0.x handoff.
+- `LivingWorldCompanionSystems/Discovery/Test-Discovery.ps1` — Deterministic discovery and safe camp-site policy, persistence, tests, or 1.0.x handoff.
+- `LivingWorldCompanionSystems/EncounterLore/WILDERNESS-COMPANION-ENCOUNTER-ARC.md` — Split-Ash and Plains authored encounter prose plus state/dialogue contract.
+- `LivingWorldCompanionSystems/EncounterLore/encounter-arc-contract.v1.json` — Split-Ash and Plains authored encounter prose plus state/dialogue contract.
+- `LivingWorldCompanionSystems/EncounterVoice/ADAPTER-HANDOFF-1.0.x.md` — Voice candidate audit, text/emote/cue policy, line mapping, validation, tests, or handoff.
+- `LivingWorldCompanionSystems/EncounterVoice/EncounterCuePresentationPolicy.cs` — Voice candidate audit, text/emote/cue policy, line mapping, validation, tests, or handoff.
+- `LivingWorldCompanionSystems/EncounterVoice/EncounterCuePresentationPolicyTests.cs` — Voice candidate audit, text/emote/cue policy, line mapping, validation, tests, or handoff.
+- `LivingWorldCompanionSystems/EncounterVoice/REVIEW-NOTE.md` — Voice candidate audit, text/emote/cue policy, line mapping, validation, tests, or handoff.
+- `LivingWorldCompanionSystems/EncounterVoice/Test-EncounterCuePresentationPolicy.ps1` — Voice candidate audit, text/emote/cue policy, line mapping, validation, tests, or handoff.
+- `LivingWorldCompanionSystems/EncounterVoice/encounter-voice-candidates.v1.json` — Voice candidate audit, text/emote/cue policy, line mapping, validation, tests, or handoff.
+- `LivingWorldCompanionSystems/EncounterVoice/validate_line_bindings.py` — Voice candidate audit, text/emote/cue policy, line mapping, validation, tests, or handoff.
+- `LivingWorldCompanionSystems/FriendInNeed/ADAPTER-HANDOFF-1.0.x.md` — Witnessed danger alert, native combat handoff, persistence, tests, or adapter guidance.
+- `LivingWorldCompanionSystems/FriendInNeed/FriendInNeedContract.cs` — Witnessed danger alert, native combat handoff, persistence, tests, or adapter guidance.
+- `LivingWorldCompanionSystems/FriendInNeed/FriendInNeedContractTests.cs` — Witnessed danger alert, native combat handoff, persistence, tests, or adapter guidance.
+- `LivingWorldCompanionSystems/FriendInNeed/README.md` — Witnessed danger alert, native combat handoff, persistence, tests, or adapter guidance.
+- `LivingWorldCompanionSystems/FriendInNeed/Test-FriendInNeedContract.ps1` — Witnessed danger alert, native combat handoff, persistence, tests, or adapter guidance.
+- `LivingWorldCompanionSystems/NeedsAndAffinity/ADAPTER-HANDOFF-1.0.x.md` — Concrete personal needs and qualitative aid/relationship facts, persistence, tests, or handoff.
+- `LivingWorldCompanionSystems/NeedsAndAffinity/NeedsAndAffinityDomain.cs` — Concrete personal needs and qualitative aid/relationship facts, persistence, tests, or handoff.
+- `LivingWorldCompanionSystems/NeedsAndAffinity/NeedsAndAffinityPolicy.cs` — Concrete personal needs and qualitative aid/relationship facts, persistence, tests, or handoff.
+- `LivingWorldCompanionSystems/NeedsAndAffinity/NeedsPersistence.cs` — Concrete personal needs and qualitative aid/relationship facts, persistence, tests, or handoff.
+- `LivingWorldCompanionSystems/NeedsAndAffinity/README.md` — Concrete personal needs and qualitative aid/relationship facts, persistence, tests, or handoff.
+- `LivingWorldCompanionSystems/NeedsAndAffinity/RuntimeAdapterContracts.cs` — Concrete personal needs and qualitative aid/relationship facts, persistence, tests, or handoff.
+- `LivingWorldCompanionSystems/NeedsAndAffinity/tests/NeedsAndAffinityPolicyTests.cs` — Concrete personal needs and qualitative aid/relationship facts, persistence, tests, or handoff.
+- `LivingWorldCompanionSystems/NeedsAndAffinity/tests/Run-Tests.ps1` — Concrete personal needs and qualitative aid/relationship facts, persistence, tests, or handoff.
+- `LivingWorldCompanionSystems/QuestBroker/ADAPTER-HANDOFF-1.0.x.md` — Single persistent request across authorized camp, board, and jarl presentations, tests, or handoff.
+- `LivingWorldCompanionSystems/QuestBroker/QuestBrokerDomain.cs` — Single persistent request across authorized camp, board, and jarl presentations, tests, or handoff.
+- `LivingWorldCompanionSystems/QuestBroker/QuestBrokerPersistence.cs` — Single persistent request across authorized camp, board, and jarl presentations, tests, or handoff.
+- `LivingWorldCompanionSystems/QuestBroker/QuestBrokerPolicy.cs` — Single persistent request across authorized camp, board, and jarl presentations, tests, or handoff.
+- `LivingWorldCompanionSystems/QuestBroker/README.md` — Single persistent request across authorized camp, board, and jarl presentations, tests, or handoff.
+- `LivingWorldCompanionSystems/QuestBroker/RuntimeAdapterContracts.cs` — Single persistent request across authorized camp, board, and jarl presentations, tests, or handoff.
+- `LivingWorldCompanionSystems/QuestBroker/tests/QuestBrokerPolicyTests.cs` — Single persistent request across authorized camp, board, and jarl presentations, tests, or handoff.
+- `LivingWorldCompanionSystems/QuestBroker/tests/Run-Tests.ps1` — Single persistent request across authorized camp, board, and jarl presentations, tests, or handoff.
+- `LivingWorldCompanionSystems/README.md` — Indexes the encounter modules, authored scene, voice audit, and research.
+- `LivingWorldCompanionSystems/RescueRelease/README.md` — Factual invitation, roster, safe party release, death and gear policy, tests, or adapter guidance.
+- `LivingWorldCompanionSystems/RescueRelease/RescueReleaseDomain.cs` — Factual invitation, roster, safe party release, death and gear policy, tests, or adapter guidance.
+- `LivingWorldCompanionSystems/RescueRelease/RescueReleasePolicy.cs` — Factual invitation, roster, safe party release, death and gear policy, tests, or adapter guidance.
+- `LivingWorldCompanionSystems/RescueRelease/RuntimeAdapterContracts.cs` — Factual invitation, roster, safe party release, death and gear policy, tests, or adapter guidance.
+- `LivingWorldCompanionSystems/RescueRelease/tests/RescueReleasePolicyTests.cs` — Factual invitation, roster, safe party release, death and gear policy, tests, or adapter guidance.
+- `LivingWorldCompanionSystems/RescueRelease/tests/Run-Tests.ps1` — Factual invitation, roster, safe party release, death and gear policy, tests, or adapter guidance.
+- `LivingWorldCompanionSystems/RuntimeIntegration/EncounterArcRuntime.cs` — Engine-free cross-module identity/transaction prototype, tests, and maintained-runtime seam.
+- `LivingWorldCompanionSystems/RuntimeIntegration/INTEGRATION-CONTRACT-1.0.x.md` — Engine-free cross-module identity/transaction prototype, tests, and maintained-runtime seam.
+- `LivingWorldCompanionSystems/RuntimeIntegration/README.md` — Engine-free cross-module identity/transaction prototype, tests, and maintained-runtime seam.
+- `LivingWorldCompanionSystems/RuntimeIntegration/Run-Tests.ps1` — Engine-free cross-module identity/transaction prototype, tests, and maintained-runtime seam.
+- `LivingWorldCompanionSystems/RuntimeIntegration/RuntimeIntegrationTests.cs` — Engine-free cross-module identity/transaction prototype, tests, and maintained-runtime seam.
+- `claude-exchange/CODEX-OUTBOX/2026-10-28-companion-encounter-world/HANDOFF.md` — Claude-facing submission with verbatim owner direction, evidence labels, and verification.
+- `claude-exchange/CODEX-OUTBOX/2026-10-28-companion-encounter-world/REQUEST.md` — Claude-facing submission with verbatim owner direction, evidence labels, and verification.
+- `claude-exchange/CODEX-OUTBOX/2026-10-28-companion-encounter-world/VERIFICATION.md` — Claude-facing submission with verbatim owner direction, evidence labels, and verification.
+- `research/CompanionRespectQuests/COMPANION-RESPECT-QUESTS-RESEARCH.md` — Source-linked Valheim and mod precedent research for small earned-respect requests.
+- `claude-exchange/CODEX-OUTBOX/2026-10-28-companion-encounter-world/CHANGED-FILES.md` — This exhaustive changed-file index.

@@ -1,0 +1,47 @@
+{
+  "schema": "formidable-authorable-relations-v1-candidate",
+  "unknownPairBehavior": "vanilla",
+  "identityResolutionOrder": [
+    "persistentAuthoredFactionId",
+    "exactPrefabBinding"
+  ],
+  "factions": [
+    { "id": "LWC.Pillagers", "displayName": "Pillagers" },
+    { "id": "LWC.Eitrherjar", "displayName": "Eitrherjar" },
+    { "id": "LWC.Draugr", "displayName": "Draugr" }
+  ],
+  "exactPrefabBindings": [
+    { "prefabId": "RRRN_Pillager", "factionId": "LWC.Pillagers" },
+    { "prefabId": "RRRN_OrcBrute", "factionId": "LWC.Eitrherjar" },
+    { "prefabId": "Krauguk", "factionId": "LWC.Eitrherjar" }
+  ],
+  "authoredRelations": [
+    { "observer": "LWC.Pillagers", "target": "LWC.Draugr", "disposition": "Hostile" },
+    { "observer": "LWC.Draugr", "target": "LWC.Pillagers", "disposition": "Hostile" },
+    { "observer": "LWC.Pillagers", "target": "LWC.Eitrherjar", "disposition": "Hostile" },
+    { "observer": "LWC.Eitrherjar", "target": "LWC.Pillagers", "disposition": "Hostile" },
+    { "observer": "LWC.Eitrherjar", "target": "LWC.Draugr", "disposition": "Hostile" },
+    { "observer": "LWC.Draugr", "target": "LWC.Eitrherjar", "disposition": "Hostile" }
+  ],
+  "authoredNativeRelations": [
+    {
+      "authoredFactionId": "LWC.Pillagers",
+      "nativeFactionName": "Undead",
+      "disposition": "Hostile",
+      "bothDirections": true
+    },
+    {
+      "authoredFactionId": "LWC.Eitrherjar",
+      "nativeFactionName": "PlainsMonsters",
+      "disposition": "Hostile",
+      "bothDirections": true
+    }
+  ],
+  "preserveVanillaRules": [
+    "taming",
+    "playerOwnership",
+    "groupIdentity",
+    "unknownFactionPairs",
+    "UndeadVersusUndead"
+  ]
+}

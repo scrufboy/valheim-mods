@@ -1,0 +1,2130 @@
+[Message:   BepInEx] BepInEx 5.4.23.5 - valheim (10/28/2026 12:51:14 PM)
+[Message:   BepInEx] User is running BepInExPack Valheim version 5.4.2351
+[Info   :   BepInEx] Running under Unity v6000.0.75.2503836
+[Info   :   BepInEx] CLR runtime version: 4.0.30319.42000
+[Info   :   BepInEx] Supports SRE: True
+[Info   :   BepInEx] System platform: Bits64, Windows
+[Message:   BepInEx] Preloader started
+[Info   :   BepInEx] Loaded 1 patcher method from [BepInEx.Preloader 5.4.23.5]
+[Info   :   BepInEx] 1 patcher plugin loaded
+[Info   :   BepInEx] Patching [UnityEngine.CoreModule] with [BepInEx.Chainloader]
+[Message:   BepInEx] Preloader finished
+[Message:   BepInEx] Valheim Version: 1.0.21
+[Message:   BepInEx] Chainloader ready
+[Message:   BepInEx] Chainloader started
+[Info   :   BepInEx] 10 plugins to load
+[Info   :   BepInEx] Loading [Jotunn 2.30.2] (com.jotunn.jotunn)
+[Info   :Jotunn.Main] Initializing ModCompatibility
+[Info   :Jotunn.Main] Initializing SynchronizationManager
+[Info   :Jotunn.Main] Initializing NetworkManager
+[Info   :   BepInEx] Loading [Living World C.O.R.E. Tooler — Brian / scrufboy 2.6.0] (com.scrufboy.livingworldcore.tooler)
+[Info   :Living World C.O.R.E. Tooler — Brian / scrufboy] Living World C.O.R.E. Tooler — Brian / scrufboy 2.6.0 loaded.
+[Info   :   BepInEx] Loading [SagesVault 1.1.3] (fantu.sagesvault)
+[Info   :Jotunn.Main] Initializing SkillManager
+[Info   :Jotunn.Main] Initializing PrefabManager
+[Info   :   BepInEx] Loading [First Person POV 0.1.35] (jpvalheim.firstpersonpov)
+[Info   :First Person POV] First Person POV 0.1.35 loaded.
+[Info   :   BepInEx] Loading [Living World C.O.R.E. NPC 1.0.32.8] (local.livingworld.humannpc)
+[Info   :Living World C.O.R.E. NPC] [LWC] Companion armor applies to damage (Player rule).
+[Info   :Living World C.O.R.E. NPC] [LWC] Companion damage parity: stagger x2 off, backstab off (Player rules).
+[Info   :Living World C.O.R.E. NPC] [LWC] 1.0.32.8 loaded. Commands: lwparty, lwparty new, lwparty plains [q], lwparty clean, lwgear iron|plains [q], lwstatus, lwheal, lwsummon, lwgoto.
+[Info   :   BepInEx] Loading [Living World TEMPORARY Lab Bed Checks 0.1.0] (local.livingworld.lab.bedtest)
+[Info   :Living World TEMPORARY Lab Bed Checks] TEMPORARY bed fire/roof-shelter override loaded. Lab-only; lwbeds normal restores checks. Ownership, wetness, enemies and sleep-time checks unchanged.
+[Info   :   BepInEx] Loading [Living World C.O.R.E. Telemetry 1.0.23] (local.livingworld.telemetry)
+[Info   :   BepInEx] Loading [RunicPack 1.1.6] (marlthon.RunicPack)
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #0 - 'localization' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #1 - 'localization_extra' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #2 - 'heightmap_message' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #3 - 'localization_witch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #4 - 'localization_ashlands' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #5 - 'localization_deepnorth' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #6 - 'localization_captions' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #7 - 'localization_warriortitles' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #8 - 'localization_combatupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #9 - 'localization_ps' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #10 - 'localization_celebrationupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #11 - 'localization_xbox' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #12 - 'localization_switch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #0 - 'localization' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #1 - 'localization_extra' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #2 - 'heightmap_message' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #3 - 'localization_witch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #4 - 'localization_ashlands' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #5 - 'localization_deepnorth' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #6 - 'localization_captions' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #7 - 'localization_warriortitles' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #8 - 'localization_combatupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #9 - 'localization_ps' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #10 - 'localization_celebrationupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #11 - 'localization_xbox' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:29: Loaded localization file #12 - 'localization_switch' language: 'English'
+
+[Info   :   BepInEx] Loading [MadHatter 2.2.4] (odinplus.plugins.madhatter)
+[Info   :   BepInEx] Loading [Server Devcommands 1.116] (server_devcommands)
+[Message:   BepInEx] Chainloader startup complete (10 loaded, 0 skipped, 0 failed)
+[Info   : Unity Log] 10/28/2026 12:51:32: Using environment steamid 892970
+
+[Info   : Unity Log] 10/28/2026 12:51:32: Using steam APPID:892970
+
+[Info   : Unity Log] 10/28/2026 12:51:32: Authentication:k_ESteamNetworkingAvailability_Attempting
+
+[Info   : Unity Log] 10/28/2026 12:51:32: 2026-10-28 12:51:32:624: Using environment steamid 892970
+
+[Info   : Unity Log] 10/28/2026 12:51:32: Platform doesn't implement Process Lifetime Management! Don't initialize suspend manager.
+
+[Info   : Unity Log] 10/28/2026 12:51:32: Initialized platform!
+
+[Info   : Unity Log] 10/28/2026 12:51:32: Platform doesn't implement matchmaking! Don't initialize matchmaking manager.
+
+[Info   : Unity Log] 10/28/2026 12:51:32: Initializing PrivilegeManager.
+
+[Info   : Unity Log] 10/28/2026 12:51:32: All files in local storage save data:
+C:/Users/scruf/AppData/LocalLow/IronGate/Valheim\adminlist.txt (40)
+C:/Users/scruf/AppData/LocalLow/IronGate/Valheim\bannedlist.txt (41)
+C:/Users/scruf/AppData/LocalLow/IronGate/Valheim\permittedlist.txt (43)
+C:/Users/scruf/AppData/LocalLow/IronGate/Valheim\Player-prev.log (131692)
+C:/Users/scruf/AppData/LocalLow/IronGate/Valheim\Player.log (7183)
+
+[Info   : Unity Log] 10/28/2026 12:51:32: All files in platform save data:
+characters/brian.fch (182518)
+characters/brian.fch.old (182518)
+characters/brian_backup_20230826-160009.fch (153177)
+characters/brian_backup_20240519-084905.fch (164091)
+characters/brian_backup_20250430-210943.fch (176137)
+characters/brian_backup_auto-20230806093551.fch (144648)
+characters/brian_backup_auto-20230806160802.fch (144528)
+characters/brian_backup_auto-20230808041854.fch (153090)
+characters/brian_backup_auto-20230809143034.fch (153136)
+characters/brian_backup_auto-20240519084905.fch (175100)
+characters/eledyn.fch (254938)
+characters/eledyn.fch.old (254938)
+characters/eledyn_backup_20240324-134920.fch (103218)
+characters/eledyn_backup_20240522-221648.fch (113407)
+characters/eledyn_backup_20250102-083227.fch (144461)
+characters/eledyn_backup_20260310-062216.fch (145170)
+characters/eledyn_backup_auto-20240522221648.fch (122192)
+characters/eledyn_backup_auto-20240611184159.fch (134775)
+characters/eledyn_backup_auto-20240613043743.fch (144310)
+characters/floki.fch (120785)
+characters/floki.fch.old (120780)
+characters/floki_backup_20250112-212200.fch (42544)
+characters/floki_backup_20251031-181432.fch (103426)
+characters/floki_backup_20260311-040404.fch (113928)
+characters/floki_backup_auto-20250824111522.fch (88327)
+characters/floki_backup_auto-20250824225958.fch (89285)
+characters/floki_backup_auto-20250825093753.fch (102708)
+characters/floki_backup_auto-20250825135742.fch (103422)
+characters/floki_backup_auto-20250826001620.fch (103426)
+characters/floki_backup_auto-20250826101621.fch (103426)
+characters/nairb.fch (87866)
+characters/nairb.fch.old (79475)
+characters/nairb_backup_20241022-120552.fch (61792)
+characters/nairb_backup_20250430-210507.fch (79475)
+characters/nairb_backup_auto-20230317141334.fch (47145)
+characters/nairb_backup_auto-20230317202223.fch (65036)
+characters/nairb_backup_auto-20230612144305.fch (43233)
+characters/nairb_backup_auto-20230716004733.fch (61345)
+characters/ragnar the red.fch (93389)
+characters/ragnar the red.fch.old (93340)
+characters/ragnar the red_backup_20241022-120048.fch (68102)
+characters/ragnar the red_backup_20250504-224835.fch (84433)
+characters/ragnar the red_backup_auto-20221217124701.fch (50761)
+characters/ragnar the red_backup_auto-20221218135842.fch (52474)
+characters/ragnar the red_backup_auto-20221219110347.fch (54207)
+characters/ragnar the red_backup_auto-20221219160638.fch (54849)
+characters/ragnar the red_backup_auto-20250504231835.fch (93340)
+characters/ragnar.fch (124010)
+characters/ragnar.fch.old (115387)
+characters/ragnar_backup_20250430-210014.fch (105261)
+characters/ragnar_backup_auto-20230221152611.fch (100162)
+characters/ragnar_backup_auto-20230222084349.fch (102482)
+characters/ragnar_backup_auto-20230222140351.fch (97215)
+characters/scrufboy.fch (112405)
+characters/scrufboy.fch.old (112405)
+characters/scrufboy_backup_20260106-175203.fch (43013)
+characters/scrufboy_backup_20260203-031457.fch (43063)
+characters/scrufboy_backup_auto-20240403231245.fch (69185)
+characters/scrufboy_backup_auto-20240404125335.fch (80485)
+worlds/Vaaltorin_Test/1a_1e__1_1.chunk (94646)
+worlds/LWC_HumanLab_v1_backup_auto-20261027-031934/1e_22__1_4.chunk (40340)
+characters/scrufboy_backup_auto-20250402000423.fch (43262)
+characters/scrufboy_backup_auto-20260302030223.fch (52913)
+characters/than.fch (207344)
+characters/than.fch.old (203318)
+characters/than_backup_20230822-133551.fch (68168)
+characters/than_backup_20250211-170241.fch (203318)
+characters/than_backup_auto-20240126171837.fch (141043)
+characters/than_backup_auto-20240127021508.fch (143572)
+characters/than_backup_auto-20240207104307.fch (182675)
+characters/than_backup_auto-20240208213016.fch (183645)
+characters/than_backup_auto-20240227151830.fch (183954)
+characters/than_backup_auto-20240312122151.fch (202973)
+serverlist/favorite (83)
+serverlist/favorite.old (83)
+serverlist/recent (198)
+serverlist/recent.old (198)
+worlds/BeBrave.fwl (48)
+worlds/BeBrave_backup_auto-20260302023855.fwl (48)
+worlds/Brave.db (5209801)
+worlds/Brave.fwl (137)
+worlds/Brave2.db (1718419)
+worlds/Brave2.fwl (47)
+worlds/Brave2_backup_auto-20240902000927.fwl (47)
+worlds/Brave_backup_20250102-083228.db (2244886)
+worlds/Brave_backup_20250102-083228.fwl (137)
+worlds/Brave_backup_auto-20240613040728.fwl (46)
+worlds/Brave_backup_auto-20250102083228.db (2190158)
+worlds/Brave_backup_auto-20250102083228.fwl (137)
+worlds/Brave_backup_auto-20250112215513.db (5209381)
+worlds/Brave_backup_auto-20250112215513.fwl (137)
+worlds/Bunko.db (25132137)
+worlds/Bunko.fwl (41)
+worlds/Bunko.fwl.old (41)
+worlds/Bunko_backup_auto-20221206190152.db (19732945)
+worlds/Bunko_backup_auto-20221206190152.fwl (41)
+worlds/CuteHome2.db (13032876)
+worlds/CuteHome2.fwl (257)
+worlds/CuteHome2_backup_auto-20240519081755.fwl (48)
+worlds/CuteHome_backup_auto-20240404094541.fwl (47)
+worlds/CuteHome_backup_auto-20240404115222.db (15397149)
+worlds/CuteHome_backup_auto-20240404115222.fwl (264)
+worlds/Dadheim1.fwl.old (44)
+worlds/Dadheim1_backup_auto-20230302104728.fwl (44)
+worlds/DADHEIM_backup_auto-20240331135350.fwl (48)
+worlds/DADHEIM_backup_auto-20240402022247.db (3380418)
+worlds/DADHEIM_backup_auto-20240402022247.fwl (48)
+worlds/DADHEIM_backup_auto-20240403103241.db (4907648)
+worlds/DADHEIM_backup_auto-20240403103241.fwl (48)
+worlds/DADHEIM_backup_auto-20240403231250.db (12501523)
+worlds/DADHEIM_backup_auto-20240403231250.fwl (48)
+worlds/DADHEIM_backup_auto-20240404011534.db (14029776)
+worlds/DADHEIM_backup_auto-20240404011534.fwl (48)
+worlds/Ender_backup_auto-20231218103535.fwl (46)
+worlds/Glymshard.db (6345897)
+worlds/Glymshard.fwl (45)
+worlds/IceLandia.fwl (209)
+worlds/IceLandia_backup_auto-20241022121919.fwl (49)
+worlds/Ironheim.db (3183584)
+worlds/Ironheim.fwl (157)
+worlds/Ironheim_backup_auto-20230826154139.fwl (49)
+worlds/Ironheim_backup_auto-20231218103327.db (3183584)
+worlds/Ironheim_backup_auto-20231218103327.fwl (157)
+worlds/krinsckeekrenks.db (58274307)
+worlds/krinsckeekrenks.fwl (51)
+worlds/krinsckeekrenks.fwl.old (51)
+worlds/krinsckeekrenks_backup_auto-20230221152615.db (50565155)
+worlds/krinsckeekrenks_backup_auto-20230221152615.fwl (51)
+worlds/krinsckeekrenks_backup_auto-20230222084400.db (51632381)
+worlds/krinsckeekrenks_backup_auto-20230222084400.fwl (51)
+worlds/krinsckeekrenks_backup_auto-20230301111537.db (51746948)
+worlds/krinsckeekrenks_backup_auto-20230301111537.fwl (51)
+worlds/krinsckeekrenks_backup_auto-20230301163612.db (58274307)
+worlds/krinsckeekrenks_backup_auto-20230301163612.fwl (51)
+worlds/ofme1.db (3286313)
+worlds/ofme1.fwl (162)
+worlds/ofme1_backup_auto-20250208221412.fwl (46)
+worlds/poopvanilla.db (1281560)
+worlds/poopvanilla.fwl (52)
+worlds/poopvanilla_backup_auto-20240324132129.fwl (52)
+worlds/poopy_backup_auto-20240519074641.fwl (46)
+worlds/poostink.db (11134152)
+worlds/poostink.fwl (44)
+worlds/poostink.fwl.old (44)
+worlds/poostink_backup_auto-20221213222754.fwl (44)
+worlds/poostink_backup_auto-20221213235313.db (10428214)
+worlds/poostink_backup_auto-20221214112759.db (11131238)
+worlds/poostink_backup_auto-20221214112759.fwl (44)
+worlds/Richesforme.fwl.old (47)
+worlds/Richesforme/00_01__0_1.chunk (79)
+worlds/Richesforme/16_24__1_1.chunk (18073)
+worlds/Richesforme/16_26__1_1.chunk (9647)
+worlds/Richesforme/18_22__1_1.chunk (85531)
+worlds/Richesforme/18_24__1_1.chunk (154425)
+worlds/Richesforme/18_26__1_1.chunk (222375)
+worlds/Richesforme/1a_22__1_1.chunk (268421)
+worlds/Richesforme/1a_24__1_1.chunk (176645)
+worlds/Richesforme/1c_24__2_1.chunk (729332)
+worlds/Richesforme/1c_28__1_1.chunk (10657)
+worlds/Richesforme/1e_1e__1_1.chunk (8450)
+worlds/Richesforme/1e_28__1_1.chunk (246052)
+worlds/Richesforme/20_1e__1_1.chunk (365387)
+worlds/Richesforme/20_20__1_1.chunk (1023591)
+worlds/Richesforme/20_22__1_1.chunk (15449)
+worlds/Richesforme/20_24__2_1.chunk (992896)
+worlds/Richesforme/20_28__1_1.chunk (234876)
+worlds/Richesforme_backup_20230716-004734.db (12646088)
+worlds/Richesforme_backup_20230716-004734.fwl (47)
+worlds/Richesforme_backup_20260918-215320.db (8165471)
+worlds/Richesforme_backup_20260918-215320.fwl (48)
+worlds/Richesforme_backup_auto-20230302104844.fwl (47)
+worlds/Richesforme_backup_auto-20230716004733.db (6867328)
+worlds/Richesforme_backup_auto-20230716004733.fwl (48)
+worlds/Richesforme_backup_auto-20260918-215319.db (8165471)
+worlds/Richesforme_backup_auto-20260918-215319.fwl (48)
+worlds/Rogaland.db (5412925)
+worlds/Rogaland.fwl (43)
+worlds/Rogaland_backup_auto-20230729165826.fwl (43)
+worlds/soitbegins.db (8093394)
+worlds/soitbegins.fwl (155)
+worlds/soitbegins_backup_20250215-141907.db (8222104)
+worlds/soitbegins_backup_20250215-141907.fwl (155)
+worlds/soitbegins_backup_auto-20240312125327.fwl (51)
+worlds/soitbegins_backup_auto-20240312150003.db (5906268)
+worlds/soitbegins_backup_auto-20240312150003.fwl (155)
+worlds/soitbegins_backup_auto-20240317210125.db (8186185)
+worlds/soitbegins_backup_auto-20240317210125.fwl (155)
+worlds/soitbegins_backup_auto-20240330215134.db (8212582)
+worlds/soitbegins_backup_auto-20240330215134.fwl (155)
+worlds/soitbegins_backup_auto-20240331031433.db (8184247)
+worlds/soitbegins_backup_auto-20240331031433.fwl (155)
+worlds/soitbegins_backup_auto-20240331111953.db (8203586)
+worlds/soitbegins_backup_auto-20240331111953.fwl (155)
+worlds/Steamdeck.db (2590455)
+worlds/Steamdeck.fwl (140)
+worlds/Steamdeck_backup_20251204-181213.db (1431870)
+worlds/Steamdeck_backup_20251204-181213.fwl (49)
+worlds/Steamdeck_backup_20260203-031457.db (2097857)
+worlds/Steamdeck_backup_20260203-031457.fwl (49)
+worlds/Steamdeck_backup_auto-20250215141449.fwl (49)
+worlds/Steamdeck_backup_auto-20260203031818.db (2137639)
+worlds/Steamdeck_backup_auto-20260203031818.fwl (140)
+worlds/Stomp.fwl.old (41)
+worlds/Stomp_backup_auto-20221211181425.fwl (41)
+worlds/Stomp_backup_auto-20221212114110.db (11378602)
+worlds/Stomp_backup_auto-20221212114110.fwl (41)
+worlds/Tasteit_backup_auto-20240206214352.fwl (48)
+worlds/tester1.fwl.old (43)
+worlds/tester1_backup_auto-20221212114549.fwl (43)
+worlds/tester2.db (16630515)
+worlds/tester2.fwl (150)
+worlds/tester2.fwl.old (43)
+worlds/tester2_backup_20250822-212157.db (44284811)
+worlds/tester2_backup_20250822-212157.fwl (43)
+worlds/tester2_backup_auto-20221212122321.db (31037694)
+worlds/tester2_backup_auto-20221212233210.db (33106853)
+worlds/tester2_backup_auto-20221212233210.fwl (43)
+worlds/tester2_backup_auto-20221213204121.db (43942031)
+worlds/tester2_backup_auto-20221213204121.fwl (43)
+worlds/tester2_backup_auto-20221214134130.db (44225090)
+worlds/tester2_backup_auto-20221214134130.fwl (43)
+worlds/tester2_backup_auto-20250822212317.db (16624927)
+worlds/tester2_backup_auto-20250822212317.fwl (150)
+worlds/tester2_backup_auto-20250822233338.db (16627217)
+worlds/tester2_backup_auto-20250822233338.fwl (150)
+worlds/Testybetas.db (2800440)
+worlds/Testybetas.fwl (271)
+worlds/Testybetas_backup_20260302-030224.db (2231577)
+worlds/Testybetas_backup_20260302-030224.fwl (271)
+worlds/Testybetas_backup_auto-20250824111522.db (2091425)
+worlds/Testybetas_backup_auto-20250824111522.fwl (271)
+worlds/Testybetas_backup_auto-20250824225959.db (2203555)
+worlds/Testybetas_backup_auto-20250824225959.fwl (271)
+worlds/Testybetas_backup_auto-20250825093754.db (2224177)
+worlds/Testybetas_backup_auto-20250825093754.fwl (271)
+worlds/Testybetas_backup_auto-20250825135743.db (2248243)
+worlds/Testybetas_backup_auto-20250825135743.fwl (271)
+worlds/Testybetas_backup_auto-20250826101622.db (2245654)
+worlds/Testybetas_backup_auto-20250826101622.fwl (271)
+worlds/Testybetas_backup_auto-20260302023947.db (2231577)
+worlds/Testybetas_backup_auto-20260302023947.fwl (271)
+worlds/Tolmar.db (32509914)
+worlds/Tolmar.fwl (259)
+worlds/Tolmar_backup_auto-20231224123409.db (18051643)
+worlds/Tolmar_backup_auto-20231224123409.fwl (251)
+worlds/Tolmar_backup_auto-20240116230052.db (18339109)
+worlds/Tolmar_backup_auto-20240116230052.fwl (251)
+worlds/Tolmar_backup_auto-20240120124310.db (23930713)
+worlds/Tolmar_backup_auto-20240120124310.fwl (259)
+worlds/Tolmar_backup_auto-20240121182943.db (23692269)
+worlds/Tolmar_backup_auto-20240121182943.fwl (259)
+worlds/Tolmar_backup_auto-20240126171845.db (24251115)
+worlds/Tolmar_backup_auto-20240126171845.fwl (259)
+worlds/Tolmar_backup_auto-20240127021514.db (29083197)
+worlds/Tolmar_backup_auto-20240127021514.fwl (259)
+worlds/Trials.fwl.old (42)
+worlds/Trials/00_00__0_1.chunk (1464)
+worlds/Trials/00_01__0_1.chunk (1194)
+worlds/Trials/18_1e__1_1.chunk (255035)
+worlds/Trials/18_20__1_1.chunk (116340)
+worlds/Trials/1a_1a__1_1.chunk (29055)
+worlds/Trials/1a_1c__1_1.chunk (179324)
+worlds/Trials/1a_1e__1_1.chunk (395871)
+worlds/Trials/1a_20__1_1.chunk (154809)
+worlds/Trials/1a_22__1_1.chunk (339)
+worlds/Trials/1c_1a__1_1.chunk (80000)
+worlds/Trials/1c_1c__1_1.chunk (1361533)
+worlds/Trials/1c_1e__1_1.chunk (1067687)
+worlds/Trials/1c_20__2_1.chunk (2664740)
+worlds/Trials/1e_1a__1_2.chunk (223505)
+worlds/Trials/1e_1c__1_1.chunk (441315)
+worlds/Trials/1e_1e__1_1.chunk (1307444)
+worlds/Trials/20_18__1_1.chunk (37418)
+worlds/Trials/20_1a__1_2.chunk (640110)
+worlds/Trials/20_1c__1_1.chunk (1254871)
+worlds/Trials/20_1e__1_1.chunk (2129861)
+worlds/Trials/20_20__2_1.chunk (1455952)
+worlds/Trials/20_24__1_1.chunk (2756)
+worlds/Trials/22_1a__1_1.chunk (119402)
+worlds/Trials/22_1c__1_1.chunk (793993)
+worlds/Trials/22_1e__1_1.chunk (382543)
+worlds/Trials/22_24__1_1.chunk (26)
+worlds/Trials/24_1c__1_1.chunk (3855)
+worlds/Trials/26_1c__1_1.chunk (357)
+worlds/Trials/26_20__1_1.chunk (402)
+worlds/Trials/26_22__1_1.chunk (365)
+worlds/Trials/_main.3.chunks (340)
+worlds/Trials/_main.3.db2 (152716)
+worlds/Trials/_main.3.fwl2 (148)
+worlds/Trials/_main.3.ok (4)
+worlds/Trials2.db (19373810)
+worlds/Trials2.fwl (47)
+worlds/Trials2.fwl.old (42)
+worlds/Trials2_backup_20260310-062216.db (45116595)
+worlds/Trials2_backup_20260310-062216.fwl (42)
+worlds/Trials2_backup_auto-20260311033533.db (17826894)
+worlds/Trials2_backup_auto-20260311033533.fwl (47)
+worlds/Trials2_backup_auto-20260311175651.db (18172757)
+worlds/Trials2_backup_auto-20260311175651.fwl (47)
+worlds/Trials2_backup_auto-20260311201626.db (19375465)
+worlds/Trials2_backup_auto-20260311201626.fwl (47)
+worlds/Trials3_backup_auto-20240312115513.fwl (48)
+worlds/Trials4_backup_auto-20240522214554.fwl (48)
+worlds/Trials4_backup_auto-20240523000027.db (1533695)
+worlds/Trials4_backup_auto-20240523000027.fwl (220)
+worlds/Trials4_backup_auto-20240523214919.db (6659933)
+worlds/Trials4_backup_auto-20240523214919.fwl (220)
+worlds/Trials5.db (3415116)
+worlds/Trials5.fwl (255)
+worlds/Trials5_backup_20260311-033853.db (3323524)
+worlds/Trials5_backup_20260311-033853.fwl (255)
+worlds/Trials5_backup_auto-20240611184159.db (2020592)
+worlds/Trials5_backup_auto-20240611184159.fwl (208)
+worlds/Trials5_backup_auto-20241021141046.db (2127637)
+worlds/Trials5_backup_auto-20241021141046.fwl (208)
+worlds/Trials5_backup_auto-20241022011840.db (3210653)
+worlds/Trials5_backup_auto-20241022011840.fwl (208)
+worlds/Trials5_backup_auto-20241022103428.db (3265315)
+worlds/Trials5_backup_auto-20241022103428.fwl (255)
+worlds/Trials_backup_20260918-212844.db (45234505)
+worlds/Trials_backup_20260918-212844.fwl (80)
+worlds/Trials_backup_auto-20230823203008.db (45234505)
+worlds/Trials_backup_auto-20230823203008.fwl (80)
+worlds/Valhalla.db (45442300)
+worlds/Valhalla.fwl (42)
+worlds/Valhalla.fwl.old (42)
+worlds/Valhalla_backup_auto-20230316191121.db (42251443)
+worlds/Valhalla_backup_auto-20230316191121.fwl (42)
+worlds/Valhalla_backup_auto-20230316214121.db (44086536)
+worlds/Valhalla_backup_auto-20230316214121.fwl (42)
+worlds/Valhalla_backup_auto-20230317141335.db (43645133)
+worlds/Valhalla_backup_auto-20230317141335.fwl (42)
+worlds/Valhalla_backup_auto-20230317202224.db (45752180)
+worlds/Valhalla_backup_auto-20230317202224.fwl (42)
+worlds/Valheim.db (31701044)
+worlds/Valheim.fwl (43)
+worlds/Valheim.fwl.old (43)
+worlds/Valheim2_backup_auto-20221215130139.fwl (44)
+worlds/Valheim_backup_auto-20221220154033.db (31798277)
+worlds/Valheim_backup_auto-20221220154033.fwl (43)
+worlds/Valheim_backup_auto-20221221013805.db (31852515)
+worlds/Valheim_backup_auto-20221221013805.fwl (43)
+worlds/Valheim_backup_auto-20221221143245.db (31767910)
+worlds/Valheim_backup_auto-20221221143245.fwl (43)
+worlds/Valheim_backup_auto-20221221163454.db (31835131)
+worlds/Valheim_backup_auto-20221221163454.fwl (43)
+worlds/vanilla.db (3478729)
+worlds/vanilla.fwl (221)
+worlds/VanillaMOD.db (1105519)
+worlds/VanillaMOD.fwl (295)
+worlds/VanillaMOD_backup_auto-20250401172827.fwl (51)
+worlds/vanilla_backup_auto-20250401091603.fwl (48)
+worlds/vanilla_backup_auto-20250401195348.db (2130502)
+worlds/vanilla_backup_auto-20250401195348.fwl (221)
+worlds/vanilla_backup_auto-20250402000423.db (3477325)
+worlds/vanilla_backup_auto-20250402000423.fwl (221)
+worlds/WheninRome_backup_auto-20240207095656.fwl (51)
+worlds/WheninRome_backup_auto-20240208213017.db (2771345)
+worlds/WheninRome_backup_auto-20240208213017.fwl (259)
+worlds/WheninRome_backup_auto-20240227151831.db (3133630)
+worlds/WheninRome_backup_auto-20240227151831.fwl (259)
+worlds/ZeroDAWN.fwl.old (44)
+worlds/ZeroDAWN_backup_auto-20230301171939.fwl (44)
+worlds/ZeroDAWN_backup_auto-20230301175614.db (20638921)
+worlds/Richesforme_backup_auto-20260919-191251/00_01__0_1.chunk (79)
+worlds/Richesforme_backup_auto-20260919-191251/16_24__1_1.chunk (18073)
+worlds/Richesforme_backup_auto-20260919-191251/16_26__1_1.chunk (9647)
+worlds/Richesforme_backup_auto-20260919-191251/18_22__1_1.chunk (85531)
+worlds/Richesforme_backup_auto-20260919-191251/18_24__1_1.chunk (154425)
+worlds/Richesforme_backup_auto-20260919-191251/18_26__1_1.chunk (222375)
+worlds/Richesforme_backup_auto-20260919-191251/1a_22__1_1.chunk (268421)
+worlds/Richesforme_backup_auto-20260919-191251/1a_24__1_1.chunk (176645)
+worlds/Richesforme_backup_auto-20260919-191251/1c_20__2_3.chunk (1758294)
+worlds/Richesforme_backup_auto-20260919-191251/1c_24__2_1.chunk (729332)
+worlds/Richesforme_backup_auto-20260919-191251/1c_28__1_1.chunk (10657)
+worlds/Richesforme_backup_auto-20260919-191251/1e_1e__1_1.chunk (8450)
+worlds/Richesforme_backup_auto-20260919-191251/1e_28__1_1.chunk (246052)
+worlds/Richesforme_backup_auto-20260919-191251/20_1e__1_1.chunk (365387)
+worlds/Richesforme_backup_auto-20260919-191251/20_20__1_1.chunk (1023591)
+worlds/Richesforme_backup_auto-20260919-191251/20_22__1_1.chunk (15449)
+worlds/Richesforme_backup_auto-20260919-191251/20_24__2_1.chunk (992896)
+worlds/Richesforme_backup_auto-20260919-191251/20_28__1_1.chunk (234876)
+worlds/Richesforme_backup_auto-20260919-191251/_main.3.ok (4)
+worlds/Richesforme_backup_auto-20260919-191251/_main.3.chunks (208)
+worlds/Richesforme_backup_auto-20260919-191251/_main.3.db2 (152502)
+worlds/Richesforme_backup_auto-20260919-191251/_main.3.fwl2 (348)
+worlds/Richesforme/1c_20__2_5.chunk (1768823)
+worlds/Richesforme/_main.6.chunks (208)
+worlds/Richesforme/_main.6.db2 (152502)
+worlds/Richesforme/_main.6.fwl2 (348)
+worlds/Richesforme/_main.6.ok (4)
+worlds/WheninRome_backup_20260929-133733.fwl (259)
+worlds/WheninRome_backup_20260929-133733.db (3121787)
+worlds/WheninRome/20_1e__1_1.chunk (1159601)
+worlds/WheninRome/20_20__1_1.chunk (125045)
+worlds/WheninRome/22_1e__1_1.chunk (534212)
+worlds/WheninRome/22_20__1_1.chunk (153170)
+worlds/WheninRome/26_28__1_1.chunk (49)
+worlds/WheninRome/00_01__0_1.chunk (6)
+worlds/WheninRome/_main.1.chunks (76)
+worlds/WheninRome/_main.1.db2 (148094)
+worlds/WheninRome/_main.1.fwl2 (322)
+worlds/WheninRome/_main.1.ok (4)
+worlds/CuteHome_backup_20260929-134118.fwl (264)
+worlds/CuteHome_backup_20260929-134118.db (15400828)
+worlds/CuteHome/1e_26__1_1.chunk (37)
+worlds/CuteHome/20_20__1_1.chunk (738924)
+worlds/CuteHome/20_22__1_1.chunk (809966)
+worlds/CuteHome/20_24__1_1.chunk (268464)
+worlds/CuteHome/22_20__1_1.chunk (339473)
+worlds/CuteHome/22_22__1_1.chunk (1079539)
+worlds/CuteHome/22_24__1_1.chunk (155601)
+worlds/CuteHome/24_24__1_1.chunk (223179)
+worlds/CuteHome/28_1e__1_1.chunk (312180)
+worlds/CuteHome/28_20__1_1.chunk (313864)
+worlds/CuteHome/28_22__1_1.chunk (246436)
+worlds/CuteHome/20_1c__2_1.chunk (1014330)
+worlds/CuteHome/24_1c__2_1.chunk (2225521)
+worlds/CuteHome/24_20__2_1.chunk (1938190)
+worlds/CuteHome/00_01__0_1.chunk (6)
+worlds/CuteHome/_main.1.chunks (175)
+worlds/CuteHome/_main.1.db2 (153850)
+worlds/CuteHome/_main.1.fwl2 (327)
+worlds/CuteHome/_main.1.ok (4)
+worlds/Steamdeck/_main.0.fwl2 (226)
+worlds/Dadheim1/1e_1e__1_1.chunk (213473)
+worlds/Dadheim1_backup_20261001-215631.db (14606812)
+worlds/Dadheim1_backup_20261001-215631.fwl (44)
+worlds/Dadheim1/1e_20__1_1.chunk (290976)
+worlds/Dadheim1/1e_24__1_1.chunk (8783)
+worlds/Dadheim1/20_1e__1_1.chunk (682584)
+worlds/Dadheim1/20_24__1_1.chunk (880628)
+worlds/Dadheim1/20_26__1_1.chunk (150944)
+worlds/Dadheim1/22_1c__1_1.chunk (225139)
+worlds/Dadheim1/22_1e__1_1.chunk (574190)
+worlds/Dadheim1/22_24__1_1.chunk (8163)
+worlds/Dadheim1/24_20__1_1.chunk (316636)
+worlds/Dadheim1/24_22__1_1.chunk (3387)
+worlds/Dadheim1/20_20__2_1.chunk (1688736)
+worlds/Dadheim1/24_1c__2_1.chunk (328132)
+worlds/Dadheim1/00_01__0_1.chunk (6)
+worlds/Dadheim1/_main.2.chunks (164)
+worlds/Dadheim1/_main.2.db2 (150097)
+worlds/Dadheim1/_main.2.fwl2 (348)
+worlds/Dadheim1/_main.2.ok (4)
+worlds/Trials3_backup_20261001-221005.fwl (262)
+worlds/Trials3_backup_20261001-221005.db (3625281)
+worlds/Trials3/1e_1c__1_1.chunk (6919)
+worlds/Trials3/1e_1e__1_1.chunk (390784)
+worlds/Trials3/1e_20__1_1.chunk (121545)
+worlds/Trials3/20_1c__1_1.chunk (87203)
+worlds/Trials3/20_1e__1_1.chunk (1174359)
+worlds/Trials3/20_20__1_1.chunk (154554)
+worlds/Trials3/22_1e__1_1.chunk (516059)
+worlds/Trials3/22_20__1_1.chunk (53878)
+worlds/Trials3/00_01__0_1.chunk (6)
+worlds/Trials3/_main.1.chunks (109)
+worlds/Trials3/_main.1.db2 (147117)
+worlds/Trials3/_main.1.fwl2 (325)
+worlds/Trials3/_main.1.ok (4)
+worlds/Once Again..../26_18__1_2.chunk (35740)
+worlds/Once Again...._backup_auto-20261005-142752/_main.91.fwl2 (290)
+worlds/Once Again...._backup_auto-20261005-142752/_main.91.db2 (152587)
+worlds/Once Again...._backup_auto-20261005-142752/_main.91.chunks (241)
+worlds/Once Again..../20_20__1_4.chunk (475939)
+characters/ragnar_backup_auto-20261004-213403.fch (124010)
+worlds/Once Again..../00_01__0_6.chunk (260)
+worlds/Once Again...._backup_auto-20261005-142752/_main.91.ok (4)
+worlds/Once Again..../26_1e__1_2.chunk (17256)
+worlds/Once Again..../24_20__1_11.chunk (85720)
+worlds/Once Again...._backup_auto-20261005-142752/28_1c__1_1.chunk (662)
+worlds/Once Again...._backup_auto-20261005-142752/28_1a__1_2.chunk (513100)
+worlds/Once Again...._backup_auto-20261005-142752/28_18__1_1.chunk (161445)
+worlds/Once Again...._backup_auto-20261005-142752/26_1e__1_1.chunk (9835)
+worlds/Once Again...._backup_auto-20261005-142752/26_1c__1_1.chunk (267143)
+worlds/Once Again...._backup_auto-20261005-142752/26_1a__1_2.chunk (594419)
+worlds/Once Again...._backup_auto-20261005-142752/26_18__1_1.chunk (33057)
+worlds/Once Again...._backup_auto-20261005-142752/24_20__1_10.chunk (82420)
+worlds/Once Again...._backup_auto-20261005-142752/24_1e__1_9.chunk (641413)
+worlds/Once Again...._backup_auto-20261005-142752/24_1c__1_2.chunk (756531)
+worlds/Once Again...._backup_auto-20261005-142752/24_1a__1_1.chunk (288272)
+worlds/Once Again...._backup_auto-20261005-142752/22_20__1_49.chunk (420573)
+worlds/Once Again...._backup_auto-20261005-142752/22_20__1_15.chunk (408762)
+worlds/Once Again...._backup_auto-20261005-142752/22_1e__1_51.chunk (1342568)
+worlds/Once Again...._backup_auto-20261005-142752/22_1e__1_15.chunk (1119119)
+worlds/Once Again...._backup_auto-20261005-142752/22_1c__1_3.chunk (582886)
+worlds/Once Again...._backup_auto-20261005-142752/20_20__1_4.chunk (475939)
+worlds/Once Again...._backup_auto-20261005-142752/20_1e__1_33.chunk (1226216)
+worlds/Once Again...._backup_auto-20261005-142752/20_1e__1_11.chunk (1194317)
+worlds/Once Again...._backup_auto-20261005-142752/20_1c__1_7.chunk (697398)
+worlds/Once Again...._backup_auto-20261005-142752/1e_20__1_2.chunk (756179)
+worlds/Once Again...._backup_auto-20261005-142752/1e_1e__1_12.chunk (832851)
+worlds/Once Again...._backup_auto-20261005-142752/1e_1c__1_4.chunk (698584)
+worlds/Once Again...._backup_auto-20261005-142752/00_01__0_6.chunk (260)
+characters/eledyn_backup_auto-20261005-142752.fch (242367)
+characters/eledyn_backup_auto-20261011-021223.fch (244812)
+worlds/Once Again...._backup_auto-20261011-021224/00_01__0_6.chunk (260)
+worlds/Once Again...._backup_auto-20261011-021224/1e_1c__1_4.chunk (698584)
+worlds/Once Again...._backup_auto-20261011-021224/1e_1e__1_13.chunk (832851)
+worlds/Once Again...._backup_auto-20261011-021224/1e_20__1_2.chunk (756179)
+worlds/Once Again...._backup_auto-20261011-021224/20_1c__1_7.chunk (697398)
+worlds/Once Again...._backup_auto-20261011-021224/20_1e__1_11.chunk (1194317)
+worlds/Once Again...._backup_auto-20261011-021224/20_1e__1_34.chunk (1233690)
+worlds/Once Again...._backup_auto-20261011-021224/20_20__1_4.chunk (475939)
+worlds/Once Again...._backup_auto-20261011-021224/22_1a__1_1.chunk (147510)
+worlds/Once Again...._backup_auto-20261011-021224/22_1c__1_4.chunk (691773)
+worlds/Once Again...._backup_auto-20261011-021224/22_1e__1_15.chunk (1119119)
+worlds/Once Again...._backup_auto-20261011-021224/22_1e__1_54.chunk (1344355)
+worlds/Once Again...._backup_auto-20261011-021224/22_20__1_15.chunk (408762)
+worlds/Once Again...._backup_auto-20261011-021224/22_20__1_52.chunk (420351)
+worlds/Once Again...._backup_auto-20261011-021224/24_18__1_1.chunk (119978)
+worlds/Once Again...._backup_auto-20261011-021224/24_1a__1_2.chunk (862171)
+worlds/Once Again...._backup_auto-20261011-021224/24_1c__1_4.chunk (924124)
+worlds/Once Again...._backup_auto-20261011-021224/24_1e__1_10.chunk (682395)
+worlds/Once Again...._backup_auto-20261011-021224/24_20__1_11.chunk (85720)
+worlds/Once Again...._backup_auto-20261011-021224/26_18__1_2.chunk (35740)
+worlds/Once Again...._backup_auto-20261011-021224/26_1a__1_3.chunk (614794)
+worlds/Once Again...._backup_auto-20261011-021224/26_1c__1_2.chunk (348493)
+worlds/Once Again...._backup_auto-20261011-021224/26_1e__1_2.chunk (17256)
+worlds/Once Again...._backup_auto-20261011-021224/28_18__1_2.chunk (161566)
+worlds/Once Again...._backup_auto-20261011-021224/28_1a__1_3.chunk (530874)
+worlds/Once Again...._backup_auto-20261011-021224/28_1c__1_2.chunk (672)
+worlds/Once Again...._backup_auto-20261011-021224/_main.96.ok (4)
+worlds/Once Again...._backup_auto-20261011-021224/_main.96.chunks (263)
+worlds/Once Again...._backup_auto-20261011-021224/_main.96.db2 (153434)
+worlds/Once Again...._backup_auto-20261011-021224/_main.96.fwl2 (290)
+worlds/Once Again..../1c_20__1_2.chunk (468122)
+worlds/Once Again..../1c_1e__1_3.chunk (335706)
+worlds/Once Again..../1e_20__1_6.chunk (1108652)
+worlds/LWC_HumanLab_v1_backup_auto-20261027-031934/_main.214.chunks (98)
+worlds/LWC_HumanLab_v1_backup_auto-20261027-031934/_main.214.ok (4)
+worlds/LWC_HumanLab_v1_backup_auto-20261027-031934/20_22__1_2.chunk (17200)
+worlds/LWC_HumanLab_v1_backup_auto-20261027-031934/1e_20__1_135.chunk (1494131)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-102845/_main.172.fwl2 (118)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-102845/_main.172.db2 (147800)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-102845/_main.172.chunks (98)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-102845/_main.172.ok (4)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-102845/20_22__1_2.chunk (17200)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-102845/20_20__1_20.chunk (865080)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-102845/20_1e__1_4.chunk (273176)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-102845/1e_22__1_4.chunk (40340)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-102845/1e_20__1_108.chunk (1493253)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-102845/1e_1e__1_9.chunk (817342)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-123454/_main.179.fwl2 (118)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-123454/_main.179.db2 (147800)
+worlds/LWC_HumanLab_v1_backup_20261016-105934/_main.48.fwl2 (118)
+worlds/LWC_HumanLab_v1_backup_20261016-105934/_main.48.db2 (147420)
+worlds/LWC_HumanLab_v1_backup_20261016-105934/_main.48.chunks (65)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-102845/1c_20__1_4.chunk (139626)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-102845/1c_1e__1_1.chunk (6557)
+characters/eledyn_backup_auto-20261011-135644.fch (247632)
+worlds/Once Again...._backup_auto-20261011-135645/00_01__0_6.chunk (260)
+worlds/Once Again...._backup_auto-20261011-135645/1c_1e__1_3.chunk (335706)
+worlds/Once Again...._backup_auto-20261011-135645/1c_20__1_2.chunk (468122)
+worlds/Once Again...._backup_auto-20261011-135645/1e_1c__1_4.chunk (698584)
+worlds/Once Again...._backup_auto-20261011-135645/1e_1e__1_18.chunk (1357808)
+worlds/Once Again...._backup_auto-20261011-135645/1e_20__1_6.chunk (1108652)
+worlds/Once Again...._backup_auto-20261011-135645/20_1c__1_8.chunk (697398)
+worlds/Once Again...._backup_auto-20261011-135645/20_1e__1_11.chunk (1194317)
+worlds/Once Again...._backup_auto-20261011-135645/20_1e__1_39.chunk (1231008)
+worlds/Once Again...._backup_auto-20261011-135645/20_20__1_4.chunk (475939)
+worlds/Once Again...._backup_auto-20261011-135645/22_1a__1_1.chunk (147510)
+worlds/Once Again...._backup_auto-20261011-135645/22_1c__1_4.chunk (691773)
+worlds/Once Again...._backup_auto-20261011-135645/22_1e__1_15.chunk (1119119)
+worlds/Once Again...._backup_auto-20261011-135645/22_1e__1_54.chunk (1344355)
+worlds/Once Again...._backup_auto-20261011-135645/22_20__1_15.chunk (408762)
+worlds/Once Again...._backup_auto-20261011-135645/22_20__1_52.chunk (420351)
+worlds/Once Again...._backup_auto-20261011-135645/24_18__1_1.chunk (119978)
+worlds/Once Again...._backup_auto-20261011-135645/24_1a__1_2.chunk (862171)
+worlds/Once Again...._backup_auto-20261011-135645/24_1c__1_4.chunk (924124)
+worlds/Once Again...._backup_auto-20261011-135645/24_1e__1_10.chunk (682395)
+worlds/Once Again...._backup_auto-20261011-135645/24_20__1_11.chunk (85720)
+worlds/Once Again...._backup_auto-20261011-135645/26_18__1_2.chunk (35740)
+worlds/Once Again...._backup_auto-20261011-135645/26_1a__1_3.chunk (614794)
+worlds/Once Again...._backup_auto-20261011-135645/26_1c__1_2.chunk (348493)
+worlds/Once Again...._backup_auto-20261011-135645/26_1e__1_2.chunk (17256)
+worlds/Once Again...._backup_auto-20261011-135645/28_18__1_2.chunk (161566)
+worlds/Once Again...._backup_auto-20261011-135645/28_1a__1_3.chunk (530874)
+worlds/Once Again...._backup_auto-20261011-135645/28_1c__1_2.chunk (672)
+worlds/Once Again...._backup_auto-20261011-135645/_main.120.ok (4)
+worlds/Once Again...._backup_auto-20261011-135645/_main.120.chunks (285)
+worlds/Once Again...._backup_auto-20261011-135645/_main.120.db2 (154224)
+worlds/Once Again...._backup_auto-20261011-135645/_main.120.fwl2 (290)
+characters/lwc_tester_backup_auto-20261025-102844.fch (96964)
+worlds/LWC_HumanLab_v1_backup_auto-20261027-031934/20_20__1_20.chunk (865080)
+worlds/LWC_HumanLab_v1_backup_20261016-105934/_main.48.ok (4)
+worlds/LWC_HumanLab_v1_backup_20261016-105934/20_20__1_3.chunk (253884)
+worlds/LWC_HumanLab_v1_backup_20261016-105934/20_1e__1_1.chunk (72397)
+worlds/LWC_HumanLab_v1_backup_20261016-105934/1e_20__1_28.chunk (1299120)
+worlds/LWC_HumanLab_v1_backup_20261016-105934/1e_1e__1_4.chunk (771711)
+worlds/LWC_HumanLab_v1_backup_20261016-105934/1c_20__1_1.chunk (1026)
+worlds/LWC_HumanLab_v1/1e_20__1_136.chunk (1494713)
+worlds/LWC_HumanLab_v1/1c_20__1_6.chunk (900045)
+worlds/LWC_HumanLab_v1_backup_auto-20261027-031934/20_1e__1_4.chunk (273176)
+worlds/LWC_HumanLab_v1/1c_1e__1_3.chunk (355739)
+worlds/LWC_HumanLab_v1_backup_auto-20261022-220545/_main.154.fwl2 (118)
+worlds/LWC_HumanLab_v1_backup_auto-20261022-220545/_main.154.db2 (147800)
+worlds/LWC_HumanLab_v1_backup_auto-20261022-220545/_main.154.chunks (98)
+worlds/LWC_HumanLab_v1_backup_auto-20261022-220545/1e_1e__1_7.chunk (816213)
+worlds/LWC_HumanLab_v1/1a_20__1_1.chunk (936)
+worlds/LWC_HumanLab_v1_backup_auto-20261027-031934/_main.214.fwl2 (118)
+worlds/LWC_HumanLab_v1_backup_auto-20261027-031934/_main.214.db2 (148183)
+worlds/Pop Village Test/_main.45.ok (4)
+worlds/LWC_HumanLab_v1_backup_auto-20261027-031934/1e_1e__1_23.chunk (978603)
+worlds/LWC_HumanLab_v1/20_22__1_2.chunk (17200)
+worlds/Pop Village Test/_main.45.fwl2 (292)
+worlds/LWC_HumanLab_v1_backup_auto-20261027-031934/1c_20__1_5.chunk (420885)
+worlds/Pop Village Test/_main.45.db2 (149518)
+worlds/Pop Village Test/_main.45.chunks (120)
+worlds/LWC_HumanLab_v1/1e_22__1_4.chunk (40340)
+worlds/Vaaltorin_Test/_main.29.ok (4)
+worlds/Vaaltorin_Test/_main.29.fwl2 (117)
+worlds/Vaaltorin_Test/_main.29.db2 (151335)
+worlds/Vaaltorin_Test/_main.29.chunks (208)
+worlds/Pop Village Test/20_1e__1_2.chunk (73658)
+worlds/Vaaltorin_Test/20_24__2_1.chunk (1072490)
+worlds/Vaaltorin_Test/24_24__1_1.chunk (26624)
+worlds/Vaaltorin_Test/24_22__1_1.chunk (66)
+worlds/Pop Village Test/20_20__2_3.chunk (1097650)
+worlds/Vaaltorin_Test/22_22__1_1.chunk (638021)
+worlds/Vaaltorin_Test/22_20__1_1.chunk (135826)
+worlds/Vaaltorin_Test/22_1e__1_1.chunk (16660)
+worlds/Vaaltorin_Test/20_22__1_1.chunk (151135)
+worlds/Pop Village Test/20_24__1_2.chunk (153961)
+worlds/Once Again..../1c_1c__1_1.chunk (6467)
+worlds/Once Again..../1e_1a__1_1.chunk (23318)
+worlds/Once Again..../1e_1c__1_5.chunk (767053)
+characters/lwc_tester.fch.old (101311)
+worlds/Pop Village Test/1e_22__1_1.chunk (153963)
+worlds/Once Again..../20_1a__1_1.chunk (1055390)
+worlds/Once Again..../20_1c__1_9.chunk (977778)
+worlds/LWC_HumanLab_v1/20_1e__1_4.chunk (273176)
+worlds/Vaaltorin_Test/20_20__1_3.chunk (786979)
+worlds/Vaaltorin_Test/20_1e__1_4.chunk (437803)
+worlds/Vaaltorin_Test/1e_1c__1_1.chunk (2496)
+worlds/Vaaltorin_Test/1e_20__1_14.chunk (1214829)
+worlds/Vaaltorin_Test/1e_1e__1_17.chunk (1224504)
+worlds/Once Again..../20_18__1_2.chunk (9683)
+worlds/Once Again..../22_16__1_1.chunk (614)
+worlds/Once Again..../22_18__1_2.chunk (417400)
+worlds/Once Again..../22_1a__1_3.chunk (1065533)
+worlds/Once Again..../22_1c__1_5.chunk (701704)
+worlds/Once Again..../24_16__1_1.chunk (59156)
+worlds/Once Again..../24_18__1_2.chunk (540751)
+worlds/Once Again..../24_1a__1_3.chunk (886669)
+worlds/Once Again..../24_1c__1_5.chunk (934852)
+worlds/Once Again..../26_1a__1_4.chunk (617631)
+worlds/Once Again..../26_1c__1_3.chunk (410988)
+worlds/Once Again..../28_18__1_3.chunk (184341)
+worlds/Vaaltorin_Test/1c_1c__1_1.chunk (8982)
+worlds/Once Again..../28_1c__1_3.chunk (1758)
+worlds/Vaaltorin_Test/1a_20__1_1.chunk (25281)
+worlds/Pop Village Test/1e_20__1_4.chunk (1157501)
+worlds/Vaaltorin_Test/1c_20__1_5.chunk (999924)
+worlds/Pop Village Test/22_24__1_28.chunk (836167)
+worlds/Vaaltorin_Test_backup_auto-20261012-125519/_main.24.fwl2 (117)
+characters/eledyn_backup_auto-20261011-182849.fch (250767)
+worlds/Once Again...._backup_auto-20261011-182850/00_01__0_6.chunk (260)
+worlds/Once Again...._backup_auto-20261011-182850/1c_1c__1_1.chunk (6467)
+worlds/Once Again...._backup_auto-20261011-182850/1c_1e__1_3.chunk (335706)
+worlds/Once Again...._backup_auto-20261011-182850/1c_20__1_2.chunk (468122)
+worlds/Once Again...._backup_auto-20261011-182850/1e_1a__1_1.chunk (23318)
+worlds/Once Again...._backup_auto-20261011-182850/1e_1c__1_5.chunk (767053)
+worlds/Once Again...._backup_auto-20261011-182850/1e_1e__1_19.chunk (1376936)
+worlds/Once Again...._backup_auto-20261011-182850/1e_20__1_6.chunk (1108652)
+worlds/Once Again...._backup_auto-20261011-182850/20_18__1_2.chunk (9683)
+worlds/Once Again...._backup_auto-20261011-182850/20_1a__1_1.chunk (1055390)
+worlds/Once Again...._backup_auto-20261011-182850/20_1c__1_9.chunk (977778)
+worlds/Once Again...._backup_auto-20261011-182850/20_1e__1_11.chunk (1194317)
+worlds/Once Again...._backup_auto-20261011-182850/20_1e__1_39.chunk (1231008)
+worlds/Once Again...._backup_auto-20261011-182850/20_20__1_4.chunk (475939)
+worlds/Once Again...._backup_auto-20261011-182850/22_16__1_1.chunk (614)
+worlds/Once Again...._backup_auto-20261011-182850/22_18__1_2.chunk (417400)
+worlds/Once Again...._backup_auto-20261011-182850/22_1a__1_3.chunk (1065533)
+worlds/Once Again...._backup_auto-20261011-182850/22_1c__1_5.chunk (701704)
+worlds/Once Again...._backup_auto-20261011-182850/22_1e__1_15.chunk (1119119)
+worlds/Once Again...._backup_auto-20261011-182850/22_1e__1_54.chunk (1344355)
+worlds/Once Again...._backup_auto-20261011-182850/22_20__1_15.chunk (408762)
+worlds/Once Again...._backup_auto-20261011-182850/22_20__1_52.chunk (420351)
+worlds/Once Again...._backup_auto-20261011-182850/24_16__1_1.chunk (59156)
+worlds/Once Again...._backup_auto-20261011-182850/24_18__1_2.chunk (540751)
+worlds/Once Again...._backup_auto-20261011-182850/24_1a__1_3.chunk (886669)
+worlds/Once Again...._backup_auto-20261011-182850/24_1c__1_5.chunk (934852)
+worlds/Once Again...._backup_auto-20261011-182850/24_1e__1_10.chunk (682395)
+worlds/Once Again...._backup_auto-20261011-182850/24_20__1_11.chunk (85720)
+worlds/Once Again...._backup_auto-20261011-182850/26_18__1_2.chunk (35740)
+worlds/Once Again...._backup_auto-20261011-182850/26_1a__1_4.chunk (617631)
+worlds/Once Again...._backup_auto-20261011-182850/26_1c__1_3.chunk (410988)
+worlds/Once Again...._backup_auto-20261011-182850/26_1e__1_2.chunk (17256)
+worlds/Once Again...._backup_auto-20261011-182850/28_18__1_3.chunk (184341)
+worlds/Once Again...._backup_auto-20261011-182850/28_1a__1_4.chunk (795392)
+worlds/Once Again...._backup_auto-20261011-182850/28_1c__1_3.chunk (1758)
+worlds/Once Again...._backup_auto-20261011-182850/2a_18__1_1.chunk (6951)
+worlds/Once Again...._backup_auto-20261011-182850/2a_1a__1_1.chunk (546826)
+worlds/Once Again...._backup_auto-20261011-182850/_main.130.ok (4)
+worlds/Once Again...._backup_auto-20261011-182850/_main.130.chunks (384)
+worlds/Once Again...._backup_auto-20261011-182850/_main.130.db2 (156698)
+worlds/Once Again...._backup_auto-20261011-182850/_main.130.fwl2 (290)
+worlds/Once Again..../1a_22__1_1.chunk (1319)
+worlds/Vaaltorin_Test_backup_auto-20261012-125519/_main.24.db2 (147894)
+worlds/Vaaltorin_Test_backup_auto-20261012-125519/_main.24.chunks (87)
+worlds/Vaaltorin_Test_backup_auto-20261012-025955/_main.22.chunks (87)
+worlds/Vaaltorin_Test_backup_auto-20261012-025955/_main.22.ok (4)
+worlds/Vaaltorin_Test_backup_auto-20261012-025955/20_20__1_2.chunk (77554)
+characters/lwc_tester.fch (101311)
+worlds/Once Again..../28_1a__1_5.chunk (795431)
+worlds/Once Again..../2a_18__1_2.chunk (12030)
+worlds/Once Again..../2a_1a__1_3.chunk (1033361)
+worlds/Once Again..../2c_18__1_2.chunk (209373)
+worlds/Once Again..../2c_1a__1_1.chunk (271316)
+worlds/Vaaltorin_Test_backup_auto-20261012-125519/_main.24.ok (4)
+worlds/Pop Village Test/24_24__1_2.chunk (24349)
+worlds/Vaaltorin_Test_backup_auto-20261012-125519/20_20__1_2.chunk (77554)
+worlds/Vaaltorin_Test_backup_auto-20261012-025955/20_1e__1_3.chunk (141169)
+worlds/Vaaltorin_Test_backup_auto-20261012-125519/20_1e__1_3.chunk (141169)
+worlds/Pop Village Test/24_22__1_2.chunk (166)
+worlds/Pop Village Test/22_26__1_1.chunk (76)
+worlds/Vaaltorin_Test/1c_1e__1_4.chunk (517906)
+worlds/Vaaltorin_Test_backup_auto-20261012-025955/_main.22.fwl2 (117)
+worlds/Once Again..../2e_16__1_1.chunk (409)
+worlds/Once Again..../2e_18__1_2.chunk (171641)
+worlds/Once Again..../2e_1a__1_2.chunk (103986)
+worlds/Once Again..../30_16__1_1.chunk (48636)
+worlds/Once Again..../30_18__1_2.chunk (1323080)
+worlds/Once Again..../30_1a__1_2.chunk (279757)
+worlds/Vaaltorin_Test_backup_auto-20261012-025955/_main.22.db2 (147570)
+worlds/Vaaltorin_Test_backup_auto-20261012-025955/1e_22__1_1.chunk (1092)
+worlds/Vaaltorin_Test_backup_auto-20261012-125519/1e_22__1_1.chunk (1092)
+worlds/Vaaltorin_Test_backup_auto-20261012-025955/1e_20__1_10.chunk (1082214)
+worlds/Vaaltorin_Test_backup_auto-20261012-025955/1e_1e__1_13.chunk (1189355)
+worlds/Vaaltorin_Test_backup_auto-20261012-025955/1c_20__1_2.chunk (25360)
+worlds/Vaaltorin_Test_backup_auto-20261012-125519/1e_20__1_11.chunk (1087465)
+worlds/Vaaltorin_Test_backup_auto-20261012-125519/1e_1e__1_14.chunk (1211111)
+worlds/Vaaltorin_Test_backup_auto-20261012-125519/1c_20__1_3.chunk (279543)
+worlds/Once Again..../1e_1e__1_20.chunk (1376934)
+worlds/Once Again..../20_1e__1_42.chunk (1234120)
+worlds/Vaaltorin_Test_backup_auto-20261012-125519/1c_1e__1_2.chunk (349717)
+worlds/Vaaltorin_Test/1e_22__1_1.chunk (1092)
+worlds/Once Again..../24_1e__1_11.chunk (682434)
+worlds/Pop Village Test/1e_1e__1_4.chunk (738176)
+worlds/Vaaltorin_Test_backup_auto-20261012-025955/1c_1e__1_1.chunk (122027)
+characters/scrufboy_backup_auto-20261012-125518.fch (75241)
+characters/krenktest.fch.old (23738)
+worlds/Once Again..../22_1e__1_56.chunk (1344498)
+worlds/Once Again..../22_20__1_54.chunk (422857)
+characters/scrufboy_backup_auto-20261012-025955.fch (73968)
+characters/krenktest_backup_auto-20261011-212145.fch (9045)
+characters/krenktest.fch (23738)
+worlds/Once Again..../_main.137.chunks (483)
+worlds/Once Again..../_main.137.db2 (159438)
+worlds/Once Again..../_main.137.fwl2 (290)
+worlds/Once Again..../_main.137.ok (4)
+worlds/LWC_HumanLab_v1_backup_auto-20261022-220545/1c_20__1_4.chunk (139626)
+worlds/LWC_HumanLab_v1_backup_auto-20261022-220545/1c_1e__1_1.chunk (6557)
+characters/lwc_tester_backup_auto-20261022-220545.fch (97527)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-123454/_main.179.chunks (98)
+worlds/LWC_HumanLab_v1_backup_auto-20261027-031934/1c_1e__1_2.chunk (338057)
+characters/lwc_tester_backup_auto-20261027-031933.fch (101307)
+worlds/LWC_HumanLab_v1/20_20__1_20.chunk (865080)
+worlds/LWC_HumanLab_v1_backup_auto-20261022-220545/_main.154.ok (4)
+worlds/LWC_HumanLab_v1_backup_auto-20261022-220545/20_22__1_2.chunk (17200)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-123454/_main.179.ok (4)
+worlds/LWC_HumanLab_v1_backup_auto-20261022-220545/20_20__1_20.chunk (865080)
+worlds/LWC_HumanLab_v1_backup_auto-20261022-220545/20_1e__1_4.chunk (273176)
+worlds/LWC_HumanLab_v1_backup_auto-20261022-220545/1e_22__1_4.chunk (40340)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-123454/20_22__1_2.chunk (17200)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-123454/20_20__1_20.chunk (865080)
+worlds/LWC_HumanLab_v1_backup_auto-20261022-220545/1e_20__1_97.chunk (1467913)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-123454/20_1e__1_4.chunk (273176)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-123454/1e_22__1_4.chunk (40340)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-123454/1e_20__1_113.chunk (1492046)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-123454/1e_1e__1_12.chunk (819600)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-123454/1c_20__1_4.chunk (139626)
+worlds/LWC_HumanLab_v1_backup_auto-20261025-123454/1c_1e__1_1.chunk (6557)
+characters/lwc_tester_backup_auto-20261025-123453.fch (98849)
+characters/eledyn_backup_auto-20260929-144706.fch (200156)
+worlds/Once Again..../20_1e__1_11.chunk (1194317)
+worlds/Once Again..../22_1e__1_15.chunk (1119119)
+worlds/Once Again..../22_20__1_15.chunk (408762)
+worlds/Once Again...._backup_auto-20260929-144707/1e_1e__1_1.chunk (282113)
+worlds/Once Again...._backup_auto-20260929-144707/1e_20__1_1.chunk (113083)
+worlds/Once Again...._backup_auto-20260929-144707/20_1e__1_1.chunk (1237)
+worlds/Once Again...._backup_auto-20260929-144707/20_20__1_1.chunk (202)
+worlds/Once Again...._backup_auto-20260929-144707/_main.1.chunks (54)
+worlds/Once Again...._backup_auto-20260929-144707/_main.1.db2 (146391)
+worlds/Once Again...._backup_auto-20260929-144707/_main.1.fwl2 (290)
+worlds/Once Again...._backup_auto-20260929-144707/_main.1.ok (4)
+worlds/LWC_HumanLab_v1/1e_1e__1_28.chunk (1041767)
+worlds/LWC_HumanLab_v1/_main.221.chunks (109)
+worlds/LWC_HumanLab_v1/_main.221.db2 (148557)
+worlds/LWC_HumanLab_v1/_main.221.fwl2 (118)
+worlds/LWC_HumanLab_v1/_main.221.ok (4)
+
+[Info   : Unity Log] 10/28/2026 12:51:32: Initializing preferences provider...
+
+[Info   : Unity Log] 10/28/2026 12:51:32: No preference provider available for this platform!
+
+[Info   : Unity Log] 10/28/2026 12:51:32: Set background loading budget to Low
+
+[Info   : Unity Log] 10/28/2026 12:51:32: Loading first scene!
+
+[Info   : Unity Log] 10/28/2026 12:51:32: Fast load set to True
+
+[Info   : Unity Log] 10/28/2026 12:51:32: Fast load counter set to 1
+
+[Info   : Unity Log] 10/28/2026 12:51:32: Preferences initialized! Activating first scene!
+
+[Info   : Unity Log] 10/28/2026 12:51:33: Loading: Starting to load scene: start.unity (169d7618616154c03be07e9ad3af5893)
+
+[Info   : Unity Log] 10/28/2026 12:51:33: Fast load counter set to 2
+
+[Info   : Unity Log] 10/28/2026 12:51:33: Set background loading budget to Normal
+
+[Info   : Unity Log] 10/28/2026 12:51:33: Fast load counter set to 1
+
+[Info   : Unity Log] 10/28/2026 12:51:37: Set background loading budget to High
+
+[Info   : Unity Log] 10/28/2026 12:51:37: GPU Device: 10DE:24DD (NVIDIA)
+
+[Info   : Unity Log] 10/28/2026 12:51:40: Loading: Done, Total time: -7.0343755
+
+[Info   : Unity Log] 10/28/2026 12:51:40: Set background loading budget to Low
+
+[Warning: Unity Log] Only custom filters can be played. Please add a custom filter or an audioclip to the audiosource (Amb_MainMenu).
+[Info   : Unity Log] [MadHatter] SoundMixMan: routed 0 bundled and 0 referenced AudioSource(s) to mixer group 'SFX'.
+[Warning: Unity Log] 10/28/2026 12:51:40: Missing audio clip in music respawn
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #0 - 'localization' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #1 - 'localization_extra' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #2 - 'heightmap_message' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #3 - 'localization_witch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #4 - 'localization_ashlands' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #5 - 'localization_deepnorth' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #6 - 'localization_captions' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #7 - 'localization_warriortitles' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #8 - 'localization_combatupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #9 - 'localization_ps' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #10 - 'localization_celebrationupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #11 - 'localization_xbox' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #12 - 'localization_switch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #0 - 'localization' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #1 - 'localization_extra' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #2 - 'heightmap_message' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #3 - 'localization_witch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #4 - 'localization_ashlands' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #5 - 'localization_deepnorth' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #6 - 'localization_captions' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #7 - 'localization_warriortitles' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #8 - 'localization_combatupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #9 - 'localization_ps' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #10 - 'localization_celebrationupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #11 - 'localization_xbox' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #12 - 'localization_switch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #0 - 'localization' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #1 - 'localization_extra' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #2 - 'heightmap_message' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #3 - 'localization_witch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #4 - 'localization_ashlands' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #5 - 'localization_deepnorth' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #6 - 'localization_captions' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #7 - 'localization_warriortitles' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #8 - 'localization_combatupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #9 - 'localization_ps' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #10 - 'localization_celebrationupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #11 - 'localization_xbox' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #12 - 'localization_switch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Steam initialized, persona:Scrufboy
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Valheim version: 1.0.21 (network version 41)
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Worldgenerator version setup:2
+
+[Info   :Server Devcommands] Reloading 0 alias data.
+[Info   :Server Devcommands] Reloading 0 bind data.
+[Info   : Unity Log] 10/28/2026 12:51:41: Render threading mode:LegacyJobified
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #0 - 'localization' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #1 - 'localization_extra' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #2 - 'heightmap_message' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #3 - 'localization_witch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #4 - 'localization_ashlands' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #5 - 'localization_deepnorth' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #6 - 'localization_captions' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #7 - 'localization_warriortitles' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #8 - 'localization_combatupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #9 - 'localization_ps' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #10 - 'localization_celebrationupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #11 - 'localization_xbox' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #12 - 'localization_switch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #0 - 'localization' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #1 - 'localization_extra' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #2 - 'heightmap_message' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #3 - 'localization_witch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #4 - 'localization_ashlands' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #5 - 'localization_deepnorth' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #6 - 'localization_captions' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #7 - 'localization_warriortitles' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #8 - 'localization_combatupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #9 - 'localization_ps' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #10 - 'localization_celebrationupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #11 - 'localization_xbox' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #12 - 'localization_switch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #0 - 'localization' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #1 - 'localization_extra' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #2 - 'heightmap_message' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #3 - 'localization_witch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #4 - 'localization_ashlands' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #5 - 'localization_deepnorth' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #6 - 'localization_captions' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #7 - 'localization_warriortitles' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #8 - 'localization_combatupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #9 - 'localization_ps' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #10 - 'localization_celebrationupdate' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #11 - 'localization_xbox' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:41: Loaded localization file #12 - 'localization_switch' language: 'English'
+
+[Info   : Unity Log] 10/28/2026 12:51:42: Checking for installed DLCs
+
+[Info   : Unity Log] 10/28/2026 12:51:42: DLC:beta installed:False
+
+[Info   : Unity Log] Load robeList
+[Info   :Jotunn.Main] Initializing RenderManager
+[Info   :Jotunn.Main] Initializing MockManager
+[Info   :Jotunn.Main] Initializing ItemManager
+[Info   :Jotunn.Main] Initializing AssetManager
+[Warning:Jotunn.Managers.AssetManager] Ambiguous asset name for path. old: Assets/world/Props/stone/Stone1_huge.prefab, new: Assets/world/Props/DeepNorth/HotSpring/Stone1_huge.prefab, using old path
+[Warning:Jotunn.Managers.AssetManager] Ambiguous asset name for path. old: Assets/world/Props/Caverocks/caverock_pillar.prefab, new: Assets/world/Props/DeepNorth/HotSpring/caverock_pillar.prefab, using old path
+[Warning:Jotunn.Managers.AssetManager] Ambiguous asset name for path. old: Assets/world/Props/Rocks/highstone.prefab, new: Assets/world/Props/DeepNorth/HotSpring/highstone.prefab, using old path
+[Info   : Unity Log] Load crownList
+[Info   : Unity Log] Load tomeList
+[Info   : Unity Log] Load bladeList
+[Info   : Unity Log] Load headList
+[Info   : Unity Log] Load scholarList
+[Info   : Unity Log] Load artifactList
+[Info   : Unity Log] Load Projectiles
+[Info   : Unity Log] Load VFX
+[Info   : Unity Log] Load vfx_sagespell_hit
+[Info   : Unity Log] Load vfx_SageFire_AoE1
+[Info   : Unity Log] Load vfx_SageFire_AoE2
+[Info   : Unity Log] Load vfx_SageFireballHit
+[Info   : Unity Log] Load vfx_SageGhost_death
+[Info   : Unity Log] Load vfx_SageGhost_hit
+[Info   : Unity Log] Load vfx_sageice_aoe
+[Info   : Unity Log] Load vfx_SageSpirit_attack
+[Info   : Unity Log] Load vfx_SageTerra_hit
+[Info   :Living World C.O.R.E. NPC] [LWC] Companion voice (Gamemaster Human Vocalizations; no enemy recordings): male (Male B) alerted 2, exert 9, hit 9, hit_heavy 9, gloat 4, death 4, warcry 3; as delivered (no normalization), pitch 1, volume 0.5 x 2.
+[Info   :Living World C.O.R.E. NPC] [LWC] Companion voice: female (Female A) alerted 2, exert 9, hit 9, hit_heavy 9, gloat 4, death 4, warcry 3; as delivered (no normalization), pitch 1, volume 0.5 x 2.
+[Info   :Living World C.O.R.E. NPC] [LWC] Registered guard and archer native humans.
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA player: baseStamina 50 regen 6 regenTimeMult 1 regenDelay 1 run 8 dodge 15 jump 10 blockDrain 10 perfectBlockDrain 0
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA SwordIron: OneHandedWeapon skill Swords maxQ 4 dmg [slash 55] +[slash 6]/q force 40 backstab 3 block 21 +0/q deflect 20 parryX 2 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P Horizontal anim swing_longsword chain 3 stam 10 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 2.4 angle 90 rayW 0.5 speed 0.3 | S Horizontal anim sword_secondary chain 0 stam 20 dmgX 3 staggerX 1 forceX 1 lastChainX 2 range 2.7 angle 10 rayW 0.7 speed 0.2
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA SwordBlackmetal: OneHandedWeapon skill Swords maxQ 4 dmg [slash 95] +[slash 6]/q force 40 backstab 3 block 39 +0/q deflect 20 parryX 2 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P Horizontal anim swing_longsword chain 3 stam 14 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 2.4 angle 90 rayW 0.5 speed 0.3 | S Horizontal anim sword_secondary chain 0 stam 28 dmgX 3 staggerX 1 forceX 1 lastChainX 2 range 2.7 angle 10 rayW 0.7 speed 0.2
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA AxeIron: OneHandedWeapon skill Axes maxQ 4 dmg [slash 60] +[slash 5]/q force 50 backstab 3 block 21 +0/q deflect 20 parryX 2 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P Horizontal anim swing_axe chain 3 stam 10 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 2.2 angle 90 rayW 0.3 speed 0.2 | S Vertical anim axe_secondary chain 0 stam 20 dmgX 1.5 staggerX 1 forceX 1.5 lastChainX 2 range 2.2 angle 90 rayW 0 speed 0.2
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA AxeBlackMetal: OneHandedWeapon skill Axes maxQ 4 dmg [slash 100] +[slash 5]/q force 60 backstab 3 block 39 +0/q deflect 20 parryX 2 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P Horizontal anim swing_axe chain 3 stam 14 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 2.2 angle 90 rayW 0.3 speed 0.2 | S Vertical anim axe_secondary chain 0 stam 28 dmgX 1.5 staggerX 1 forceX 1.5 lastChainX 2 range 2.2 angle 90 rayW 0 speed 0.2
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA MaceIron: OneHandedWeapon skill Clubs maxQ 4 dmg [blunt 55] +[blunt 6]/q force 90 backstab 3 block 21 +0/q deflect 30 parryX 2 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P Horizontal anim swing_longsword chain 3 stam 10 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 2.4 angle 90 rayW 0.3 speed 0.3 | S Vertical anim mace_secondary chain 0 stam 20 dmgX 2.5 staggerX 2 forceX 2 lastChainX 2 range 2.5 angle 30 rayW 0.3 speed 0.2
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA MaceNeedle: OneHandedWeapon skill Clubs maxQ 4 dmg [blunt 50 pierce 45] +[pierce 6]/q force 100 backstab 3 block 39 +0/q deflect 30 parryX 2 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P Horizontal anim swing_longsword chain 3 stam 14 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 2.4 angle 90 rayW 0.3 speed 0.3 | S Vertical anim mace_secondary chain 0 stam 28 dmgX 2.5 staggerX 2 forceX 2 lastChainX 2 range 2.5 angle 30 rayW 0.3 speed 0.2
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA KnifeBlackMetal: OneHandedWeapon skill Knives maxQ 4 dmg [slash 34 pierce 34] +[slash 1 pierce 1]/q force 10 backstab 6 block 2 +0/q deflect 10 parryX 4 moveMod 0 aiRange 2 aiAngle 5 interval 2 | P Horizontal anim knife_stab chain 3 stam 12 dmgX 1 staggerX 1 forceX 1 lastChainX 1 range 1.8 angle 60 rayW 0.2 speed 0.3 | S Horizontal anim knife_secondary chain 0 stam 36 dmgX 3 staggerX 1 forceX 4 lastChainX 2 range 1.8 angle 45 rayW 0.3 speed 0
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA AtgeirBronze: TwoHandedWeapon skill Polearms maxQ 4 dmg [pierce 45] +[pierce 6]/q force 30 backstab 3 block 16 +0/q deflect 40 parryX 2 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P Horizontal anim atgeir_attack chain 3 stam 12 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 3.2 angle 20 rayW 0.3 speed 0.2 | S Horizontal anim atgeir_secondary chain 0 stam 24 dmgX 1 staggerX 6 forceX 5 lastChainX 2 range 3 angle 360 rayW 0.3 speed 0.2
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA AtgeirIron: TwoHandedWeapon skill Polearms maxQ 4 dmg [pierce 65] +[pierce 6]/q force 30 backstab 3 block 28 +0/q deflect 40 parryX 2 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P Horizontal anim atgeir_attack chain 3 stam 14 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 3.2 angle 20 rayW 0.3 speed 0.2 | S Horizontal anim atgeir_secondary chain 0 stam 28 dmgX 1 staggerX 6 forceX 5 lastChainX 2 range 3 angle 360 rayW 0.3 speed 0.2
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA AtgeirBlackmetal: TwoHandedWeapon skill Polearms maxQ 4 dmg [pierce 105] +[pierce 6]/q force 30 backstab 3 block 52 +0/q deflect 40 parryX 2 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P Horizontal anim atgeir_attack chain 3 stam 18 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 3.2 angle 20 rayW 0.3 speed 0.2 | S Horizontal anim atgeir_secondary chain 0 stam 36 dmgX 1 staggerX 6 forceX 5 lastChainX 2 range 3 angle 360 rayW 0.3 speed 0.2
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA Battleaxe: TwoHandedWeapon skill Axes maxQ 4 dmg [slash 70] +[slash 6]/q force 70 backstab 3 block 28 +0/q deflect 70 parryX 2 moveMod -0.15 aiRange 2 aiAngle 5 interval 2 | P Horizontal anim battleaxe_attack chain 3 stam 16 dmgX 1 staggerX 1.5 forceX 1 lastChainX 2 range 2.5 angle 90 rayW 0.5 speed 0.1 | S Horizontal anim battleaxe_secondary chain 0 stam 8 dmgX 0.5 staggerX 4 forceX 2 lastChainX 2 range 2.5 angle 30 rayW 0.5 speed 0.1
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA SledgeIron: TwoHandedWeapon skill Clubs maxQ 4 dmg [blunt 55] +[blunt 6]/q force 200 backstab 2 block 28 +0/q deflect 50 parryX 2 moveMod -0.15 aiRange 2 aiAngle 5 interval 2 | P Area anim swing_sledge chain 0 stam 20 dmgX 1 staggerX 2 forceX 1 lastChainX 2 range 2 angle 90 rayW 4 speed 0.3 | S none
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA SledgeStagbreaker: TwoHandedWeapon skill Clubs maxQ 4 dmg [blunt 20 pierce 5] +[blunt 6]/q force 150 backstab 2 block 4 +0/q deflect 50 parryX 2 moveMod -0.15 aiRange 2 aiAngle 5 interval 2 | P Area anim swing_sledge chain 0 stam 12 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 2 angle 90 rayW 4 speed 0.3 | S none
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA SpearBronze: OneHandedWeapon skill Spears maxQ 4 dmg [pierce 35] +[pierce 6]/q force 20 backstab 3 block 12 +0/q deflect 20 parryX 2 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P Horizontal anim spear_poke chain 0 stam 8 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 1.9 angle 40 rayW 0.5 speed 0.2 | S Projectile anim spear_throw chain 0 stam 10 dmgX 1.5 staggerX 1 forceX 1.5 lastChainX 2 range 1 angle 90 rayW 0 speed 0.3
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA SpearElderbark: OneHandedWeapon skill Spears maxQ 4 dmg [pierce 55] +[pierce 6]/q force 20 backstab 3 block 21 +0/q deflect 20 parryX 2 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P Horizontal anim spear_poke chain 0 stam 10 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 1.9 angle 40 rayW 0.5 speed 0.2 | S Projectile anim spear_throw chain 0 stam 12 dmgX 1.5 staggerX 1 forceX 1.5 lastChainX 2 range 1 angle 90 rayW 0 speed 0.3
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA BowFineWood: Bow skill Bows maxQ 4 dmg [pierce 32] +[pierce 3]/q force 5 backstab 3 block 3 +0/q deflect 0 parryX 1.5 moveMod -0.05 aiRange 2 aiAngle 10 interval 2 | P Projectile anim bow_fire chain 0 stam 0 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 1 angle 90 rayW 0 speed 0.3 | S none
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA BowHuntsman: Bow skill Bows maxQ 4 dmg [pierce 42] +[pierce 3]/q force 10 backstab 3 block 3 +0/q deflect 0 parryX 1.5 moveMod -0.05 aiRange 2 aiAngle 10 interval 2 | P Projectile anim bow_fire chain 0 stam 0 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 1 angle 90 rayW 0 speed 0.3 | S none
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA BowDraugrFang: Bow skill Bows maxQ 4 dmg [pierce 47 poison 5] +[pierce 3 poison 5]/q force 20 backstab 3 block 3 +0/q deflect 0 parryX 1.5 moveMod -0.05 aiRange 2 aiAngle 10 interval 2 | P Projectile anim bow_fire chain 0 stam 0 dmgX 1 staggerX 1 forceX 1 lastChainX 2 range 1 angle 90 rayW 0 speed 0.3 | S none
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA ArrowWood: Ammo skill Bows maxQ 1 dmg [pierce 22] +[pierce 5]/q force 10 backstab 3 block 10 +0/q deflect 0 parryX 1.5 moveMod 0 aiRange 2 aiAngle 5 interval 2 | P none | S none
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA ArrowNeedle: Ammo skill Bows maxQ 1 dmg [pierce 62] +[]/q force 15 backstab 3 block 10 +0/q deflect 0 parryX 1.5 moveMod 0 aiRange 2 aiAngle 5 interval 2 | P none | S none
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA ShieldBanded: Shield skill Blocking maxQ 3 dmg [blunt 10] +[]/q force 50 backstab 4 block 42 +6/q deflect 40 parryX 1.5 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P none | S none
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA ShieldSilver: Shield skill Blocking maxQ 3 dmg [blunt 10] +[]/q force 50 backstab 4 block 60 +6/q deflect 40 parryX 1.5 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P none | S none
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA ShieldBlackmetal: Shield skill Blocking maxQ 3 dmg [blunt 10] +[]/q force 50 backstab 4 block 78 +6/q deflect 50 parryX 1.5 moveMod -0.05 aiRange 2 aiAngle 5 interval 2 | P none | S none
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA ShieldBlackmetalTower: Shield skill Blocking maxQ 3 dmg [] +[]/q force 50 backstab 1 block 104 +6/q deflect 150 parryX 0 moveMod -0.1 aiRange 2 aiAngle 5 interval 2 | P none | S none
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA ShieldSerpentscale: Shield skill Blocking maxQ 3 dmg [blunt 10] +[]/q force 50 backstab 4 block 60 +6/q deflect 100 parryX 0 moveMod -0.1 aiRange 2 aiAngle 5 interval 2 | P none | S none
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA ArmorIronChest: Chest skill Swords maxQ 4 armor 14 +2/q; mods none moveMod -0.05
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA ArmorIronLegs: Legs skill Swords maxQ 4 armor 14 +2/q; mods none moveMod -0.05
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA HelmetIron: Helmet skill Swords maxQ 4 armor 14 +2/q; mods none moveMod 0
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA ArmorWolfChest: Chest skill Swords maxQ 4 armor 20 +2/q; mods Frost=Resistant moveMod -0.05
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA ArmorWolfLegs: Legs skill Swords maxQ 4 armor 20 +2/q; mods none moveMod -0.05
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA HelmetDrake: Helmet skill Swords maxQ 4 armor 20 +2/q; mods none moveMod 0
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA ArmorPaddedCuirass: Chest skill Swords maxQ 4 armor 26 +2/q; mods none moveMod -0.05
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA ArmorPaddedGreaves: Legs skill Swords maxQ 4 armor 26 +2/q; mods none moveMod -0.05
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA HelmetPadded: Helmet skill Swords maxQ 4 armor 26 +2/q; mods none moveMod 0
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA CapeDeerHide: Shoulder skill Swords maxQ 4 armor 1 +1/q; mods none moveMod 0
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA CapeWolf: Shoulder skill Swords maxQ 4 armor 1 +1/q; mods Frost=Resistant moveMod 0
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA CapeLinen: Shoulder skill Swords maxQ 4 armor 1 +1/q; mods none moveMod 0
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA CapeLox: Shoulder skill Swords maxQ 4 armor 1 +1/q; mods Frost=Resistant moveMod 0
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food QueensJam: health 14 stamina 40 regen 2 burn 1200 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food Sausages: health 55 stamina 18 regen 3 burn 1500 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food TurnipStew: health 18 stamina 55 regen 2 burn 1500 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food ShocklateSmoothie: health 16 stamina 50 regen 1 burn 1200 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food BlackSoup: health 50 stamina 17 regen 3 burn 1200 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food SerpentStew: health 80 stamina 26 regen 4 burn 1800 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food WolfMeatSkewer: health 65 stamina 21 regen 3 burn 1500 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food OnionSoup: health 20 stamina 60 regen 1 burn 1200 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food Eyescream: health 21 stamina 65 regen 1 burn 1500 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food LoxPie: health 75 stamina 24 regen 4 burn 1800 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food FishWraps: health 70 stamina 23 regen 4 burn 1500 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food BloodPudding: health 25 stamina 75 regen 2 burn 1800 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food Bread: health 23 stamina 70 regen 2 burn 1500 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food MeadStaminaMinor: health 0 stamina 0 regen 0 burn 0 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA food MeadStaminaMedium: health 0 stamina 0 regen 0 burn 0 type Consumable
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA throw BombOoze: OneHandedWeapon skill None dmg [blunt 5] aiRange 2 aiMin 0 interval 2 | Projectile anim throw_bomb stam 8 vel 20 velMin 2 acc 5 accMin 20 launchAngle 0 ammo  | projectile oozebomb_projectile gravity 10 aoe 0 hitFriendly False noDamageFriendly False hitOwner False dmg [] | blast oozebomb_explosion radius 4 ttl 10 interval 1 dmg [poison 40] hitFriendly False hitOwner False hitSame False hitEnemy True se 
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA throw BombBile: OneHandedWeapon skill None dmg [blunt 5] aiRange 2 aiMin 0 interval 2 | Projectile anim throw_bomb stam 8 vel 20 velMin 2 acc 5 accMin 20 launchAngle 0 ammo  | projectile bilebomb_projectile gravity 10 aoe 0 hitFriendly False noDamageFriendly False hitOwner False dmg [] | blast bilebomb_explosion radius 4 ttl 10 interval 1 dmg [fire 15 poison 30] hitFriendly False hitOwner False hitSame False hitEnemy True se 
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA throw Greydwarf_throw: OneHandedWeapon skill Swords dmg [blunt 10] aiRange 15 aiMin 5 interval 8 | Projectile anim throw stam 20 vel 12 velMin 2 acc 5 accMin 5 launchAngle -25 ammo  | projectile Greydwarf_throw_projectile gravity 10 aoe 0 hitFriendly False noDamageFriendly False hitOwner False dmg [] | blast none
+[Info   :Living World C.O.R.E. NPC] [LWC] DATA throw GoblinShaman_attack_fireball: OneHandedWeapon skill Swords dmg [blunt 20 fire 100] aiRange 20 aiMin 0 interval 3 | Projectile anim attack_cast stam 20 vel 15 velMin 2 acc 4 accMin 20 launchAngle -10 ammo  | projectile GoblinShaman_projectile_fireball gravity 5 aoe 3 hitFriendly False noDamageFriendly False hitOwner False dmg [] | blast none
+[Info   : Unity Log] 10/28/2026 12:51:45: SaveSystem.Reload for Character is done [47ms]
+
+[Info   :Jotunn.Managers.SkillManager] Registering 1 custom skills
+[Info   :Jotunn.Main] Initializing LocalizationManager
+[Info   : Unity Log] 10/28/2026 12:51:45: SaveSystem.Reload for World is done [266ms]
+
+[Info   :Living World C.O.R.E. Tooler — Brian / scrufboy] Living World C.O.R.E. Tooler interface initialized. Press Delete to open or close it.
+[Info   : Unity Log] 10/28/2026 12:51:46: Sending PlayFab login request (attempt 1)
+
+[Info   : Unity Log] 10/28/2026 12:51:46: Missing attach item: -1790071405  ob:Player(Clone)  joint:Helmet_attach
+
+[Info   : Unity Log] 10/28/2026 12:51:46: Session auth respons callback
+
+[Info   : Unity Log] 10/28/2026 12:51:46: Starting music menu
+
+[Info   : Unity Log] 10/28/2026 12:51:48: Logged in PlayFab user via Steam auth session ticket
+
+[Info   : Unity Log] 10/28/2026 12:51:48: PlayFab local entity ID is 53A7DBAE008BDE6D
+
+[Info   : Unity Log] 10/28/2026 12:51:48: Released session ticket
+
+[Info   : Unity Log] 10/28/2026 12:51:48: Fast load set to False
+
+[Info   : Unity Log] 10/28/2026 12:51:48: Fast load counter set to 0
+
+[Info   : Unity Log] 10/28/2026 12:52:25: SaveSystem.Reload for Character is done [41ms]
+
+[Info   : Unity Log] 10/28/2026 12:52:25: show character selection
+
+[Info   : Unity Log] 10/28/2026 12:52:27: OnCharacterStart "lwc_tester"
+
+[Info   : Unity Log] 10/28/2026 12:52:31: Loading main scene
+
+[Info   : Unity Log] 10/28/2026 12:52:31: Fast load set to True
+
+[Info   : Unity Log] 10/28/2026 12:52:31: Fast load counter set to 1
+
+[Info   : Unity Log] 10/28/2026 12:52:31: Audioman already exist, destroying self
+
+[Info   : Unity Log] [MadHatter] SoundMixMan: routed 0 bundled and 0 referenced AudioSource(s) to mixer group 'SFX'.
+[Info   : Unity Log] 10/28/2026 12:52:31: Steam initialized, persona:Scrufboy
+
+[Info   : Unity Log] 10/28/2026 12:52:31: Loading player profile lwc_tester
+
+[Info   : Unity Log] 10/28/2026 12:52:31: isModded: True
+
+[Info   : Unity Log] 10/28/2026 12:52:31: Zonesystem Awake 3063
+
+[Info   : Unity Log] 10/28/2026 12:52:31: DungeonDB Awake 3063
+
+[Info   : Unity Log] 10/28/2026 12:52:31: Steam initialized, persona:Scrufboy
+
+[Info   : Unity Log] 10/28/2026 12:52:31: Worldgenerator version setup:2
+
+[Info   : Unity Log] Registered 'marlthon.RunicPack ConfigSync' RPC - waiting for incoming connections
+[Info   : Unity Log] Registered 'marlthon.RunicPack ItemManager ConfigSync' RPC - waiting for incoming connections
+[Info   : Unity Log] Registered 'marlthon.RunicPack PieceManager ConfigSync' RPC - waiting for incoming connections
+[Info   : Unity Log] Registered 'marlthon.RunicPack CreatureManager ConfigSync' RPC - waiting for incoming connections
+[Info   : Unity Log] Registered 'MadHatter ConfigSync' RPC - waiting for incoming connections
+[Info   : Unity Log] Registered 'odinplus.plugins.madhatter ItemManager ConfigSync' RPC - waiting for incoming connections
+[Info   :Jotunn.Managers.PrefabManager] Adding 78 custom prefabs to the ZNetScene
+[Info   : Unity Log] 10/28/2026 12:52:34: Checking for installed DLCs
+
+[Info   : Unity Log] 10/28/2026 12:52:34: DLC:beta installed:False
+
+[Info   :Server Devcommands] Reloading 0 bind data.
+[Info   :Jotunn.Managers.ItemManager] Adding 44 custom items to the ObjectDB
+[Info   :Jotunn.Managers.ItemManager] Adding 44 custom recipes to the ObjectDB
+[Info   :Jotunn.Managers.NetworkManager] Registering 2 custom RPCs
+[Info   : Unity Log] 10/28/2026 12:52:34: Zonesystem Start 3063
+
+[Info   : Unity Log] 10/28/2026 12:52:34: Added 3 locations, 0 vegetations, 0 environments, 0 biome env-setups, 0 clutter  from main
+
+[Info   : Unity Log] 10/28/2026 12:52:34: Added 2 locations, 0 vegetations, 2 environments, 0 biome env-setups, 0 clutter  from main
+
+[Info   : Unity Log] 10/28/2026 12:52:34: Added 27 locations, 25 vegetations, 5 environments, 1 biome env-setups, 3 clutter  from main
+
+[Info   : Unity Log] 10/28/2026 12:52:34: Added 4 locations, 0 vegetations, 1 environments, 0 biome env-setups, 0 clutter  from main
+
+[Info   : Unity Log] 10/28/2026 12:52:34: Added 25 locations, 33 vegetations, 8 environments, 2 biome env-setups, 2 clutter  from main
+
+[Info   : Unity Log] 10/28/2026 12:52:34: Added 25 locations, 35 vegetations, 12 environments, 1 biome env-setups, 2 clutter  from main
+
+[Info   :Server Devcommands] Reloading 1 permission data.
+[Info   : Unity Log] 10/28/2026 12:52:34: DungeonDB Start 3063
+
+[Info   : Unity Log] 10/28/2026 12:52:34: ZRpc timeout set to 30s 
+
+[Info   : Unity Log] 10/28/2026 12:52:34: Loading: ZNet Start
+
+[Info   : Unity Log] 10/28/2026 12:52:34: ZNet.LoadWorld: LWC_HumanLab_v1 (LWC_HumanLab_v1), save number 221
+
+[Info   : Unity Log] 10/28/2026 12:52:34: ZoneSystem.Load => DB2: unpacking compressed data 148,490 => 212,584 bytes
+
+[Info   : Unity Log] 10/28/2026 12:52:34: ZoneSystem.Load => Loaded 12,268 locations
+
+[Info   : Unity Log] 10/28/2026 12:52:34: Random event set:army_goblin
+
+[Info   : Unity Log] 10/28/2026 12:52:34: ZDOMan.LoadChunks - Starting to load 137,290 zdos from 9 Chunks. SessionID: 3491799621, WorldVersion: 42 [CheatCleanSlate]
+
+[Info   : Unity Log] 10/28/2026 12:52:34: ZDOMan.LoadChunks => Loading ZDOs done [412ms]
+
+[Info   : Unity Log] 10/28/2026 12:52:34: ZDOMan.LoadChunks => Adding ZDOs to Dictionary done [7ms]
+
+[Info   : Unity Log] 10/28/2026 12:52:34: ZDOMan.LoadChunks => Adding ZDOs to Sectors done [9ms]
+
+[Info   : Unity Log] 10/28/2026 12:52:34: ZDOMan.LoadChunks => Connecting Portals done [0ms]
+
+[Info   : Unity Log] ConnectSpawners => Connected 57 spawners and 90 'done' spawners. Removed connection from 0 orphan spawn:s.
+[Info   : Unity Log] 10/28/2026 12:52:34: ZDOMan.LoadChunks => Connecting Spawners done [7ms]
+
+[Info   : Unity Log] 10/28/2026 12:52:34: ZDOMan.LoadChunks => Connecting SyncTransforms done [0ms]
+
+[Info   : Unity Log] 10/28/2026 12:52:34: ZDOMan.LoadChunks done [442ms]
+
+[Info   : Unity Log] 10/28/2026 12:52:34: Player history entry with index 0:  Scrufboy (Steam_[redacted], [redacted player ID])
+
+[Info   : Unity Log] 10/28/2026 12:52:34: Checking for any blocked players in the historical player list...
+
+[Info   : Unity Log] 10/28/2026 12:52:34: Unloading unused assets
+
+[Info   : Unity Log] 10/28/2026 12:52:39: Starting respawn
+
+[Info   : Unity Log] 10/28/2026 12:52:40: Loading minimap textures done [313ms]
+
+[Info   : Unity Log] 10/28/2026 12:52:40: Minimap: unpacking compressed mapData 8,593 => 8,389,446 bytes
+
+[Info   : Unity Log] 10/28/2026 12:52:40: tip:$loadscreen_tip20
+
+[Info   : Unity Log] 10/28/2026 12:52:40: Fast load set to False
+
+[Info   : Unity Log] 10/28/2026 12:52:40: Fast load counter set to 0
+
+[Info   : Unity Log] 10/28/2026 12:52:43: Loading dungeon
+
+[Info   : Unity Log] 10/28/2026 12:52:43: Dungeon loaded with 15 rooms in 1 ms.
+
+[Info   : Unity Log] 10/28/2026 12:52:43: Loading room prefabs asynchronously
+
+[Info   : Unity Log] 10/28/2026 12:52:43: Spawning dungeon
+
+[Info   : Unity Log] 10/28/2026 12:52:44: Force generating hmap (-448.00, 0.00, -576.00)
+
+[Info   : Unity Log] 10/28/2026 12:52:48: Spawned after 8.019993
+
+[Info   :Jotunn.Managers.SkillManager] Registering 1 custom skills
+[Warning: Unity Log] 10/28/2026 12:52:48: Character ID for player ([LWC_Tester, 0:0], [Scrufboy, Steam_[redacted], [redacted player ID]], Scrufboy) was 0:0. Skipping.
+
+[Info   : Unity Log] 10/28/2026 12:52:48: Skipping unloading unused assets
+
+[Info   : Unity Log] 10/28/2026 12:52:48: Missing attach item: -1790071405  ob:Player(Clone)  joint:Helmet_attach
+
+[Info   :Living World C.O.R.E. Telemetry] Recording read-only telemetry: C:\Users\scruf\AppData\Roaming\r2modmanPlus-local\Valheim\profiles\LWC Human Lab v1\BepInEx\LivingWorldTelemetry\LWC-20261028-125248-LWC_HumanLab_v1-part00.jsonl
+[Info   : Unity Log] 10/28/2026 12:52:48: Starting music CombatEventL4
+
+[Info   : Unity Log] 10/28/2026 12:52:48: Resumed music CombatEventL4 at 0
+
+[Info   : Unity Log] 10/28/2026 12:52:48: Minimap: Adding unique location (-123.00, 33.54, -258.22)
+
+[Info   : Unity Log] 10/28/2026 12:52:56: Activating default element Continue
+
+[Info   : Unity Log] 10/28/2026 12:53:01: Skipping unloading unused assets
+
+[Info   : Unity Log] 10/28/2026 12:53:17: Activating default element Continue
+
+[Info   : Unity Log] 10/28/2026 12:53:26: Activating default element Continue
+
+[Info   : Unity Log] 10/28/2026 12:53:30: Activating default element Continue
+
+[Info   : Unity Log] 10/28/2026 12:53:32: Activating default element Continue
+
+[Info   : Unity Log] 10/28/2026 12:53:37: Activating default element Continue
+
+[Info   : Unity Log] 10/28/2026 12:53:42: Stopped music CombatEventL4 at 2380223
+
+[Info   : Unity Log] 10/28/2026 12:53:42: Starting music meadows
+
+[Info   : Unity Log] 10/28/2026 12:53:42: Resumed music meadows at 0
+
+[Info   : Unity Log] 10/28/2026 12:53:57: Vis equip model set to 1
+
+[Info   : Unity Log] 10/28/2026 12:53:57: Vis equip model set to 1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] APPEARANCE READY Svanhild Knutsdottir: female, hair=Hair24, beard=none, role=guard
+[Info   :Living World C.O.R.E. NPC] [LWC] APPEARANCE READY Bothild Guthormsdottir: female, hair=Hair14, beard=none, role=archer
+[Warning:Living World C.O.R.E. NPC] [LWC] female voice 'death' first use: 4 of 4 clips alive
+[Info   :Living World C.O.R.E. NPC] [LWC] PARTY READY: two companions bound to you.
+[Info   : Unity Log] 10/28/2026 12:53:57: Adding item ArrowWood x39
+
+[Info   : Unity Log] 10/28/2026 12:53:57: Adding item ArrowWood x39
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=3 mode=Sidestep avoid=- side=left offset=0.48 region=0.08 t=87.23
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=3 mode=Travel avoid=- side=left offset=0.93 region=0.00 lasted=0.61 t=87.84
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=2 mode=Sidestep avoid=- side=left offset=0.49 region=4.16 t=93.82
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=94.23
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Bothild Guthormsdottir with=leader begin t=94.23
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=94.33
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=94.44
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Bothild Guthormsdottir with=leader end lasted=0.21 t=94.44
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=94.54
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=94.64
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=94.74
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=94.85
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=94.95
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=2 mode=Travel avoid=- side=left offset=0.44 region=1.65 lasted=1.85 t=95.67
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=2 mode=Sidestep avoid=leader side=left offset=0.26 region=1.49 t=96.28
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=3 mode=Sidestep avoid=leader side=right offset=0.44 region=2.91 t=96.80
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=2 mode=Travel avoid=leader side=left offset=0.44 region=1.82 lasted=0.93 t=97.21
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=98.14
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Bothild Guthormsdottir with=leader begin t=98.14
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=98.24
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=98.34
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=98.45
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=98.55
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=98.65
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=98.76
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=98.86
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Bothild Guthormsdottir with=leader end lasted=0.72 t=98.86
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=98.96
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=99.07
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=99.07
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=99.17
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=99.17
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=99.27
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=3 mode=Travel avoid=leader side=right offset=2.25 region=0.00 lasted=2.48 t=99.27
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=99.38
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=99.48
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=2 mode=Sidestep avoid=leader side=left offset=0.45 region=0.00 t=103.23
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=104.89
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=104.99
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=105.09
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=105.20
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Svanhild Knutsdottir with=leader begin t=105.20
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=105.30
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=105.40
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=105.50
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=105.60
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=105.71
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=105.81
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=105.91
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Svanhild Knutsdottir with=leader end lasted=0.72 t=105.91
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=106.02
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=2 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=106.12
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=2 mode=Travel avoid=leader side=left offset=1.47 region=1.99 lasted=3.51 t=106.74
+[Info   : Unity Log] 10/28/2026 12:54:32: Spawned Boar x 1
+
+[Info   : Unity Log] 10/28/2026 12:54:32: Spawned Greyling x 1
+
+[Info   : Unity Log] 10/28/2026 12:54:33: Force generating hmap (-128.00, 0.00, -704.00)
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=2 mode=Sidestep avoid=leader side=left offset=0.86 region=6.05 t=117.32
+[Info   : Unity Log] 10/28/2026 12:54:35: Spawned Greyling x 1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=2 mode=Travel avoid=leader side=left offset=1.23 region=6.63 lasted=0.62 t=117.94
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=2 mode=Sidestep avoid=leader side=right offset=0.49 region=2.86 t=119.07
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=2 mode=Travel avoid=leader side=right offset=2.24 region=6.62 lasted=2.02 t=121.09
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=3 mode=Sidestep avoid=- side=right offset=1.08 region=8.50 t=121.53
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=3 mode=Travel avoid=- side=right offset=0.44 region=12.43 lasted=0.72 t=122.24
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=2 mode=Sidestep avoid=leader side=left offset=0.48 region=4.73 t=124.12
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=2 mode=Travel avoid=leader side=left offset=0.45 region=0.17 lasted=1.55 t=125.67
+[Info   : Unity Log] 10/28/2026 12:54:44: Setting selected recipe 0
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=3 mode=Sidestep avoid=leader side=left offset=0.44 region=0.12 t=135.28
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=3 mode=Travel avoid=leader side=left offset=2.24 region=0.09 lasted=1.03 t=136.31
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Svanhild Knutsdottir episodes=6 contacts=1 contactSeconds=0.7 t=139.72
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Bothild Guthormsdottir episodes=4 contacts=2 contactSeconds=0.9 t=139.72
+[Info   : Unity Log] 10/28/2026 12:55:05: drop all 50  50
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=3 mode=Sidestep avoid=leader side=left offset=0.39 region=0.53 t=147.58
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=3 mode=Travel avoid=leader side=left offset=2.24 region=0.00 lasted=0.93 t=148.51
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=149.95
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=150.06
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=150.16
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=150.26
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=150.36
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=150.47
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=150.57
+[Info   : Unity Log] 10/28/2026 12:55:11: drop all 9  9
+
+[Info   : Unity Log] 10/28/2026 12:55:12: drop all 25  25
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=3 mode=Sidestep avoid=leader side=left offset=0.49 region=0.01 t=154.30
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=3 mode=Travel avoid=leader side=left offset=1.38 region=0.72 lasted=0.83 t=155.13
+[Info   : Unity Log] 10/28/2026 12:55:13: drop all 24  24
+
+[Info   : Unity Log] 10/28/2026 12:55:14: drop all 50  50
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=2 mode=Sidestep avoid=leader side=right offset=0.45 region=5.24 t=185.56
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=2 mode=Travel avoid=leader side=right offset=0.45 region=0.87 lasted=1.37 t=186.93
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=2 mode=Sidestep avoid=leader side=left offset=0.48 region=5.96 t=187.97
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=2 mode=Travel avoid=leader side=left offset=0.50 region=7.05 lasted=0.73 t=188.70
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=2 mode=Wait avoid=leader side=left offset=0.00 region=5.16 t=189.33
+[Warning:Living World C.O.R.E. NPC] [LWC] female voice 'alerted' first use: 2 of 2 clips alive
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=alerted clip=01__voice_female_a_expression_emote_03
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=191.20
+[Info   : Unity Log] 10/28/2026 12:55:54: Adding item ArrowWood x1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Svanhild Knutsdottir episodes=8 contacts=1 contactSeconds=0.7 t=199.81
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Bothild Guthormsdottir episodes=6 contacts=2 contactSeconds=0.9 t=199.81
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=0 mode=Sidestep avoid=- side=left offset=0.46 region=3.89 t=205.34
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=0 mode=Travel avoid=- side=left offset=0.96 region=3.06 lasted=0.63 t=205.98
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=0 mode=Sidestep avoid=- side=left offset=0.57 region=7.37 t=207.96
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=3 mode=BackOff avoid=- side=left offset=0.00 region=0.19 t=209.94
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=3 mode=Travel avoid=- side=left offset=1.78 region=0.00 lasted=56.27 t=210.58
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=0 mode=Travel avoid=- side=left offset=0.76 region=0.74 lasted=2.94 t=210.89
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=0 mode=Sidestep avoid=leader side=left offset=0.58 region=0.31 t=211.72
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=0 mode=Travel avoid=leader side=left offset=1.09 region=0.03 lasted=0.84 t=212.57
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=214.14
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Bothild Guthormsdottir with=leader begin t=214.14
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=214.24
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=3 mode=Wait avoid=leader side=- offset=0.00 region=0.00 t=214.35
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Bothild Guthormsdottir slot=3 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=214.46
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Bothild Guthormsdottir with=leader end lasted=0.32 t=214.46
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=0 mode=Travel avoid=- side=left offset=0.00 region=3.76 t=214.87
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=0 mode=Wait avoid=- side=left offset=1.02 region=4.08 t=216.67
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=3 mode=Sidestep avoid=leader side=right offset=0.38 region=5.22 t=217.20
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=0 mode=Travel avoid=- side=left offset=1.51 region=3.72 t=217.61
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=0 mode=Travel avoid=- side=left offset=2.02 region=1.28 t=218.14
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=0 mode=Travel avoid=- side=left offset=1.86 region=0.81 lasted=7.04 t=218.77
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=3 mode=Travel avoid=leader side=right offset=0.44 region=5.00 lasted=2.00 t=219.20
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=0 mode=Wait avoid=leader side=right offset=0.00 region=2.88 t=221.28
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=0 mode=Wait avoid=leader side=right offset=0.27 region=2.94 t=221.49
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=3 mode=Sidestep avoid=leader side=right offset=0.50 region=5.23 t=222.13
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=222.24
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Svanhild Knutsdottir with=leader begin t=222.24
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=222.34
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=222.44
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=3 mode=Wait avoid=leader side=right offset=1.09 region=3.18 t=222.44
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=222.55
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=222.65
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=222.76
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=222.87
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Svanhild Knutsdottir with=leader end lasted=0.63 t=222.87
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=222.97
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=223.07
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=0 mode=Wait avoid=leader side=right offset=0.81 region=2.61 t=223.18
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=3 mode=Travel avoid=leader side=right offset=0.93 region=1.53 lasted=1.05 t=223.18
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=0 mode=Travel avoid=leader side=right offset=1.17 region=0.55 lasted=12.08 t=223.80
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=224.53
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Svanhild Knutsdottir with=leader begin t=224.53
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=224.63
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=224.74
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Svanhild Knutsdottir with=leader end lasted=0.21 t=224.74
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=224.84
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=224.95
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=0 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=225.06
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=3 mode=Sidestep avoid=- side=right offset=0.52 region=3.07 t=225.16
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=3 mode=Wait avoid=- side=right offset=0.65 region=3.00 t=225.59
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=3 mode=Wait avoid=- side=right offset=0.60 region=2.23 t=226.01
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=3 mode=Travel avoid=- side=right offset=0.44 region=2.49 lasted=1.06 t=226.22
+[Info   : Unity Log] 10/28/2026 12:56:25: Player 3491799621 wants to open TreasureChest_meadows(Clone)   im: 3491799621
+
+[Info   : Unity Log] 10/28/2026 12:56:25: Setting selected recipe 0
+
+[Warning: Unity Log] 10/28/2026 12:56:25: Failed to find rpc method 327122920
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=3 mode=Wait avoid=leader side=right offset=0.00 region=2.63 t=229.55
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=0 mode=Travel avoid=- side=left offset=0.00 region=2.17 t=230.72
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=3 mode=Wait avoid=leader side=right offset=1.03 region=2.22 t=231.58
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=3 mode=Travel avoid=leader side=right offset=0.86 region=1.68 lasted=6.64 t=231.80
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=0 mode=Wait avoid=- side=left offset=0.60 region=3.20 t=232.84
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=0 mode=Travel avoid=- side=left offset=0.45 region=3.24 lasted=21.33 t=233.05
+[Info   : Unity Log] 10/28/2026 12:56:34: Spawned Boar x 2
+
+[Info   : Unity Log] 10/28/2026 12:56:35: Force generating hmap (-192.00, 0.00, -384.00)
+
+[Info   : Unity Log] 10/28/2026 12:56:35: Force generating hmap (-128.00, 0.00, -384.00)
+
+[Info   : Unity Log] 10/28/2026 12:56:40: Spawned Greyling x 1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=3 mode=Sidestep avoid=leader side=right offset=0.60 region=3.78 t=242.11
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=3 mode=Travel avoid=leader side=right offset=0.44 region=2.80 lasted=0.66 t=242.76
+[Info   : Unity Log] 10/28/2026 12:56:45: Player 3491799621 wants to open TreasureChest_meadows(Clone)   im: 3491799621
+
+[Info   : Unity Log] 10/28/2026 12:56:45: Setting selected recipe 0
+
+[Warning: Unity Log] 10/28/2026 12:56:45: Failed to find rpc method 327122920
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=0 mode=Wait avoid=leader side=left offset=0.00 region=0.89 t=250.83
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=0 mode=Travel avoid=leader side=- offset=0.00 region=4.05 lasted=39.73 t=251.45
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Svanhild Knutsdottir episodes=11 contacts=3 contactSeconds=1.6 t=259.87
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Bothild Guthormsdottir episodes=10 contacts=3 contactSeconds=1.3 t=259.87
+[Info   : Unity Log] 10/28/2026 12:57:08: Spawned Greyling x 1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=3 mode=Sidestep avoid=leader side=right offset=0.67 region=5.69 t=274.13
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=3 mode=Travel avoid=leader side=right offset=0.43 region=5.53 lasted=0.33 t=274.46
+[Info   : Unity Log] 10/28/2026 12:57:31: Spawned Boar x 1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=alerted clip=01__voice_female_a_expression_emote_03
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=298.30
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=298.34
+[Warning:Living World C.O.R.E. NPC] [LWC] female voice 'idle' first use: 4 of 4 clips alive
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=idle clip=04__voice_female_a_laugh_09
+[Info   : Unity Log] 10/28/2026 12:57:42: Adding item ArrowWood x1
+
+[Info   : Unity Log] 10/28/2026 12:57:42: Adding item ArrowWood x1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.50 region=1.53 t=304.08
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.44 region=6.28 lasted=1.57 t=305.64
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.81 region=5.77 t=307.10
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.66 region=7.40 lasted=0.62 t=307.72
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.87 region=9.13 t=308.77
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=1.03 region=12.65 lasted=0.62 t=309.38
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.77 region=11.28 t=317.24
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.73 region=14.75 lasted=0.64 t=317.88
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=0.00 region=14.55 t=318.72
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.69 region=19.45 lasted=2.12 t=319.36
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Svanhild Knutsdottir episodes=15 contacts=3 contactSeconds=1.6 t=319.88
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Bothild Guthormsdottir episodes=11 contacts=3 contactSeconds=1.3 t=319.88
+[Info   : Unity Log] 10/28/2026 12:58:02: Force generating hmap (256.00, 0.00, -256.00)
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=0.00 region=9.77 t=327.81
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=- offset=0.00 region=8.96 lasted=11.00 t=328.24
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.46 region=0.00 t=328.76
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=2.25 region=0.00 lasted=0.73 t=329.49
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.52 region=1.53 t=331.06
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=0.60 region=2.02 t=333.15
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.44 region=1.80 lasted=2.41 t=333.47
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.35 region=0.00 t=334.20
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.44 region=0.00 lasted=0.94 t=335.13
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.95 region=8.28 t=337.76
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=1.07 region=11.22 lasted=0.62 t=338.38
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=0.00 region=10.76 t=339.64
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=- offset=0.00 region=10.27 lasted=3.35 t=341.10
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.47 region=2.92 t=341.93
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=leader side=left offset=0.50 region=8.71 t=342.24
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.80 region=0.21 lasted=1.26 t=343.19
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=leader side=left offset=0.45 region=1.57 lasted=2.30 t=344.54
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=leader side=left offset=0.50 region=3.64 t=348.28
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.40 region=2.32 t=348.28
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=leader side=left offset=1.82 region=1.29 lasted=0.62 t=348.91
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.44 region=0.81 lasted=1.58 t=349.86
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=- side=left offset=0.58 region=0.97 t=352.08
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=- side=left offset=0.60 region=0.71 t=352.31
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=- side=left offset=0.99 region=3.31 lasted=1.62 t=353.70
+[Info   : Unity Log] 10/28/2026 12:58:43: Starting music evening
+
+[Info   : Unity Log] 10/28/2026 12:58:44: Stopped music meadows at 3598629
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=left offset=0.39 region=0.00 t=368.52
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=- side=left offset=0.28 region=0.00 t=368.93
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=left offset=1.82 region=0.00 lasted=0.94 t=369.46
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=- side=left offset=2.02 region=0.00 lasted=0.74 t=369.68
+[Info   : Unity Log] 10/28/2026 12:58:48: Update PlayFab entity token
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.50 region=0.32 t=371.46
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=0.60 region=0.00 t=371.88
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.45 region=0.76 lasted=1.38 t=372.84
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=left offset=0.28 region=0.66 t=373.81
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=left offset=0.44 region=0.00 lasted=0.62 t=374.42
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.48 region=0.00 t=379.47
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Svanhild Knutsdottir episodes=22 contacts=3 contactSeconds=1.6 t=379.89
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Bothild Guthormsdottir episodes=18 contacts=3 contactSeconds=1.3 t=379.89
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.42 region=0.00 lasted=0.87 t=380.34
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=0.00 region=0.00 t=381.22
+[Info   : Unity Log] 10/28/2026 12:59:00: Spawned Neck x 1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.45 region=0.93 lasted=9.14 t=382.95
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=alerted clip=02__voice_female_a_expression_emote_11
+[Warning:Living World C.O.R.E. NPC] [LWC] female voice 'exert' first use: 9 of 9 clips alive
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=exert clip=09__voice_female_a_attack_02
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=387.50
+[Info   : Unity Log] 10/28/2026 12:59:11: Adding item ArrowWood x1
+
+[Info   : Unity Log] 10/28/2026 12:59:11: Adding item ArrowWood x1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.55 region=2.75 t=393.12
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.45 region=3.86 lasted=0.93 t=394.06
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.75 region=4.89 t=396.98
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=1.31 region=7.82 lasted=1.25 t=398.23
+[Info   : Unity Log] 10/28/2026 12:59:17: Loading dungeon
+
+[Info   : Unity Log] 10/28/2026 12:59:17: Dungeon loaded with 10 rooms in 2 ms.
+
+[Info   : Unity Log] 10/28/2026 12:59:17: Loading room prefabs asynchronously
+
+[Info   : Unity Log] 10/28/2026 12:59:18: Spawning dungeon
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=- side=left offset=0.91 region=9.34 t=405.80
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=- side=left offset=0.63 region=6.50 lasted=0.64 t=406.43
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=leader side=right offset=0.00 region=0.00 t=409.36
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=- offset=0.00 region=0.00 lasted=4.20 t=409.99
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=leader side=right offset=0.00 region=0.00 t=413.66
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=- offset=0.00 region=2.30 lasted=9.25 t=415.05
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.48 region=3.07 t=421.72
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=leader side=right offset=1.24 region=2.83 t=422.25
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.45 region=0.00 lasted=2.41 t=424.13
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.51 region=0.29 t=432.61
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.44 region=0.00 lasted=0.85 t=433.45
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Svanhild Knutsdottir episodes=24 contacts=3 contactSeconds=1.6 t=439.93
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Bothild Guthormsdottir episodes=21 contacts=3 contactSeconds=1.3 t=439.93
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.50 region=0.00 t=443.19
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.44 region=0.00 lasted=1.08 t=444.27
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.29 region=0.00 t=444.58
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=1.82 region=0.00 lasted=2.71 t=447.30
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=- side=left offset=0.27 region=0.03 t=447.62
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=- side=left offset=2.23 region=0.00 lasted=1.37 t=448.98
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.58 region=6.43 t=451.91
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.45 region=4.58 lasted=0.94 t=452.84
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=455.58
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Svanhild Knutsdottir with=leader begin t=455.58
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=455.68
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=455.78
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=455.88
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=455.99
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=456.09
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Svanhild Knutsdottir with=leader end lasted=0.52 t=456.09
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=456.20
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=456.30
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.27 region=2.29 t=460.74
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=1.12 region=5.15 lasted=0.64 t=461.37
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.51 region=0.14 t=461.69
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.44 region=0.00 lasted=1.36 t=463.05
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.50 region=0.00 t=463.37
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.44 region=0.38 lasted=1.15 t=464.52
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.50 region=0.00 t=480.60
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.43 region=0.08 lasted=0.73 t=481.33
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.49 region=0.00 t=481.64
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.45 region=0.00 t=482.48
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.44 region=0.00 lasted=1.16 t=482.80
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=2.24 region=0.00 lasted=0.84 t=483.33
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Svanhild Knutsdottir episodes=29 contacts=4 contactSeconds=2.1 t=499.93
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Bothild Guthormsdottir episodes=26 contacts=3 contactSeconds=1.3 t=499.93
+[Info   : Unity Log] 10/28/2026 13:01:07: Loading dungeon
+
+[Info   : Unity Log] 10/28/2026 13:01:07: Dungeon loaded with 10 rooms in 1 ms.
+
+[Info   : Unity Log] 10/28/2026 13:01:07: Loading room prefabs asynchronously
+
+[Info   : Unity Log] 10/28/2026 13:01:08: Spawning dungeon
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=left offset=0.90 region=10.98 t=512.41
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=left offset=0.44 region=13.93 lasted=0.63 t=513.04
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.86 region=8.40 t=514.19
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.69 region=5.85 lasted=0.64 t=514.83
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.47 region=1.45 t=515.57
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=left offset=0.51 region=6.40 t=516.10
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=left offset=0.44 region=5.17 lasted=0.63 t=516.73
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.70 region=4.56 lasted=1.48 t=517.04
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=- side=right offset=0.66 region=7.49 t=517.87
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=- side=right offset=1.31 region=6.02 lasted=0.63 t=518.50
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=- side=left offset=0.71 region=11.70 t=520.08
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=- side=left offset=0.44 region=10.25 lasted=0.64 t=520.72
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=0.00 region=0.00 t=527.53
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.44 region=0.00 lasted=13.16 t=529.26
+[Info   : Unity Log] 10/28/2026 13:01:30: Starting music home
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=leader side=right offset=0.00 region=0.60 t=534.91
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=leader side=right offset=1.53 region=1.10 t=535.55
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=0.00 region=5.88 t=535.76
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=leader side=right offset=0.62 region=0.00 t=536.40
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=- offset=0.00 region=3.25 lasted=20.41 t=536.51
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.47 region=1.93 lasted=16.74 t=536.83
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=- side=left offset=0.34 region=2.59 t=551.40
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=- side=left offset=0.74 region=4.43 t=551.83
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=- side=left offset=0.58 region=5.93 lasted=1.91 t=553.31
+[Info   : Unity Log] 10/28/2026 13:01:52: Stopped music home at 985958
+
+[Info   : Unity Log] 10/28/2026 13:01:52: Starting music home
+
+[Info   : Unity Log] 10/28/2026 13:01:52: Resumed music home at 985958
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=0.00 region=2.39 t=556.26
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SWITCH Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=left offset=0.00 region=2.07 t=557.82
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=left offset=2.16 region=1.11 t=558.65
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=BackOff avoid=- side=left offset=2.00 region=1.74 t=560.01
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Svanhild Knutsdottir episodes=32 contacts=5 contactSeconds=3.0 t=560.01
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Bothild Guthormsdottir episodes=30 contacts=4 contactSeconds=2.2 t=560.01
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=leader side=right offset=0.00 region=0.00 t=560.22
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=BackOff avoid=- side=left offset=1.53 region=2.72 t=560.64
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-GIVEWAY Svanhild Knutsdottir slot=5 mode=BackOff avoid=- side=left offset=1.53 region=2.87 t=560.74
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-GIVEWAY Svanhild Knutsdottir slot=5 mode=BackOff avoid=- side=left offset=1.53 region=3.13 t=560.85
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.43 region=0.00 lasted=9.45 t=560.85
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SWITCH Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=1.53 region=3.63 t=562.23
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=1.57 region=2.47 t=563.28
+[Info   : Unity Log] 10/28/2026 13:02:01: Stopped music home at 1386738
+
+[Info   : Unity Log] 10/28/2026 13:02:04: Starting music home
+
+[Info   : Unity Log] 10/28/2026 13:02:04: Resumed music home at 1386738
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=2.25 region=1.76 t=580.94
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=2.09 region=1.60 t=582.00
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=1.47 region=0.99 t=582.96
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=1.31 region=0.60 lasted=67.39 t=583.49
+[Info   : Unity Log] 10/28/2026 13:02:22: Stopped music home at 2192062
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.36 region=0.00 t=588.00
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=leader side=right offset=0.60 region=0.00 t=589.88
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.44 region=0.00 lasted=2.30 t=590.30
+[Info   : Unity Log] 10/28/2026 13:02:32: Starting music home
+
+[Info   : Unity Log] 10/28/2026 13:02:32: Resumed music home at 2192062
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=leader side=right offset=0.00 region=1.23 t=594.61
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SWITCH Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=left offset=0.00 region=2.25 t=596.62
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=- offset=0.00 region=2.24 lasted=8.72 t=596.72
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.46 region=0.82 t=600.61
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=leader side=right offset=0.60 region=0.00 t=600.94
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.70 region=0.06 lasted=0.63 t=601.24
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=0.00 region=3.92 t=601.99
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.63 region=1.85 t=602.71
+[Info   : Unity Log] 10/28/2026 13:02:41: Stopped music home at 400780
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=- offset=0.00 region=8.88 lasted=87.14 t=603.24
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=1.11 region=4.92 lasted=1.88 t=604.59
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=leader side=left offset=0.55 region=6.67 t=604.91
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=- side=right offset=0.45 region=5.17 t=605.65
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=- side=right offset=0.45 region=3.47 lasted=1.70 t=607.34
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=leader side=left offset=2.40 region=2.72 t=607.56
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=607.66
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Svanhild Knutsdottir with=leader begin t=607.66
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=607.76
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=607.87
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=607.98
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=608.08
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=608.19
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=608.29
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=608.40
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=608.51
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=608.61
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=608.72
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=608.82
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-CONTACT Svanhild Knutsdottir with=leader end lasted=1.16 t=608.82
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BACKOFF Svanhild Knutsdottir slot=5 mode=BackOff avoid=leader side=- offset=0.00 region=0.00 t=608.93
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SWITCH Svanhild Knutsdottir slot=5 mode=Sidestep avoid=leader side=right offset=2.40 region=4.06 t=609.14
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=leader side=right offset=1.14 region=3.00 t=609.98
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=leader side=right offset=0.68 region=2.22 lasted=5.48 t=610.39
+[Info   : Unity Log] 10/28/2026 13:02:51: Starting music home
+
+[Info   : Unity Log] 10/28/2026 13:02:51: Resumed music home at 400780
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=left offset=0.30 region=0.59 t=613.78
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=left offset=1.12 region=1.32 lasted=2.50 t=616.28
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.47 region=2.20 t=617.85
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Svanhild Knutsdottir episodes=35 contacts=6 contactSeconds=4.2 t=620.07
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Bothild Guthormsdottir episodes=34 contacts=4 contactSeconds=2.2 t=620.07
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=BackOff avoid=- side=right offset=0.60 region=3.46 t=624.84
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-GIVEWAY Svanhild Knutsdottir slot=5 mode=BackOff avoid=- side=right offset=0.60 region=3.09 t=624.94
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=0.45 region=2.97 lasted=7.41 t=625.26
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.58 region=6.24 t=625.88
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=1.52 region=7.27 t=626.92
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=0.73 region=5.38 t=627.64
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=leader side=left offset=0.00 region=4.81 t=629.00
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SWITCH Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=left offset=0.73 region=7.99 t=629.23
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=left offset=0.91 region=4.63 t=629.65
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=left offset=0.75 region=0.13 lasted=4.73 t=630.61
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=- offset=0.00 region=0.65 lasted=24.96 t=630.61
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=0.31 region=2.59 t=631.46
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=BackOff avoid=- side=right offset=0.31 region=2.59 t=631.56
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-GIVEWAY Svanhild Knutsdottir slot=5 mode=BackOff avoid=- side=right offset=0.31 region=2.60 t=631.66
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Svanhild Knutsdottir slot=5 mode=Wait avoid=- side=right offset=1.78 region=3.49 t=632.41
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=1.63 region=3.71 lasted=1.88 t=633.34
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-BLOCKED Bothild Guthormsdottir slot=1 mode=Wait avoid=leader side=left offset=0.00 region=1.77 t=635.76
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=left offset=2.25 region=0.00 lasted=32.30 t=637.95
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=left offset=0.60 region=12.13 t=656.29
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=left offset=0.56 region=8.14 lasted=0.63 t=656.92
+[Info   : Unity Log] 10/28/2026 13:03:35: Stopped music home at 2331301
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.64 region=2.50 t=657.76
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.45 region=0.00 lasted=0.73 t=658.49
+[Info   : Unity Log] 10/28/2026 13:03:42: Loading dungeon
+
+[Info   : Unity Log] 10/28/2026 13:03:42: Dungeon loaded with 10 rooms in 1 ms.
+
+[Info   : Unity Log] 10/28/2026 13:03:42: Loading room prefabs asynchronously
+
+[Info   : Unity Log] 10/28/2026 13:03:43: Spawning dungeon
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.61 region=2.42 t=666.47
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=right offset=1.02 region=7.45 t=667.21
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.83 region=4.82 lasted=0.85 t=667.32
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=right offset=1.21 region=11.18 lasted=1.15 t=668.36
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=5 mode=Sidestep avoid=- side=left offset=0.80 region=7.77 t=671.63
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=5 mode=Travel avoid=- side=left offset=0.44 region=5.47 lasted=0.63 t=672.26
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Svanhild Knutsdottir episodes=40 contacts=6 contactSeconds=4.2 t=680.08
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Bothild Guthormsdottir episodes=36 contacts=4 contactSeconds=2.2 t=680.08
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=- side=left offset=0.49 region=2.11 t=687.85
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=- side=left offset=0.44 region=0.00 lasted=1.05 t=688.90
+[Info   : Unity Log] 10/28/2026 13:04:07: Random event set:army_theelder
+
+[Info   : Unity Log] 10/28/2026 13:04:07: Starting music CombatEventL2
+
+[Warning:Living World C.O.R.E. NPC] [LWC] female voice 'warcry' first use: 3 of 3 clips alive
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=warcry clip=03__voice_female_a_battle_shout_01
+[Info   : Unity Log] 10/28/2026 13:04:08: Spawned Greydwarf x 3
+
+[Info   : Unity Log] 10/28/2026 13:04:08: Spawned Greydwarf x 1
+
+[Info   : Unity Log] 10/28/2026 13:04:08: Spawned Greydwarf x 2
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=warcry clip=02__voice_female_a_battle_shout_07
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=1 mode=Sidestep avoid=leader side=right offset=0.40 region=4.58 t=694.28
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=1 mode=Travel avoid=leader side=right offset=0.44 region=1.05 lasted=1.17 t=695.45
+[Info   : Unity Log] 10/28/2026 13:04:14: Spawned Greyling x 1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=696.44
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=696.44
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=698.50
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=700.54
+[Info   : Unity Log] 10/28/2026 13:04:20: Spawned Greydwarf x 2
+
+[Info   : Unity Log] 10/28/2026 13:04:20: Spawned Greyling x 3
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=exert clip=08__voice_female_a_effort_push_fast_05
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=707.14
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=707.20
+[Warning:Living World C.O.R.E. NPC] [LWC] female voice 'hit' first use: 9 of 9 clips alive
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=hit clip=03__voice_female_a_hurt_pain_18
+[Info   : Unity Log] 10/28/2026 13:04:26: Spawned Greydwarf x 2
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=710.44
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=710.64
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=exert clip=09__voice_female_a_attack_02
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=hit clip=03__voice_female_a_hurt_pain_18
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=idle reason=lower priority t=713.80
+[Info   : Unity Log] 10/28/2026 13:04:32: Spawned Greydwarf x 1
+
+[Info   : Unity Log] 10/28/2026 13:04:38: Spawned Greydwarf x 2
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=alerted clip=01__voice_female_a_expression_emote_03
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=720.14
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=exert clip=09__voice_female_a_attack_02
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=hit clip=03__voice_female_a_hurt_pain_18
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=hit reason=cooldown t=721.85
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=cooldown t=722.44
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=722.84
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=cooldown t=723.74
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=725.80
+[Info   : Unity Log] 10/28/2026 13:04:44: Spawned Greydwarf x 1
+
+[Info   : Unity Log] 10/28/2026 13:04:44: Spawned Greyling x 2
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=726.00
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=alerted clip=01__voice_female_a_expression_emote_03
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=727.40
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=idle clip=01__voice_female_a_laugh_14
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=hit clip=08__voice_female_a_hurt_pain_09
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=hit reason=chance t=729.21
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=729.50
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=exert clip=07__voice_female_a_effort_quick_action_04
+[Info   : Unity Log] 10/28/2026 13:04:50: Spawned Greydwarf x 2
+
+[Info   : Unity Log] 10/28/2026 13:04:55: Adding item ArrowWood x7
+
+[Info   : Unity Log] 10/28/2026 13:04:56: Spawned Greydwarf x 2
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=0 mode=Sidestep avoid=leader side=left offset=0.53 region=0.50 t=738.08
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=0 mode=Travel avoid=leader side=left offset=0.44 region=2.39 lasted=1.04 t=739.12
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Bothild Guthormsdottir episodes=39 contacts=4 contactSeconds=2.2 t=740.17
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Svanhild Knutsdottir episodes=40 contacts=6 contactSeconds=4.2 t=742.38
+[Info   : Unity Log] 10/28/2026 13:05:00: Adding item ArrowWood x4
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=0 mode=Sidestep avoid=- side=right offset=0.26 region=0.00 t=743.54
+[Info   : Unity Log] 10/28/2026 13:05:02: Spawned Greydwarf x 1
+
+[Info   : Unity Log] 10/28/2026 13:05:02: Spawned Greyling x 1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=0 mode=Travel avoid=- side=right offset=2.24 region=3.62 lasted=1.48 t=745.02
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Bothild Guthormsdottir slot=0 mode=Sidestep avoid=leader side=left offset=0.47 region=1.98 t=749.31
+[Info   : Unity Log] 10/28/2026 13:05:08: Spawned Greyling x 1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=2 mode=Sidestep avoid=- side=left offset=0.52 region=2.27 t=750.69
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Bothild Guthormsdottir slot=0 mode=Travel avoid=leader side=left offset=0.44 region=0.00 lasted=1.69 t=751.00
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=alerted clip=02__voice_female_a_expression_emote_11
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=752.84
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=idle clip=01__voice_female_a_laugh_14
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=754.90
+[Info   : Unity Log] 10/28/2026 13:05:14: Spawned Greydwarf x 2
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=756.94
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=759.34
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=760.14
+[Info   : Unity Log] 10/28/2026 13:05:20: Spawned Greyling x 3
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=exert clip=04__voice_female_a_effort_quick_action_05
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=hit clip=02__voice_female_a_hurt_pain_12
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=765.14
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=hit clip=09__voice_female_a_hurt_pain_13
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=hit reason=cooldown t=766.54
+[Info   : Unity Log] 10/28/2026 13:05:26: Spawned Greydwarf x 1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=exert clip=06__voice_female_a_attack_05
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=cooldown t=768.90
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=hit clip=05__voice_female_a_hurt_pain_14
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=exert clip=01__voice_female_a_effort_quick_action_07
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=idle clip=03__voice_female_a_laugh_12
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=alerted clip=01__voice_female_a_expression_emote_03
+[Info   : Unity Log] 10/28/2026 13:05:32: Spawned Greydwarf x 3
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=cooldown t=774.30
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=775.80
+[Info   : Unity Log] 10/28/2026 13:05:38: Spawned Greydwarf x 2
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=alerted clip=01__voice_female_a_expression_emote_03
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=781.50
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=781.60
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=783.70
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=785.74
+[Info   : Unity Log] 10/28/2026 13:05:44: Spawned Greydwarf x 2
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=alerted clip=01__voice_female_a_expression_emote_03
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=787.80
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=788.80
+[Info   : Unity Log] 10/28/2026 13:05:50: Spawned Greydwarf x 1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=793.60
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=idle clip=03__voice_female_a_laugh_12
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=795.34
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=exert clip=09__voice_female_a_attack_02
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=cooldown t=797.80
+[Info   : Unity Log] 10/28/2026 13:05:56: Spawned Greydwarf x 1
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=alerted clip=02__voice_female_a_expression_emote_11
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=798.64
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=hit clip=04__voice_female_a_hurt_pain_01
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=800.00
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=800.74
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=802.94
+[Info   : Unity Log] 10/28/2026 13:06:02: Spawned Greydwarf x 2
+
+[Info   : Unity Log] 10/28/2026 13:06:02: Spawned Greyling x 2
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=805.00
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=807.04
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=idle clip=04__voice_female_a_laugh_09
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=alerted clip=01__voice_female_a_expression_emote_03
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=813.10
+[Info   : Unity Log] 10/28/2026 13:06:12: Stopped music CombatEventL2 at 1601397
+
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=814.90
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Svanhild Knutsdottir (female) line=exert clip=02__voice_female_a_attack_01
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Svanhild Knutsdottir episodes=41 contacts=6 contactSeconds=4.2 t=820.23
+[Info   : Unity Log] 10/28/2026 13:06:18: Adding item ArrowWood x13
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-SUMMARY Bothild Guthormsdottir episodes=41 contacts=4 contactSeconds=2.2 t=820.23
+[Info   : Unity Log] 10/28/2026 13:06:18: Adding item ArrowWood x14
+
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-ENTER Svanhild Knutsdottir slot=3 mode=Sidestep avoid=- side=left offset=0.35 region=0.00 t=820.65
+[Info   :Living World C.O.R.E. NPC] [LWC] SPACE-RELEASE Svanhild Knutsdottir slot=3 mode=Travel avoid=- side=left offset=1.72 region=0.00 lasted=0.63 t=821.28
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE Bothild Guthormsdottir (female) line=alerted clip=01__voice_female_a_expression_emote_03
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=822.30
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=822.44
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Svanhild Knutsdottir line=exert reason=chance t=826.00
+[Info   :Living World C.O.R.E. NPC] [LWC] VOICE-SKIP Bothild Guthormsdottir line=exert reason=chance t=826.10
+[Info   : Unity Log] 10/28/2026 13:06:28: Activating default element Continue
+
+[Info   : Unity Log] 10/28/2026 13:06:29: Available space to current user: 3653024821248. Saving is blocked if below: 10478190 bytes. Warnings are given if below: 20956380
+
+[Info   : Unity Log] 10/28/2026 13:06:29: Fast load set to True
+
+[Info   : Unity Log] 10/28/2026 13:06:29: Fast load counter set to 1
+
+[Info   : Unity Log] 10/28/2026 13:06:29: Minimap: compressed mapData 8389446 => 8593 bytes
+
+[Info   : Unity Log] 10/28/2026 13:06:30: Cloud Save: 101307 bytes. /characters/lwc_tester.fch.new
+
+[Info   : Unity Log] Steam writing file chunks 1 / 1, (101307 bytes)
+[Info   : Unity Log] Steam writing file chunks 1 / 1, (101311 bytes)
+[Info   : Unity Log] Steam writing file chunks 1 / 1, (101307 bytes)
+[Info   : Unity Log] 10/28/2026 13:06:30: Considering autobackup for Character. World time: 780.1797, short time: 7200, long time: 43200, backup count: 4
+
+[Info   : Unity Log] 10/28/2026 13:06:30: Skipping backup. World session not long enough.
+
+[Info   : Unity Log] 10/28/2026 13:06:30: Fast load set to False
+
+[Info   : Unity Log] 10/28/2026 13:06:30: Fast load counter set to 0
+
+[Info   : Unity Log] 10/28/2026 13:06:30: Activating default element Continue
+
+[Info   : Unity Log] 10/28/2026 13:06:30: Fast load set to True
+
+[Info   : Unity Log] 10/28/2026 13:06:30: Fast load counter set to 1
+
+[Info   : Unity Log] 10/28/2026 13:06:30: GetSaveClonePerChunk. Calculated number of actual chunk files: 9  Number of dirty chunks to save: 2 [26ms]
+
+[Info   : Unity Log] 10/28/2026 13:06:30: PrepareSave: ZDOExtraData.PrepareSave done [40ms]
+
+[Info   : Unity Log] 10/28/2026 13:06:30: Fast load set to False
+
+[Info   : Unity Log] 10/28/2026 13:06:30: Fast load counter set to 0
+
+[Info   : Unity Log] 10/28/2026 13:06:33: Activating default element Button_no
+
+[Info   : Unity Log] 10/28/2026 13:06:37: Available space to current user: 3653024772096. Saving is blocked if below: 10486640 bytes. Warnings are given if below: 20973280
+
+[Info   : Unity Log] 10/28/2026 13:06:37: Game - OnApplicationQuit
+
+[Info   : Unity Log] 10/28/2026 13:06:37: Available space to current user: 3653024772096. Saving is blocked if below: 10486640 bytes. Warnings are given if below: 20973280
+
+[Info   : Unity Log] 10/28/2026 13:06:37: Shutting down
+
+[Info   : Unity Log] 10/28/2026 13:06:37: Fast load set to True
+
+[Info   : Unity Log] 10/28/2026 13:06:37: Fast load counter set to 1
+
+[Info   : Unity Log] 10/28/2026 13:06:37: Minimap: compressed mapData 8389446 => 8593 bytes
+
+[Info   : Unity Log] 10/28/2026 13:06:37: SaveSystem.Reload for Character is done [54ms]
+
+[Info   : Unity Log] 10/28/2026 13:06:37: Cloud Save: 101307 bytes. /characters/lwc_tester.fch.new
+
+[Info   : Unity Log] Steam writing file chunks 1 / 1, (101307 bytes)
+[Info   : Unity Log] Steam writing file chunks 1 / 1, (101307 bytes)
+[Info   : Unity Log] Steam writing file chunks 1 / 1, (101307 bytes)
+[Info   : Unity Log] 10/28/2026 13:06:38: Considering autobackup for Character. World time: 780.1797, short time: 7200, long time: 43200, backup count: 4
+
+[Info   : Unity Log] 10/28/2026 13:06:38: Skipping backup. World session not long enough.
+
+[Info   : Unity Log] 10/28/2026 13:06:38: Fast load set to False
+
+[Info   : Unity Log] 10/28/2026 13:06:38: Fast load counter set to 0
+
+[Info   : Unity Log] 10/28/2026 13:06:38: ZNet Shutdown
+
+[Info   : Unity Log] 10/28/2026 13:06:38: Fast load set to True
+
+[Info   : Unity Log] 10/28/2026 13:06:38: Fast load counter set to 1
+
+[Info   : Unity Log] 10/28/2026 13:06:38: GetSaveClonePerChunk. Calculated number of actual chunk files: 9  Number of dirty chunks to save: 0 [1ms]
+
+[Info   : Unity Log] 10/28/2026 13:06:38: PrepareSave: ZDOExtraData.PrepareSave done [40ms]
+
+[Info   : Unity Log] 10/28/2026 13:06:38: Fast load set to False
+
+[Info   : Unity Log] 10/28/2026 13:06:38: Fast load counter set to 0
+
+[Info   : Unity Log] 10/28/2026 13:06:38: Unloading unused assets
+
+[Info   : Unity Log] 10/28/2026 13:06:38: Sending disconnect msg
+
+[Info   : Unity Log] ZPlayFabMatchmaking::UnregisterServer - unregistering server now. State: Uninitialized
+[Info   : Unity Log] 10/28/2026 13:06:38: Stopping build thread
+
