@@ -7,6 +7,7 @@ try {
     & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:exe "/out:$output" `
         (Join-Path $root 'EncounterAllegianceDomain.cs') `
         (Join-Path $root 'AllegianceMatrix.cs') `
+        (Join-Path $root 'AuthorableRelations.cs') `
         (Join-Path $root 'EncounterAllegiancePolicy.cs') `
         (Join-Path $root 'EncounterAllegiancePersistence.cs') `
         (Join-Path $PSScriptRoot 'EncounterAllegiancePolicyTests.cs')

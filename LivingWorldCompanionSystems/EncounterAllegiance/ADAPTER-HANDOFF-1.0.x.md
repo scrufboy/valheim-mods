@@ -50,3 +50,25 @@ registration, hidden/revealed UI, and native combat/action-owner handoff. The
 pure tests cover authority, bilateral notice, reveal permanence, witnessed
 escalation/de-escalation, matrix distinctions, idempotence, recruitment limits,
 and reload persistence; they do not claim live networking or AI integration.
+
+## Formidable authorable relation integration
+
+Port `AuthorableRelationConfig` as synchronized server configuration, not as a
+Living World-only enum. Resolve managed identity in this order: persistent
+authored faction ID, then exact prefab/profile binding. Native faction buckets
+are permitted only as the other half of an explicit pairwise selector; they do
+not become identity. Directed authored rules require both directions when
+symmetry is intended.
+
+The supplied compatibility blueprint binds `RRRN_Pillager` to `LWC.Pillagers`
+despite a stale or forced `SetFaction=Undead`, then applies one symmetric
+Pillager↔native-Undead hostility selector. This does not globally rewrite
+Undead↔Undead, ownership, taming, player/group rules, raid membership, or unknown
+pairs; a missing override must fall through to vanilla. Likewise,
+`RRRN_OrcBrute`/`Krauguk` resolve as Eitrherjar before `PlainsMonsters` filtering.
+
+The maintained runtime still needs a server target-filter hook that asks the
+resolver in both argument orders before native same-faction rejection, plus synchronized config loading,
+validation, diagnostics, and network proof. Do not install these defaults into a
+live profile or edit the current supplemental Formidable raid configuration as
+part of this policy handoff.

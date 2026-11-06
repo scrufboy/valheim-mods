@@ -32,6 +32,21 @@ humans, Pillagers, Eitrherjar, Fulings, draugr, wildlife, and other-mod actors.
 Other mods require an explicit adapter identity; an absent adapter ID fails to a
 neutral disposition, not a guessed native-faction alliance.
 
+## Authorable Formidable relation seam
+
+`AuthorableRelations` is the engine-free shape for a framework-level public API:
+mods register string faction IDs, exact prefab/profile bindings, directed
+authored relations, and explicit authored-to-native compatibility selectors.
+Identity resolution priority is persistent authored profile, then exact prefab.
+Native buckets never become authored identity.
+
+The Living World compatibility defaults bind `RRRN_Pillager` to
+`LWC.Pillagers` despite its stale/forced native `Undead` value. A pairwise
+Pillager↔native-Undead selector returns hostile in either argument order, but
+unknown pairs return no override and therefore keep vanilla behavior.
+Undead↔Undead is not rewritten. `RRRN_OrcBrute` and `Krauguk` similarly preserve Eitrherjar identity
+instead of inheriting `PlainsMonsters` as story allegiance.
+
 Accepted-request travel remains a temporary aid agreement owned by request and
 party policy. It must retain this `PersonId`, relationship, wounds, and personal
 equipment; it is not recruitment. A verified destination and any bounded hostile

@@ -21,6 +21,16 @@ namespace LivingWorld.CompanionSystems.EncounterAllegiance
         FactionIdentity Resolve(object nativeCharacter);
     }
 
+    public interface IAuthorableFactionAdapter
+    {
+        // Prefer the persistent authored profile ID, then an exact registered
+        // prefab binding. Never promote native Character.Faction into identity.
+        AuthoredFactionIdentity ResolveAuthoredIdentity(object nativeCharacter);
+        // False means no authored override: preserve vanilla tame, player,
+        // group, and native faction behavior unchanged.
+        bool TryResolveRelation(object observer, object target, out Disposition disposition);
+    }
+
     public interface INativeCombatHandoff
     {
         void CommitTarget(string personId, object nativeTarget);

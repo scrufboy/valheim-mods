@@ -72,6 +72,40 @@ class EncounterAllegiancePolicyTests
         Check(restored.PersonId == revealed.PersonId && restored.CampId == revealed.CampId && restored.IdentityRevealed, "IDs and reveal survive reload");
         Check(restored.Relationship == Relationship.Unknown && restored.RevealedName == "Runa", "relationship and identity survive reload");
         Check(!EncounterAllegiancePersistence.TryRead(saved.Replace("lwc-encounter-allegiance-v1", "future"), out restored), "future schema fails closed");
+
+        AuthorableRelationResolver authored = new AuthorableRelationResolver(LivingWorldRelationDefaults.Create());
+        AuthoredFactionIdentity authoredIdentity;
+        Check(authored.TryResolve(null, "RRRN_Pillager", "Undead", out authoredIdentity) &&
+            authoredIdentity.FactionId == LivingWorldRelationDefaults.Pillagers, "Pillager exact binding overrides inherited Undead bucket");
+        Check(authored.TryResolve(null, "RRRN_OrcBrute", "PlainsMonsters", out authoredIdentity) &&
+            authoredIdentity.FactionId == LivingWorldRelationDefaults.Eitrherjar, "OrcBrute exact binding preserves Eitrherjar identity");
+        Check(authored.TryResolve(null, "Krauguk", "PlainsMonsters", out authoredIdentity) &&
+            authoredIdentity.FactionId == LivingWorldRelationDefaults.Eitrherjar, "Krauguk compatibility alias preserves Eitrherjar identity");
+        Check(!authored.TryResolve(null, "Draugr", "Undead", out authoredIdentity), "native Undead never becomes authored identity");
+        Check(authored.TryResolve(LivingWorldRelationDefaults.Draugr, "Draugr", "Undead", out authoredIdentity) &&
+            authoredIdentity.Source == "persistent-profile", "authored Draugr profile resolves independently of native bucket");
+        Check(authored.Get(LivingWorldRelationDefaults.Draugr, LivingWorldRelationDefaults.Pillagers) == Disposition.Hostile &&
+            authored.Get(LivingWorldRelationDefaults.Pillagers, LivingWorldRelationDefaults.Draugr) == Disposition.Hostile,
+            "Draugr and Pillagers are mutually hostile");
+        Disposition authoredDisposition;
+        Check(!authored.TryGet("unregistered.mod.faction", LivingWorldRelationDefaults.Pillagers, out authoredDisposition),
+            "unregistered pair explicitly defers to vanilla");
+        AuthoredFactionIdentity pillagerIdentity;
+        Check(authored.TryResolve(null, "RRRN_Pillager", "Undead", out pillagerIdentity), "Pillager identity available for override");
+        Check(authored.TryGetOverride(pillagerIdentity, "Undead", null, "Undead", out authoredDisposition) &&
+            authoredDisposition == Disposition.Hostile, "Pillager first argument is hostile to native Undead target");
+        Check(authored.TryGetOverride(null, "Undead", pillagerIdentity, "Undead", out authoredDisposition) &&
+            authoredDisposition == Disposition.Hostile, "Pillager second argument is hostile to native Undead observer");
+        Check(!authored.TryGetOverride(null, "Undead", null, "Undead", out authoredDisposition),
+            "Undead versus Undead has no override and stays vanilla");
+
+        AuthorableRelationConfig directedConfig = new AuthorableRelationConfig();
+        directedConfig.Factions.Add(new AuthoredFaction { Id = "mod.guards" });
+        directedConfig.Factions.Add(new AuthoredFaction { Id = "mod.trespassers" });
+        directedConfig.Relations.Add(new AuthoredRelation { ObserverFactionId = "mod.guards", TargetFactionId = "mod.trespassers", Disposition = Disposition.Hostile });
+        AuthorableRelationResolver directed = new AuthorableRelationResolver(directedConfig);
+        Check(directed.Get("mod.guards", "mod.trespassers") == Disposition.Hostile &&
+            directed.Get("mod.trespassers", "mod.guards") == Disposition.Neutral, "relations are freely authorable and directed");
         Console.WriteLine("EncounterAllegiancePolicyTests PASS: " + checks + " checks");
     }
 }
