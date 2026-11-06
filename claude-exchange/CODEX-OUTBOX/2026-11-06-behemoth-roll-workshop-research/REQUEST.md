@@ -1,11 +1,13 @@
-# Owner research and feedback handoff — 6 November 2026
+# Active Behemoth implementation — latest owner direction
 
-Brian: “Research if it's possible having that attack attached and those animations attached.” Brian: “Update the right chats for this.”
+Read OWNER-UPDATE-SOUND-ENVIRONMENT.md first. It supersedes the earlier research-only status and conflicting long-roar/large-damage proposals in HANDOFF.md.
 
-Read HANDOFF.md completely. Coordinate with existing runtime, animation, appearance, Workshop and Neck faction owners. Return an evidence-backed feasibility/design response; these research questions do not authorize an unreviewed implementation or installation.
+Brian has explicitly authorized implementation in the Workbench execution chat. Existing root owns it: current Behemoth Player-roll preview first, then additive rage/adrenaline roll with cooldown, near-bash damage, building/tree collision, knockback/stagger, brief recovery and fast reacquisition. All three native Brute attacks stay.
 
-Carry all feedback: human forward roll as charged Behemoth body attack without replacing bash/rage bash; binding/trinket build-up semantics unresolved; hidden manual Workshop dance/capture; low mustache; saved beard/mustache/ring placement; inspect hair/beard physics first, band color and actual normal maps; original Souls Neckman with credited Fantu robes, staff/lead, shaman self/ally protection and distinct Behemoth binding aura; ruin treasure/poison encounter and deliberate skin/strength/location variants.
+Brian reports Workshop 0.5.25 / actual Behemoth 0.1.28 playing Player_animator Base Layer.Dodge / Dive, pathID -8031980558117531977, 1.5 seconds, native speed 1.7, 47 matched tracks. No game launched or gameplay proof claimed.
 
-Current 0.1.26 installation is reported by the Workbench cloth receipt; this session did not inspect installed Windows bytes or prove motion. Workshop browser has no native cloth simulator. Preserve one canonical standalone/LWC creature build and optional faction integration boundary.
+Required: occasional surprising conversion from apparent bash to roll, no big advance roar; distinct launch exertion, real-contact impact, and zombie-pack recovery/exhaustion or relief one-shot. Heavy ground rumble, contact debris/smoke, surface response, snow tracks and real tree/building damage are required. Exact audio suitability awaits owner audition.
 
-No live direct-chat delivery is claimed. These committed shared handoffs are the delivery mechanism.
+Root's creature-local temporary PlayableGraph is a proposed implementation path. Do not start competing source edits. Faction correction remains with the existing encounter-allegiance owner; reported installed Pillager forced Undead and Krauguk Plains findings are preserved in the update.
+
+Retain the earlier separate Workshop dance/accessory-fitting/appearance and Neck-shaman/ruin/variant requests in HANDOFF.md. Do not treat these added requirements as already gameplay-proven or silently broaden implementation ownership. Shared committed handoffs are the delivery mechanism; no direct message into a separate live conversation is claimed.

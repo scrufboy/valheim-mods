@@ -1,3 +1,5 @@
+> **SUPERSEDING OWNER UPDATE — 6 November 2026:** Active implementation is authorized in the Workbench execution chat and belongs to its existing root. Read [OWNER-UPDATE-SOUND-ENVIRONMENT.md](OWNER-UPDATE-SOUND-ENVIRONMENT.md) first: verified-as-reported Workshop roll preview, surprise timing, launch/contact/recovery audio, ground effects/snow tracks and tree/building response. Earlier research-only and conflicting roar/damage proposals below are historical. No in-game proof is claimed.
+
 LIVING WORLD C.O.R.E. — DRAUGR BEHEMOTH ANIMATION AND WORKSHOP RESEARCH
 Recorded 6 November 2026 (America/New_York)
 Status: SOURCE-INSPECTED feasibility and owner-feedback handoff. No attack, editor control or shaman gameplay was built by this research session.
