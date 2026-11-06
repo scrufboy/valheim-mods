@@ -414,3 +414,7 @@ boss-like, suitable for deliberate swamp/Bonemass-themed raid tests.
 Reclamation planning and Gale interoperability research now have dedicated
 chats; Gale installation/replacement is not authorized by that research idea.
 Full scope: docs/development/NECK-MARAUDER-UNDEAD-COLOSSUS-SCOPE-2026-11-03.md.
+
+## 2026-11-06 — Behemoth roll, Workshop fitting and Neck shaman exploration (Brian)
+
+Explicit actions: research feasibility and update the right chats through the shared handoff. This is design/research, not installation authority. Preserve the approved Behemoth and existing bash/rage bash. Explore a charged human-roll body attack, private manual dance previews, saved per-part beard/mustache/ring fitting, and the original Souls Neckman as robed shaman with self/ally protection plus a distinct binding aura/tether. Low mustache, hair physics, hair bands and effective normal maps require inspection. Keep standalone and LWC on one canonical creature build; optional faction/world expansion remains separate. Full direction and unresolved charge/clip/geometry details: CODEX-OUTBOX/2026-11-06-behemoth-roll-workshop-research/HANDOFF.md. All existing identities remain unchanged.
