@@ -33,6 +33,7 @@ $requiredLivingWorldPages = @(
     '"Player"',
     '"Items / Spawn"',
     '"World"',
+    '"Site Survey"',
     '"Terrain"',
     '"Map / Admin"',
     '"Danger"',
@@ -83,3 +84,4 @@ if ($pageCount -ne $requiredLivingWorldPages.Count) {
     LivingWorldPages = $pageCount
     InterfacePolicy = 'Existing pages, commands, layout, and original feature surface are build-enforced.'
 } | ConvertTo-Json
+
