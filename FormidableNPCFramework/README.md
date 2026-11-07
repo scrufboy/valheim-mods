@@ -1,5 +1,9 @@
 # Formidable NPC Framework
 
+Latest integration receipt: [parallel swamp checkpoint](PARALLEL-SWAMP-STATUS-2026-11-07.md). Native shaman registration source compiles; full raid and tiny model remain blocked on the documented runtime/source gaps. No game acceptance is claimed.
+
+Active swamp work: [Shaman behavior and full-faction trial](SHAMAN-AND-SWAMP-TRIAL-2026-11-07.md). Source now includes the control policy and bounded raid compiler; native actor/executor and live encounter acceptance remain separate requirements.
+
 November 7 source development: see [the full-roster execution update](DEVELOPMENT-2026-11-07.md). The lossless Souls roster reader and FormidableAI dart proposal module are implemented and offline-tested. Native conversion/execution remains incomplete; this is not yet an installable RRR replacement. [Content attribution](CONTENT-CREDITS.md) preserves Fantu's authorized contribution separately from the framework.
 
 **Working product name.** This is the standalone, community-usable NPC authoring

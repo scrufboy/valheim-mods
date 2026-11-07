@@ -1,0 +1,330 @@
+{
+  "format": "lwc-formidable-authoring-roster-status",
+  "schemaVersion": 1,
+  "asOf": "2026-11-07",
+  "installable": false,
+  "purpose": "Read-only evidence and authoring handoff; not consumed by the game or Workbench.",
+  "identityPolicy": "Preserve all six Souls runtime identities and source definitions. No prefab rename, save migration, native override or endpoint is authorized by this manifest.",
+  "loreAuthority": [
+    "valheim-mods/LivingWorldCORE/FACTION-AND-PEOPLES-BIBLE.md",
+    "valheim-mods/LivingWorldCORE/NAMING-CANON.md",
+    "valheim-mods/docs/design/SWAMP-TEMPLE-MIREKIN-2026-11-07.md"
+  ],
+  "constraints": [
+    "Ground NPCs and active raid tests first; temple/world relocation deferred.",
+    "Bonemass origin/model/AI/attacks/summons/progression remain unchanged; existing swamp undead retained.",
+    "Existing Behemoth fallen-hero, hoard, enslavement and binding lore unchanged.",
+    "Stitched bodies, faces-in-skin and neck-built Behemoth variants are proposals only; no art applied.",
+    "No final naming decision for goblin-derived family. No child variants inferred from camp roles.",
+    "SagesVault clothing authoring requires original attribution/permission records; inventory is not a redistribution license."
+  ],
+  "actors": [
+    {
+      "roleKey": "Pillager",
+      "scope": "preserved-souls-roster",
+      "sourceRuntimePrefab": "RRRN_Pillager",
+      "formidableReplacementPrefab": null,
+      "sourceDisplayName": "Common Folk Pillager",
+      "establishedLoreIdentity": "Pillager; living Second-Breath human",
+      "evidence": [
+        {
+          "path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\config\\Souls Of The Land - Enemy Pack\\rrrnpcs.custom.CommonFolk.json",
+          "exists": true,
+          "sha256": "d54d4bdeaf67ada11effbdd6adb962e2ac4121eddfc0b3ba521392dee00461f0"
+        }
+      ],
+      "equipmentReferences": [
+        "ArmorIronLegs",
+        "ArmorWolfChest",
+        "AxeIron",
+        "Battleaxe",
+        "BowFineWood",
+        "CapeDeerHide",
+        "HelmetIron",
+        "SageHoodBlack",
+        "SageHoodBrown",
+        "SageRobeBrown",
+        "SageTunicBlack",
+        "ShieldBronzeBuckler",
+        "ShieldIronTower",
+        "ShieldKnight",
+        "SpearBronze",
+        "SwordIron",
+        "Torch"
+      ],
+      "assetStatus": "Legacy config references inventoried; per-item runtime resolution and redistribution readiness unverified. No source assets copied.",
+      "aiStatus": "Legacy behavior retained in inventory; native Formidable port pending.",
+      "buildStatus": "Existing Souls actor definition; no replacement native Formidable actor built by this manifest.",
+      "gameplayAcceptance": "not-tested-by-this-pass"
+    },
+    {
+      "roleKey": "WoodsSoul",
+      "scope": "preserved-souls-roster",
+      "sourceRuntimePrefab": "RRRN_WoodsSoul",
+      "formidableReplacementPrefab": null,
+      "sourceDisplayName": "Forest Child",
+      "establishedLoreIdentity": "Forest Guardian; ancient warden, not a human child",
+      "evidence": [
+        {
+          "path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\config\\Souls Of The Land - Enemy Pack\\rrrnpcs.custom.ForestChild1.json",
+          "exists": true,
+          "sha256": "34e0fa84c5f690b778f52e90c1e3305bc51e0e032e7659f393379ad5c95bbd1e"
+        }
+      ],
+      "equipmentReferences": [
+        "ArmorRootChest",
+        "ArmorRootLegs",
+        "CapeDeerHide",
+        "CatTail",
+        "HoodofYggdrasil",
+        "RunicAxeGreen"
+      ],
+      "assetStatus": "Legacy config references inventoried; per-item runtime resolution and redistribution readiness unverified. No source assets copied.",
+      "aiStatus": "Legacy behavior retained in inventory; native Formidable port pending.",
+      "buildStatus": "Existing Souls actor definition; no replacement native Formidable actor built by this manifest.",
+      "gameplayAcceptance": "not-tested-by-this-pass"
+    },
+    {
+      "roleKey": "Neckman",
+      "scope": "preserved-souls-roster",
+      "sourceRuntimePrefab": "RRRN_Neckman",
+      "formidableReplacementPrefab": null,
+      "sourceDisplayName": "Swamp Neckman",
+      "establishedLoreIdentity": "Fen Draugr; existing Neckman identity retained",
+      "evidence": [
+        {
+          "path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\config\\Souls Of The Land - Enemy Pack\\rrrnpcs.custom.Neckman.json",
+          "exists": true,
+          "sha256": "1417af7014ffa458d6947b86be376c73687f093beda10e1549abbbb1bfe8c1db"
+        }
+      ],
+      "equipmentReferences": [
+        "ArmorRootChest",
+        "ArmorRootLegs",
+        "CapeTrollHide",
+        "CatTail",
+        "RuneBowPurple",
+        "ShieldBronzeBuckler",
+        "SpearWolfFang",
+        "neckhead"
+      ],
+      "assetStatus": "Legacy config references inventoried; per-item runtime resolution and redistribution readiness unverified. No source assets copied.",
+      "aiStatus": "Legacy behavior retained in inventory; native Formidable port pending.",
+      "buildStatus": "Existing Souls actor definition; no replacement native Formidable actor built by this manifest.",
+      "gameplayAcceptance": "not-tested-by-this-pass"
+    },
+    {
+      "roleKey": "NinoBosque",
+      "scope": "preserved-souls-roster",
+      "sourceRuntimePrefab": "RRRN_NinoBosque",
+      "formidableReplacementPrefab": null,
+      "sourceDisplayName": "Black Forest Child",
+      "establishedLoreIdentity": "Forest Guardian; blue/frost variant, not a human child",
+      "evidence": [
+        {
+          "path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\config\\Souls Of The Land - Enemy Pack\\rrrnpcs.custom.NinoBosque.json",
+          "exists": true,
+          "sha256": "16fbd9c72d91fb3a4707e75b9c4cc2b01ad304ffffbf38cd20d1a7d0902cef49"
+        }
+      ],
+      "equipmentReferences": [
+        "ArmorRootChest",
+        "ArmorRootLegs",
+        "CapeTrollHide",
+        "CatTail",
+        "EphemeralHelm",
+        "RunicAxeBlue"
+      ],
+      "assetStatus": "Legacy config references inventoried; per-item runtime resolution and redistribution readiness unverified. No source assets copied.",
+      "aiStatus": "Legacy behavior retained in inventory; native Formidable port pending.",
+      "buildStatus": "Existing Souls actor definition; no replacement native Formidable actor built by this manifest.",
+      "gameplayAcceptance": "not-tested-by-this-pass"
+    },
+    {
+      "roleKey": "OrcBrute",
+      "scope": "preserved-souls-roster",
+      "sourceRuntimePrefab": "RRRN_OrcBrute",
+      "formidableReplacementPrefab": null,
+      "sourceDisplayName": "Krauguk Legions",
+      "establishedLoreIdentity": "Eitrherjar Legionary; undead war-captain",
+      "evidence": [
+        {
+          "path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\config\\Souls Of The Land - Enemy Pack\\rrrnpcs.custom.Orcs.json",
+          "exists": true,
+          "sha256": "8cad5919eaeb4f2c1fea6b78eb8005cd24950dd884d2afae45d042cbffdf94fd"
+        }
+      ],
+      "equipmentReferences": [
+        "ArmorIronChest",
+        "ArmorWolfLegs",
+        "AtgeirBlackmetal",
+        "Battleaxe",
+        "CapeDeerHide",
+        "GrimAgeChaosWarrior",
+        "GrimAgeHornedHelm",
+        "MaceIron",
+        "ShieldBoneTower",
+        "SpearElderbark",
+        "SwordBlackmetal",
+        "Torch"
+      ],
+      "assetStatus": "Legacy config references inventoried; per-item runtime resolution and redistribution readiness unverified. No source assets copied.",
+      "aiStatus": "Legacy behavior retained in inventory; native Formidable port pending.",
+      "buildStatus": "Existing Souls actor definition; no replacement native Formidable actor built by this manifest.",
+      "gameplayAcceptance": "not-tested-by-this-pass"
+    },
+    {
+      "roleKey": "Servant",
+      "scope": "preserved-souls-roster",
+      "sourceRuntimePrefab": "RRRN_Servant",
+      "formidableReplacementPrefab": null,
+      "sourceDisplayName": "Corrupted Servant",
+      "establishedLoreIdentity": "Myrkvidr Thrall / Corrupted Servant",
+      "evidence": [
+        {
+          "path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\config\\Souls Of The Land - Enemy Pack\\rrrnpcs.custom.Servant.json",
+          "exists": true,
+          "sha256": "42b0b289196f1eea378408f0aea18fa23768db32b933dcc65b9ed555d80b3f02"
+        }
+      ],
+      "equipmentReferences": [
+        "ArmorRootLegs",
+        "HelmetRoot",
+        "RunicSwordGreen",
+        "SageRobeBlack"
+      ],
+      "assetStatus": "Legacy config references inventoried; per-item runtime resolution and redistribution readiness unverified. No source assets copied.",
+      "aiStatus": "Legacy behavior retained in inventory; native Formidable port pending.",
+      "buildStatus": "Existing Souls actor definition; no replacement native Formidable actor built by this manifest.",
+      "gameplayAcceptance": "not-tested-by-this-pass"
+    },
+    {
+      "roleKey": "marauder",
+      "scope": "existing-native-creature",
+      "sourceRuntimePrefab": "LWC_MarshMarauder_Prototype",
+      "formidableReplacementPrefab": null,
+      "sourceDisplayName": "Neck Marauder",
+      "packageVersion": "0.3.4",
+      "assetPath": "Assets/LWCPrepared/FrogPickaxes007/P_Frog_Pickaxes007.prefab",
+      "bundleExpectedSha256": "e368a0ad8c42875f365c1543cedc0ab25b3b4d923643a6f779e7acc5c1dac8ed",
+      "bundleHashMatches": true,
+      "evidence": [
+        {
+          "path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\plugins\\LivingWorldCORE-Marsh_Marauder_Prototype\\manifest.json",
+          "exists": true,
+          "sha256": "4e289889bc73d4ca38ab896a924fd218f7435288ade1cdc9ee57747c49d964bf"
+        },
+        {
+          "path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\plugins\\LivingWorldCORE-Marsh_Marauder_Prototype\\LWC-MarshMarauder\\marauder.json",
+          "exists": true,
+          "sha256": "1acb0fd607dcfc798aaff9337b3284b2dcdd4aec9042ed9af9fac24e3c1b98ad"
+        },
+        {
+          "path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\plugins\\LivingWorldCORE-Marsh_Marauder_Prototype\\LWC-MarshMarauder\\000-p_frog_pickaxes007.bundle",
+          "exists": true,
+          "sha256": "e368a0ad8c42875f365c1543cedc0ab25b3b4d923643a6f779e7acc5c1dac8ed"
+        }
+      ],
+      "assetStatus": "Original bundle present; hash matched installed definition. No asset copied.",
+      "aiStatus": "Existing creature runtime; Formidable raid/control integration pending.",
+      "buildStatus": "Existing installed package observed read-only; no replacement built or installed by this manifest.",
+      "gameplayAcceptance": "Conditional roster member: owner doubts Frog Marauder fit; combat/appearance acceptance pending."
+    },
+    {
+      "roleKey": "behemoth",
+      "scope": "existing-native-creature",
+      "sourceRuntimePrefab": "LWC_UndeadColossus_Test",
+      "formidableReplacementPrefab": null,
+      "sourceDisplayName": "Draugr Behemoth",
+      "packageVersion": "0.1.41",
+      "assetPath": "Assets/AngeloMaN87/Inca Pack (Pixelated Texture)/Prefabs/AndeanColossus.prefab",
+      "bundleExpectedSha256": "b0e21d4e4024cd505afe9f59c47f57451d4750686c6853bcc36609612454304e",
+      "bundleHashMatches": true,
+      "evidence": [
+        {
+          "path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\plugins\\LivingWorldCORE-Undead_Colossus_Prototype\\manifest.json",
+          "exists": true,
+          "sha256": "5a6ef7fe660f0a6f0c2962090247a91098349e2fd1c9dad061342d0799c8a993"
+        },
+        {
+          "path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\plugins\\LivingWorldCORE-Undead_Colossus_Prototype\\LWC-UndeadColossus\\colossus.json",
+          "exists": true,
+          "sha256": "91e133dad33f80894e9bfbe010b6303c88241f43d1e0e5915d4a21c49b82bc2e"
+        },
+        {
+          "path": "C:\\Users\\scruf\\AppData\\Roaming\\r2modmanPlus-local\\Valheim\\profiles\\LWC Formidable Arena\\BepInEx\\plugins\\LivingWorldCORE-Undead_Colossus_Prototype\\LWC-UndeadColossus\\000-andeancolossus.bundle",
+          "exists": true,
+          "sha256": "b0e21d4e4024cd505afe9f59c47f57451d4750686c6853bcc36609612454304e"
+        }
+      ],
+      "assetStatus": "Original bundle present; hash matched installed definition. No asset copied.",
+      "aiStatus": "Existing creature runtime; Formidable raid/control integration pending.",
+      "buildStatus": "Existing installed package observed read-only; no replacement built or installed by this manifest.",
+      "gameplayAcceptance": "Owner likes Behemoth appearance; club/beard/roll/dive work remains."
+    },
+    {
+      "roleKey": "neckman-shaman",
+      "scope": "additive-request",
+      "sourceRuntimePrefab": null,
+      "formidableReplacementPrefab": null,
+      "sourceDisplayName": "Neckman Shaman (working role)",
+      "evidence": [
+        {
+          "path": "LWCModelSkinStudio/exchange/temple-faction/2026-11-07/Red-Neck-Shaman/project.json",
+          "exists": true,
+          "sha256": "23c4311ca37263bcce9ec24b7cabc6fe768be088d29405dd5a81ac0d34ba1c9f"
+        },
+        {
+          "path": "LWCModelSkinStudio/exchange/temple-faction/2026-11-07/Red-Neck-Shaman/Workbench/Recipes/Red-Neck-Shaman/recipe.json",
+          "exists": true,
+          "sha256": "78fa849fb9f7d39f6d61e3382cb75ef4eee2b679e4017bf582f1fe6deabc3813"
+        }
+      ],
+      "assetReferences": [
+        "Player (0066870867c94f5f2a25)",
+        "neckhead (MadHatter)",
+        "SageRobeRed (SagesVault)",
+        "SageFireStaff (SagesVault)"
+      ],
+      "assetStatus": "Workbench appearance prototype exists; this is not a native game actor.",
+      "aiStatus": "ShamanControlPolicy source policy; native execution, shields, projectiles, minions, tether and faction integration pending.",
+      "buildStatus": "No registered or installed shaman prefab established by this roster pass.",
+      "gameplayAcceptance": "not-tested"
+    },
+    {
+      "roleKey": "tiny-blowgun-goblin",
+      "scope": "additive-request",
+      "sourceRuntimePrefab": null,
+      "formidableReplacementPrefab": null,
+      "sourceDisplayName": "Tiny adult blowgun goblin; fetish/Mirekin names provisional",
+      "assetReferences": [
+        "Goblin Scout1 (Unity Asset Store 393680; owner acquired)",
+        "Low-poly spears (Unity Asset Store 66326; owner acquired)"
+      ],
+      "assetStatus": "Acquired source files not located in inspected caches/project asset directories as of this pass; no model/proportion/rig/weapon edits applied.",
+      "aiStatus": "DartSkirmisherModule source policy; native attack/executor integration pending.",
+      "buildStatus": "No model export, native prefab, bundle, registration or gameplay proof.",
+      "gameplayAcceptance": "not-tested"
+    },
+    {
+      "roleKey": "random-neck-variants",
+      "scope": "optional-request",
+      "sourceRuntimePrefab": null,
+      "formidableReplacementPrefab": null,
+      "assetStatus": "No authored variants approved or built.",
+      "aiStatus": "No separate runtime defined.",
+      "buildStatus": "deferred",
+      "gameplayAcceptance": "not-tested"
+    },
+    {
+      "roleKey": "shoulder-composite",
+      "scope": "later-request",
+      "sourceRuntimePrefab": null,
+      "formidableReplacementPrefab": null,
+      "assetStatus": "Singles must be completed first; no composite model/animation applied.",
+      "aiStatus": "ONE composite entity; top hit kills top -> bare-headed bottom solo; bottom hit kills bottom -> headdress top solo; simultaneous kill -> no survivor. Exactly-once replacement and loot/network handling required. Earlier two-actor stacking design superseded.",
+      "buildStatus": "deferred",
+      "gameplayAcceptance": "not-tested"
+    }
+  ]
+}
