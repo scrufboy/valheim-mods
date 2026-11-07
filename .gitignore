@@ -61,6 +61,10 @@ LivingWorldHumanNPC/*.zip
 LivingWorldEnemyFamilies/build/
 LivingWorldEnemyFamilies/dist/
 
+# Private lossless Souls roster authoring input and Python test cache
+/build/formidable-roster-*/
+FormidableNPCFramework/**/__pycache__/
+
 # Build results on 'Bin' directories
 **/[Bb]in/*
 # Uncomment if you have tasks that rely on *.refresh files to move binaries

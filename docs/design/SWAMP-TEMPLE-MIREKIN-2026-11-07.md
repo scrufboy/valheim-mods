@@ -1,4 +1,6 @@
 # LWC swamp temple and Mirekin family - owner design update
+
+LATEST OWNER EXECUTION ORDER - November 7: full Souls roster, ground creatures and native FormidableAI tests first. ONE composite mounted creature with hit-region-based single-survivor replacement supersedes the older two-actor stacking section below. See the Formidable execution update and valheim-mods/FormidableNPCFramework/DEVELOPMENT-2026-11-07.md. The existing red Neckman Shaman is visibly opened/animated in Workbench0.5.28; it is not a completed game actor. All Behemoth lore remains intact.
 Date: 2026-11-07 (America/New_York).
 Authority: Brian's current swamp, goblin, spear and documentation directions.
 Status: design requirements and proposed names; no creature build, profile installation, world migration or gameplay acceptance is established by this document.

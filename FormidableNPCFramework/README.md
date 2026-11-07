@@ -1,5 +1,7 @@
 # Formidable NPC Framework
 
+November 7 source development: see [the full-roster execution update](DEVELOPMENT-2026-11-07.md). The lossless Souls roster reader and FormidableAI dart proposal module are implemented and offline-tested. Native conversion/execution remains incomplete; this is not yet an installable RRR replacement. [Content attribution](CONTENT-CREDITS.md) preserves Fantu's authorized contribution separately from the framework.
+
 **Working product name.** This is the standalone, community-usable NPC authoring
 and runtime framework that will replace the capabilities currently obtained from
 RRRCore in the private lab stack.
