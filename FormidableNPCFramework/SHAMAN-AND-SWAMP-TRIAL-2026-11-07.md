@@ -42,6 +42,15 @@ Raid compiler/routing tests and roster evidence validator are independent source
 ## App authoring
 This should ultimately be one authored shaman behavior profile with protection recipients/exclusions, ranged spell, reinforcement limits and beast-control settings, consumed by one authoritative executor. The present Workbench has no supported complete shaman-behavior export/consumer. Do not add inert UI controls or silently treat this source contract as an installed feature.
 
+## Ground staff lightning — accepted additional attack
+Brian selected the actual Ground Staff Attack preview on November 7. Add a staff-ground discharge that travels along valid ground toward the authorized player, then arcs to other hostile players and staggers those hit. Keep the existing ranged blast. Protection, retreat and beast control retain their priorities; this is another action of the same FormidableAI owner.
+
+The installed Player controller maps Ground Staff Attack to `staff_shield`, Base Layer state 91, clip index 575. The native `Hit` event is at 1.078104138 seconds of clip time, not a guessed wall-clock timer. A cast receipt must distinguish this offensive action from a shield cast sharing that gesture. `staff_thunder` maps a different clip; StaffLightning's 12-projectile shot is also a different attack. Native chain-lightning effect prefabs supply presentation, not a verified targeting/chain implementation.
+
+Source policy now selects `GroundLightning` only with cooldown readiness, a validated ground origin/path and the authorized combat target. It uses the existing attack/facing arbitration and preserves ranged-blast fallback. Terrain sampling, visible ground propagation, unique hostile-player hop selection, finite hop/range caps, per-cast hit/stagger receipts, cooldown consumption and owner migration belong to the native executor. No arcs through walls, repeated hits on the same player, friendly hits, recursive chains or instant repeated staggers. Damage, chain distance/count and recovery remain explicit tuning inputs for playtesting.
+
+Source checks pass: 66 shaman checks, 19 dart checks and seven roster importer tests. This addition is not installed combat yet; preview animation is not proof of electrical effects, stagger or multiplayer execution.
+
 ## Habitat scope
 Add inhabited swamp ruins/camps around authored populations first. The cached KumaBeer Stylized ancient modular ruins package is an available source to inspect. Alternative crypt rooms/locations are a separate later prototype; no replacement of existing worlds or Bonemass locations has run.
 Published Jotunn data generated for Valheim1.0.7 lists GoblinHut03 with Goblin, GoblinArcher, GoblinBrute and GoblinShaman. This is a version-qualified role benchmark, not a verified count for every local camp.

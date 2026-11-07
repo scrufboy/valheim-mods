@@ -6,7 +6,7 @@ using LivingWorld.FormidableAI.Kernel;
 namespace LivingWorld.FormidableAI.Shaman
 {
     public enum ShamanMode { Support, Controlling, Retreating, Rebinding, Dead }
-    public enum ShamanAction { None, Retreat, Rebind, ShieldSelf, ShieldAlly, SummonMinion, SummonBeast, RangedBlast }
+    public enum ShamanAction { None, Retreat, Rebind, ShieldSelf, ShieldAlly, SummonMinion, SummonBeast, RangedBlast, GroundLightning }
     public sealed class ShamanState
     {
         public ShamanMode Mode;
@@ -23,6 +23,7 @@ namespace LivingWorld.FormidableAI.Shaman
         public string ActorIdentity, BeastIdentity, AuthorizedTargetIdentity, ShieldTargetIdentity;
         public string EncounterIdentity;
         public bool OwnerReady, Alive, EncounterActive, ThreatVisible, ClearShot, BlastReady;
+        public bool GroundLightningReady, GroundOriginValid, GroundAttackPathClear;
         public bool BeastAlive, PreviousBeastGone, BeastClaimAvailable, LinkClear, SafeFromThreat, EscapeReachable;
         public bool SelfShieldNeeded, AllyShieldNeeded, ShieldReady, ShieldAllyEligible, ShieldTargetIsBehemoth;
         public bool MinionReady, SpawnPointValid, MinionPrefabAvailable;
@@ -135,6 +136,10 @@ namespace LivingWorld.FormidableAI.Shaman
                     !String.IsNullOrEmpty(f.EncounterIdentity)&&state.BeastSummonedEncounter!=f.EncounterIdentity&&
                     f.BeastSummonReady&&f.BeastSpawnPointValid&&f.BeastPrefabAvailable&&!f.BeastSummonReserved)
                 action=ShamanAction.SummonBeast;
+            else if(f.EncounterActive&&f.ThreatVisible&&f.GroundLightningReady&&f.GroundOriginValid&&f.GroundAttackPathClear&&
+                    !String.IsNullOrEmpty(f.AuthorizedTargetIdentity)&&f.AuthorizedTargetIdentity!=f.ActorIdentity) {
+                action=ShamanAction.GroundLightning;target=f.AuthorizedTargetIdentity;
+            }
             else if(f.EncounterActive&&f.ThreatVisible&&f.ClearShot&&f.BlastReady&&
                     !String.IsNullOrEmpty(f.AuthorizedTargetIdentity)&&f.AuthorizedTargetIdentity!=f.ActorIdentity) {
                 action=ShamanAction.RangedBlast;target=f.AuthorizedTargetIdentity;
@@ -171,10 +176,11 @@ namespace LivingWorld.FormidableAI.Shaman
             if(frame==null||!frame.OwnerReady||!frame.CombatCommitted||!ShamanSettings.Finite(frame.Time)||
                !ShamanSettings.Finite(frame.HealthFraction)||frame.HealthFraction<=0)yield break;
             var d=source.Observe(frame);if(d==null||d.Sequence!=frame.Sequence||d.ActorIdentity!=frame.ActorIdentity||d.Mode==ShamanMode.Dead||d.Action==ShamanAction.None)yield break;
-            if(d.Action==ShamanAction.RangedBlast&&d.ActionTarget!=frame.AuthorizedTargetIdentity)yield break;
+            bool offensive=d.Action==ShamanAction.RangedBlast||d.Action==ShamanAction.GroundLightning;
+            if(offensive&&d.ActionTarget!=frame.AuthorizedTargetIdentity)yield break;
             DecisionDomain domains;
             if(d.Action==ShamanAction.Retreat)domains=DecisionDomain.Movement|DecisionDomain.Attack;
-            else if(d.Action==ShamanAction.RangedBlast)domains=DecisionDomain.Attack|DecisionDomain.Facing;
+            else if(offensive)domains=DecisionDomain.Attack|DecisionDomain.Facing;
             else domains=DecisionDomain.Support|DecisionDomain.Attack;
             if(d.ActionTarget!=null&&d.ActionTarget!=frame.ActorIdentity)domains|=DecisionDomain.Facing;
             yield return new CombatProposal("lwc.shaman."+d.Action.ToString().ToLowerInvariant(),domains,

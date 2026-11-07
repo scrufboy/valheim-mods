@@ -101,12 +101,23 @@ class ShamanTests : IShamanDecisionSource
         Check(Tick().Action==ShamanAction.RangedBlast,"failed/unavailable summon leaves ranged support available");
         facts.ClearShot=false;Check(Tick().Action==ShamanAction.None,"blocked spell has no melee substitute");
 
+        facts.GroundLightningReady=true;facts.GroundOriginValid=true;facts.GroundAttackPathClear=true;
+        Check(Tick().Action==ShamanAction.GroundLightning,"verified ground route can select additional electrical attack");
+        facts.GroundOriginValid=false;
+        Check(Tick().Action==ShamanAction.None,"ground attack refuses invented ground origin");
+        facts.GroundOriginValid=true;facts.GroundAttackPathClear=false;facts.ClearShot=true;
+        Check(Tick().Action==ShamanAction.RangedBlast,"unavailable ground route preserves existing ranged spell");
+        facts.GroundAttackPathClear=true;facts.ShieldReady=true;facts.SelfShieldNeeded=true;
+        Check(Tick().Action==ShamanAction.ShieldSelf,"new ground attack does not displace required self protection");
+        facts.ShieldReady=false;facts.SelfShieldNeeded=false;
+
         var module=new ShamanProposalModule(this);
         var frame=new CombatFrame(1,10,"shaman","","player",true,true,1,1,null);
         facts.ClearShot=true;Tick();
         var result=new CombatArbitrator().Evaluate(frame,new List<IFormidableCombatModule>{module});
         Check(result.LeaseFor(DecisionDomain.Attack).OwnerId==module.Id,"existing arbitrator receives spell proposal");
         Check(result.LeaseFor(DecisionDomain.Defense).IsNativeFallback,"no competing defense writer");
+        Check(result.LeaseFor(DecisionDomain.Facing).OwnerId==module.Id,"ground spell owns facing through same arbitrator");
         var deadFrame=new CombatFrame(1,10,"shaman","","player",true,true,0,1,null);
         result=new CombatArbitrator().Evaluate(deadFrame,new List<IFormidableCombatModule>{module});
         Check(result.LeaseFor(DecisionDomain.Attack).IsNativeFallback,"dead frame cannot acquire a spell lease");
