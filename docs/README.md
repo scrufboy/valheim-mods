@@ -1,5 +1,7 @@
 # Documentation
 
+Current swamp design: [temple, Mirekin family, shaman, Draugr beast and spear tiers](design/SWAMP-TEMPLE-MIREKIN-2026-11-07.md). Bonemass is unchanged. Every owning workstream must reconcile its records and push its own Git changes with an exact commit receipt.
+
 Architecture, engineering standards, behavior contracts, roadmaps, and release
 documentation shared across the repository.
 

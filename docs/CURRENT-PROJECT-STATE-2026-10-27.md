@@ -1,5 +1,7 @@
 # Current Living World C.O.R.E. project state — 2026-10-27
 
+Superseding design navigation, 2026-11-07: read [the swamp temple/Mirekin update](design/SWAMP-TEMPLE-MIREKIN-2026-11-07.md). This updates design and coordination only; historical runtime evidence below remains dated. Bonemass stays unchanged; tiny blowgun individuals precede dynamic shoulder pairs. All owners must update owned records and push their assigned Git branches.
+
 This file is the repository navigation record. It does not merge experimental or
 approved runtime branches into `main`.
 
