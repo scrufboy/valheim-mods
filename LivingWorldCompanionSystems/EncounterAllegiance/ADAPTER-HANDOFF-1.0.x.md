@@ -72,3 +72,35 @@ resolver in both argument orders before native same-faction rejection, plus sync
 validation, diagnostics, and network proof. Do not install these defaults into a
 live profile or edit the current supplemental Formidable raid configuration as
 part of this policy handoff.
+
+## Captive Behemoth integration boundary
+
+`CaptiveBehemothAllegiancePolicy` is the sole encounter relationship record for
+the binding ritual. Persist it under
+`lwc_captive_behemoth_v1_<encounterId>/<behemothId>` with expected-revision save.
+Only the current authoritative encounter owner may apply events. Replicate the
+committed record so whichever peer owns MonsterAI resolves the same instance
+relations; clients do not invent transitions.
+
+Adapters must map existing owner outputs rather than replace them:
+
+1. Shaman control reports a `BindingCompleted` event only after the native cast
+   receipt succeeds, carrying its monotonically newer binding revision.
+2. The spell/anchor owner reports `SpellBroken` only for the authored control
+   break. Chain deployment, generic stagger, eye color and arbitrary damage are
+   insufficient. Frenzy duration is explicit encounter configuration; this
+   module ships no balance default.
+3. The Behemoth owner consumes the five presentation booleans after the state
+   save commits, clears stale effects, and leaves movement/attack/damage/death to
+   the accepted creature runtime.
+4. Minion behavior reads controlled/rebinding state to protect the shaman but
+   never grants control or captor safety by itself.
+5. Relation lookup must check the exact persisted Behemoth ID in either argument
+   order before global/native faction resolution. A false result falls through.
+6. On death/unload, stop loops and clear effects. Death is terminal; unload is
+   not death. Reload and ownership transfer restore state without replaying old
+   break/bind effects.
+
+Still required outside this owner: native receipt adapters, network/CAS store,
+spell-break criteria and configured frenzy duration, presentation/effect wiring,
+minion protection execution, and live save/reload/ownership evidence.

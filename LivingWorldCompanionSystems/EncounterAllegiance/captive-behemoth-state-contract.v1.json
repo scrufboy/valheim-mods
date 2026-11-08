@@ -1,0 +1,79 @@
+{
+  "schema": "lwc-captive-behemoth-state-contract-v1",
+  "authority": "single encounter owner with expected-revision persistence",
+  "scope": "exact EncounterId plus BehemothId only",
+  "record": [
+    "EncounterId",
+    "BehemothId",
+    "ControllerId",
+    "Mode",
+    "Revision",
+    "BindingRevision",
+    "ReleaseEpoch",
+    "FrenzyUntil",
+    "AppliedEventIds"
+  ],
+  "modes": [
+    "DormantBound",
+    "Controlled",
+    "ReleasedFrenzy",
+    "ReleasedUndead",
+    "Dead"
+  ],
+  "acceptedReceipts": {
+    "shamanOwner": [
+      "BindingCompleted with verified native completion and monotonically newer BindingRevision"
+    ],
+    "spellOwner": [
+      "SpellBroken with verified authored break and explicit positive FrenzyDuration"
+    ],
+    "encounterOwner": [
+      "PhysicalDeployment",
+      "TimeAdvanced",
+      "DeathConfirmed"
+    ]
+  },
+  "notBreakEvidence": [
+    "physical chain deployment",
+    "eye color",
+    "generic damage",
+    "generic stagger",
+    "animation or visual effect alone"
+  ],
+  "relations": {
+    "DormantBound": {
+      "captorFamily": "Friendly",
+      "others": "DeferNative"
+    },
+    "Controlled": {
+      "captorFamily": "Friendly",
+      "player": "Hostile",
+      "others": "DeferNative"
+    },
+    "ReleasedFrenzy": {
+      "everyOtherValidActor": "Hostile"
+    },
+    "ReleasedUndead": {
+      "undead": "Friendly",
+      "captorFamily": "Hostile",
+      "player": "Hostile",
+      "others": "DeferNative"
+    },
+    "Dead": {
+      "all": "NoOverride"
+    }
+  },
+  "presentationOutputsAfterCommit": [
+    "ClearControlPresentation",
+    "StartFrenzyPresentation",
+    "RestoreUndeadPresentation",
+    "RestoreControlPresentation",
+    "ClearAllPresentation"
+  ],
+  "nonOwners": {
+    "behemothRuntime": "consumes committed state and presentation outputs; retains native movement, attacks, damage, death, drops and corpse",
+    "shamanRuntime": "produces bind receipts and attempts rebind; does not directly grant allegiance",
+    "minionRuntime": "reads state to protect shaman; does not mutate allegiance",
+    "globalFactionRuntime": "used only after an exact-instance lookup returns no override"
+  }
+}

@@ -14,6 +14,15 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Encounter allegiance test compilation failed: $LASTEXITCODE" }
     & $output
     if ($LASTEXITCODE -ne 0) { throw "Encounter allegiance tests failed: $LASTEXITCODE" }
+    $behemothOutput = Join-Path $PSScriptRoot 'CaptiveBehemothAllegianceTests.exe'
+    & $compiler /nologo /langversion:5 /warn:4 /warnaserror+ /optimize+ /target:exe "/out:$behemothOutput" `
+        (Join-Path $root 'EncounterAllegianceDomain.cs') `
+        (Join-Path $root 'CaptiveBehemothAllegiance.cs') `
+        (Join-Path $PSScriptRoot 'CaptiveBehemothAllegianceTests.cs')
+    if ($LASTEXITCODE -ne 0) { throw "Captive Behemoth allegiance test compilation failed: $LASTEXITCODE" }
+    & $behemothOutput
+    if ($LASTEXITCODE -ne 0) { throw "Captive Behemoth allegiance tests failed: $LASTEXITCODE" }
 } finally {
     Remove-Item -LiteralPath $output -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath (Join-Path $PSScriptRoot 'CaptiveBehemothAllegianceTests.exe') -Force -ErrorAction SilentlyContinue
 }

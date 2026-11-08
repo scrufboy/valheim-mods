@@ -36,4 +36,31 @@ namespace LivingWorld.CompanionSystems.EncounterAllegiance
         void CommitTarget(string personId, object nativeTarget);
         void YieldPeacefulControl(string personId);
     }
+
+    // One encounter authority owns this record. Shaman, Behemoth, minion and
+    // presentation owners exchange verified receipts; none owns a second copy.
+    public interface ICaptiveBehemothAllegianceStore
+    {
+        CaptiveBehemothRecord Load(string encounterId, string behemothId);
+        bool TrySave(long expectedRevision, CaptiveBehemothRecord next);
+    }
+
+    public interface ICaptiveBehemothReceiptAdapter
+    {
+        // Only an accepted native bind completion may set VerifiedBindingReceipt.
+        CaptiveBehemothEvent ReadBindingReceipt(string encounterId, string behemothId,
+            string controllerId, long bindingRevision);
+        // Physical chain deployment, generic damage and cosmetic effects are not
+        // spell breaks. The spell owner supplies the verified break receipt.
+        CaptiveBehemothEvent ReadSpellBreakReceipt(string encounterId, string behemothId);
+    }
+
+    public interface IInstanceRelationAdapter
+    {
+        // False means preserve the native/global relation. True is scoped only
+        // to the exact persisted encounter and Behemoth identities.
+        bool TryResolveCaptiveBehemoth(string encounterId, string firstActorId,
+            EncounterActorRole firstRole, string secondActorId, EncounterActorRole secondRole,
+            out InstanceDisposition disposition);
+    }
 }
