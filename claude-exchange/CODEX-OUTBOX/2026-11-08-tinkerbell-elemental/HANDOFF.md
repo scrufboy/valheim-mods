@@ -1,52 +1,38 @@
-# Tinkerbell elemental - shared owner direction, November 8
+# Tinkerbell elemental - shared implementation handoff, November 8
 
-Brian explicitly requested this handoff for Claude and the active fire/audio
-work. It records engineering direction, not approval of a finished release.
+Brian explicitly requested this handoff for Claude and the fire/audio work.
 
-Canonical full contract: repository scrufboy/lwc-valheim-workbench,
-published on main (contract commit deb48793700c1f1f82c55aca50f269bc16da0625),
-`docs/project/TINKERBELL-ELEMENTAL-CONTRACT-2026-11-08.md`.
-The local checkout is the sibling `LWCModelSkinStudio` directory; local work/valheim-workbench commit ba9b608 contains the same contract. Ordinary Git pushes are DNS-blocked; the connector published this contract/handoff only, not the complete source history.
+## Latest playtest feedback
 
-The Surtling replacement is now a fire elemental in character and presentation,
-with its core as the internal heart/power source. **Ground-oriented hover is the
-default.** Keep ground-combat decisions and native attack opportunities, with
-independent facing and travel, backward/side/diagonal leaning and synchronized
-authored turns. No constant scripted circle, scheduled climb loop, high Drake
-flight or insect dive-bomb. Temporary elevation is only two to three human
-heights, approximately4-6m, chosen for actual tactical/environmental reasons.
+Brian's direct feedback, relayed here from the Real Smoke and Fire chat: “What I witnessed was really cool behavior. I gotta see more of it. I want you to just let it know that I just saw amazing stuff in the last play. Oh my goodness.” Preserve the current effects/behavior candidate as the comparison baseline. This positive observation does not imply that every scenario, loot proposal or multiplayer feature is accepted.
 
-Poison/frost/native Wet must support a deliberate counterplay cycle:
-quench -> controlled descent -> actual acquired Land at a real support surface
--> grounded vulnerable Stunned with steam -> arms-out SpecialAttack1 reignition
-with a small telegraphed fire burst -> changed attack phase. Actual death still
-uses the final large explosion. Cancel stale attacks, preserve native damage,
-never revive zero HP, and do not heal repeatedly or stun-lock on every poison tick.
-Native Surtling poison immunity must be explicitly changed on the replacement
-for accepted poison bombs to drive this behavior; frost is already weak.
+## Current source and installed candidate
 
-Surtling Branch Recovery owns creature traversal/combat/quench/body/trail/death
-effects. Real Smoke and Fire owns world-fire adapters; current source is
-LivingWorldRealSmokeFire and its Workbench checkpoint. Keep these owners separate
-and avoid duplicate attached effect/sound writers. Audio work should provide
-auditioned smolder/crackle, steam/hiss, recovery laugh and elemental cast/burst
-candidates with exact archive/clip names and mix notes. New acquisitions are
-authoritative in Unity My Assets; local absence does not prove non-ownership.
+Canonical direction: https://github.com/scrufboy/lwc-valheim-workbench/blob/main/docs/project/TINKERBELL-ELEMENTAL-CONTRACT-2026-11-08.md
 
-Candidate19 remains installed in **LWC Surtling Flight Test** with Toolkit3.0.3
-and Server Devcommands1.116. A separate QA encounter recorded120HP,135 motion
-samples,0.50-6.30m terrain height,36 casts,four flames,death/removal and no logged
-exceptions. Brian did not see this encounter; it is not owner acceptance.
-Candidate20 is under development in
-`exchange/surtling-elemental/2026-11-07/recovery06` in the Workbench checkout.
-Preserve19. Do not start competing source edits/builders/install transactions.
+Corrected source checkpoint: work/valheim-workbench commit df384f0fb5f51430ebd03d30470e4d1eade79808, directory exchange/surtling-elemental/2026-11-07/recovery06. Read DELIVERY20.md and ELEMENTAL20-STATUS.md. Local source commit39f22dc. Ordinary pushes fail DNS; connector source checkpoints preserve remote files with non-forced leased updates. Local and remote API-created histories require later reconciliation; do not reset either side or claim all repositories fully synchronized.
 
-Brian now requests controlled Arena/raid scenarios with the acquired creature
-roster and poison/frost interactions. Coordinate baseline backup, exact installed
-versions, factions and telemetry ownership before touching that live profile.
-The Surtling source owner will supply an installable candidate and status.
+Version0.1.10 Recovery20 Package02 is installed/enabled in **LWC Surtling Flight Test**. Toolkit3.0.3 and Server Devcommands1.116 remain enabled. QA-only poison injector is disabled after testing, absent from creature ZIP. Valheim exited after testing.
 
-Cross-chat delivery through the app could not enumerate chats in this pass;
-this file is the explicit shared handoff. Read it and the canonical contract
-before continuing. A local commit is not proof of successful remote push.
+Actual controlled native damage-path poison testing completed three cycles:
+Descend -> actual contact Land ->3s vulnerable Stunned/steam -> arms-out SpecialAttack1 Reignite -> Active, phases1/2/0.120HP reduced to106.5853 without healing. Actual Searing Shards, Cinder Fan and primary fireball releases logged.129 telemetry samples; capsule-foot terrain clearance0.080-0.089m at Land; zero Error/Exception lines. This was injected HitData, not an actual thrown bomb or multiplayer test. Package01's touchdown probe caused upward avoidance; Package02 caps that probe at landing support and completed all cycles without teleport/physics bypass.
 
+Private ZIP: scrufboy-Formidable_Surtling_Female-0.1.10-Recovery20-Package02-PRIVATE.zip
+SHA256 ebe48813c5073caaffc78246040a305fb1428f0d830577b68fc07642e632738e
+Persistent download: https://chatgpt.com/library?file_id=libfile_07d89c7f0440819181c94c39fba5ca71&account_id=personal
+
+## Shared behavior contract
+
+Ground-oriented hovering fire elemental with its core as heart. Native MonsterAI sensing/hostility and actual ground combat opportunities remain. Low terrain-following buffer; independent facing/travel with forward/back/side/diagonal lean and synchronized turns. Brief tactical elevation only2-3 human heights, approximately4-6m. No scripted circles, timed climb/dive loops, high Drake flight or Deathsquito dive-bomb role. Reusable bounded environment probes; no trained machine-learning claim.
+
+Poison resistance explicitly changes Immune -> Normal on this replacement. Frost remains weak. Native Wet/damage/duration persists, including ongoing damage after leaving water until native Wet expires. Reignition does not cure Wet. Quench cancels stale native attacks and uses an18s cooldown, no zero-HP revival. Acquired NatureManufacture body flame/steam/trailing smoke/near-ground scorch and existing Inferno/Distortion attacks/death effects are bound.
+
+## Ownership and next work
+
+Surtling Branch Recovery owns creature traversal, controller, combat, quenching, body/trail/recovery/death effects and its bounded fire lease. Real Smoke and Fire owns world-fire adapters. Audio work supplies auditioned clip roles/mix notes, not a second creature writer. Need elemental cast/burst, smolder/crackle, steam/hiss and recovery laugh candidates. Current female voice remains provisional.
+
+Read the fire chat's local handoff exchange/real-smoke-fire/2026-11-08/SURTLING-OWNER-DIRECTION.md for the newer finisher/loot/recovery-boost proposals. They are pending reconciliation: the tested build still uses native drops, allows ordinary lethal damage and has no recovery healing. Do not claim the proposed kill-window/rare loot system is implemented. Acquired Elemental summon, rigid ash corpse and variant skins remain pending.
+
+Arena integration is authorized but requires baseline backup, exact roster and coordinated telemetry. Prepared manual event names: lwc_elemental_observe, lwc_elemental_poison, lwc_elemental_frost, lwc_elemental_roster. The prepared CFG is source, not proof of installation or raid execution. No multiplayer or final owner appearance acceptance claimed.
+
+Direct app thread enumeration failed again. This Git handoff is verified shared delivery; no direct message delivery to other chats is claimed. Preserve19, avoid competing source writers/Unity builders, and retain this Package02 baseline.
