@@ -1,3 +1,25 @@
+# Current reveal preview: Surtling21 Package04 + Tooler3.0.5
+
+Brian corrected the boundary explicitly: the creature IS the Formidable Surtling/fire elemental. Explosive provides player Sorceress animations, not NPC AI. Our behavior parts are FormidableAI modules. Neutral HoverCombatModule/Profile now exposes the reusable combat-motion contract; future player Sorceress needs full controller input/animation/telemetry integration, not an assertion that the NPC API already supplies that.
+
+Ground-oriented means hovering just ABOVE terrain with a visible buffer. Contact Land is deliberate quench behavior. Latest reward correction: maximum reward for finishing the brief peak-danger steaming window; thoroughly soaked/rain/drowned defeat gives NO reward, superseding earlier coin proposals. Finisher/steam-damage/reward gate is not implemented in this candidate; native drops/ordinary lethal damage remain.
+
+Corrected source checkpoint 5e7a93ee23fec243df806b417a938063da06dd3d on work/valheim-workbench, scrufboy/lwc-valheim-workbench. Read recovery06/DELIVERY21.md and SORCERESS21.md. Local source commits4742fc7,00f18fe,cae3fef preserve implementation and evidence. All previous versions remain preserved. Package02/03 were integration failures (address, staged inactive parameter validation); superseded by04.
+
+Actual Package04 installed in LWC Surtling Flight Test and live-loaded with acquired female geometry, visible native body flames, acquired trails/steam/ground/attacks/death retained.142 telemetry frames,24 casts including primary/searing shards, zero Error/Exception lines in the successful run. New visible-attack evasion logic compiled; no independent live evasion cue was observed in this capture. The saved flame image is real gameplay, not a render substitute.
+
+Private Surtling0.1.11Package04: https://chatgpt.com/library?file_id=libfile_84dc7a90abc08191bf0efb33c8c1e49f&account_id=personal
+SHA2566be6e86c3c6a5f20aedcec5fe4d0f3d8ca58f4b9b36478b3ed295244fcd32ef1
+
+Tooler3.0.5 installed, ServerDev1.116retained. Nativefreefly/FOV, nearest-creature framing, local singleplayer freeze, F9 clean PNG and F10 restore work together. Actual clean1920x1080 capture:
+https://chatgpt.com/library?file_id=libfile_37a2fd2fba8081918b5e839d126aa8ca&account_id=personal
+Toolerpackage: https://chatgpt.com/library?file_id=libfile_5ba4685c760c81918fd6e43407afab89&account_id=personal
+Toolkit local repo LWCToolerRebuild commits05b4435/8df3e29, no remote configured. Camera source/handoff under integration/src/LivingWorldCamera.cs and exchange/CAMERA-3.0.5-2026-11-08.md. No other actor AI changed.
+
+Game left in separate LWCTinkerbellQA with the candidate framed and action frozen for Brian's review. F8resumes,F9captures,F10restores; DeleteopensTooler and resumes photo freeze. Disposable QAobserver died before enabling protection after load; no owner character/save used. No OBSrecording. PoisonQAhelperdisabled. Capture/UI proof is separate from full gameplay, audio, Arena, multiplayer, reward/finisher acceptance.
+
+---
+
 # Tinkerbell elemental - shared implementation handoff, November 8
 
 Brian explicitly requested this handoff for Claude and the fire/audio work.
