@@ -4,9 +4,9 @@ Brian explicitly requested this handoff for Claude and the active fire/audio
 work. It records engineering direction, not approval of a finished release.
 
 Canonical full contract: repository scrufboy/lwc-valheim-workbench,
-branch work/valheim-workbench, commit ba9b608,
+published on main (contract commit deb48793700c1f1f82c55aca50f269bc16da0625),
 `docs/project/TINKERBELL-ELEMENTAL-CONTRACT-2026-11-08.md`.
-The local checkout is the sibling `LWCModelSkinStudio` directory.
+The local checkout is the sibling `LWCModelSkinStudio` directory; local work/valheim-workbench commit ba9b608 contains the same contract. Ordinary Git pushes are DNS-blocked; the connector published this contract/handoff only, not the complete source history.
 
 The Surtling replacement is now a fire elemental in character and presentation,
 with its core as the internal heart/power source. **Ground-oriented hover is the
