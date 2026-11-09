@@ -1,3 +1,28 @@
+# Current: Formidable Surtling Finalization22 built, live test blocked
+
+Brian explicitly resumed all finalization work. Source checkpoint aed5ecb688cce13fbb3487ae71f7c47bfa0643e4 on scrufboy/lwc-valheim-workbench work/valheim-workbench; localcommit33fffb8. Read exchange/surtling-elemental/2026-11-07/recovery06/DELIVERY22.md and FINALIZATION22.md.
+
+Built private0.1.12 Recovery22Package02 with:
+- Pre-zero physical hot-window finisher gate, one immutable native drop result.
+- Prolonged nativeWet no-reward dissipation; explicit custom exposedrain soaking (60sdefault, configurable; vanillaSurtlings do not gainrainWet).
+-3s dangeroushotsteam using nativefireAoE; separate nativeSmoke attackhazards, bounded anchors/puffs/TTL.
+- At mosttwo reignitions to25%-maxHPfloor, then missed-window exhaustion/onecoin. No postdeath revival or endless healing.
+- NormalVolley/Crossfire/Pressure decisions independent of downing,6s recoveryrage as tacticalbias. Corrected style reentry, hoverdescent overshoot and upward avoidance heightcap.
+- Existing acquired female visual/controller/fire/smoke/attack/death bundle and nativebodyflames preserved. Fullreward core1..2base/2..3level2+,AncientBark/Resin2..4, optionalnativevaluables withconfigchances. SoakgivesZERO reward. Missing a window permanentlyreduces laterfinisherreward toonecoin.
+
+Runtimecompile against actual installed gameassemblies, ZIPCRC/manifest/payload equality passed. QA22helper0.2.1compiled with exact named disposable observer/worldguard; physicalfinisher, nativeWet injection, poisonnonlethality, immutableRewardreads and finiteexhaustion tests prepared. Neither runtime22 norQA22 was installed or liveexecuted.
+
+Desktopinventory succeeded; r2modman launch failed exactly: GetCursorPos failed: Access is denied. (0x80070005). Restore interactiveWindows desktop access before authorized UIimport/liveQA. Do not bypass this through another UIautomation route.21version0.1.11 is still enabled in separateFlightTest; Toolkit3.0.5/ServerDev1.116/Jotunn2.30.2retained,QA20disabled. No profile/savechanged.
+
+Package download: https://chatgpt.com/library?file_id=libfile_e16dcc551db48191921feea970da7f66&account_id=personal
+SHA256d4748110d01ea8f18e6ce750357cfaab1c5193a8ee84a55d6cb52ac490ee4d14
+Localoutput/FormidableSurtling-Recovery22/scrufboy-Formidable_Surtling_Female-0.1.12-Recovery22-Package02-PRIVATE.zip
+Testhelperlocaltest-output/FormidableSurtling-Recovery22/QA22/LWC-ElementalCycleQA22-0.2.1.zip is separate and must never ship withcreature.
+
+Not game-ready/released yet. Actualbomb/rain/immersion, physicaldropcounts, densecombat, cover, smokeexposure/obstruction, movement/faction/companion encounters and multiplayerremainacceptance. Elementalaudioaudition, rigidcarbonalternative/summon/skinsremainpending. DedicatedTinkerbellplayerowner retainsitsseparateprototype; no sourceownershiptransfer. Source21andallpriorcandidatespreserved. OrdinaryGit history vsAPIcheckpointsrequires later non-destructive reconciliation.
+
+---
+
 # Current reveal preview: Surtling21 Package04 + Tooler3.0.5
 
 Brian corrected the boundary explicitly: the creature IS the Formidable Surtling/fire elemental. Explosive provides player Sorceress animations, not NPC AI. Our behavior parts are FormidableAI modules. Neutral HoverCombatModule/Profile now exposes the reusable combat-motion contract; future player Sorceress needs full controller input/animation/telemetry integration, not an assertion that the NPC API already supplies that.
