@@ -1,3 +1,13 @@
+## November 9 owner order — existing Arena, complete combat roster, immediate delivery
+
+Brian: "bring forward all these characters so I can test them all in one space and get good video footage." Use the EXISTING LWC Formidable Arena profile and established world/scenarios; do not create another profile/world by default. The connected profile owner must inspect the actual installed companions, project NPCs, Souls content, raid/randomization configuration and dependencies, then stage compatible candidates together while preserving saves, settings, roster identities and unrelated packages.
+
+Continue Huntress as her own authored Plains character; no Archer migration, alias or replacement. Bring her compatible candidate forward to the shared Arena combat showcase without assigning her to the swamp faction or delaying her standalone work for that encounter.
+
+Pass required pre-install checks, install/enable/verify through the connected profile transaction owner, disable superseded competing runtime copies, and immediately tell Brian the exact available version/profile, existing event/test action and gameplay status. Record real NPC-versus-creature/raid footage with installed build identification. Continue owned implementation without waiting for the whole roster to finish. A profile/source audit or handoff is not an installation; unavailable Windows access must be reported as a concrete blocker. This shared update is not proof that another chat acknowledged it or that any combat roster/world was staged.
+
+---
+
 ## OWNER EXECUTION ORDER — November 8, 2026: continue creature implementation and delivery
 
 Brian directs every creature development owner to continue the actual owned code, feature sets, supported animation/movement, hit reactions and behavior work now. Deliver testable stages through required checks -> package -> r2modman install/enable/verify -> immediate owner notification, preserving approved source and removing/disabling superseded competing candidates. Do not stop at written plans, compile-only helpers or an uninstalled ZIP.
