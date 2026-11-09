@@ -1,3 +1,13 @@
+## OWNER EXECUTION ORDER — November 8, 2026: continue creature implementation and delivery
+
+Brian directs every creature development owner to continue the actual owned code, feature sets, supported animation/movement, hit reactions and behavior work now. Deliver testable stages through required checks -> package -> r2modman install/enable/verify -> immediate owner notification, preserving approved source and removing/disabling superseded competing candidates. Do not stop at written plans, compile-only helpers or an uninstalled ZIP.
+
+The swamp encounter owners are concurrently implementing a distinct Neck revenge raid: fetish flayers and Neckmen protect a staff-casting Neckman shaman who controls a captive armed/unarmed Behemoth. This event is separate from optional shaman-free undead/Bonemass integration. Coordinate through existing owners/contracts; do not independently patch their sources or add unrelated creatures to that raid. The established encounter lifecycle and detailed role orders are recorded in the current shared shaman, goblin, swamp and Behemoth handoffs.
+
+Each model also needs actual arena demonstrations against varied combatants and real showcase footage identifying the installed build. Standalone creature completion continues independently of the group encounter. Do not claim another chat/Claude/Cursor is working without an acknowledged task, and do not claim footage or installation without evidence. Report the exact current step and concrete blocker immediately if execution is unavailable.
+
+---
+
 ## OWNER DIRECTIVE — November 8, 2026: INSTALLATION IS PART OF EVERY NPC TEST DELIVERY
 
 Brian is explicitly angry that developers keep stopping at "compiled and packaged, not installed", forcing him to spend another message, usage and time requesting installation. He has ordered this recurring process failure to stop permanently. This applies to EVERY NPC/creature development owner, character, variant and subsequent testing revision, including already queued candidates.
