@@ -1,3 +1,13 @@
+## Owner correction — November 9, 2026: test the assembled project in the existing Arena
+
+Brian explicitly requests the existing LWC Formidable Arena profile and its established world/test events as the integrated creature/companion/raid/video destination. Do not create another profile or world by default, and do not retain separate Surtling-only testing as the sole delivery destination. Consolidation is now requested: the connected profile owner must inventory the actual Arena and its required existing project NPCs, companions, Souls content and raid dependencies, resolve candidate compatibility, preserve a recoverable baseline and owner saves/settings, then install/enable/verify passing owned candidates there. This does not claim that all those components currently exist or are compatible, nor authorize replacing unrelated runtimes or erasing worlds.
+
+Use the established scenario/raid controls and ordinary randomized Behemoth entry so Brian can watch his companions fight armed OR unarmed Behemoths without manually constructing the test. Keep the accepted armed behavior while advancing unarmed attacks/roll. Three Behemoth types are normal gashed, vulnerable/devastating stitched, and less-damaged resilient pallid stone-blue; exact balance remains for the owning developer, not invented governance defaults. Audit actual eligible hair/beard pools including bald and clean-shaven; record installed counts, not catalogue maxima.
+
+Each owner continues concrete implementation under existing source ownership. Finish required checks, installation, enabling and verification, and notify Brian immediately of availability and remaining gameplay unknowns. Coordinate simultaneous profile writes through the existing profile transaction owner. Actual installed combat/showcase footage is the target; handoff edits are not an installation receipt. Requested child-agent fanout is authorized, but never claim separate ChatGPT/Claude/Cursor tasks were delivered without acknowledgment.
+
+---
+
 ## OWNER EXECUTION ORDER — November 8, 2026: continue creature implementation and delivery
 
 Brian directs every creature development owner to continue the actual owned code, feature sets, supported animation/movement, hit reactions and behavior work now. Deliver testable stages through required checks -> package -> r2modman install/enable/verify -> immediate owner notification, preserving approved source and removing/disabling superseded competing candidates. Do not stop at written plans, compile-only helpers or an uninstalled ZIP.
