@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.5.0
+
+- Added an isolated, controller-usable Site Survey module without removing or replacing any existing Tooler page.
+- Added exact four-corner capture from live Valheim ground, quadrilateral validation, best-fit campus geometry, bounded grid sampling, water/biome/blocker evidence, cut/fill estimates, removable owned preview markers, and text/JSON exports.
+- Kept terrain application visibly locked and absent until a later build can enforce backup receipts, second confirmation, bounded journaling, cancellation, no combat, and no peers.
+
 ## 2.4.1
 
 - Established the existing Tooler shell, toolbar, page order, and capabilities as a build-checked interface contract.
@@ -34,3 +40,4 @@
 - Added direct party, follow, hold, status, recovery, and wave controls.
 - Preserved the full original item and prefab catalogs.
 - Silenced only the repeated log lines for invalid unfinished item sprites; valid catalog entries remain.
+
