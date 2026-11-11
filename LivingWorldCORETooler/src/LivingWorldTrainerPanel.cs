@@ -30,6 +30,12 @@ namespace Scrufboy.LivingWorld.Tooler
         private static string coordinates = "0 0";
         private static string environmentName = "Clear";
         private static string terrainRadius = "8";
+        private static string raidDistanceMin = "70";
+        private static string raidDistanceMax = "95";
+        private static string raidApproachSeconds = "90";
+        private static string raidCount = "1";
+        private static string raidIntervalSeconds = "20";
+        private static string raidWaves = "1";
         private static string pendingDanger;
         private static float pendingUntil;
         private static GUIStyle sectionStyle;
@@ -128,6 +134,48 @@ namespace Scrufboy.LivingWorld.Tooler
         // ---------------- 2. Raids ----------------
         private static void Raids()
         {
+            Heading("Living World reveal raid calculator");
+            GUILayout.Label("These buttons use the existing Custom Raids / RandEventSystem scheduler. They validate the exact registered prefab before launch and never substitute a vanilla actor.", statusStyle);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Distance", GUILayout.Width(58));
+            raidDistanceMin = GUILayout.TextField(raidDistanceMin, GUILayout.Width(42));
+            GUILayout.Label("to", GUILayout.Width(18));
+            raidDistanceMax = GUILayout.TextField(raidDistanceMax, GUILayout.Width(42));
+            GUILayout.Label("m   Approach", GUILayout.Width(80));
+            raidApproachSeconds = GUILayout.TextField(raidApproachSeconds, GUILayout.Width(45));
+            GUILayout.Label("s   Count", GUILayout.Width(55));
+            raidCount = GUILayout.TextField(raidCount, GUILayout.Width(38));
+            GUILayout.Label("Interval", GUILayout.Width(55));
+            raidIntervalSeconds = GUILayout.TextField(raidIntervalSeconds, GUILayout.Width(42));
+            GUILayout.Label("s   Waves", GUILayout.Width(55));
+            raidWaves = GUILayout.TextField(raidWaves, GUILayout.Width(38));
+            GUILayout.EndHorizontal();
+
+            foreach (LivingWorldRaidCandidate candidate in LivingWorldRaidDirector.Candidates)
+            {
+                string reason;
+                bool available = LivingWorldRaidDirector.IsAvailable(candidate, out reason);
+                bool prior = GUI.enabled;
+                GUI.enabled = prior && available;
+                if (GUILayout.Button((available ? "START " : "UNAVAILABLE — ") + candidate.Label + "\n" + candidate.PrefabName, buttonStyle))
+                {
+                    int min = ParseBounded(raidDistanceMin, 70, 40, 250);
+                    int max = ParseBounded(raidDistanceMax, 95, min, 300);
+                    int approach = ParseBounded(raidApproachSeconds, 90, 15, 1800);
+                    int count = ParseBounded(raidCount, 1, 1, 20);
+                    int interval = ParseBounded(raidIntervalSeconds, 20, 1, 300);
+                    int waves = ParseBounded(raidWaves, 1, 1, 20);
+                    LivingWorldRaidDirector.Start(candidate, min, max, approach, count, interval, waves, out lastAction);
+                }
+                GUI.enabled = prior;
+                GUILayout.Label((available ? "Ready" : reason) + " — " + candidate.Readiness, available ? GUI.skin.label : warningStyle);
+            }
+            if (GUILayout.Button("STOP LIVING WORLD REVEAL RAID", GUILayout.Height(36)))
+            {
+                LivingWorldRaidDirector.Stop();
+                lastAction = "Living World reveal raid stopped; existing survivors remain governed by their native lifecycle.";
+            }
+
             Heading("Current FormidableAI training raids");
             Row(new ActionDef("Formidable Arena", "event lwc_formidable_arena", "Starts the current Elder-pattern mixed Souls raid at the configured long-range ring."),
                 new ActionDef("Formidable Souls Swamp", "event lwc_formidable_souls_swamp", "Starts the current Elder-pattern swamp Souls raid at the configured long-range ring."));
@@ -362,6 +410,14 @@ namespace Scrufboy.LivingWorld.Tooler
         {
             int number;
             return Int32.TryParse(value, out number) ? number.ToString() : fallback;
+        }
+
+        private static int ParseBounded(string value, int fallback, int minimum, int maximum)
+        {
+            int parsed;
+            if (!Int32.TryParse(value, out parsed))
+                parsed = fallback;
+            return Mathf.Clamp(parsed, minimum, maximum);
         }
 
         private static string SafeCoordinates(string value)

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.7.0
+
+- Added exact-registration-gated reveal raid buttons for the current NekMyn, Behemoth, Formidable Surtling and Sunken Marauder candidates.
+- Reused Custom Raids and Valheim's RandEventSystem for distant pursuit; no competing spawner or creature runtime was added.
+- Exposed distance, approach window, count, interval and wave controls, with JSONL request/spawn/failure telemetry.
+- Unregistered or refused candidates stay visibly unavailable and never fall back to vanilla actors.
+
 ## 2.6.6
 
 - Corrected all eight Souls raid spawn intervals from `5000` seconds to `5` seconds. The previous millisecond-style value exceeded the entire 120-second raid, so the event started but its source creatures never received a spawn attempt.
