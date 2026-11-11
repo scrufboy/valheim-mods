@@ -16,7 +16,10 @@ $compiler = 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $sources = @(
     (Join-Path $root 'src\LivingWorldToolerExtension.cs'),
     (Join-Path $root 'src\LivingWorldTrainerPanel.cs'),
-    (Join-Path $root 'src\LivingWorldToolerModules.cs')
+    (Join-Path $root 'src\LivingWorldToolerModules.cs'),
+    (Join-Path $root 'src\LivingWorldSiteSurvey.cs'),
+    (Join-Path $root 'src\LivingWorldRaidDirector.cs'),
+    (Join-Path $root 'src\LivingWorldShowcaseDirector.cs')
 )
 $coreVersionSource = Join-Path $root 'src\CoreVersionInfo.cs'
 $coreInput = Join-Path $CompatibilityForkDirectory 'ValheimTooler.dll'
@@ -24,10 +27,12 @@ $coreOutput = Join-Path $build 'LivingWorld.CORE.Tooler.Core.dll'
 $versionCarrierDirectory = Join-Path $build 'version-carrier'
 $versionCarrier = Join-Path $versionCarrierDirectory 'LivingWorld.CORE.Tooler.Core.dll'
 $output = Join-Path $build 'LivingWorld.CORE.Tooler.dll'
-$archive = Join-Path $dist 'scrufboy-LivingWorldCORETooler-2.4.1.zip'
+$archive = Join-Path $dist 'scrufboy-LivingWorldCORETooler-2.7.1.zip'
 $icon = Join-Path $root 'icon.png'
 $iconBase64 = Join-Path $root 'icon.png.base64'
-$raidConfig = Join-Path $root 'config\custom_raids.supplemental.lwc_formidable_trials.cfg'
+$raidConfig = Join-Path $root 'config\custom_raids.supplemental.lwc_formidable_souls.cfg'
+$revealRaidConfig = Join-Path $root 'config\custom_raids.supplemental.lwc_reveal_candidates.cfg'
+$showcasePolicy = Join-Path $root 'HEADLESS-SHOWCASE-ADMIN-POLICY.md'
 
 if (Test-Path -LiteralPath $build) {
     $resolvedBuild = (Resolve-Path -LiteralPath $build).Path
@@ -59,7 +64,7 @@ if (-not (Test-Path -LiteralPath $icon -PathType Leaf) -and (Test-Path -LiteralP
     [IO.File]::WriteAllBytes($icon, [Convert]::FromBase64String((Get-Content -LiteralPath $iconBase64 -Raw).Trim()))
 }
 
-foreach ($path in @($compiler) + $sources + @($coreVersionSource, $icon, $raidConfig, $CecilPath, $coreInput, (Join-Path $CompatibilityForkDirectory 'SharpConfig.dll'))) {
+foreach ($path in @($compiler) + $sources + @($coreVersionSource, $icon, $raidConfig, $revealRaidConfig, $showcasePolicy, $CecilPath, $coreInput, (Join-Path $CompatibilityForkDirectory 'SharpConfig.dll'))) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
         throw "Missing build input: $path"
     }
@@ -168,7 +173,7 @@ Add-Type -Path $CecilPath
 $core = [Mono.Cecil.AssemblyDefinition]::ReadAssembly($coreInput)
 try {
     $core.Name.Name = 'LivingWorld.CORE.Tooler.Core'
-    $core.Name.Version = [Version]'2.4.1.0'
+    $core.Name.Version = [Version]'2.7.1.0'
     $core.MainModule.Name = 'LivingWorld.CORE.Tooler.Core.dll'
 
     $metadata = @{
@@ -177,8 +182,8 @@ try {
         'System.Reflection.AssemblyCompanyAttribute' = 'Brian / scrufboy'
         'System.Reflection.AssemblyProductAttribute' = 'Living World C.O.R.E. Tooler'
         'System.Reflection.AssemblyCopyrightAttribute' = 'Living World integration Copyright Brian / scrufboy'
-        'System.Reflection.AssemblyVersionAttribute' = '2.4.1.0'
-        'System.Reflection.AssemblyFileVersionAttribute' = '2.4.1.0'
+        'System.Reflection.AssemblyVersionAttribute' = '2.7.1.0'
+        'System.Reflection.AssemblyFileVersionAttribute' = '2.7.1.0'
     }
     foreach ($attribute in $core.CustomAttributes) {
         if ($metadata.ContainsKey($attribute.AttributeType.FullName) -and $attribute.ConstructorArguments.Count -gt 0) {
@@ -222,7 +227,7 @@ finally {
 $coreVersionInfo = [Diagnostics.FileVersionInfo]::GetVersionInfo($coreOutput)
 if ($coreVersionInfo.CompanyName -ne 'Brian / scrufboy' -or
     $coreVersionInfo.ProductName -ne 'Living World C.O.R.E. Tooler' -or
-    $coreVersionInfo.FileVersion -ne '2.4.1.0') {
+    $coreVersionInfo.FileVersion -ne '2.7.1.0') {
     throw 'The rebranded core still contains incorrect Windows file metadata.'
 }
 
@@ -236,6 +241,7 @@ $references = @(
     (Join-Path $ManagedDirectory 'UnityEngine.IMGUIModule.dll'),
     (Join-Path $ManagedDirectory 'UnityEngine.TextRenderingModule.dll'),
     (Join-Path $ManagedDirectory 'UnityEngine.InputLegacyModule.dll'),
+    (Join-Path $ManagedDirectory 'UnityEngine.PhysicsModule.dll'),
     $coreOutput
 )
 foreach ($path in $references) {
@@ -254,9 +260,25 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Living World C.O.R.E. Tooler interface contract failed.'
 }
 
+& (Join-Path $root 'Test-SiteSurveyContracts.ps1') -ProjectRoot $root
+if ($LASTEXITCODE -ne 0) {
+    throw 'Living World Site Survey contract failed.'
+}
+
+& (Join-Path $root 'Test-FormidableRaidIntegration.ps1')
+if ($LASTEXITCODE -ne 0) {
+    throw 'Living World Formidable raid integration contract failed.'
+}
+
+& (Join-Path $root 'Test-RevealRaidIntegration.ps1')
+if ($LASTEXITCODE -ne 0) {
+    throw 'Living World reveal raid integration contract failed.'
+}
+
 Copy-Item -LiteralPath $output, $coreOutput, (Join-Path $CompatibilityForkDirectory 'SharpConfig.dll') -Destination $plugin -Force
 Copy-Item -LiteralPath $raidConfig -Destination $packageConfig -Force
-Copy-Item -LiteralPath (Join-Path $root 'README.md'), (Join-Path $root 'CHANGELOG.md'), (Join-Path $root 'manifest.json'), (Join-Path $root 'LICENSE'), $icon -Destination $package -Force
+Copy-Item -LiteralPath $revealRaidConfig -Destination $packageConfig -Force
+Copy-Item -LiteralPath (Join-Path $root 'README.md'), (Join-Path $root 'CHANGELOG.md'), (Join-Path $root 'HEADLESS-SHOWCASE-ADMIN-POLICY.md'), (Join-Path $root 'manifest.json'), (Join-Path $root 'LICENSE'), $icon -Destination $package -Force
 
 $builtCore = [Mono.Cecil.AssemblyDefinition]::ReadAssembly($coreOutput)
 $builtPlugin = [Mono.Cecil.AssemblyDefinition]::ReadAssembly($output)
@@ -278,10 +300,10 @@ Compress-Archive -Path (Join-Path $package '*') -DestinationPath $archive -Compr
 
 [ordered]@{
     Product = 'Living World C.O.R.E. Tooler — Brian / scrufboy'
-    PackageVersion = '2.4.1'
+    PackageVersion = '2.7.1'
     PluginGuid = 'com.scrufboy.livingworldcore.tooler'
     Status = 'PASS'
-    Scope = 'Offline compilation, owned plugin identity, rebranded core, and original feature-surface verification'
+    Scope = 'Offline compilation, owned plugin identity, rebranded core, original feature-surface, and isolated Site Survey verification'
     Runtime = 'NOT RUN'
     PluginSha256 = (Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash
     CoreSha256 = (Get-FileHash -LiteralPath $coreOutput -Algorithm SHA256).Hash
