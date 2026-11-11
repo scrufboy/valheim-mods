@@ -2,7 +2,7 @@
   "name": "LivingWorldCORETooler",
   "version_number": "2.7.1",
   "website_url": "https://github.com/scrufboy/valheim-mods/tree/main/LivingWorldCORETooler",
-  "description": "Brian's Living World C.O.R.E. Tooler with the full proven tool surface and integrated Living World companion controls.",
+  "description": "Private Living World C.O.R.E. administration and QA Tooler. Showcase Director is disabled by default and is not a public release candidate.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2333",
     "ASharpPen-Custom_Raids-1.8.2"

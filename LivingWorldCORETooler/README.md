@@ -4,6 +4,8 @@ Maintained and packaged for Living World C.O.R.E. by **Brian / scrufboy**.
 
 Version 2.7.1 adds a headless Showcase Director for Stream Deck. Configurable debounced hotkeys work while the Tooler window is closed. Reveal buttons and hotkeys add independently tagged cohorts to one Tooler-owned run, using the distant spawnable-ground search and native hostile approach while preserving each prefab's faction. Valheim still owns exactly one native raid slot, so an Elder/greydwarf raid can run alongside later Legion, Behemoth, NekMyn and other Showcase cohorts without one native event canceling another. Exact prefab registration is mandatory and substitutions are forbidden. Showcase companion reinforcement/recall requires a dedicated noncanonical `LWC_ShowcaseCompanion_Test` prefab; canonical saved companions are never changed. Telemetry records Stream Deck action, native event, run/cohort IDs, requested/actual prefab, geometry, waves, arrivals, deaths, reinforcement and cleanup under `BepInEx/config/LivingWorld/Tooler/ShowcaseTelemetry`.
 
+The Showcase Director is a private administrative/QA bridge and is disabled by default. It requires explicit enablement plus local host/server authority. It is not intended for progression, farming, public multiplayer advantage, or undisclosed staged gameplay. Read [HEADLESS-SHOWCASE-ADMIN-POLICY.md](HEADLESS-SHOWCASE-ADMIN-POLICY.md) before enabling it. This build is not a public release candidate and must not be published to Thunderstore, Nexus or Hexium.
+
 This is the Living World C.O.R.E. Tooler: one Living World plugin identity,
 Living World branding, the familiar proven interface/colors/control layout,
 the complete player, catalog, entity, terrain, ESP, and utility feature set,

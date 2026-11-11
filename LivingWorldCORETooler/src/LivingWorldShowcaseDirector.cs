@@ -42,12 +42,19 @@ namespace Scrufboy.LivingWorld.Tooler
         private static string runId;
         private static int cohortSerial;
         private static string lastAction = "Showcase idle.";
+        internal static bool ExplicitlyEnabled { get; set; }
 
         internal static string Status { get { return lastAction; } }
         internal static bool Running { get { return !String.IsNullOrEmpty(runId); } }
 
         internal static bool Queue(LivingWorldRaidCandidate candidate, int minDistance, int maxDistance, int approachDelay, int count, int intervalSeconds, int waves, string action, out string result)
         {
+            if (!ExplicitlyEnabled)
+            {
+                result = "REFUSED — Showcase Director is disabled. An authorized administrator must explicitly enable the private testing bridge.";
+                Write("cohort_refused", action, candidate, null, Vector3.zero, 0f, 0, "showcase-explicit-enablement-required");
+                return false;
+            }
             string reason = "exact prefab is not registered";
             if (!LivingWorldRaidDirector.IsPrefabAvailable(candidate, out reason))
             {
@@ -57,8 +64,8 @@ namespace Scrufboy.LivingWorld.Tooler
             }
             if (Player.m_localPlayer == null || ZNet.instance == null || !ZNet.instance.IsServer())
             {
-                result = "REFUSED — Showcase Director requires local/server authority.";
-                Write("cohort_refused", action, candidate, null, Vector3.zero, 0f, 0, "server-authority-required");
+                result = "REFUSED — Showcase Director requires local host/server-administrator authority; unprivileged remote clients are not permitted.";
+                Write("cohort_refused", action, candidate, null, Vector3.zero, 0f, 0, "local-host-or-server-admin-authority-required");
                 return false;
             }
             if (String.IsNullOrEmpty(runId))

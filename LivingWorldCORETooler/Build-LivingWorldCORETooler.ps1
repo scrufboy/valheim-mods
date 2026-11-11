@@ -32,6 +32,7 @@ $icon = Join-Path $root 'icon.png'
 $iconBase64 = Join-Path $root 'icon.png.base64'
 $raidConfig = Join-Path $root 'config\custom_raids.supplemental.lwc_formidable_souls.cfg'
 $revealRaidConfig = Join-Path $root 'config\custom_raids.supplemental.lwc_reveal_candidates.cfg'
+$showcasePolicy = Join-Path $root 'HEADLESS-SHOWCASE-ADMIN-POLICY.md'
 
 if (Test-Path -LiteralPath $build) {
     $resolvedBuild = (Resolve-Path -LiteralPath $build).Path
@@ -63,7 +64,7 @@ if (-not (Test-Path -LiteralPath $icon -PathType Leaf) -and (Test-Path -LiteralP
     [IO.File]::WriteAllBytes($icon, [Convert]::FromBase64String((Get-Content -LiteralPath $iconBase64 -Raw).Trim()))
 }
 
-foreach ($path in @($compiler) + $sources + @($coreVersionSource, $icon, $raidConfig, $revealRaidConfig, $CecilPath, $coreInput, (Join-Path $CompatibilityForkDirectory 'SharpConfig.dll'))) {
+foreach ($path in @($compiler) + $sources + @($coreVersionSource, $icon, $raidConfig, $revealRaidConfig, $showcasePolicy, $CecilPath, $coreInput, (Join-Path $CompatibilityForkDirectory 'SharpConfig.dll'))) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
         throw "Missing build input: $path"
     }
@@ -277,7 +278,7 @@ if ($LASTEXITCODE -ne 0) {
 Copy-Item -LiteralPath $output, $coreOutput, (Join-Path $CompatibilityForkDirectory 'SharpConfig.dll') -Destination $plugin -Force
 Copy-Item -LiteralPath $raidConfig -Destination $packageConfig -Force
 Copy-Item -LiteralPath $revealRaidConfig -Destination $packageConfig -Force
-Copy-Item -LiteralPath (Join-Path $root 'README.md'), (Join-Path $root 'CHANGELOG.md'), (Join-Path $root 'manifest.json'), (Join-Path $root 'LICENSE'), $icon -Destination $package -Force
+Copy-Item -LiteralPath (Join-Path $root 'README.md'), (Join-Path $root 'CHANGELOG.md'), (Join-Path $root 'HEADLESS-SHOWCASE-ADMIN-POLICY.md'), (Join-Path $root 'manifest.json'), (Join-Path $root 'LICENSE'), $icon -Destination $package -Force
 
 $builtCore = [Mono.Cecil.AssemblyDefinition]::ReadAssembly($coreOutput)
 $builtPlugin = [Mono.Cecil.AssemblyDefinition]::ReadAssembly($output)

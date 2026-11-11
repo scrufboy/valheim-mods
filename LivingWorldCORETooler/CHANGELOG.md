@@ -2,6 +2,8 @@
 
 ## 2.7.1
 
+- Guardrail follow-up: Showcase Director and Stream Deck triggers now default disabled and require explicit enablement plus local host/server authority; refused remote/unprivileged actions are audited.
+- Added the private administration/QA ethics, allowed-use, prohibited-use, telemetry and non-public-release policy.
 - Added configurable debounced Stream Deck hotkeys that operate with the Tooler window closed.
 - Added a Tooler-owned Showcase Director for multiple independently tagged distant cohorts alongside, but never as a fake replacement for, Valheim's single native raid.
 - Added nearby spawnable-ground search, explicit no-area refusal, cohort/run provenance, arrival/death/reinforcement/cleanup telemetry and Tooler-owned cleanup.

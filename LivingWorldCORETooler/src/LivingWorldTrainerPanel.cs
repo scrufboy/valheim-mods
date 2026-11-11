@@ -135,6 +135,10 @@ namespace Scrufboy.LivingWorld.Tooler
         private static void Raids()
         {
             Heading("Living World reveal raid calculator");
+            GUILayout.Label(LivingWorldShowcaseDirector.ExplicitlyEnabled
+                ? "PRIVATE SHOWCASE DIRECTOR ENABLED — all interventions are audited."
+                : "SHOWCASE DIRECTOR DISABLED — explicitly enable the private admin/QA bridge in configuration before use.",
+                LivingWorldShowcaseDirector.ExplicitlyEnabled ? warningStyle : statusStyle);
             GUILayout.Label("These buttons add independently tagged Tooler-owned cohorts to one Showcase run. They use the proven distant spawn search while leaving Valheim's single native raid slot untouched, so one native raid may run alongside the showcase. Exact prefab registration is required; no substitution.", statusStyle);
             GUILayout.BeginHorizontal();
             GUILayout.Label("Distance", GUILayout.Width(58));

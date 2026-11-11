@@ -41,6 +41,7 @@ namespace Scrufboy.LivingWorld.Tooler
         private ConfigEntry<KeyboardShortcut> recallKey;
         private ConfigEntry<float> debounceSeconds;
         private ConfigEntry<bool> noHudMode;
+        private ConfigEntry<bool> showcaseEnabled;
         private float nextHotkeyAt;
 
         private void Awake()
@@ -55,6 +56,7 @@ namespace Scrufboy.LivingWorld.Tooler
         private void BindShowcaseHotkeys()
         {
             KeyCode[] defaults = { KeyCode.F1, KeyCode.F2, KeyCode.F3, KeyCode.F4, KeyCode.F5, KeyCode.F6, KeyCode.F7, KeyCode.F8, KeyCode.F9 };
+            showcaseEnabled = Config.Bind("Stream Deck Showcase", "Showcase Director enabled", false, "PRIVATE ADMIN/QA BRIDGE. Disabled by default. Enable only in a private/local world or under authorized server administration; every action is audited.");
             for (int index = 0; index < LivingWorldRaidDirector.Candidates.Length; index++)
             {
                 LivingWorldRaidCandidate candidate = LivingWorldRaidDirector.Candidates[index];
@@ -69,11 +71,14 @@ namespace Scrufboy.LivingWorld.Tooler
             debounceSeconds = Config.Bind("Stream Deck Showcase", "Debounce seconds", 0.40f, new ConfigDescription("Minimum time between accepted Showcase hotkeys.", new AcceptableValueRange<float>(0.15f, 3f)));
             noHudMode = Config.Bind("Stream Deck Showcase", "No HUD mode", true, "Hotkeys and telemetry remain active without opening the Tooler window; no showcase overlay is required.");
             Logger.LogInfo("Stream Deck Showcase hotkeys ready; no-HUD mode=" + noHudMode.Value + ".");
+            LivingWorldShowcaseDirector.ExplicitlyEnabled = showcaseEnabled.Value;
         }
 
         private void Update()
         {
             LivingWorldShowcaseDirector.Tick();
+            LivingWorldShowcaseDirector.ExplicitlyEnabled = showcaseEnabled.Value;
+            if (!showcaseEnabled.Value) return;
             if (Time.unscaledTime < nextHotkeyAt) return;
             for (int index = 0; index < showcaseKeys.Count; index++)
             {

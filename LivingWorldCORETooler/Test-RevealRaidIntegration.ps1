@@ -3,6 +3,7 @@ $root = $PSScriptRoot
 $director = Get-Content -LiteralPath (Join-Path $root 'src\LivingWorldRaidDirector.cs') -Raw
 $showcase = Get-Content -LiteralPath (Join-Path $root 'src\LivingWorldShowcaseDirector.cs') -Raw
 $plugin = Get-Content -LiteralPath (Join-Path $root 'src\LivingWorldToolerExtension.cs') -Raw
+$policy = Get-Content -LiteralPath (Join-Path $root 'HEADLESS-SHOWCASE-ADMIN-POLICY.md') -Raw
 $panel = Get-Content -LiteralPath (Join-Path $root 'src\LivingWorldTrainerPanel.cs') -Raw
 $config = Get-Content -LiteralPath (Join-Path $root 'config\custom_raids.supplemental.lwc_reveal_candidates.cfg') -Raw
 
@@ -33,6 +34,15 @@ foreach ($required in @('LivingWorldShowcaseMarker', 'FindSpawnPoint', 'no-nearb
 }
 foreach ($required in @('KeyboardShortcut', 'Debounce seconds', 'No HUD mode', 'streamdeck:cohort:', 'streamdeck:stop', 'streamdeck:next-wave', 'streamdeck:reinforce', 'streamdeck:recall')) {
     if (-not $plugin.Contains($required)) { throw "Headless Stream Deck contract missing: $required" }
+}
+foreach ($required in @('Showcase Director enabled", false', 'ExplicitlyEnabled = showcaseEnabled.Value', 'if (!showcaseEnabled.Value) return')) {
+    if (-not $plugin.Contains($required)) { throw "Safe-default guardrail missing: $required" }
+}
+foreach ($required in @('if (!ExplicitlyEnabled)', 'showcase-explicit-enablement-required', '!ZNet.instance.IsServer()', 'local-host-or-server-admin-authority-required')) {
+    if (-not $showcase.Contains($required)) { throw "Authority guardrail missing: $required" }
+}
+foreach ($required in @('Allowed uses', 'Prohibited uses', 'public multiplayer', 'loot/resources', 'impersonating', 'ShowcaseTelemetry', 'not a public release candidate', 'Thunderstore', 'Nexus', 'Hexium')) {
+    if (-not $policy.Contains($required)) { throw "Showcase ethics/audit policy missing: $required" }
 }
 if ($showcase.Contains('SetFaction(')) { throw 'Showcase Director must never rewrite creature factions.' }
 if ($showcase.Contains('SetRandomEventByName')) { throw 'Showcase cohorts must not consume or fake a second native raid slot.' }
