@@ -1,0 +1,5 @@
+# FORMIDABLE Revision Ledger
+- **2026-10-17 / v0.2:** Lore draft frozen as research baseline. Corrected manual maypole placement to opt-in automatic centered Thor-lightning arrival; no branch retains a reactivation marker; Hugin/Munin dialogues; revised camp and raid requirements; legion name marked unresolved E-initial; forest knights retained; internal stats/faction/spawn identities preserved; explicit Claude and engineering handoff; no code changed.
+- **Earlier v0.1 conceptual discussion:** FORMIDABLE title, Hearths of the Forgotten, Common Folk/pillagers, corrupted legion, Forest Children, Neckmen and Dark Servants; village Great Hall, steward/Jarl/matron; worker animations plus authoritative economy; companions as independent persistent people. These ideas are included in v0.2 except corrected details.
+
+**Modification discipline:** Versioned changes to lore require a clearly stated user decision. Engineering is governed by its more recent accepted status, not this narrative packet. No silently renamed prefabs or statistical rebalancing.
