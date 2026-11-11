@@ -24,34 +24,37 @@ $requiredOriginalSurface = @(
 )
 
 $requiredLivingWorldPages = @(
-    '"Overview"',
-    '"Lifecycle"',
-    '"Community"',
-    '"Combat"',
-    '"Party"',
+    '"Companions"',
     '"Raids"',
     '"Player"',
-    '"Items / Spawn"',
+    '"Spawn"',
     '"World"',
-    '"Terrain"',
-    '"Map / Admin"',
-    '"Danger"',
-    '"Console"'
+    '"Build"',
+    '"Admin"'
 )
 
 $requiredCapabilities = @(
     'lwparty',
-    'lwtest party recover',
-    'lwtest follow',
-    'lwtest hold',
-    'event lwc_souls_pillagers',
-    'event lwc_krauguk_legion',
+    'lwparty new',
+    'lwparty clean',
+    'lwstatus',
+    'lwheal',
+    'lwsummon',
+    'lwgoto',
+    'event army_moder',
+    'event lwc_formidable_arena',
+    'event lwc_formidable_souls_swamp',
+    'stopevent',
     'tod 0',
     'env Rain',
     'terrain_level',
+    'terrain_reset',
     'exploremap',
+    'genloc',
+    'killall',
     'removedrops',
-    'lwcommands'
+    'killme',
+    'SiteSurveyPanel.DisplayGUI'
 )
 
 foreach ($fragment in $requiredOriginalSurface) {

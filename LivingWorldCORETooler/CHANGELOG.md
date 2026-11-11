@@ -1,5 +1,71 @@
 # Changelog
 
+## 2.7.1
+
+- Guardrail follow-up: Showcase Director and Stream Deck triggers now default disabled and require explicit enablement plus local host/server authority; refused remote/unprivileged actions are audited.
+- Added the private administration/QA ethics, allowed-use, prohibited-use, telemetry and non-public-release policy.
+- Added configurable debounced Stream Deck hotkeys that operate with the Tooler window closed.
+- Added a Tooler-owned Showcase Director for multiple independently tagged distant cohorts alongside, but never as a fake replacement for, Valheim's single native raid.
+- Added nearby spawnable-ground search, explicit no-area refusal, cohort/run provenance, arrival/death/reinforcement/cleanup telemetry and Tooler-owned cleanup.
+- Showcase companion actions require a dedicated `LWC_ShowcaseCompanion_Test` registration; canonical persistent companions are never recalled, resurrected or changed.
+
+## 2.7.0
+
+- Added exact-registration-gated reveal raid buttons for the current NekMyn, Behemoth, Formidable Surtling and Sunken Marauder candidates.
+- Reused Custom Raids and Valheim's RandEventSystem for distant pursuit; no competing spawner or creature runtime was added.
+- Exposed distance, approach window, count, interval and wave controls, with JSONL request/spawn/failure telemetry.
+- Unregistered or refused candidates stay visibly unavailable and never fall back to vanilla actors.
+
+## 2.6.6
+
+- Corrected all eight Souls raid spawn intervals from `5000` seconds to `5` seconds. The previous millisecond-style value exceeded the entire 120-second raid, so the event started but its source creatures never received a spawn attempt.
+- Added an integration contract that rejects the erroneous `5000` value and requires eight five-second intervals.
+
+## 2.6.5
+
+- Restored NinoBosque and both OrcBrute heavy slots to the full training-raid roster after review showed their quarantine came from an unproven suspicion rather than causal evidence.
+- Kept `HuntPlayer=true` on all eight slots so the first full-roster pursuit test measures the intended Elder-pattern encounter.
+- Left range, timing, group sizes, caps, factions, hostile stats and combat behavior unchanged; the separate lifecycle observer now records evidence if the removal error recurs.
+
+## 2.6.4
+
+- Added the unresolved blue `RRRN_NinoBosque` specialist to the temporary isolation boundary: it logged one spawn but never appeared in combat, video, awareness, damage, death or kill records.
+- Corrected the evidence claim: both NinoBosque and OrcBrute were eligible around the error bursts, so neither is declared the cause until their construction and removal lifecycles are traced separately.
+- Kept the five Souls actor types that produced valid live combat active and left pursuit, range, group sizes, caps and combat behavior unchanged.
+
+## 2.6.3
+
+- Temporarily disabled only the two `RRRN_OrcBrute` heavy raid slots after two live error bursts aligned with OrcBrute spawn opportunities and no OrcBrute ever completed spawning.
+- Retained the heavy definitions for compatibility repair; all other Souls actors, the 70–95 m ring, native pursuit, group sizes, caps and combat behavior are unchanged.
+- The natural OrcBrute spawner is isolated separately in the active Arena profile so ordinary exploration cannot trigger the same broken construction path.
+
+## 2.6.2
+
+- Corrected every current FormidableAI raid slot to `HuntPlayer=true` after live video showed `HuntPlayer=false` actors stranded around the 70–95 m ring.
+- This is native hostile raid pursuit only. It does not add a companion defend order, leader status, faction override or artificial combat state.
+- Kept the outer ring, group sizes, population caps, specialist/heavy limits and all combatant stats unchanged so the next run measures the complete attacking force before balance changes.
+
+## 2.6.1
+
+- Added first-class Raids-page buttons for the current `lwc_formidable_arena` and `lwc_formidable_souls_swamp` Elder-pattern FormidableAI stress raids.
+- Added the standard noon setup beside the current training-raid controls and kept the existing stop-event control explicit.
+- Removed the two obsolete bounded-trial buttons whose event definitions were deliberately superseded in the Arena profile; every visible raid button now names an event packaged or supplied by the game.
+- Preserved every vanilla raid control and all non-raid Tooler pages.
+
+## 2.6.0
+
+- Living World pages reorganized from 14 to 7: Companions, Raids, Player, Spawn, World, Build, Admin.
+- Every control appears exactly once (lwparty had been on six pages); destructive actions stay on their own page behind the two-click confirmation; the separate Danger page is gone.
+- Removed about twenty buttons that called the retired 0.x `lwtest` commands; added the 1.0 companion commands: lwparty new/clean, lwstatus, lwheal, lwsummon, lwgoto.
+- Site Survey moved onto the Build page with terrain tools; Console moved onto Admin.
+- The four original Tooler pages and the Tooler core file are unchanged.
+
+## 2.5.0
+
+- Added an isolated, controller-usable Site Survey module without removing or replacing any existing Tooler page.
+- Added exact four-corner capture from live Valheim ground, quadrilateral validation, best-fit campus geometry, bounded grid sampling, water/biome/blocker evidence, cut/fill estimates, removable owned preview markers, and text/JSON exports.
+- Kept terrain application visibly locked and absent until a later build can enforce backup receipts, second confirmation, bounded journaling, cancellation, no combat, and no peers.
+
 ## 2.4.1
 
 - Established the existing Tooler shell, toolbar, page order, and capabilities as a build-checked interface contract.

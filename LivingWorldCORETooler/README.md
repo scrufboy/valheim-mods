@@ -2,6 +2,10 @@
 
 Maintained and packaged for Living World C.O.R.E. by **Brian / scrufboy**.
 
+Version 2.7.1 adds a headless Showcase Director for Stream Deck. Configurable debounced hotkeys work while the Tooler window is closed. Reveal buttons and hotkeys add independently tagged cohorts to one Tooler-owned run, using the distant spawnable-ground search and native hostile approach while preserving each prefab's faction. Valheim still owns exactly one native raid slot, so an Elder/greydwarf raid can run alongside later Legion, Behemoth, NekMyn and other Showcase cohorts without one native event canceling another. Exact prefab registration is mandatory and substitutions are forbidden. Showcase companion reinforcement/recall requires a dedicated noncanonical `LWC_ShowcaseCompanion_Test` prefab; canonical saved companions are never changed. Telemetry records Stream Deck action, native event, run/cohort IDs, requested/actual prefab, geometry, waves, arrivals, deaths, reinforcement and cleanup under `BepInEx/config/LivingWorld/Tooler/ShowcaseTelemetry`.
+
+The Showcase Director is a private administrative/QA bridge and is disabled by default. It requires explicit enablement plus local host/server authority. It is not intended for progression, farming, public multiplayer advantage, or undisclosed staged gameplay. Read [HEADLESS-SHOWCASE-ADMIN-POLICY.md](HEADLESS-SHOWCASE-ADMIN-POLICY.md) before enabling it. This build is not a public release candidate and must not be published to Thunderstore, Nexus or Hexium.
+
 This is the Living World C.O.R.E. Tooler: one Living World plugin identity,
 Living World branding, the familiar proven interface/colors/control layout,
 the complete player, catalog, entity, terrain, ESP, and utility feature set,
@@ -11,11 +15,11 @@ item/prefab spawning, time of day, environment/weather, terrain, map/admin,
 confirmed destructive actions, and an arbitrary command bridge. Invalid
 unfinished ObjectDB item entries are skipped without flooding `LogOutput.log`.
 
-The Raids page includes two opt-in, real Valheim `RandomEvent` matchups for
-Formidable companion evaluation: a bounded group of two to three Common Folk
-Pillagers and a two-combatant Krauguk Legion. They use the installed Souls of
-the Land RRR prefabs, hunt the player/party, and are excluded from random world
-raid selection. Custom Raids 1.8.2 loads and synchronizes these event records.
+The Raids page launches the installed `lwc_formidable_arena` and
+`lwc_formidable_souls_swamp` long-range training events. Its package includes
+the matching Custom Raids definitions. The Tooler issues the normal Valheim
+event commands and does not create a separate combat, faction, or
+defended-player state.
 
 The World page includes Midnight, Morning, Noon, Evening, normal time-flow,
 time skipping, named environment forcing, Clear, Rain, Thunderstorm, Fog,
