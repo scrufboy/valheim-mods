@@ -1,4 +1,4 @@
-# Balrond Character Customization: Living World NPC appearance audit
+# External appearance capability research
 
 Date: 2026-10-27
 

@@ -1,4 +1,4 @@
-# VikingsForHire 1.6.3 capability and architecture audit
+# External human actor capability research
 
 Date: 2026-10-19
 
@@ -61,7 +61,7 @@ capability behind a narrow state/module contract.
 
 ## Capability matrix and module destination
 
-| Capability | VikingsForHire 1.6.3 | Living World direction |
+| Capability | Reviewed reference | Living World direction |
 | --- | --- | --- |
 | Native target/pursuit/attack loop | Implemented | Core boundary corrected in 0.3.56 |
 | Melee/ranged/tank/healer roles | Implemented | `CombatRoles`; preserve native selection, add only role constraints/support |

@@ -1,0 +1,55 @@
+Session: core 1.0.23, world LWC_HumanLab_v1, 255 s, companions: Signy Thorstensdottir, Unn Geirsdottir
+PASS          Companions present                              2 companion(s), 908 samples
+PASS          No domain ownership violations                  violations=0
+PASS          No kernel/behavior faults                       faults=0
+PASS          Torch never in hand during combat/readiness     0 bad samples
+FAIL          Torch lit at night in calm                      56% of dark calm samples lit (built light or settling delays account for the rest)
+PASS          Torch does not flicker                          0 toggles under 3 s
+PASS          Weapons stay visible on the back in calm        0 samples with empty back and no weapon in hand
+PASS          Weapons stowed (not in hand) in calm            0 calm samples with a weapon in hand
+NOT EXERCISED Companions crouch when leader sneaks            leader never crouched in calm
+NOT EXERCISED Companions sit when leader sits                 leader never sat
+PASS          Combat control does not churn                   18 handoffs in/out of native combat, 5.9/min (148 combat/clear relabels ignored)
+PASS          Cohesion returns are occasional                 6 returns to the party, 2.0 per combat-minute
+PASS          Party stays together in combat                  mean 8.2 m, max 20.8 m, 5% of combat samples over 16 m
+PASS          No torch used as a weapon                       0 samples
+PASS          Shield held with sword in combat                99% of sword samples carry the shield
+PASS          Shield kept on the back in calm                 100% of calm samples
+PASS          Bow used at range                               median 13.4 m, 4% of bow samples under 4 m
+PASS          Bow actually fires (Signy Thorstensdottir)      31 arrows spent, attacking in 45 of 254 bow-in-hand combat samples
+PASS          Bow actually fires (Unn Geirsdottir)            31 arrows spent, attacking in 50 of 253 bow-in-hand combat samples
+INFO          Arrows used by Signy Thorstensdottir            40 at start, 13 at end
+INFO          Arrows used by Unn Geirsdottir                  40 at start, 15 at end
+PASS          Target switches calm (Signy Thorstensdottir)    0 rule switches in 2.7 combat-min = 0.0/min
+INFO          Focus on real threats (Signy Thorstensdottir)   100% of combat on a shooter or an enemy attacking the party
+PASS          Target switches calm (Unn Geirsdottir)          0 rule switches in 2.9 combat-min = 0.0/min
+INFO          Focus on real threats (Unn Geirsdottir)         97% of combat on a shooter or an enemy attacking the party
+PASS          Wildlife watched, not fought                    0 combat samples on wildlife that never committed
+INFO          Target choice reasons                           nearest engaged 84, on me 14, defend partner 3
+PASS          No walking away from engaged enemies            0 of 6 returns started with an engaged enemy within 10 m
+PASS          Falls back when badly hurt                      1 fall-backs; 12 combat samples at or below 35% health
+PASS          Every fall-back ends in a decision              0 over 6 s or unfinished, 0 beyond 3 per fight
+INFO          Fall-back outcomes                              caught 1
+FAIL          No dead time between targets                    7% of fighting samples had no target with a hostile near (1.0.6/1.0.7: 13%)
+PASS          Armor reduces damage (Draugr axe, ~45 raw)      median 9.0 over 1 hits at armor >= 20
+PASS          No multiplied one-shot hits                     every hit within 3x its weapon's normal
+PASS          Worn armor counts against hits                  0 of 20 hits taken with armor 0; typical armor 63
+PASS          Bow in hand for flying or distant targets       2% of 230 samples held melee (1.0.11 Moder: 44%)
+INFO          Voice rate                                      68 lines, 22.7 per combat-minute (alerted 12, exert 27, hit 12, hit_heavy 2, idle 11, warcry 4)
+INFO          Damage dealt by Signy Thorstensdottir           30 hits landed (21 by bow; 31 arrows spent -> 68% arrow hit rate), 3074 damage, 25 kills
+INFO          Damage dealt by Unn Geirsdottir                 31 hits landed (18 by bow; 31 arrows spent -> 58% arrow hit rate), 3691 damage, 24 kills
+PASS          Melee chains (1-2-3 combos)                     4 follow-ups started; melee hits by combo position: hit 1: 16, hit 2: 6; 27% of melee hits were follow-ups
+PASS          Follow-ups only within reach                    0 of 4 follow-ups started with the target over 3 m away
+INFO          Gear plains q3                                  armor 63; median hit taken: Goblin 26 (n=11), GoblinBrute 59 (n=6), Skeleton 2 (n=2), Draugr 9 (n=1); deaths 2
+INFO          Heavy stamina pool                              max 150; full in 92% of combat samples, under 15 in 0%; emptied 0 time(s)
+PASS          Heavy attacks                                   6 started (Staggered 6); 3 heavy hits landed, median 573 damage vs 99 for other melee hits
+PASS          No single-target heavy into a converging crowd  0 of 6 heavies started with 2+ other enemies within 4 m
+PASS          Split pair defends the partner                  split in 34 of 695 combat samples; partner under attack in 5; 3 'defend partner' picks; 0 samples regrouping while the partner was attacked
+INFO          War cries                                       4 (army_bonemass, army_goblin)
+NOT EXERCISED Shield blocks in close combat                   blocking switched off in config
+INFO          Last 20 s of hits on Signy Thorstensdottir      t205 Fuling 27@1.4m; t207 Fuling 26@2.1m; t208 Fuling 23@1.8m; t217 Fuling 24@2.8m; t221 Fuling Berserker 58@2.2m; t224 Fuling Berserker 62@1.5m; t224 Fuling Berserker 52@2.8m
+INFO          Last 20 s of hits on Unn Geirsdottir            t215 Fuling 22@1.7m; t218 Fuling Berserker 61@2.1m; t223 Fuling 22@1.9m; t229 Fuling 27@1.7m; t234 Fuling Berserker 51@1.3m; t235 Fuling Berserker 59@2.9m
+FAIL          Removed: Signy Thorstensdottir                  death at t=224 in Combat, hp 0, last hit by Fuling Berserker
+FAIL          Removed: Unn Geirsdottir                        death at t=235 in Combat, hp 0, last hit by Fuling Berserker
+
+FAILED: 52 checks, 4 failed.

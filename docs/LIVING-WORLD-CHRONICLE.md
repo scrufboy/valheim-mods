@@ -4,6 +4,19 @@ An append-only public record of how the world, characters, art, and playable
 systems develop. This is not a raw commit log. It records decisions that change
 what a reader understands about the project.
 
+## 2026-11-07 - Swamp temples and the proposed Mirekin family
+
+Brian directs an evolving swamp overhaul around selected Bonemass locations.
+The native boss and his origin/gameplay stay intact; temples and a muddy sunken
+dungeon provide the new setting. Tiny blowgun individuals come first, followed
+by material-tiered spear roles, a grotesque shaman and later dynamic shoulder
+pairs with two independently surviving actors. Draugr Behemoth retains its name;
+shaman binding/body-work extends LWC context without rewriting Bonemass.
+Mirekin and Mirekin Fleshweaver are proposed names. Mask face-taking lore and
+giving Bonemass a body remain unapproved ideas. Full scope and honest status:
+[design update](design/SWAMP-TEMPLE-MIREKIN-2026-11-07.md). Every owning workstream
+must update its records and Git with a precise source/build/install receipt.
+
 ## 2026-10-27 — The Second Breath becomes the story foundation
 
 Living World established that earlier people reached Valheim before the player.

@@ -18,7 +18,7 @@ Each submission must include:
 
 1. `HANDOFF.md` — intent, evidence, exact scope, and remaining unknowns.
 2. `CHANGED-FILES.md` — every changed file and why.
-3. `VERIFICATION.md` — offline tests, installation status, live tests, hashes, and failures.
+3. `VERIFICATION.md` — code checks, installation status, live tests, hashes, and failures.
 4. `REQUEST.md` or `RESPONSE.md` — the exact question or return message for the other agent.
 
 Source changes should be delivered on a branch or pull request. Do not use the exchange folder as an unreviewed dumping ground for replacement binaries.
@@ -28,13 +28,15 @@ Source changes should be delivered on a branch or pull request. Do not use the e
 Every claim must be labeled as one of:
 
 - SOURCE-INSPECTED
-- OFFLINE-TESTED
+- CODE-TESTED (checks run outside Valheim)
 - INSTALLED
 - LIVE-PROVEN
 - FAILED
 - UNKNOWN
 
-Offline success must never be written as live success.
+Code-test success must never be written as live success. Older dated submissions
+retain their original wording as historical evidence; new submissions use this
+vocabulary.
 
 ## Promotion
 

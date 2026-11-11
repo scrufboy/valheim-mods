@@ -5,8 +5,8 @@
   persistence, and delivery order.
 - `LivingWorldHumanNPC/SPECIALIST-COMBAT-CAPABILITY-PLAN.md` — reusable thrown,
   lunge, heavy, and magic capabilities plus prediction fairness and acceptance.
-- `research/COMPETITOR-AUDIT-OFFLINE-COMPANIONS.md` — public capability research
-  for Offline Companions and Vikings for Hire.
+- `research/EXTERNAL-COMPANION-CAPABILITIES.md` — public capability research
+  on persistence, encounters, and roster behavior.
 - `LivingWorldCompanionSystems/README.md` — index and current priority summary.
 - `art/README.md` — committed-art index and implementation boundary.
 - `art/brand/LWC-OBS-Intro-Key-Art-v1.png` — approved splash/OBS art.

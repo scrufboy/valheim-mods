@@ -1,0 +1,12 @@
+# Native attack capability matrix — source baseline 1.0.32.7
+
+This matrix is source-inspected at commit `9933763978fd7c29bfa9909e7ea8b6c47f86e421`. It is not live-game proof.
+
+| Move | Item/data path | Animation / attack path | Status for encounter adapter |
+|---|---|---|---|
+| Spear throw | `CombatDataReport` inspects `SpearBronze` and `SpearElderbark`, including primary/secondary `Attack` data and projectile fields. The maintained default kits do not equip a spear. | Core delegates weapon selection and attacks to native `MonsterAI`; `Humanoid.StartAttack` is observed/patched for chaining and voice. No source assertion proves a non-Player human selects or completes the spear secondary throw. | Item data is inspectable; live selection, animation compatibility, projectile launch, ownership, and recovery are **unknown**. |
+| Bomb / area attack | `CombatDataReport.Throws` inspects `BombOoze`, `BombBile`, their attack projectile, and resulting AOE ownership/damage data. Default kits contain no bomb. | No adapter or maintained equipment path equips/consumes bombs on the companion. No encounter code calls `StartAttack` for them. | Data-report path only; inventory use, throw animation, projectile/AOE attribution, replication, and AI cadence are **unknown**. |
+| Knife lunge | `CombatDataReport` inspects `KnifeBlackMetal` primary and secondary attack data. Default kits contain no knife. | Heavy-attack policy can classify a single-target secondary and core patches native `Humanoid.StartAttack`; that proves a generic secondary seam, not this animation on the non-Player human. | Item and generic secondary paths exist; lunge selection, animation/root motion, hit registration, and live ownership are **unknown**. |
+| Atgeir native attack | `CombatDataReport` inspects bronze/iron/blackmetal atgeirs. `HeavyAttackPolicy.ShapeOf` classifies area secondary attacks (the source comment explicitly cites the atgeir spin). | Native combat owns targeting/movement/attacks, and the generic secondary/chain hooks exist. No maintained kit equips an atgeir and no live result for thrust or spin is recorded by this adapter. | Strongest source-level candidate: data + native attack + area-heavy policy paths are present. Both primary thrust and secondary spin remain **unproven in game**. |
+
+No move above is enabled or forced by the first adapter slice. `CoreEncounterAdapter` observes combat phase only and never selects equipment, sets a target, or starts an attack.

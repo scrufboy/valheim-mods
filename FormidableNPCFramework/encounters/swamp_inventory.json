@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "status": "blocked: shaman and blowgun actors missing; native encounter executor not wired; installed Custom Raids forces faction",
+  "raid_faction_passthrough": {
+    "verified": false,
+    "evidence": "Read-only Mono.Cecil inspection of installed Valheim.CustomRaids.dll: RaidEventConfiguration constructor defaults Faction to Boss; SpawnModifierSetFaction.Modify initializes faction enum 8 and unconditionally writes Character.m_faction and ZDO faction, even when both config strings are empty. Omitting Faction is therefore insufficient. Actor-scoped preservation needs actual integration verification before this trial can compile."
+  },
+  "native_shaman_control": {
+    "ready": false,
+    "event": "lwc_formidable_swamp_faction_trial",
+    "beast_prefab": "LWC_UndeadColossus_Test",
+    "single_decision_per_encounter": false,
+    "configured_beast_chance_percent": null,
+    "evidence": "CommitBeastSummon pure policy has a stable encounter latch; actual native shaman summon/control executor and its event integration are not wired. This receipt does not configure the runtime."
+  },
+  "actors": {
+    "neckman": {
+      "prefab": "RRRN_Neckman",
+      "registered": true,
+      "evidence": "LWC Formidable Arena/BepInEx/LogOutput.log: Spawned RRRN_Neckman x 1 at 11/06/2026 21:09:25; installed Souls Of The Land - Enemy Pack/rrrnpcs.custom.Neckman.json. Legacy RRR dependency, not Formidable-native."
+    },
+    "marauder": {
+      "prefab": "LWC_MarshMarauder_Prototype",
+      "registered": true,
+      "evidence": "LWC Formidable Arena/BepInEx/LogOutput.log: LWC_MARAUDER_REGISTERED LWC_MarshMarauder_Prototype; installed LivingWorldCORE-Marsh_Marauder_Prototype/LWC-MarshMarauder/marauder.json agrees. Scenario acceptance pending."
+    },
+    "shaman": {
+      "prefab": null,
+      "registered": false,
+      "evidence": "Red-Neck-Shaman/project.json is appearance only; no registered hostile shaman identity verified."
+    },
+    "blowgun": {
+      "prefab": null,
+      "registered": false,
+      "evidence": "Purchased goblin/blowgun asset has no verified package bytes or registered actor yet."
+    },
+    "beast": {
+      "prefab": "LWC_UndeadColossus_Test",
+      "registered": true,
+      "evidence": "LWC Formidable Arena/BepInEx/plugins/LivingWorldCORE-Undead_Colossus_Prototype/LWC-UndeadColossus/colossus-verified-content.json: exact runtime registration receipt prefabName; colossus.json agrees."
+    }
+  }
+}
