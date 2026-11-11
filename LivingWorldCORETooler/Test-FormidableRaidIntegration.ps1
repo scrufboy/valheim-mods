@@ -43,7 +43,7 @@ if (($config -split '\r?\n' | Where-Object { $_ -match '^SpawnInterval\s*=\s*5$'
     ($config -split '\r?\n' | Where-Object { $_ -match '^SpawnInterval\s*=\s*5000$' }).Count -ne 0) {
     throw 'Every current FormidableAI raid slot must retry every 5 seconds; Custom Raids uses seconds, not milliseconds.'
 }
-if ($manifest.version_number -ne '2.7.0') {
+if ($manifest.version_number -ne '2.7.1') {
     throw 'Unexpected Tooler package version.'
 }
 if ($manifest.dependencies -notcontains 'ASharpPen-Custom_Raids-1.8.2') {

@@ -18,7 +18,8 @@ $sources = @(
     (Join-Path $root 'src\LivingWorldTrainerPanel.cs'),
     (Join-Path $root 'src\LivingWorldToolerModules.cs'),
     (Join-Path $root 'src\LivingWorldSiteSurvey.cs'),
-    (Join-Path $root 'src\LivingWorldRaidDirector.cs')
+    (Join-Path $root 'src\LivingWorldRaidDirector.cs'),
+    (Join-Path $root 'src\LivingWorldShowcaseDirector.cs')
 )
 $coreVersionSource = Join-Path $root 'src\CoreVersionInfo.cs'
 $coreInput = Join-Path $CompatibilityForkDirectory 'ValheimTooler.dll'
@@ -26,7 +27,7 @@ $coreOutput = Join-Path $build 'LivingWorld.CORE.Tooler.Core.dll'
 $versionCarrierDirectory = Join-Path $build 'version-carrier'
 $versionCarrier = Join-Path $versionCarrierDirectory 'LivingWorld.CORE.Tooler.Core.dll'
 $output = Join-Path $build 'LivingWorld.CORE.Tooler.dll'
-$archive = Join-Path $dist 'scrufboy-LivingWorldCORETooler-2.7.0.zip'
+$archive = Join-Path $dist 'scrufboy-LivingWorldCORETooler-2.7.1.zip'
 $icon = Join-Path $root 'icon.png'
 $iconBase64 = Join-Path $root 'icon.png.base64'
 $raidConfig = Join-Path $root 'config\custom_raids.supplemental.lwc_formidable_souls.cfg'
@@ -171,7 +172,7 @@ Add-Type -Path $CecilPath
 $core = [Mono.Cecil.AssemblyDefinition]::ReadAssembly($coreInput)
 try {
     $core.Name.Name = 'LivingWorld.CORE.Tooler.Core'
-    $core.Name.Version = [Version]'2.7.0.0'
+    $core.Name.Version = [Version]'2.7.1.0'
     $core.MainModule.Name = 'LivingWorld.CORE.Tooler.Core.dll'
 
     $metadata = @{
@@ -180,8 +181,8 @@ try {
         'System.Reflection.AssemblyCompanyAttribute' = 'Brian / scrufboy'
         'System.Reflection.AssemblyProductAttribute' = 'Living World C.O.R.E. Tooler'
         'System.Reflection.AssemblyCopyrightAttribute' = 'Living World integration Copyright Brian / scrufboy'
-        'System.Reflection.AssemblyVersionAttribute' = '2.7.0.0'
-        'System.Reflection.AssemblyFileVersionAttribute' = '2.7.0.0'
+        'System.Reflection.AssemblyVersionAttribute' = '2.7.1.0'
+        'System.Reflection.AssemblyFileVersionAttribute' = '2.7.1.0'
     }
     foreach ($attribute in $core.CustomAttributes) {
         if ($metadata.ContainsKey($attribute.AttributeType.FullName) -and $attribute.ConstructorArguments.Count -gt 0) {
@@ -225,7 +226,7 @@ finally {
 $coreVersionInfo = [Diagnostics.FileVersionInfo]::GetVersionInfo($coreOutput)
 if ($coreVersionInfo.CompanyName -ne 'Brian / scrufboy' -or
     $coreVersionInfo.ProductName -ne 'Living World C.O.R.E. Tooler' -or
-    $coreVersionInfo.FileVersion -ne '2.7.0.0') {
+    $coreVersionInfo.FileVersion -ne '2.7.1.0') {
     throw 'The rebranded core still contains incorrect Windows file metadata.'
 }
 
@@ -298,7 +299,7 @@ Compress-Archive -Path (Join-Path $package '*') -DestinationPath $archive -Compr
 
 [ordered]@{
     Product = 'Living World C.O.R.E. Tooler — Brian / scrufboy'
-    PackageVersion = '2.7.0'
+    PackageVersion = '2.7.1'
     PluginGuid = 'com.scrufboy.livingworldcore.tooler'
     Status = 'PASS'
     Scope = 'Offline compilation, owned plugin identity, rebranded core, original feature-surface, and isolated Site Survey verification'

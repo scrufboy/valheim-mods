@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.7.1
+
+- Added configurable debounced Stream Deck hotkeys that operate with the Tooler window closed.
+- Added a Tooler-owned Showcase Director for multiple independently tagged distant cohorts alongside, but never as a fake replacement for, Valheim's single native raid.
+- Added nearby spawnable-ground search, explicit no-area refusal, cohort/run provenance, arrival/death/reinforcement/cleanup telemetry and Tooler-owned cleanup.
+- Showcase companion actions require a dedicated `LWC_ShowcaseCompanion_Test` registration; canonical persistent companions are never recalled, resurrected or changed.
+
 ## 2.7.0
 
 - Added exact-registration-gated reveal raid buttons for the current NekMyn, Behemoth, Formidable Surtling and Sunken Marauder candidates.

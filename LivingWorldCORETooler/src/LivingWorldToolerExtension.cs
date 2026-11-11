@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using BepInEx;
+using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
 using ValheimTooler;
@@ -17,8 +18,8 @@ using ValheimTooler.Utils;
 [assembly: AssemblyCompany("Brian / scrufboy")]
 [assembly: AssemblyProduct("Living World C.O.R.E.")]
 [assembly: AssemblyCopyright("Living World integration Copyright Brian / scrufboy")]
-[assembly: AssemblyVersion("2.7.0.0")]
-[assembly: AssemblyFileVersion("2.7.0.0")]
+[assembly: AssemblyVersion("2.7.1.0")]
+[assembly: AssemblyFileVersion("2.7.1.0")]
 
 namespace Scrufboy.LivingWorld.Tooler
 {
@@ -28,18 +29,71 @@ namespace Scrufboy.LivingWorld.Tooler
     {
         public const string PluginGuid = "com.scrufboy.livingworldcore.tooler";
         public const string PluginName = "Living World C.O.R.E. Tooler — Brian / scrufboy";
-        public const string PluginVersion = "2.7.0";
+        public const string PluginVersion = "2.7.1";
 
         private Harmony harmony;
         private bool coreStarted;
         private static LivingWorldCoreToolerPlugin instance;
+        private readonly List<ConfigEntry<KeyboardShortcut>> showcaseKeys = new List<ConfigEntry<KeyboardShortcut>>();
+        private ConfigEntry<KeyboardShortcut> stopKey;
+        private ConfigEntry<KeyboardShortcut> nextWaveKey;
+        private ConfigEntry<KeyboardShortcut> reinforceKey;
+        private ConfigEntry<KeyboardShortcut> recallKey;
+        private ConfigEntry<float> debounceSeconds;
+        private ConfigEntry<bool> noHudMode;
+        private float nextHotkeyAt;
 
         private void Awake()
         {
             instance = this;
             harmony = new Harmony(PluginGuid);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
+            BindShowcaseHotkeys();
             Logger.LogInfo(PluginName + " " + PluginVersion + " loaded.");
+        }
+
+        private void BindShowcaseHotkeys()
+        {
+            KeyCode[] defaults = { KeyCode.F1, KeyCode.F2, KeyCode.F3, KeyCode.F4, KeyCode.F5, KeyCode.F6, KeyCode.F7, KeyCode.F8, KeyCode.F9 };
+            for (int index = 0; index < LivingWorldRaidDirector.Candidates.Length; index++)
+            {
+                LivingWorldRaidCandidate candidate = LivingWorldRaidDirector.Candidates[index];
+                showcaseKeys.Add(Config.Bind("Stream Deck Showcase", "Cohort " + (index + 1).ToString("D2") + " - " + candidate.Label,
+                    new KeyboardShortcut(defaults[index], KeyCode.LeftControl, KeyCode.LeftAlt),
+                    "Global in-game shortcut. Works while the Tooler window is hidden; Stream Deck may emit this chord."));
+            }
+            stopKey = Config.Bind("Stream Deck Showcase", "Stop and cleanup", new KeyboardShortcut(KeyCode.F10, KeyCode.LeftControl, KeyCode.LeftAlt), "Stops Tooler-owned cohorts only; does not stop the native raid.");
+            nextWaveKey = Config.Bind("Stream Deck Showcase", "Release next wave", new KeyboardShortcut(KeyCode.F11, KeyCode.LeftControl, KeyCode.LeftAlt), "Releases every queued cohort's next wave now.");
+            reinforceKey = Config.Bind("Stream Deck Showcase", "Showcase companion reinforcement", new KeyboardShortcut(KeyCode.F12, KeyCode.LeftControl, KeyCode.LeftAlt), "Requires the dedicated noncanonical LWC_ShowcaseCompanion_Test prefab.");
+            recallKey = Config.Bind("Stream Deck Showcase", "Recall showcase companions", new KeyboardShortcut(KeyCode.Insert, KeyCode.LeftControl, KeyCode.LeftAlt), "Recalls Tooler-owned showcase companion instances only.");
+            debounceSeconds = Config.Bind("Stream Deck Showcase", "Debounce seconds", 0.40f, new ConfigDescription("Minimum time between accepted Showcase hotkeys.", new AcceptableValueRange<float>(0.15f, 3f)));
+            noHudMode = Config.Bind("Stream Deck Showcase", "No HUD mode", true, "Hotkeys and telemetry remain active without opening the Tooler window; no showcase overlay is required.");
+            Logger.LogInfo("Stream Deck Showcase hotkeys ready; no-HUD mode=" + noHudMode.Value + ".");
+        }
+
+        private void Update()
+        {
+            LivingWorldShowcaseDirector.Tick();
+            if (Time.unscaledTime < nextHotkeyAt) return;
+            for (int index = 0; index < showcaseKeys.Count; index++)
+            {
+                if (!showcaseKeys[index].Value.IsDown()) continue;
+                LivingWorldRaidCandidate candidate = LivingWorldRaidDirector.Candidates[index];
+                string result;
+                LivingWorldShowcaseDirector.Queue(candidate, 70, 95, 0, 1, 20, 1, "streamdeck:cohort:" + candidate.PrefabName, out result);
+                Logger.LogInfo(result);
+                AcceptHotkey();
+                return;
+            }
+            if (stopKey.Value.IsDown()) { LivingWorldShowcaseDirector.Stop("streamdeck:stop"); Logger.LogInfo(LivingWorldShowcaseDirector.Status); AcceptHotkey(); }
+            else if (nextWaveKey.Value.IsDown()) { LivingWorldShowcaseDirector.NextWave("streamdeck:next-wave"); Logger.LogInfo(LivingWorldShowcaseDirector.Status); AcceptHotkey(); }
+            else if (reinforceKey.Value.IsDown()) { LivingWorldShowcaseDirector.Reinforce("streamdeck:reinforce"); Logger.LogInfo(LivingWorldShowcaseDirector.Status); AcceptHotkey(); }
+            else if (recallKey.Value.IsDown()) { LivingWorldShowcaseDirector.Recall("streamdeck:recall"); Logger.LogInfo(LivingWorldShowcaseDirector.Status); AcceptHotkey(); }
+        }
+
+        private void AcceptHotkey()
+        {
+            nextHotkeyAt = Time.unscaledTime + debounceSeconds.Value;
         }
 
         private void OnDestroy()

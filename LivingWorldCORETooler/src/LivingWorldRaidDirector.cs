@@ -51,6 +51,19 @@ namespace Scrufboy.LivingWorld.Tooler
 
         internal static bool IsAvailable(LivingWorldRaidCandidate candidate, out string reason)
         {
+            if (!IsPrefabAvailable(candidate, out reason))
+                return false;
+            if (RandEventSystem.instance == null || !RandEventSystem.instance.HaveEvent(candidate.EventName))
+            {
+                reason = "raid definition is not registered: " + candidate.EventName;
+                return false;
+            }
+            reason = "ready";
+            return true;
+        }
+
+        internal static bool IsPrefabAvailable(LivingWorldRaidCandidate candidate, out string reason)
+        {
             if (candidate == null)
             {
                 reason = "candidate is missing";
@@ -70,11 +83,6 @@ namespace Scrufboy.LivingWorld.Tooler
             if (prefab == null || !String.Equals(prefab.name, candidate.PrefabName, StringComparison.Ordinal))
             {
                 reason = "exact prefab is not registered: " + candidate.PrefabName;
-                return false;
-            }
-            if (RandEventSystem.instance == null || !RandEventSystem.instance.HaveEvent(candidate.EventName))
-            {
-                reason = "raid definition is not registered: " + candidate.EventName;
                 return false;
             }
             reason = "ready";

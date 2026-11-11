@@ -135,7 +135,7 @@ namespace Scrufboy.LivingWorld.Tooler
         private static void Raids()
         {
             Heading("Living World reveal raid calculator");
-            GUILayout.Label("These buttons use the existing Custom Raids / RandEventSystem scheduler. They validate the exact registered prefab before launch and never substitute a vanilla actor.", statusStyle);
+            GUILayout.Label("These buttons add independently tagged Tooler-owned cohorts to one Showcase run. They use the proven distant spawn search while leaving Valheim's single native raid slot untouched, so one native raid may run alongside the showcase. Exact prefab registration is required; no substitution.", statusStyle);
             GUILayout.BeginHorizontal();
             GUILayout.Label("Distance", GUILayout.Width(58));
             raidDistanceMin = GUILayout.TextField(raidDistanceMin, GUILayout.Width(42));
@@ -154,7 +154,7 @@ namespace Scrufboy.LivingWorld.Tooler
             foreach (LivingWorldRaidCandidate candidate in LivingWorldRaidDirector.Candidates)
             {
                 string reason;
-                bool available = LivingWorldRaidDirector.IsAvailable(candidate, out reason);
+                bool available = LivingWorldRaidDirector.IsPrefabAvailable(candidate, out reason);
                 bool prior = GUI.enabled;
                 GUI.enabled = prior && available;
                 if (GUILayout.Button((available ? "START " : "UNAVAILABLE — ") + candidate.Label + "\n" + candidate.PrefabName, buttonStyle))
@@ -165,16 +165,34 @@ namespace Scrufboy.LivingWorld.Tooler
                     int count = ParseBounded(raidCount, 1, 1, 20);
                     int interval = ParseBounded(raidIntervalSeconds, 20, 1, 300);
                     int waves = ParseBounded(raidWaves, 1, 1, 20);
-                    LivingWorldRaidDirector.Start(candidate, min, max, approach, count, interval, waves, out lastAction);
+                    LivingWorldShowcaseDirector.Queue(candidate, min, max, approach, count, interval, waves, "tooler-ui:" + candidate.PrefabName, out lastAction);
                 }
                 GUI.enabled = prior;
                 GUILayout.Label((available ? "Ready" : reason) + " — " + candidate.Readiness, available ? GUI.skin.label : warningStyle);
             }
             if (GUILayout.Button("STOP LIVING WORLD REVEAL RAID", GUILayout.Height(36)))
             {
-                LivingWorldRaidDirector.Stop();
-                lastAction = "Living World reveal raid stopped; existing survivors remain governed by their native lifecycle.";
+                LivingWorldShowcaseDirector.Stop("tooler-ui:stop");
+                lastAction = LivingWorldShowcaseDirector.Status;
             }
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Release next Showcase wave now", GUILayout.Height(36)))
+            {
+                LivingWorldShowcaseDirector.NextWave("tooler-ui:next-wave");
+                lastAction = LivingWorldShowcaseDirector.Status;
+            }
+            if (GUILayout.Button("Showcase companion reinforcement", GUILayout.Height(36)))
+            {
+                LivingWorldShowcaseDirector.Reinforce("tooler-ui:reinforce");
+                lastAction = LivingWorldShowcaseDirector.Status;
+            }
+            if (GUILayout.Button("Recall showcase companions", GUILayout.Height(36)))
+            {
+                LivingWorldShowcaseDirector.Recall("tooler-ui:recall");
+                lastAction = LivingWorldShowcaseDirector.Status;
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Label("Headless defaults: Ctrl+Alt+F1..F9 cohorts; Ctrl+Alt+F10 stop/cleanup; Ctrl+Alt+F11 next wave; Ctrl+Alt+F12 showcase reinforcement; Ctrl+Alt+Insert recall. All are configurable in the Tooler config.", statusStyle);
 
             Heading("Current FormidableAI training raids");
             Row(new ActionDef("Formidable Arena", "event lwc_formidable_arena", "Starts the current Elder-pattern mixed Souls raid at the configured long-range ring."),
