@@ -1,0 +1,51 @@
+Behemoth animation set - recommended picks from packs you own (preview each in the Workshop before committing),,,,,,,,,,,,,,
+"Native = GoblinBruteAnimator clip the Behemoth uses today (installed Valheim, read 2026-11-06). An override controller swaps clips inside these existing states; NEW rows need new states.",,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+Behemoth slot,Pick,Clip,Pack,Behemoth-ready,Seconds,Native clip (s),Root motion,Speed (hip-heights/s),Fastest limb (hit candidate),Fastest-limb time (s),Why,Role,Vendor,File
+Idle1,Primary,GiantGolem_Idle,Giant Golem,YES,13.333,8.25,In-place,,,,Club-holding giant idle authored for this body type; long 13 s loop avoids visible repetition.,Main idle loop,RamsterZ,GiantGolem_Idle.fbx
+Idle1,Alt,Giant@Idle01,Giant Animations,YES,2.667,8.25,In-place,,,,"Clean 2.7 s heavy-breathing loop; Humanoid, ready now.",Main idle loop,Kevin Iglesias,Giant@Idle01.fbx
+Idle1,Alt,4_GIANT_Idle_C,Monster Animations - Giant,CONVERT,2.967,8.25,In-place,,,,Combat-ready giant idle; needs Generic->Humanoid re-import first.,Main idle loop,HQA3,4_GIANT_Idle_C.fbx
+Idle2,Primary,GiantGolem_Idle_LookingAround01,Giant Golem,YES,5.667,8.333,In-place,,,,Scans surroundings - reads as a guardian watching its hoard.,Idle variety,RamsterZ,GiantGolem_Idle_LookingAround01.fbx
+Idle2,Alt,GiantGolem_Idle_CheckLeftSide,Giant Golem,YES,6,8.333,In-place,,,,Pair with CheckRightSide for directional checks.,Idle variety,RamsterZ,GiantGolem_Idle_CheckLeftSide.fbx
+Idle2,Alt,GiantGolem_Idle_Restless,Giant Golem,YES,5.333,8.333,In-place,,,,Agitated shift - good while alerted but no target.,Idle variety,RamsterZ,GiantGolem_Idle_Restless.fbx
+Idle2,Alt,Giant@Idle01 - Action01,Giant Animations,YES,3.267,8.333,In-place,,,,"One-shot idle break, 3.3 s.",Idle variety,Kevin Iglesias,Giant@Idle01 - Action01.fbx
+Walk1,Primary,GiantGolem_Move_Walk_Forward,Giant Golem,YES,2,2.5,Root motion,0.45,,,Slowest gait in the whole catalog (about 0.45 hip-heights/s): the heaviest-reading walk. Has root motion.,Walk,RamsterZ,GiantGolem_Move_Walk_Forward.fbx
+Walk1,Alt,Giant@Walk01 - Forward,Giant Animations,YES,2.267,2.5,In-place,0.87,,,About 0.87 hip-heights/s; has an [RM] twin. Includes 8-way strafes/backpedal.,Walk,Kevin Iglesias,Giant@Walk01 - Forward.fbx
+Walk1,Alt,move_walk_front,Giant Golem AnimSet,YES,2.033,2.5,Root motion,0.77,,,About 0.77 hip-heights/s; root-motion and in-place versions; 8-way.,Walk,wemakethegame,move_walk_front.fbx
+Walk1,Alt,4_GIANT_Walk_F,Monster Animations - Giant,CONVERT,3.3,2.5,In-place,0.45,,,In-place; foot-contact estimate about 0.45 hip-heights/s (as heavy as RamsterZ). Needs re-import.,Walk,HQA3,4_GIANT_Walk_F.fbx
+WalkAlerted,Primary,GiantGolem_Move_Run_Forward,Giant Golem,YES,1.5,2.533,Root motion,1.05,,,"Heavy jog about 1.05 hip-heights/s; same rig/style as the walk, so the blend matches.",Chase gait,RamsterZ,GiantGolem_Move_Run_Forward.fbx
+WalkAlerted,Alt,Giant@Run01 - Forward,Giant Animations,YES,1.8,2.533,In-place,1.63,,,About 1.75 hip-heights/s; [RM] twin and strafes available.,Chase gait,Kevin Iglesias,Giant@Run01 - Forward.fbx
+WalkAlerted,Alt,move_run_front,Giant Golem AnimSet,YES,1.4,2.533,Root motion,2.65,,,About 2.65 hip-heights/s - fast; may look light for a giant.,Chase gait,wemakethegame,move_run_front.fbx
+Attack1,Primary,GiantGolem_Attack_Swing_Low01_Quick,Giant Golem,YES,4,1.875,In-place,,right hand,1.07,Club-authored swing (hand grip matches a club). Fastest limb right hand at about 1.07 s. Untick loop.,Basic club strike,RamsterZ,GiantGolem_Attack_Swing_Low01_Quick.fbx
+Attack1,Alt,Attack3,Brute Warrior Mecanim Animation Pack,YES,1.8,1.875,Root motion,,right hand,0.8,"1.8 s, closest to the native 1.875 s; ships with a Hit event at the impact frame. Lighter, human-brute feel.",Basic club strike,Explosive,Brute@Attack3.FBX
+Attack1,Alt,attack03,Giant Golem AnimSet,YES,3.667,1.875,In-place,,right hand,1.67,Right-hand overhead; body drops 0.43 hip-heights into the blow.,Basic club strike,wemakethegame,attack03.fbx
+Attack2,Primary,GiantGolem_Attack_Swing_TurnAround_Smash,Giant Golem,YES,4.5,2.708,Root motion,,right hand,1.7,Turn-around smash - punishes players circling behind. Right hand at about 1.7 s.,Second strike,RamsterZ,GiantGolem_Attack_Swing_TurnAround_Smash.fbx
+Attack2,Alt,GiantGolem_Attack_Swing_Behind_Low01,Giant Golem,YES,4,2.708,In-place,,right hand,1.2,Rear low sweep.,Second strike,RamsterZ,GiantGolem_Attack_Swing_Behind_Low01.fbx
+Attack2,Alt,GiantGolem_Attack_Stomp01,Giant Golem,YES,4.5,2.708,In-place,,right hand,1.47,Stomp - no weapon contact needed; pairs with ground-impact VFX.,Second strike,RamsterZ,GiantGolem_Attack_Stomp01.fbx
+Attack2,Alt,attack_whirlwind,Giant Golem AnimSet,YES,3.633,2.708,In-place,,right hand,1.07,"Spin attack, 3.6 s.",Second strike,wemakethegame,attack_whirlwind.fbx
+AttackRage,Primary,GiantGolem_Attack_Swing_Forward_PowerSmash,Giant Golem,YES,6.167,5.833,Root motion,,right hand,3.1,6.2 s vs native 5.8 s - nearest duration match; travels about 1.9 hip-heights into the smash. Right hand at about 3.1 s.,Rage / heavy,RamsterZ,GiantGolem_Attack_Swing_Forward_PowerSmash.fbx
+AttackRage,Alt,GiantGolem_Attack_Swing_SmashDown01,Giant Golem,YES,5.333,5.833,In-place,,right hand,1.87,Overhead smash-down.,Rage / heavy,RamsterZ,GiantGolem_Attack_Swing_SmashDown01.fbx
+AttackRage,Alt,attack_ground01,Giant Golem AnimSet,YES,4.733,5.833,In-place,,right hand,1.83,Ground slam; body drops 0.47 hip-heights.,Rage / heavy,wemakethegame,attack_ground01.fbx
+AttackRage,Alt,attack_jumpAtk,Giant Golem AnimSet,YES,3.067,5.833,In-place,,right hand,1,Leap attack: body rises a full hip-height.,Rage / heavy,wemakethegame,attack_jumpAtk.fbx
+AttackRage,Alt,4_GIANT_Skill_01,Monster Animations - Giant,CONVERT,6.3,5.833,In-place,,left hand,3.3,Vendor-unnamed skill; measured leap (rises 0.91). Preview needed; re-import needed.,Rage / heavy,HQA3,4_GIANT_Skill_01.fbx
+Taunt,Primary,GiantGolem_Idle_Roar01,Giant Golem,YES,5.333,4.167,In-place,,,,"Giant roar, 5.3 s (native taunt 4.2 s).",Taunt / roar,RamsterZ,GiantGolem_Idle_Roar01.fbx
+Taunt,Alt,GiantGolem_Idle_Roar02,Giant Golem,YES,6,4.167,In-place,,,,6.0 s variant.,Taunt / roar,RamsterZ,GiantGolem_Idle_Roar02.fbx
+Taunt,Alt,Giant@Spawn01,Giant Animations,YES,1.867,4.167,Root motion,,,,"Rise-and-display, 1.9 s.",Taunt / roar,Kevin Iglesias,Giant@Spawn01.fbx
+Stagger,Primary,Giant@Damage02,Giant Animations,YES,1.067,1.458,In-place,,,,1.07 s - closest to the native 1.46 s stagger window.,Stagger,Kevin Iglesias,Giant@Damage02.fbx
+Stagger,Alt,GiantGolem_Stagger_Back01,Giant Golem,YES,4,1.458,Root motion,,,,"Directional set (Back/Forward/Left/Right x2) - heavier, but 4-5 s is far longer than native.",Stagger,RamsterZ,GiantGolem_Stagger_Back01.fbx
+Stagger,Alt,hit_shoulder_left,Giant Golem AnimSet,YES,1.5,1.458,Root motion,,,,1.5 s shoulder knock with real root travel (v1.45 fix).,Stagger,wemakethegame,hit_shoulder_left.fbx
+Swimming,Keep native,(keep native),,,,4.533,,,,,No pack has a swim clip. Keep the native player-derived Swimming clip.,Swim,,
+Treading Water,Keep native,(keep native),,,,3,,,,,No pack has one. Keep native.,Tread water,,
+NEW: charge/roll,Candidate,attack_DashAtk,Giant Golem AnimSet,YES,4,,Root motion,,left hand,2.23,Charging attack that travels about 6.7 hip-heights in 4 s - a rush to sit beside the planned Player Dive roll.,Special travelling attack,wemakethegame,attack_DashAtk.fbx
+NEW: charge/roll,Candidate,MoveAttack1,Brute Warrior Mecanim Animation Pack,YES,2,,Root motion,,left foot,1.2,Travels about 7.7 hip-heights; ships with a Hit event.,Special travelling attack,Explosive,Brute@MoveAttack1.FBX
+NEW: recovery,Candidate,Stun_End,Giant Golem AnimSet,YES,1.6,,In-place,,,,"1.6 s recover-to-stand: fits ""brief recovery, fast reacquisition"".",Post-roll recovery,wemakethegame,Stun_End.fbx
+NEW: recovery,Candidate,rise01,Giant Golem AnimSet,YES,4.333,,Root motion,,,,4.3 s full get-up if the roll ends grounded.,Post-roll recovery,wemakethegame,rise01.fbx
+NEW: turn,Candidate,GiantGolem_Move_Turn_Left90,Giant Golem,YES,3.667,,In-place,0.18,,,Heavy pivot (45/90/180 each way). Native controller has no turn clips.,Turn in place,RamsterZ,GiantGolem_Move_Turn_Left90.fbx
+NEW: grab,Candidate,GiantGolem_Attack_PickUpBiteAndThrow,Giant Golem,YES,12.333,,In-place,,left hand,8.9,"12.3 s pick-up, bite and throw - an execution-style grab.",Grab & throw,RamsterZ,GiantGolem_Attack_PickUpBiteAndThrow.fbx
+NEW: throw,Candidate,Giant@ThrowObject01_A ThrowRockScript EVENT,Giant Animations,YES,2.267,,In-place,,right hand,1.43,Ships with SpawnRock/GrabRock/ThrowRock/RemoveRock events already timed.,Rock throw,Kevin Iglesias,Giant@ThrowObject01_A.fbx
+Story: Neck captive,Candidate,GiantGolem_Chained_Idle,Giant Golem,YES,10,,In-place,,,,Chained idle - the enslaved-hoard-guard look from your lore.,Bound by shaman,RamsterZ,GiantGolem_Chained_Idle.fbx
+Story: Neck captive,Candidate,GiantGolem_Chained_Stressed,Giant Golem,YES,12.667,,In-place,,,,Straining against the binding.,Bound by shaman,RamsterZ,GiantGolem_Chained_Stressed.fbx
+Story: Neck captive,Candidate,GiantGolem_Chained_BreakFree,Giant Golem,YES,17.667,,Root motion,,,,17.7 s break-free - a set piece for when the binding fails.,Binding breaks,RamsterZ,GiantGolem_Chained_BreakFree.fbx
+Death (optional),Candidate,GiantGolem_CriticalHit_Kneel_Death01,Giant Golem,YES,10.333,,Root motion,,,,"Kneel-then-fall. The native controller has no death clip, so this only applies if you add a death state.",Death,RamsterZ,GiantGolem_CriticalHit_Kneel_Death01.fbx
+Death (optional),Candidate,Giant@Death01_A,Giant Animations,YES,2.067,,Root motion,,,,2.1 s forward fall.,Death,Kevin Iglesias,Giant@Death01_A.fbx
+,,,,,,,,,,,,,,

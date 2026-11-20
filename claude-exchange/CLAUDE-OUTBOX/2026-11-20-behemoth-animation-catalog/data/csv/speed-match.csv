@@ -1,0 +1,33 @@
+"Locomotion speed matching - stops the ""sneaking"" / foot-sliding look",,,,,,,,
+Fill the two yellow inputs from the Behemoth prefab. Playback speed = creature speed / (clip speed in hip-heights/s x hip height).,,,,,,,,
+,,,,,,,,
+Behemoth hip height (m),,,,,,,,
+Behemoth walk speed (m/s),,,,,,,,
+Behemoth run speed (m/s),,,,,,,,
+Inputs are not known from the files read here - take them from the installed prefab (Character walk/run speed) and the scaled model.,,,,,,,,
+,,,,,,,,
+Clip,Gait,Pack,Root motion,Clip speed (hip-heights/s),Speed source,Playback multiplier,Seconds,Behemoth-ready
+GiantGolem_Move_Run_Forward,Run,Giant Golem,Root motion,1.05,measured root travel,"=IF(OR($B$6="""",$B$4="""",E10=0),"""",$B$6/(E10*$B$4))",1.5,YES
+4_GIANT_Run_F,Run,Monster Animations - Giant,In-place,1.18,foot-contact estimate,"=IF(OR($B$6="""",$B$4="""",E11=0),"""",$B$6/(E11*$B$4))",2,CONVERT
+Giant@Run01 - Forward,Run,Giant Animations,In-place,1.63,foot-contact estimate,"=IF(OR($B$6="""",$B$4="""",E12=0),"""",$B$6/(E12*$B$4))",1.8,YES
+6_hunter ogre_20_Run_F,Run,Monster Animations - Hunter Ogre,In-place,1.64,foot-contact estimate,"=IF(OR($B$6="""",$B$4="""",E13=0),"""",$B$6/(E13*$B$4))",2,CONVERT
+Giant@Run01 - Forward [RM],Run,Giant Animations,Root motion,1.75,measured root travel,"=IF(OR($B$6="""",$B$4="""",E14=0),"""",$B$6/(E14*$B$4))",1.8,YES
+5_Golem_Run_F_52,Run,Monster Animations - Golem,In-place,2.23,foot-contact estimate,"=IF(OR($B$6="""",$B$4="""",E15=0),"""",$B$6/(E15*$B$4))",1.833,CONVERT
+move_run_front,Run,Giant Golem AnimSet,In-place,2.49,foot-contact estimate,"=IF(OR($B$6="""",$B$4="""",E16=0),"""",$B$6/(E16*$B$4))",1.4,YES
+move_run_front,Run,Giant Golem AnimSet,Root motion,2.65,measured root travel,"=IF(OR($B$6="""",$B$4="""",E17=0),"""",$B$6/(E17*$B$4))",1.4,YES
+5_Golem_Run_F_51,Run,Monster Animations - Golem,In-place,2.66,foot-contact estimate,"=IF(OR($B$6="""",$B$4="""",E18=0),"""",$B$6/(E18*$B$4))",1.7,CONVERT
+run,Run,Creature Cave Troll,Root motion,3.04,measured root travel,"=IF(OR($B$6="""",$B$4="""",E19=0),"""",$B$6/(E19*$B$4))",2.6,NO
+Run,Run,Brute Warrior Mecanim Animation Pack,Root motion,3.2,measured root travel,"=IF(OR($B$6="""",$B$4="""",E20=0),"""",$B$6/(E20*$B$4))",0.667,YES
+GiantGolem_Move_Walk_Forward,Walk,Giant Golem,Root motion,0.45,measured root travel,"=IF(OR($B$5="""",$B$4="""",E21=0),"""",$B$5/(E21*$B$4))",2,YES
+4_GIANT_Walk_F,Walk,Monster Animations - Giant,In-place,0.45,foot-contact estimate,"=IF(OR($B$5="""",$B$4="""",E22=0),"""",$B$5/(E22*$B$4))",3.3,CONVERT
+walk,Walk,Creature Cave Troll,Root motion,0.62,measured root travel,"=IF(OR($B$5="""",$B$4="""",E23=0),"""",$B$5/(E23*$B$4))",3.967,NO
+5_Golem_Walk_F_87,Walk,Monster Animations - Golem,In-place,0.68,foot-contact estimate,"=IF(OR($B$5="""",$B$4="""",E24=0),"""",$B$5/(E24*$B$4))",3.3,CONVERT
+move_walk_front,Walk,Giant Golem AnimSet,In-place,0.76,foot-contact estimate,"=IF(OR($B$5="""",$B$4="""",E25=0),"""",$B$5/(E25*$B$4))",2.033,YES
+move_walk_front,Walk,Giant Golem AnimSet,Root motion,0.77,measured root travel,"=IF(OR($B$5="""",$B$4="""",E26=0),"""",$B$5/(E26*$B$4))",2.033,YES
+WalkSlow,Walk,Brute Warrior Mecanim Animation Pack,Root motion,0.79,measured root travel,"=IF(OR($B$5="""",$B$4="""",E27=0),"""",$B$5/(E27*$B$4))",1.067,YES
+5_Golem_Walk_F_86,Walk,Monster Animations - Golem,In-place,0.79,foot-contact estimate,"=IF(OR($B$5="""",$B$4="""",E28=0),"""",$B$5/(E28*$B$4))",2.9,CONVERT
+Giant@Walk01 - Forward [RM],Walk,Giant Animations,Root motion,0.87,measured root travel,"=IF(OR($B$5="""",$B$4="""",E29=0),"""",$B$5/(E29*$B$4))",2.267,YES
+Giant@Walk01 - Forward,Walk,Giant Animations,In-place,0.87,foot-contact estimate,"=IF(OR($B$5="""",$B$4="""",E30=0),"""",$B$5/(E30*$B$4))",2.267,YES
+6_hunter ogre_20_Walk_F,Walk,Monster Animations - Hunter Ogre,In-place,1.27,foot-contact estimate,"=IF(OR($B$5="""",$B$4="""",E31=0),"""",$B$5/(E31*$B$4))",1.6,CONVERT
+Walk,Walk,Brute Warrior Mecanim Animation Pack,Root motion,1.57,measured root travel,"=IF(OR($B$5="""",$B$4="""",E32=0),"""",$B$5/(E32*$B$4))",1.067,YES
+WalkForward,Walk,Brute Warrior Mecanim Animation Pack,Root motion,1.57,measured root travel,"=IF(OR($B$5="""",$B$4="""",E33=0),"""",$B$5/(E33*$B$4))",1.067,YES

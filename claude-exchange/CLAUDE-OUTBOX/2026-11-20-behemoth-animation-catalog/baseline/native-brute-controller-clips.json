@@ -1,0 +1,331 @@
+{
+  "source": "D:\\SteamLibrary\\steamapps\\common\\Valheim\\valheim_Data\\StreamingAssets\\SoftRef\\Bundles\\c4210710",
+  "controller": "GoblinBruteAnimator",
+  "controllerPathId": -4589203544318718681,
+  "clips": [
+    {
+      "pathId": -7113321831265784843,
+      "name": "Idle1",
+      "seconds": 8.250000953674316,
+      "humanMotion": null
+    },
+    {
+      "pathId": -6790352972712694795,
+      "name": "Idle2",
+      "seconds": 8.333333969116211,
+      "humanMotion": null
+    },
+    {
+      "pathId": -2991087857813296573,
+      "name": "Treading Water",
+      "seconds": 3.000000238418579,
+      "humanMotion": null
+    },
+    {
+      "pathId": -2917349974592705547,
+      "name": "Taunt",
+      "seconds": 4.166667938232422,
+      "humanMotion": null
+    },
+    {
+      "pathId": -2880120835826766859,
+      "name": "Attack2",
+      "seconds": 2.7083358764648438,
+      "humanMotion": null
+    },
+    {
+      "pathId": -1228277699038794763,
+      "name": "Attack1",
+      "seconds": 1.875,
+      "humanMotion": null
+    },
+    {
+      "pathId": -850103166371514151,
+      "name": "Swimming",
+      "seconds": 4.533333778381348,
+      "humanMotion": null
+    },
+    {
+      "pathId": 307977331498626037,
+      "name": "Walk1",
+      "seconds": 2.5,
+      "humanMotion": null
+    },
+    {
+      "pathId": 4662309554486455285,
+      "name": "Stagger",
+      "seconds": 1.4583320617675781,
+      "humanMotion": null
+    },
+    {
+      "pathId": 6825540035975850997,
+      "name": "WalkAlerted",
+      "seconds": 2.533111572265625,
+      "humanMotion": null
+    },
+    {
+      "pathId": 6900451263385447413,
+      "name": "AttackRage",
+      "seconds": 5.833333969116211,
+      "humanMotion": null
+    }
+  ],
+  "stateNames": [
+    [
+      1298953377,
+      "inWater"
+    ],
+    [
+      33346102,
+      "Base Layer.attack0 -> Base Layer.Movement"
+    ],
+    [
+      1163367464,
+      "AnyState -> Stagger"
+    ],
+    [
+      2813527574,
+      "jump"
+    ],
+    [
+      2801912787,
+      "attack1 -> Movement"
+    ],
+    [
+      1645379218,
+      "Entry -> Base Layer.attack0"
+    ],
+    [
+      168290477,
+      "In Water -> Movement"
+    ],
+    [
+      3978643748,
+      "dead"
+    ],
+    [
+      373021397,
+      "random"
+    ],
+    [
+      2105523844,
+      "GravityWeight"
+    ],
+    [
+      971348239,
+      "stagger"
+    ],
+    [
+      3693393173,
+      "idle"
+    ],
+    [
+      1167586856,
+      "attack0"
+    ],
+    [
+      2056720982,
+      "attack0 -> Movement"
+    ],
+    [
+      353717764,
+      "Entry -> Base Layer.attack1"
+    ],
+    [
+      2315764621,
+      "swing_logh"
+    ],
+    [
+      2856441260,
+      "Base Layer.attack0"
+    ],
+    [
+      2571069944,
+      "Base Layer.In Water"
+    ],
+    [
+      3492231135,
+      "AnyState -> Rage attack"
+    ],
+    [
+      0,
+      ""
+    ],
+    [
+      1980192711,
+      "Taunt"
+    ],
+    [
+      1929771234,
+      "In Water"
+    ],
+    [
+      4137206419,
+      "AnyState -> attack0"
+    ],
+    [
+      1846804257,
+      "Assets/Characters/Player/model/old_first/player@Treading Water.fbxTreading Water"
+    ],
+    [
+      2893717824,
+      "Assets/Characters/GoblinBrute/model/GoblinBrute.fbxIdle2"
+    ],
+    [
+      3656989997,
+      "Rage attack -> Movement"
+    ],
+    [
+      467771452,
+      "Assets/Characters/GoblinBrute/model/GoblinBrute.fbxWalkAlerted"
+    ],
+    [
+      848348862,
+      "attack1"
+    ],
+    [
+      2572521721,
+      "footstep"
+    ],
+    [
+      1140720805,
+      "Assets/Characters/GoblinBrute/model/GoblinBrute.fbxWalk1"
+    ],
+    [
+      1879637742,
+      "swing_logv"
+    ],
+    [
+      398283183,
+      "Stagger -> Movement"
+    ],
+    [
+      2792529849,
+      "Taunt -> Movement"
+    ],
+    [
+      2945248844,
+      "rageattack"
+    ],
+    [
+      2463199314,
+      "Entry -> Base Layer.Rage attack"
+    ],
+    [
+      4133003411,
+      "Stagger"
+    ],
+    [
+      3670968875,
+      "Base Layer.Stagger -> Base Layer.Movement"
+    ],
+    [
+      1864274221,
+      "Assets/Characters/Player/model/old_first/player@Swimming.fbxSwimming"
+    ],
+    [
+      428770071,
+      "Base Layer.Stagger"
+    ],
+    [
+      3520931881,
+      "Entry -> Base Layer.Stagger"
+    ],
+    [
+      1335050551,
+      "throw"
+    ],
+    [
+      3712410938,
+      "Base Layer.attack1"
+    ],
+    [
+      1784438316,
+      "Blend"
+    ],
+    [
+      752971864,
+      "punch"
+    ],
+    [
+      2174743045,
+      "AnyState -> attack1"
+    ],
+    [
+      756556552,
+      "Base Layer"
+    ],
+    [
+      1394674004,
+      "Base Layer.Rage attack"
+    ],
+    [
+      1203776827,
+      "attack"
+    ],
+    [
+      4204540692,
+      "Base Layer.Rage attack -> Base Layer.Movement"
+    ],
+    [
+      3885065915,
+      "Base Layer.Movement"
+    ],
+    [
+      3083237571,
+      "taunt"
+    ],
+    [
+      3972419057,
+      "Rage attack"
+    ],
+    [
+      1045451092,
+      "AnyState -> Taunt"
+    ],
+    [
+      4081784901,
+      "Base Layer.Taunt"
+    ],
+    [
+      2950496983,
+      "sideway_speed"
+    ],
+    [
+      2805782930,
+      "turn_speed"
+    ],
+    [
+      552468485,
+      "Base Layer.In Water -> Base Layer.Movement"
+    ],
+    [
+      229373857,
+      "Movement"
+    ],
+    [
+      3082089558,
+      "Entry -> Base Layer.Taunt"
+    ],
+    [
+      2747352929,
+      "wakeup"
+    ],
+    [
+      2805407134,
+      "forward_speed"
+    ],
+    [
+      2161751825,
+      "Base Layer.attack1 -> Base Layer.Movement"
+    ],
+    [
+      896790778,
+      "Assets/Characters/GoblinBrute/model/GoblinBrute.fbxIdle1"
+    ],
+    [
+      223346952,
+      "Base Layer.Taunt -> Base Layer.Movement"
+    ]
+  ]
+}

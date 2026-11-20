@@ -1,0 +1,150 @@
+{
+  "m_Name": "AttackRage",
+  "m_Events": [
+    {
+      "time": 0.018730882555246353,
+      "functionName": "Speed",
+      "data": "",
+      "objectReferenceParameter": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "floatParameter": 1.2999999523162842,
+      "intParameter": 0,
+      "messageOptions": 0
+    },
+    {
+      "time": 0.5263106822967529,
+      "functionName": "Effect",
+      "data": "",
+      "objectReferenceParameter": {
+        "m_FileID": 0,
+        "m_PathID": -1470282911976151630
+      },
+      "floatParameter": 0.0,
+      "intParameter": 0,
+      "messageOptions": 0
+    },
+    {
+      "time": 2.1718385219573975,
+      "functionName": "TrailOn",
+      "data": "",
+      "objectReferenceParameter": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "floatParameter": 0.0,
+      "intParameter": 0,
+      "messageOptions": 0
+    },
+    {
+      "time": 2.4989309310913086,
+      "functionName": "Hit",
+      "data": "",
+      "objectReferenceParameter": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "floatParameter": 0.0,
+      "intParameter": 0,
+      "messageOptions": 0
+    },
+    {
+      "time": 2.6173417568206787,
+      "functionName": "TrailOff",
+      "data": "",
+      "objectReferenceParameter": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "floatParameter": 0.0,
+      "intParameter": 0,
+      "messageOptions": 0
+    },
+    {
+      "time": 3.48050856590271,
+      "functionName": "TrailOn",
+      "data": "",
+      "objectReferenceParameter": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "floatParameter": 0.0,
+      "intParameter": 0,
+      "messageOptions": 0
+    },
+    {
+      "time": 3.725827693939209,
+      "functionName": "Hit",
+      "data": "",
+      "objectReferenceParameter": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "floatParameter": 0.0,
+      "intParameter": 0,
+      "messageOptions": 0
+    },
+    {
+      "time": 3.8842484951019287,
+      "functionName": "TrailOff",
+      "data": "",
+      "objectReferenceParameter": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "floatParameter": 0.0,
+      "intParameter": 0,
+      "messageOptions": 0
+    },
+    {
+      "time": 5.1093878746032715,
+      "functionName": "TrailOn",
+      "data": "",
+      "objectReferenceParameter": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "floatParameter": 0.0,
+      "intParameter": 0,
+      "messageOptions": 0
+    },
+    {
+      "time": 5.410394191741943,
+      "functionName": "Hit",
+      "data": "",
+      "objectReferenceParameter": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "floatParameter": 0.0,
+      "intParameter": 0,
+      "messageOptions": 0
+    },
+    {
+      "time": 5.540971279144287,
+      "functionName": "TrailOff",
+      "data": "",
+      "objectReferenceParameter": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "floatParameter": 0.0,
+      "intParameter": 0,
+      "messageOptions": 0
+    },
+    {
+      "time": 5.617852687835693,
+      "functionName": "Speed",
+      "data": "",
+      "objectReferenceParameter": {
+        "m_FileID": 0,
+        "m_PathID": 0
+      },
+      "floatParameter": 1.0,
+      "intParameter": 0,
+      "messageOptions": 0
+    }
+  ],
+  "m_AnimationClipSettings": null
+}

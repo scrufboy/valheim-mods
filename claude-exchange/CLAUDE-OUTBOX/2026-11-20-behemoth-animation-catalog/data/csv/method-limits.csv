@@ -1,0 +1,23 @@
+HOW THIS WAS BUILT
+"Source: the 10 .unitypackage files in your Unity Asset Store cache, read directly (no Unity import). 505 clip rows."
+"Clip names, frame ranges, loop flags, rig type and authored events come from each FBX .meta (ModelImporter)."
+Durations: clip frame range / FBX frame rate (30 fps for all ten packs).
+"Motion numbers: hip, hand and foot bones evaluated in world space through the full bone chain at 30 fps."
+"Units: everything is in hip-heights (the pack's standing hip height), so packs of different scale compare directly."
+Travel / Speed: root displacement start->end. Zero means an in-place clip.
+Ground speed from foot contact: speed of the planted foot sliding under the body. Validated against root-motion clips: walks within about 5%; runs under-read 5-35% (airborne phase).
+"Fastest limb: the hand/foot with the highest body-relative speed and when it peaks. It is a candidate for where to put the Valheim Hit event, NOT a confirmed impact frame - check in preview."
+"Behemoth native baseline: GoblinBruteAnimator, 11 clips, from your 0.1.29 RageRoll audit (installed Valheim). Native AttackRage events: Speed 0.02 s, Effect 0.53 s, TrailOn 2.17 s, Hit 2.50 s, TrailOff 2.62 s."
+""
+WHAT IS NOT VERIFIED
+"No clip was played or watched. Recommendations rest on names, timing and measured motion - preview every pick in the Workshop on the real Behemoth before committing."
+"HQA3 ""Skill_xx"" clips are unnamed by the vendor; the descriptions are measured motion only."
+Generic->Humanoid conversion of the HQA3 packs is expected to work (standard Biped skeleton) but has not been done; retarget quality is unknown.
+Root-motion columns read the bone curves; how Unity extracts root motion also depends on import settings (bake into pose flags).
+Behemoth hip height and Valheim walk/run speeds were not available in the files read; Speed Match needs them filled in.
+""
+IMPORTANT FOR PORTING
+New attack clips need Valheim animation events authored (at least Hit; TrailOn/TrailOff for weapon trails). Only Explosive (Hit/Foot) and Kevin Iglesias throws (rock events) ship any events.
+"RamsterZ and wemakethegame flag almost every clip as looping - untick Loop Time on one-shots (attacks, reactions, deaths, taunts)."
+Most giant attacks here are 3-6 s; the native Attack1/Attack2 are 1.9/2.7 s. Longer clips change attack cadence unless state speed is raised.
+Licensing: bundling these clips into a public mod is redistribution. The wemakethegame PDF explicitly forbids redistribution/posting; check every pack's terms before public upload (not legal advice).
